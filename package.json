@@ -2,6 +2,7 @@
   "name": "coachv2",
   "private": true,
   "version": "0.0.0",
+  "homepage": "https://proyectocelene.github.io/adonis-tracker",
   "type": "module",
   "scripts": {
     "dev": "vite",
