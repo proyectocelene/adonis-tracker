@@ -2,12 +2,10 @@ import React from 'react';
 import { Calendar, Award, CheckCircle, Flame } from 'lucide-react';
 
 export default function ConsistencyHeatmap({ workoutHistory = [] }) {
-  // Genera los últimos 84 días (12 semanas exactamente para ver la adherencia al tratamiento en un celular sin cortar)
   const totalDays = 84;
   const today = new Date();
   const daysArray = [];
 
-  // Crear mapa de fechas con entrenamiento guardado
   const activeDatesMap = {};
   workoutHistory.forEach(ses => {
     if (ses.timestamp) {
@@ -34,47 +32,43 @@ export default function ConsistencyHeatmap({ workoutHistory = [] }) {
     });
   }
 
-  // Calcular adherencia (considerando que el protocolo tiene 5 días activos por semana sobre 7 días = ~71% máximo de días activos)
-  // Si no hay historial real aún, colorearemos algunas celdas de simulación para que el heatmap se aprecie espectacularmente en vivo
   const isSimulated = workoutHistory.length === 0;
   
   const getCellColor = (index, vol) => {
     if (!isSimulated) {
-      if (vol === 0) return '#e2e8f0'; // gris inactivo
-      if (vol < 8000) return '#34d399'; // verde claro
-      if (vol < 15000) return '#10b981'; // verde medio
-      return '#047857'; // verde intenso intenso
+      if (vol === 0) return '#e2e8f0';
+      if (vol < 8000) return '#34d399';
+      if (vol < 15000) return '#10b981';
+      return '#047857';
     } else {
-      // Simulación de consistencia impecable (5 días a la semana)
       const dayMod = index % 7;
-      if (dayMod === 3 || dayMod === 6) return '#e2e8f0'; // Jueves y Domingo de descanso
+      if (dayMod === 3 || dayMod === 6) return '#e2e8f0';
       return index % 3 === 0 ? '#047857' : '#10b981';
     }
   };
 
   return (
-    <div className="card" style={{ padding: '18px', marginBottom: '22px', borderTop: '3px solid var(--accent-green)' }}>
+    <div className="card" style={{ padding: '18px', marginBottom: '20px', borderTop: '4px solid #00b464' }}>
       <div className="flex-between" style={{ marginBottom: '12px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Calendar size={20} color="var(--accent-green)" />
-          <h2 style={{ margin: 0, fontSize: '16px' }}>Heatmap de Consistencia (Últimas 12 Semanas)</h2>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+          <Calendar size={20} color="#00b464" />
+          <h2 style={{ margin: 0, fontSize: '16px', fontWeight: '700' }}>Heatmap de Consistencia (12 Semanas)</h2>
         </div>
         <span className="badge badge-green">
           {isSimulated ? 'Simulación de Adherencia' : `Adherencia: ${Math.round((activeDaysCount / totalDays) * 100)}%`}
         </span>
       </div>
 
-      <p style={{ fontSize: '12px', marginBottom: '14px', color: '#475569' }}>
-        Cada celda representa un día del calendario. La densidad del color verde aumenta según el volumen mecánico ($\text{Lbs} \times \text{Reps}$) levantado en ese día.
+      <p style={{ fontSize: '13px', marginBottom: '16px', color: '#475569', lineHeight: '1.5' }}>
+        Cada celda representa un día del calendario de tu tratamiento deportivo. La intensidad del color verde aumenta según el volumen mecánico total (Lbs × Reps) alcanzado en cada sesión.
       </p>
 
-      {/* Grid de Calor Estilo GitHub */}
-      <div style={{ overflowX: 'auto', paddingBottom: '4px' }}>
+      <div style={{ overflowX: 'auto', paddingBottom: '6px' }}>
         <div style={{ 
           display: 'grid', 
           gridTemplateRows: 'repeat(7, 1fr)', 
           gridAutoFlow: 'column', 
-          gap: '4px',
+          gap: '5px',
           minWidth: '280px'
         }}>
           {daysArray.map((item, idx) => {
@@ -84,12 +78,12 @@ export default function ConsistencyHeatmap({ workoutHistory = [] }) {
                 key={idx} 
                 title={`${item.dateString}: ${isSimulated ? (idx % 7 === 3 || idx % 7 === 6 ? 'Descanso' : 'Entrenamiento Completado') : (item.volume > 0 ? `${item.volume.toLocaleString()} lbs-reps` : 'Sin actividad')}`}
                 style={{
-                  width: '16px',
-                  height: '16px',
+                  width: '15px',
+                  height: '15px',
                   backgroundColor: color,
-                  borderRadius: '3px',
-                  border: item.volume > 0 || isSimulated && (idx % 7 !== 3 && idx % 7 !== 6) ? '1px solid rgba(0,0,0,0.05)' : 'none',
-                  transition: 'transform 0.1s ease'
+                  borderRadius: '4px',
+                  boxShadow: item.volume > 0 ? '0 2px 4px rgba(0, 180, 100, 0.2)' : 'none',
+                  transition: 'all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1)'
                 }}
               />
             );
@@ -97,15 +91,15 @@ export default function ConsistencyHeatmap({ workoutHistory = [] }) {
         </div>
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '12px', fontSize: '11px', color: '#64748b' }}>
-        <span>Menor intensidad / Descanso</span>
-        <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
-          <div style={{ width: '12px', height: '12px', background: '#e2e8f0', borderRadius: '2px' }} />
-          <div style={{ width: '12px', height: '12px', background: '#34d399', borderRadius: '2px' }} />
-          <div style={{ width: '12px', height: '12px', background: '#10b981', borderRadius: '2px' }} />
-          <div style={{ width: '12px', height: '12px', background: '#047857', borderRadius: '2px' }} />
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '14px', fontSize: '11px', color: '#64748b', fontWeight: '600' }}>
+        <span>Menor carga / Descanso</span>
+        <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
+          <div style={{ width: '13px', height: '13px', background: '#e2e8f0', borderRadius: '3px' }} />
+          <div style={{ width: '13px', height: '13px', background: '#34d399', borderRadius: '3px' }} />
+          <div style={{ width: '13px', height: '13px', background: '#10b981', borderRadius: '3px' }} />
+          <div style={{ width: '13px', height: '13px', background: '#047857', borderRadius: '3px' }} />
         </div>
-        <span>Mayor volumen</span>
+        <span>Récord de volumen</span>
       </div>
     </div>
   );
