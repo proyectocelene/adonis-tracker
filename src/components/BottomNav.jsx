@@ -1,27 +1,31 @@
 import React from 'react';
-import { Dumbbell, Utensils, Activity } from 'lucide-react';
-import { Link, useLocation } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
+import { Calendar, Activity, Droplet } from 'lucide-react';
 
 export default function BottomNav() {
-  const location = useLocation();
-  const path = location.pathname;
-
   return (
-    <div className="bottom-nav">
-      <Link to="/" className={`nav-item ${path === '/' ? 'active' : ''}`}>
-        <Dumbbell size={22} />
+    <nav className="bottom-nav">
+      <NavLink 
+        to="/" 
+        className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+      >
+        <Calendar size={22} />
         <span>Rutina</span>
-      </Link>
-      
-      <Link to="/nutrition" className={`nav-item ${path === '/nutrition' ? 'active' : ''}`}>
-        <Utensils size={22} />
-        <span>Nutrición</span>
-      </Link>
-      
-      <Link to="/history" className={`nav-item ${path === '/history' ? 'active' : ''}`}>
+      </NavLink>
+      <NavLink 
+        to="/history" 
+        className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+      >
         <Activity size={22} />
         <span>Análisis</span>
-      </Link>
-    </div>
+      </NavLink>
+      <NavLink 
+        to="/nutrition" 
+        className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+      >
+        <Droplet size={22} />
+        <span>Nutrición</span>
+      </NavLink>
+    </nav>
   );
 }

@@ -3,14 +3,13 @@ import { useLocalStorage } from '../hooks/useLocalStorage';
 import { scientificProtocol } from '../data/scientificProtocol';
 import ConsistencyHeatmap from './ConsistencyHeatmap';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { Activity, TrendingUp, Award, Clock, ChevronDown, ChevronUp, Trash2, ShieldCheck, Zap, HeartPulse, Dumbbell, Calendar } from 'lucide-react';
+import { Activity, TrendingUp, Award, Clock, ChevronDown, ChevronUp, Trash2, ShieldCheck, Zap, HeartPulse, Dumbbell, Calendar, Sparkles } from 'lucide-react';
 
 export default function HistoryView() {
   const [workoutHistory, setWorkoutHistory] = useLocalStorage('coachv2_history', []);
-  const [selectedExId, setSelectedExId] = useState('d1_e1'); // Press Inclinado por defecto
+  const [selectedExId, setSelectedExId] = useState('d1_e1');
   const [expandedSessionId, setExpandedSessionId] = useState(null);
 
-  // Obtener lista completa de todos los ejercicios posibles de la rutina para el selector
   const allAvailableExercises = [];
   scientificProtocol.forEach(day => {
     if (day.exercises) {
@@ -22,19 +21,11 @@ export default function HistoryView() {
     }
   });
 
-  // Datos simulados en caso de que aún no haya historial
   const simulatedGlobalHistory = [
     { name: 'Sem 1', volumen: 9200, rpe: 7.8, f1rm: 96 },
     { name: 'Sem 2', volumen: 10400, rpe: 8.2, f1rm: 102 },
     { name: 'Sem 3', volumen: 11100, rpe: 8.5, f1rm: 108 },
     { name: 'Sem 4', volumen: 12200, rpe: 9.0, f1rm: 115 },
-  ];
-
-  const simulatedExProgression = [
-    { date: 'Sem 1', maxWeight: 80, est1RM: 96, reps: 9 },
-    { date: 'Sem 2', maxWeight: 85, est1RM: 102, reps: 9 },
-    { date: 'Sem 3', maxWeight: 85, est1RM: 107, reps: 10 },
-    { date: 'Sem 4', maxWeight: 90, est1RM: 114, reps: 9 },
   ];
 
   const totalSessions = workoutHistory.length;
@@ -99,10 +90,8 @@ export default function HistoryView() {
     });
   };
 
-  // Curva de progresión específica para el ejercicio seleccionado en el menú
+  // Curva de progresión para el ejercicio seleccionado
   const getExerciseProgressionData = () => {
-    if (workoutHistory.length === 0) return simulatedExProgression;
-
     const progData = [];
     workoutHistory.forEach(ses => {
       if (ses.exercises && ses.exercises[selectedExId]) {
@@ -136,7 +125,7 @@ export default function HistoryView() {
       }
     });
 
-    return progData.length > 0 ? progData : simulatedExProgression;
+    return progData;
   };
 
   const chartData = getChartData();
@@ -150,47 +139,47 @@ export default function HistoryView() {
   };
 
   const handleClearAll = () => {
-    if(confirm("⚠️ ¿Deseas formatear el laboratorio analítico y borrar el historial guardado?")) {
+    if(confirm("⚠️ ¿Deseas limpiar el laboratorio analítico y borrar el historial guardado?")) {
       setWorkoutHistory([]);
     }
   };
 
   const findExerciseDefinition = (dayId, exId) => {
     const day = scientificProtocol.find(d => d.id === dayId);
-    return day?.exercises?.find(e => e.id === exId) || { name: 'Ejercicio', sets: '-', reps: '-' };
+    return day?.exercises?.find(e => e.id === exId) || { name: 'Ejercicio Personalizado', sets: '-', reps: '-' };
   };
 
   return (
     <div className="container" style={{ paddingBottom: '35px' }}>
-      <div className="flex-between" style={{ marginBottom: '18px' }}>
+      <div className="flex-between" style={{ marginBottom: '14px' }}>
         <div>
-          <span className="badge badge-blue">Analítica y Fisiología</span>
-          <h1 style={{ marginTop: '4px' }}>Laboratorio de Progreso</h1>
+          <span className="badge badge-blue">Analítica & Fisiología</span>
+          <h1 style={{ marginTop: '4px', fontSize: '20px' }}>Laboratorio de Progreso</h1>
         </div>
         {workoutHistory.length > 0 && (
-          <button className="btn btn-outline" style={{ width: 'auto', padding: '6px 12px', fontSize: '12px', color: '#e11d48', borderColor: '#fecdd3' }} onClick={handleClearAll}>
+          <button className="btn btn-outline" style={{ width: 'auto', padding: '6px 12px', fontSize: '12px', color: '#ff3b30', borderColor: '#fecdd3' }} onClick={handleClearAll}>
             <Trash2 size={14} /> Limpiar Datos
           </button>
         )}
       </div>
 
       {/* KPIs Clínicos */}
-      <div className="grid-3" style={{ marginBottom: '20px' }}>
-        <div className="card" style={{ padding: '12px 6px', textAlign: 'center', margin: 0 }}>
+      <div className="grid-3" style={{ marginBottom: '16px' }}>
+        <div className="card" style={{ padding: '12px 4px', textAlign: 'center', margin: 0 }}>
           <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '700', textTransform: 'uppercase' }}>Sesiones</span>
-          <strong style={{ fontSize: '20px', color: '#0f172a', display: 'block', margin: '2px 0' }}>{totalSessions}</strong>
-          <span style={{ fontSize: '10px', color: 'var(--accent-green)', fontWeight: '600' }}>Archivadas</span>
+          <strong style={{ fontSize: '18px', color: '#0f172a', display: 'block', margin: '2px 0' }}>{totalSessions}</strong>
+          <span style={{ fontSize: '10px', color: '#00b464', fontWeight: '700' }}>Archivadas</span>
         </div>
         
-        <div className="card" style={{ padding: '12px 6px', textAlign: 'center', margin: 0, borderTop: '3px solid var(--accent-blue)' }}>
+        <div className="card" style={{ padding: '12px 4px', textAlign: 'center', margin: 0, borderTop: '3px solid #0066ff' }}>
           <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '700', textTransform: 'uppercase' }}>Volumen Global</span>
-          <strong style={{ fontSize: '17px', color: 'var(--accent-blue)', display: 'block', margin: '2px 0' }}>{totalVolumeLifted.toLocaleString()}</strong>
+          <strong style={{ fontSize: '16px', color: '#0066ff', display: 'block', margin: '2px 0' }}>{totalVolumeLifted.toLocaleString()}</strong>
           <span style={{ fontSize: '10px', color: '#64748b' }}>Lbs-Reps</span>
         </div>
         
-        <div className="card" style={{ padding: '12px 6px', textAlign: 'center', margin: 0 }}>
+        <div className="card" style={{ padding: '12px 4px', textAlign: 'center', margin: 0 }}>
           <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '700', textTransform: 'uppercase' }}>Intensidad</span>
-          <strong style={{ fontSize: '20px', color: '#d97706', display: 'block', margin: '2px 0' }}>RPE {calculateGlobalAverageRPE()}</strong>
+          <strong style={{ fontSize: '18px', color: '#f59e0b', display: 'block', margin: '2px 0' }}>RPE {calculateGlobalAverageRPE()}</strong>
           <span style={{ fontSize: '10px', color: '#64748b' }}>Esfuerzo Medio</span>
         </div>
       </div>
@@ -199,20 +188,20 @@ export default function HistoryView() {
       <ConsistencyHeatmap workoutHistory={workoutHistory} />
 
       {/* Sección de Análisis por Ejercicio Individual */}
-      <div className="card card-highlight" style={{ padding: '18px', marginBottom: '22px' }}>
-        <div style={{ marginBottom: '14px' }}>
-          <div style={{ display: 'flex', gap: '6px', alignItems: 'center', marginBottom: '8px' }}>
-            <Dumbbell size={20} color="var(--accent-blue)" />
-            <h2 style={{ margin: 0, fontSize: '16px' }}>Curva Evolutiva por Ejercicio</h2>
+      <div className="card card-highlight" style={{ padding: '16px', marginBottom: '18px' }}>
+        <div style={{ marginBottom: '12px' }}>
+          <div style={{ display: 'flex', gap: '6px', alignItems: 'center', marginBottom: '6px' }}>
+            <Dumbbell size={18} color="#0066ff" />
+            <h2 style={{ margin: 0, fontSize: '15px' }}>Curva Evolutiva por Ejercicio</h2>
           </div>
-          <p style={{ fontSize: '12px' }}>Selecciona cualquier ejercicio del programa para rastrear su ganancia de fuerza e hipertrofia:</p>
+          <p style={{ fontSize: '12px', margin: 0 }}>Selecciona cualquier ejercicio de tu rutina para auditar tu ganancia real de fuerza:</p>
         </div>
 
-        <div style={{ marginBottom: '16px' }}>
+        <div style={{ marginBottom: '14px' }}>
           <select 
             value={selectedExId}
             onChange={(e) => setSelectedExId(e.target.value)}
-            style={{ width: '100%', padding: '10px', fontWeight: '700', fontSize: '14px', background: '#f8fafc', border: '2px solid #cbd5e1' }}
+            style={{ width: '100%', padding: '10px', fontWeight: '700', fontSize: '14px', borderRadius: '12px' }}
           >
             {allAvailableExercises.map(ex => (
               <option key={ex.id} value={ex.id}>{ex.day} - {ex.name}</option>
@@ -220,62 +209,81 @@ export default function HistoryView() {
           </select>
         </div>
 
-        <div style={{ width: '100%', height: '220px' }}>
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={exerciseProgData} margin={{ top: 10, right: 15, left: 0, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-              <XAxis dataKey="date" stroke="#64748b" fontSize={11} tickLine={false} />
-              <YAxis stroke="var(--accent-blue)" fontSize={11} domain={['auto', 'auto']} />
-              <Tooltip 
-                contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
-                formatter={(val, name) => [val + ' lbs/kg', name === 'maxWeight' ? 'Carga Máxima' : '1RM Est. Epley']}
-              />
-              <Legend verticalAlign="top" height={36} />
-              <Line type="monotone" dataKey="maxWeight" name="Carga Máxima Levantada" stroke="var(--accent-blue)" strokeWidth={3} dot={{ r: 5, fill: 'var(--accent-blue)' }} activeDot={{ r: 7 }} />
-              <Line type="monotone" dataKey="est1RM" name="1RM Teórico (Epley)" stroke="var(--accent-green)" strokeWidth={2} strokeDasharray="5 5" dot={{ r: 4, fill: 'var(--accent-green)' }} />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
+        {/* SI NO HAY DATOS EN EL HISTORIAL PARA ESTE EJERCICIO ESPÉCIFICADO -> AVISO DE PENDIENTE DE LÍNEA BASE */}
+        {exerciseProgData.length === 0 ? (
+          <div style={{
+            background: '#f8fafc',
+            border: '2px dashed #cbd5e1',
+            borderRadius: '14px',
+            padding: '22px 16px',
+            textAlign: 'center',
+            color: '#475569'
+          }}>
+            <Sparkles size={28} color="#0066ff" style={{ margin: '0 auto 10px auto' }} />
+            <h3 style={{ fontSize: '15px', color: '#0f172a', margin: '0 0 6px 0' }}>📈 Estado: Pendiente de Línea Base</h3>
+            <p style={{ fontSize: '13px', margin: 0 }}>
+              Aún no has archivado un entrenamiento que contenga <strong>{selectedExDef.name}</strong>.  
+              En tu primera sesión guardada, tu peso y repeticiones establecerán tu <strong>Línea Base</strong> para proyectar tu fuerza Epley 1RM.
+            </p>
+          </div>
+        ) : (
+          <div style={{ width: '100%', height: '220px' }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={exerciseProgData} margin={{ top: 10, right: 15, left: -15, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                <XAxis dataKey="date" stroke="#64748b" fontSize={11} tickLine={false} />
+                <YAxis stroke="#0066ff" fontSize={11} domain={['auto', 'auto']} />
+                <Tooltip 
+                  contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                  formatter={(val, name) => [val + ' lbs/kg', name === 'maxWeight' ? 'Carga Máxima' : '1RM Est. Epley']}
+                />
+                <Legend verticalAlign="top" height={36} />
+                <Line type="monotone" dataKey="maxWeight" name="Carga Máxima" stroke="#0066ff" strokeWidth={3} dot={{ r: 5, fill: '#0066ff' }} activeDot={{ r: 7 }} />
+                <Line type="monotone" dataKey="est1RM" name="1RM Teórico (Epley)" stroke="#00b464" strokeWidth={2} strokeDasharray="5 5" dot={{ r: 4, fill: '#00b464' }} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        )}
       </div>
 
       {/* Gráfico de Sobrecarga Progresiva Global */}
-      <div className="card" style={{ padding: '18px', marginBottom: '24px' }}>
-        <div className="flex-between" style={{ marginBottom: '14px' }}>
+      <div className="card" style={{ padding: '16px', marginBottom: '20px' }}>
+        <div className="flex-between" style={{ marginBottom: '12px' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <TrendingUp size={18} color="#0e7490" />
-              <h2 style={{ margin: 0, fontSize: '16px' }}>Sobrecarga Progresiva de Volumen</h2>
+              <TrendingUp size={16} color="#0e7490" />
+              <h2 style={{ margin: 0, fontSize: '15px' }}>Sobrecarga Progresiva Global</h2>
             </div>
-            <p style={{ fontSize: '12px', marginTop: '2px' }}>Carga mecánica total por sesión</p>
+            <p style={{ fontSize: '11px', margin: 0 }}>Carga mecánica total (Lbs-Reps) por sesión</p>
           </div>
           <span className="badge badge-green">Hipertrofia</span>
         </div>
         
-        <div style={{ width: '100%', height: '200px' }}>
+        <div style={{ width: '100%', height: '190px' }}>
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+            <BarChart data={chartData} margin={{ top: 10, right: 10, left: -15, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
               <XAxis dataKey="name" stroke="#64748b" fontSize={11} tickLine={false} />
               <YAxis stroke="#64748b" fontSize={11} tickLine={false} axisLine={false} />
-              <Tooltip contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '8px' }} />
-              <Bar dataKey="volumen" name="Volumen (lbs)" fill="#0e7490" radius={[6, 6, 0, 0]} />
+              <Tooltip contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '12px' }} />
+              <Bar dataKey="volumen" name="Volumen (lbs-reps)" fill="#0066ff" radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
       </div>
 
-      {/* Bitácora del Atleta (Historial por Sesión) */}
-      <div style={{ display: 'flex', gap: '6px', alignItems: 'center', marginBottom: '12px' }}>
-        <Clock size={18} color="#475569" />
-        <h2 style={{ margin: 0, fontSize: '17px', color: '#0f172a' }}>Bitácora de Sesiones Pasadas</h2>
+      {/* Bitácora del Atleta */}
+      <div style={{ display: 'flex', gap: '6px', alignItems: 'center', marginBottom: '10px' }}>
+        <Clock size={16} color="#475569" />
+        <h2 style={{ margin: 0, fontSize: '16px', color: '#0f172a' }}>Bitácora de Sesiones Pasadas</h2>
       </div>
       
       {workoutHistory.length === 0 ? (
-        <div className="card" style={{ padding: '26px', textAlign: 'center', backgroundColor: '#f8fafc', border: '1px dashed #cbd5e1' }}>
-          <Calendar size={32} color="#94a3b8" style={{ margin: '0 auto 10px auto' }} />
+        <div className="card" style={{ padding: '24px', textAlign: 'center', backgroundColor: '#f8fafc', border: '1px dashed #cbd5e1' }}>
+          <Calendar size={30} color="#94a3b8" style={{ margin: '0 auto 10px auto' }} />
           <h3 style={{ color: '#475569', margin: 0, fontSize: '15px' }}>Bitácora limpia</h3>
-          <p style={{ marginTop: '8px', fontSize: '13px' }}>
-            Al terminar un entrenamiento y pulsar el botón azul de Guardar en la pestaña Rutina, tus datos y métricas RPE quedarán registrados de forma indefinida en este laboratorio.
+          <p style={{ marginTop: '6px', fontSize: '12px' }}>
+            Al pulsar el botón de Guardar Sesión en la pestaña Rutina al final del día, tu análisis y RPE quedarán inmortalizados en este laboratorio.
           </p>
         </div>
       ) : (
@@ -283,26 +291,26 @@ export default function HistoryView() {
           const isExpanded = expandedSessionId === ses.id;
           
           return (
-            <div key={ses.id} className="card" style={{ marginBottom: '14px', overflow: 'hidden' }}>
+            <div key={ses.id} className="card" style={{ marginBottom: '12px', overflow: 'hidden' }}>
               <div 
                 onClick={() => setExpandedSessionId(isExpanded ? null : ses.id)}
                 style={{ 
-                  padding: '14px 16px', 
+                  padding: '14px', 
                   display: 'flex', 
                   justifyContent: 'space-between', 
                   alignItems: 'center',
                   cursor: 'pointer',
-                  background: isExpanded ? '#f8fafc' : '#ffffff',
+                  background: isExpanded ? 'rgba(241, 245, 249, 0.7)' : 'transparent',
                   transition: 'background 0.2s ease'
                 }}
               >
-                <div>
-                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                    <strong style={{ fontSize: '15px', color: '#0f172a' }}>{ses.dayName}</strong>
+                <div style={{ flex: 1, minWidth: 0, paddingRight: '8px' }}>
+                  <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
+                    <strong style={{ fontSize: '14px', color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{ses.dayName}</strong>
                     {ses.completedSets > 0 && <span className="badge badge-green" style={{ fontSize: '10px' }}>{ses.completedSets} series</span>}
                     {ses.cardioCompleted > 0 && <span className="badge" style={{ background: '#ecfeff', color: '#0e7490', fontSize: '10px' }}>Cardio</span>}
                   </div>
-                  <span style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'block', marginTop: '4px' }}>
+                  <span style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block', marginTop: '3px' }}>
                     📅 {ses.dateString} • Carga: <strong>{ses.volume?.toLocaleString()} lbs</strong>
                   </span>
                 </div>
@@ -310,7 +318,7 @@ export default function HistoryView() {
                 <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
                   <button 
                     onClick={(e) => { e.stopPropagation(); handleDeleteSession(ses.id); }} 
-                    style={{ background: 'transparent', border: 'none', color: '#e11d48', padding: '4px', cursor: 'pointer' }}
+                    style={{ background: 'transparent', border: 'none', color: '#ff3b30', padding: '4px', cursor: 'pointer' }}
                     title="Borrar registro"
                   >
                     <Trash2 size={16} />
@@ -319,40 +327,36 @@ export default function HistoryView() {
                 </div>
               </div>
 
-              {/* Detalle Desplegado en Tarjetas por Ejercicio */}
               {isExpanded && ses.exercises && (
-                <div style={{ padding: '4px 14px 16px 14px', borderTop: '1px solid #e2e8f0', background: '#f8fafc' }}>
+                <div style={{ padding: '4px 14px 16px 14px', borderTop: '1px solid #cbd5e1', background: '#f8fafc' }}>
                   {Object.keys(ses.exercises).map((exId) => {
                     const exData = ses.exercises[exId];
                     if (!exData) return null;
 
-                    // Si es registro de Cardio
                     if (exData.machine) {
                       return (
-                        <div key={exId} style={{ marginTop: '10px', background: '#ffffff', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1', borderLeft: '4px solid #06b6d4' }}>
-                          <div className="flex-between" style={{ marginBottom: '6px' }}>
-                            <strong style={{ fontSize: '14px', color: '#0e7490' }}><HeartPulse size={14} style={{ display: 'inline' }} /> {exData.machine}</strong>
+                        <div key={exId} style={{ marginTop: '10px', background: '#ffffff', padding: '12px', borderRadius: '12px', border: '1px solid #cbd5e1', borderLeft: '4px solid #06b6d4' }}>
+                          <div className="flex-between" style={{ marginBottom: '4px' }}>
+                            <strong style={{ fontSize: '13px', color: '#0e7490' }}><HeartPulse size={13} style={{ display: 'inline' }} /> {exData.machine}</strong>
                             <span className="badge" style={{ background: '#ecfeff', color: '#0e7490' }}>{exData.duration} min</span>
                           </div>
-                          <div style={{ fontSize: '12px', color: '#475569', display: 'flex', gap: '12px', flexWrap: 'wrap', marginTop: '4px' }}>
+                          <div style={{ fontSize: '11px', color: '#475569', display: 'flex', gap: '10px', flexWrap: 'wrap', marginTop: '4px' }}>
                             {exData.speed && <span>Velocidad: <strong>{exData.speed}</strong></span>}
-                            {exData.incline && <span>Inclinación/Nivel: <strong>{exData.incline}</strong></span>}
+                            {exData.incline && <span>Inclinación: <strong>{exData.incline}</strong></span>}
                             {exData.heartRate && <span>Pulsaciones: <strong>{exData.heartRate} BPM</strong></span>}
                           </div>
-                          {exData.notes && <p style={{ fontSize: '12px', color: '#64748b', marginTop: '6px', fontStyle: 'italic', background: '#f8fafc', padding: '6px', borderRadius: '6px' }}>"{exData.notes}"</p>}
                         </div>
                       );
                     }
 
-                    // Ejercicio de fuerza
                     const exDef = findExerciseDefinition(ses.dayId, exId);
                     const setNums = Object.keys(exData).filter(k => exData[k] && exData[k].completed && !isNaN(parseInt(k)));
                     if (setNums.length === 0) return null;
 
                     return (
-                      <div key={exId} style={{ marginTop: '10px', background: '#ffffff', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }}>
+                      <div key={exId} style={{ marginTop: '10px', background: '#ffffff', padding: '12px', borderRadius: '12px', border: '1px solid #cbd5e1' }}>
                         <div className="flex-between" style={{ marginBottom: '8px' }}>
-                          <strong style={{ fontSize: '14px', color: '#0f172a' }}>{exDef.name || 'Ejercicio Personalizado'}</strong>
+                          <strong style={{ fontSize: '13px', color: '#0f172a' }}>{exDef.name || 'Ejercicio Personalizado'}</strong>
                           <span className="badge badge-blue">Meta: {exDef.reps || '-'}</span>
                         </div>
 
@@ -360,11 +364,11 @@ export default function HistoryView() {
                           {setNums.map(setNum => {
                             const s = exData[setNum];
                             return (
-                              <div key={setNum} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', padding: '6px', background: '#f8fafc', borderRadius: '6px', alignItems: 'center' }}>
+                              <div key={setNum} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', padding: '6px 8px', background: '#f8fafc', borderRadius: '8px', alignItems: 'center' }}>
                                 <span style={{ fontWeight: '700', color: '#334155' }}>Serie #{setNum}</span>
-                                <span style={{ color: '#64748b' }}>Carga: <strong style={{ color: '#2563eb' }}>{s.weight || '0'} {s.unit || 'lbs'}</strong></span>
+                                <span style={{ color: '#64748b' }}>Carga: <strong style={{ color: '#0066ff' }}>{s.weight || '0'} {s.unit || 'lbs'}</strong></span>
                                 <span>Logrado: <strong style={{ color: '#0f172a' }}>{s.reps || '-'} reps</strong></span>
-                                <span className="badge badge-warning" style={{ margin: 0 }}>RPE {s.rpe || '8'}</span>
+                                <span className="badge badge-warning" style={{ margin: 0, fontSize: '10px' }}>RPE {s.rpe || '8'}</span>
                               </div>
                             );
                           })}

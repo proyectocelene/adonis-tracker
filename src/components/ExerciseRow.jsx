@@ -1,21 +1,35 @@
-import React, { useState } from 'react';
-import { Info, AlertCircle, CheckCircle2, Search, Timer, TrendingUp, Plus, ShieldAlert, Zap, Dumbbell } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Info, CheckCircle2, Search, Timer, TrendingUp, Plus, ShieldAlert, Zap, Dumbbell, ChevronDown, ChevronUp, Sparkles } from 'lucide-react';
 
-export default function ExerciseRow({ exercise, exerciseData = {}, previousData = {}, onUpdateSet }) {
+export default function ExerciseRow({ exercise, exerciseData = {}, previousData = {}, onUpdateSet, initiallyExpanded = false }) {
   const defaultSetsCount = parseInt(exercise.sets) || 3;
   
-  // Soporte para añadir series adicionales dinámicamente
   const [customTotalSets, setCustomTotalSets] = useState(() => {
     const recordedKeys = Object.keys(exerciseData).map(Number).filter(n => !isNaN(n));
     const maxRecorded = recordedKeys.length > 0 ? Math.max(...recordedKeys) : defaultSetsCount;
     return Math.max(defaultSetsCount, maxRecorded);
   });
 
-  // Unidad de peso de este ejercicio (lbs o kg)
   const [unit, setUnit] = useState(exerciseData.unit || exercise.defaultUnit || 'lbs');
-
+  
+  // Acordeón Principal del Ejercicio (Chip Desplegable iOS)
   const setsArray = Array.from({ length: customTotalSets }, (_, i) => i + 1);
+  const completedSetsCount = setsArray.filter(s => exerciseData[s]?.completed).length;
+  const isAllCompleted = completedSetsCount === customTotalSets && customTotalSets > 0;
+
+  const [isExpanded, setIsExpanded] = useState(initiallyExpanded || !isAllCompleted);
+  // Sub-acordeón para Análisis Biomecánico y Descanso (ahorro extremo de espacio en pantalla)
+  const [showBiomech, setShowBiomech] = useState(false);
+
+  // Responde si el componente cambia externamente por enrutado
+  useEffect(() => {
+    if (initiallyExpanded !== undefined) {
+      setIsExpanded(initiallyExpanded);
+    }
+  }, [initiallyExpanded]);
+
   const isTime = !!exercise.isTime || (typeof exercise.reps === 'string' && (exercise.reps.includes('s') || exercise.reps.includes('m')));
+  const hasPreviousHistory = Object.keys(previousData).some(k => previousData[k]?.completed && !isNaN(parseInt(k)));
 
   const handleSetChange = (setNumber, field, value) => {
     const currentSetData = exerciseData[setNumber] || {};
@@ -26,9 +40,9 @@ export default function ExerciseRow({ exercise, exerciseData = {}, previousData 
     });
   };
 
-  const handleUnitToggle = (newUnit) => {
+  const handleUnitToggle = (newUnit, e) => {
+    e.stopPropagation();
     setUnit(newUnit);
-    // Propagar unidad al estado
     setsArray.forEach(setNum => {
       if (exerciseData[setNum]) {
         onUpdateSet(setNum, { ...exerciseData[setNum], unit: newUnit });
@@ -40,20 +54,17 @@ export default function ExerciseRow({ exercise, exerciseData = {}, previousData 
     setCustomTotalSets(prev => prev + 1);
   };
 
-  const openSearch = () => {
-    const query = exercise.searchQuery || `${exercise.name} proper form technique biomechanics`;
+  const openSearch = (e) => {
+    if (e) e.stopPropagation();
+    const query = exercise.searchQuery || `${exercise.name} proper biomechanical exercise execution`;
     window.open(`https://www.google.com/search?q=${encodeURIComponent(query)}&tbm=isch`, '_blank');
   };
 
-  // Verificación de series terminadas
-  const isAllCompleted = setsArray.every(s => exerciseData[s]?.completed);
-
-  // Algoritmo Científico de Alertas Inteligentes (Overload / Deload)
+  // Algoritmo de Alertas Inteligentes (Cuando hay historial previo)
   const evaluateIntelligentAlert = () => {
-    const prevSetKeys = Object.keys(previousData).filter(k => previousData[k]?.completed && !isNaN(parseInt(k)));
-    if (prevSetKeys.length === 0 || isTime) return null;
+    if (!hasPreviousHistory || isTime) return null;
 
-    // Extraer el tope máximo y mínimo de repeticiones prescriptas
+    const prevSetKeys = Object.keys(previousData).filter(k => previousData[k]?.completed && !isNaN(parseInt(k)));
     const repsStr = String(exercise.reps || '');
     const numbers = repsStr.match(/\d+/g)?.map(Number) || [10];
     const targetMax = Math.max(...numbers);
@@ -78,253 +89,292 @@ export default function ExerciseRow({ exercise, exerciseData = {}, previousData 
     if (allHitTop && prevSetKeys.length >= defaultSetsCount) {
       return {
         type: 'overload',
-        icon: <Zap size={18} style={{ flexShrink: 0 }} />,
+        bg: '#e6faf1', border: '#10b981', textCol: '#065f46',
+        icon: <Zap size={18} style={{ flexShrink: 0, color: '#00b464' }} />,
         title: '⚡ ALERTA INTELIGENTE DE SOBRECARGA:',
-        text: `En tu sesión anterior alcanzaste el tope (${targetMax} reps) en todas las series con buena técnica. ¡Es indicación rigurosa de progresar! Aumenta la carga un 2.5% a 5% hoy.`
+        text: `En tu sesión anterior dominaste el tope de reps (${targetMax} reps) con técnica controlada. ¡Indicación de sobrecarga! Sube peso de 2.5% a 5% hoy.`
       };
     }
 
     if (anyEarlyFail) {
       return {
         type: 'deload',
-        icon: <ShieldAlert size={18} style={{ flexShrink: 0, color: '#e11d48' }} />,
+        bg: '#ffebe9', border: '#ff3b30', textCol: '#991b1b',
+        icon: <ShieldAlert size={18} style={{ flexShrink: 0, color: '#ff3b30' }} />,
         title: '⚠️ INDICACIÓN DE REGULACIÓN (DELOAD):',
-        text: `En la sesión anterior hubo fallo prematuro (@ RPE 10 por debajo de ${targetMin} reps). Sugerencia técnica: reducir la carga en un 5% hoy para recuperar el RIR y proteger el Sistema Nervioso Central.`
+        text: `Fallo prematuro (@ RPE 10 antes de las ${targetMin} reps) en la sesión anterior. Sugerencia técnica: reducir la carga 5% para resguardar tu Sistema Nervioso Central.`
       };
     }
 
     return {
       type: 'reference',
+      bg: '#f8fafc', border: '#cbd5e1', textCol: '#334155',
       icon: <TrendingUp size={16} style={{ flexShrink: 0, color: 'var(--accent-blue)' }} />,
-      title: '📊 Referencia de Sesión Anterior:',
-      text: `Busca superar en al menos 1 repetición tu registro pasado o mejorar el control de tu RPE con el mismo peso.`
+      title: '📊 Referencia de Carga Previa:',
+      text: `Busca superar hoy al menos 1 repetición tu registro anterior o mejorar tu control de RIR al mismo peso.`
     };
   };
 
   const intelligentAlert = evaluateIntelligentAlert();
 
   return (
-    <div className={`card ${isAllCompleted ? 'card-success' : ''}`} style={{ padding: '16px', marginBottom: '20px' }}>
-      {/* Cabecera y Badges */}
-      <div style={{ marginBottom: '12px' }}>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center', marginBottom: '6px' }}>
-          <span className="badge badge-blue">
-            <Dumbbell size={12} /> {customTotalSets} series x {exercise.reps}
-          </span>
-          
-          {exercise.restTime && (
-            <span className="badge badge-neutral">
-              <Timer size={12} /> Descanso: {exercise.restTime}
+    <div className={`card-chip ${isAllCompleted ? 'completed' : ''}`}>
+      {/* CABECERA CHIP DESPLEGABLE (Visible siempre) */}
+      <div 
+        onClick={() => setIsExpanded(!isExpanded)}
+        style={{ 
+          padding: '14px', 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center', 
+          cursor: 'pointer',
+          background: isExpanded ? 'rgba(241, 245, 249, 0.7)' : 'transparent',
+          borderBottom: isExpanded ? '1px solid #cbd5e1' : 'none',
+          userSelect: 'none',
+          transition: 'all 0.2s ease'
+        }}
+      >
+        <div style={{ flex: 1, minWidth: 0, paddingRight: '8px' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center', marginBottom: '4px' }}>
+            <span className="badge badge-blue">
+              {customTotalSets}x{exercise.reps}
             </span>
-          )}
+            {isAllCompleted ? (
+              <span className="badge badge-green">✓ {completedSetsCount}/{customTotalSets} Listo</span>
+            ) : (
+              <span className="badge badge-neutral">{completedSetsCount}/{customTotalSets} series</span>
+            )}
+          </div>
+          <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#0f172a', whiteSpace: isExpanded ? 'normal' : 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', margin: 0 }}>
+            {exercise.name}
+          </h3>
+        </div>
 
-          {/* Toggle de Unidad (Lbs / Kg) */}
-          {!isTime && (
-            <div style={{ display: 'inline-flex', background: '#e2e8f0', borderRadius: '999px', padding: '2px', marginLeft: 'auto' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          {!isTime && isExpanded && (
+            <div style={{ display: 'inline-flex', background: '#e2e8f0', borderRadius: '999px', padding: '2px' }} onClick={e => e.stopPropagation()}>
               <button 
-                onClick={() => handleUnitToggle('lbs')}
+                onClick={(e) => handleUnitToggle('lbs', e)}
                 style={{
                   border: 'none',
-                  background: unit === 'lbs' ? '#2563eb' : 'transparent',
+                  background: unit === 'lbs' ? '#0066ff' : 'transparent',
                   color: unit === 'lbs' ? '#ffffff' : '#64748b',
-                  fontSize: '11px',
-                  fontWeight: '700',
-                  padding: '2px 8px',
-                  borderRadius: '999px',
-                  cursor: 'pointer'
+                  fontSize: '11px', fontWeight: '700', padding: '2px 7px', borderRadius: '999px', cursor: 'pointer'
                 }}
               >
                 LBS
               </button>
               <button 
-                onClick={() => handleUnitToggle('kg')}
+                onClick={(e) => handleUnitToggle('kg', e)}
                 style={{
                   border: 'none',
-                  background: unit === 'kg' ? '#2563eb' : 'transparent',
+                  background: unit === 'kg' ? '#0066ff' : 'transparent',
                   color: unit === 'kg' ? '#ffffff' : '#64748b',
-                  fontSize: '11px',
-                  fontWeight: '700',
-                  padding: '2px 8px',
-                  borderRadius: '999px',
-                  cursor: 'pointer'
+                  fontSize: '11px', fontWeight: '700', padding: '2px 7px', borderRadius: '999px', cursor: 'pointer'
                 }}
               >
                 KG
               </button>
             </div>
           )}
-
-          {isAllCompleted && <CheckCircle2 size={20} color="var(--accent-green)" style={{ marginLeft: isTime ? 'auto' : 0 }} />}
+          <div style={{ color: '#64748b', display: 'flex', alignItems: 'center' }}>
+            {isExpanded ? <ChevronUp size={22} /> : <ChevronDown size={22} />}
+          </div>
         </div>
-        
-        <h3 style={{ fontSize: '17px', color: '#0f172a', fontWeight: '700' }}>{exercise.name}</h3>
       </div>
 
-      {/* Alertas Inteligentes Algorítmicas */}
-      {intelligentAlert && (
-        <div 
-          className={intelligentAlert.type === 'overload' ? 'card-alert-overload' : ''} 
-          style={
-            intelligentAlert.type !== 'overload' ? {
-              background: intelligentAlert.type === 'deload' ? '#fff1f2' : '#f8fafc',
-              border: '1px solid ' + (intelligentAlert.type === 'deload' ? '#fecdd3' : '#cbd5e1'),
-              borderLeft: '4px solid ' + (intelligentAlert.type === 'deload' ? '#e11d48' : '#2563eb'),
+      {/* CONTENIDO DESPLEGADO DEL EJERCICIO */}
+      {isExpanded && (
+        <div style={{ padding: '14px' }}>
+          
+          {/* BANNER AVISO SI ES PRIMERA VEZ / PENDIENTE LÍNEA BASE */}
+          {!hasPreviousHistory && (
+            <div style={{
+              background: '#e6f0ff',
+              border: '1px solid #93c5fd',
+              borderRadius: '12px',
               padding: '10px 12px',
-              borderRadius: '8px',
+              marginBottom: '12px',
+              display: 'flex',
+              gap: '8px',
+              alignItems: 'center',
+              color: '#0369a1',
+              fontSize: '12px'
+            }}>
+              <Sparkles size={18} color="#0066ff" style={{ flexShrink: 0 }} />
+              <div>
+                <strong style={{ display: 'block', fontWeight: '700', color: '#0066ff' }}>✨ PRIMERA VEZ EN ESTE EJERCICIO:</strong>
+                <span>No hay registros históricos previos. Registra tus cargas hoy para establecer tu <strong>Línea Base (Baseline)</strong> de fuerza para tus curvas Epley 1RM.</span>
+              </div>
+            </div>
+          )}
+
+          {/* BANNER DE ALERTAS INTELIGENTES ALGORYTMICAS (Cuando existe historial) */}
+          {intelligentAlert && (
+            <div style={{
+              background: intelligentAlert.bg,
+              border: `1px solid ${intelligentAlert.border}`,
+              borderLeft: `5px solid ${intelligentAlert.type === 'overload' ? '#00b464' : (intelligentAlert.type === 'deload' ? '#ff3b30' : '#0066ff')}`,
+              borderRadius: '12px',
+              padding: '10px 12px',
               marginBottom: '12px',
               display: 'flex',
               gap: '8px',
               alignItems: 'flex-start',
               fontSize: '12px',
-              color: intelligentAlert.type === 'deload' ? '#9f1239' : '#334155'
-            } : {}
-          }
-        >
-          {intelligentAlert.icon}
-          <div>
-            <strong>{intelligentAlert.title} </strong>
-            <span>{intelligentAlert.text}</span>
-          </div>
-        </div>
-      )}
-      
-      {/* Indicaciones Biomecánicas Clínicas */}
-      {exercise.biomechanics && (
-        <div style={{ 
-          background: '#f8fafc', 
-          border: '1px solid #cbd5e1', 
-          borderRadius: '8px', 
-          padding: '10px 12px', 
-          marginBottom: '12px',
-          fontSize: '12px',
-          color: '#334155'
-        }}>
-          <div style={{ display: 'flex', gap: '6px', alignItems: 'center', marginBottom: '4px', fontWeight: '700', color: '#2563eb' }}>
-            <Info size={15} /> Análisis Biomecánico y Ejecución:
-          </div>
-          <p style={{ margin: 0, fontSize: '12px', lineHeight: '1.4' }}>{exercise.biomechanics}</p>
-        </div>
-      )}
-
-      {/* Botón de Consulta Visual en Google AI / Images */}
-      <div style={{ marginBottom: '14px' }}>
-        <button className="btn-search" onClick={openSearch}>
-          <Search size={13} /> Consultar Técnica Visual en Google AI / Images
-        </button>
-      </div>
-      
-      {/* Lista Mobile-First de Series (Diseño Tarjetas por Serie) */}
-      <div className="sets-grid">
-        {setsArray.map((setNum) => {
-          const currentSet = exerciseData[setNum] || {};
-          const prevSet = previousData[setNum] || {};
-          const hasPrevious = prevSet.weight !== undefined && prevSet.reps !== undefined;
-          
-          return (
-            <div 
-              key={setNum} 
-              className={`set-item-card ${currentSet.completed ? 'completed' : ''}`}
-            >
-              {/* Cabecera del Set con comparación con Sesión Anterior */}
-              <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px dashed #e2e8f0', paddingBottom: '6px', marginBottom: '4px' }}>
-                <span style={{ fontWeight: '700', fontSize: '14px', color: '#0f172a' }}>
-                  Serie #{setNum} <span style={{ fontSize: '11px', color: '#64748b', fontWeight: '500' }}>({exercise.reps} meta)</span>
-                </span>
-                {hasPrevious && (
-                  <span style={{ fontSize: '11px', color: '#475569', background: '#e2e8f0', padding: '2px 6px', borderRadius: '4px' }}>
-                    ⏮️ Ant: <strong>{prevSet.weight || 0} {prevSet.unit || 'lbs'}</strong> × <strong>{prevSet.reps} reps</strong> (@ RPE {prevSet.rpe || '8'})
-                  </span>
-                )}
-              </div>
-
-              {/* Contenedores de inputs adaptados a tacto en móvil */}
-              <div style={{ display: 'flex', width: '100%', gap: '8px', alignItems: 'flex-end' }}>
-                {/* Input Peso */}
-                {!isTime && (
-                  <div className="input-group">
-                    <span className="input-label">Carga ({unit.toUpperCase()})</span>
-                    <input 
-                      type="number" 
-                      placeholder={hasPrevious && prevSet.weight ? String(prevSet.weight) : '0'} 
-                      value={currentSet.weight !== undefined ? currentSet.weight : (hasPrevious ? (prevSet.weight || '') : '')}
-                      onChange={(e) => handleSetChange(setNum, 'weight', e.target.value)}
-                    />
-                  </div>
-                )}
-                
-                {/* Input Reps / Tiempo */}
-                <div className="input-group">
-                  <span className="input-label">{isTime ? 'Duración (s)' : 'Reps Reales'}</span>
-                  <input 
-                    type={isTime ? "text" : "number"}
-                    placeholder={exercise.reps} 
-                    value={currentSet.reps !== undefined ? currentSet.reps : ''}
-                    onChange={(e) => handleSetChange(setNum, 'reps', e.target.value)}
-                    style={{ fontWeight: currentSet.reps ? '700' : '500' }}
-                  />
-                </div>
-                
-                {/* Selector RPE */}
-                <div className="input-group" style={{ flex: '1.4' }}>
-                  <span className="input-label">Esfuerzo (RPE)</span>
-                  <select
-                    value={currentSet.rpe || '8'}
-                    onChange={(e) => handleSetChange(setNum, 'rpe', e.target.value)}
-                    style={{ background: 'white', padding: '8px 4px', fontSize: '13px' }}
-                  >
-                    <option value="10">RPE 10 (Fallo absoluto)</option>
-                    <option value="9.5">RPE 9.5 (0.5 RIR)</option>
-                    <option value="9">RPE 9 (1 rep en recámara)</option>
-                    <option value="8.5">RPE 8.5 (1-2 RIR)</option>
-                    <option value="8">RPE 8 (2 reps en recámara)</option>
-                    <option value="7">RPE 7 (3 reps / Suave)</option>
-                    <option value="6">RPE 6 (Calentamiento)</option>
-                  </select>
-                </div>
-                
-                {/* Checkbox */}
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                  <span className="input-label" style={{ visibility: 'hidden' }}>OK</span>
-                  <input 
-                    type="checkbox" 
-                    className="set-checkbox"
-                    checked={!!currentSet.completed}
-                    onChange={(e) => handleSetChange(setNum, 'completed', e.target.checked)}
-                  />
-                </div>
+              color: intelligentAlert.textCol
+            }}>
+              {intelligentAlert.icon}
+              <div>
+                <strong style={{ fontWeight: '700' }}>{intelligentAlert.title} </strong>
+                <span>{intelligentAlert.text}</span>
               </div>
             </div>
-          );
-        })}
-      </div>
+          )}
 
-      {/* Botón para añadir series adicionales dinámicamente */}
-      <div style={{ marginTop: '12px', textAlign: 'center' }}>
-        <button 
-          onClick={addExtraSet}
-          style={{
-            background: 'transparent',
-            border: '1px dashed #94a3b8',
-            color: '#475569',
-            padding: '8px 16px',
-            borderRadius: '8px',
-            fontSize: '13px',
-            fontWeight: '600',
-            cursor: 'pointer',
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '6px',
-            width: '100%',
-            justifyContent: 'center'
-          }}
-        >
-          <Plus size={16} color="var(--accent-blue)" /> + Agregar Serie Adicional a este Ejercicio
-        </button>
-      </div>
+          {/* SUB-CHIP DESPLEGABLE PARA ANÁLISIS BIOMECÁNICO Y DESCANSO */}
+          {(exercise.biomechanics || exercise.restTime) && (
+            <div>
+              <div 
+                onClick={() => setShowBiomech(!showBiomech)} 
+                className="sub-chip-toggle"
+              >
+                <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Info size={15} color="#0066ff" /> Ver Análisis Biomecánico y Descanso
+                </span>
+                <span>{showBiomech ? '▲ Ocultar' : '▼ Mostrar'}</span>
+              </div>
 
-      {isAllCompleted && (
-        <div style={{ marginTop: '10px', textAlign: 'right', fontSize: '12px', color: 'var(--accent-green)', fontWeight: '700' }}>
-          ✓ Todas las series del ejercicio verificadas
+              {showBiomech && (
+                <div style={{ 
+                  background: '#f8fafc', 
+                  border: '1px solid #cbd5e1', 
+                  borderRadius: '14px', 
+                  padding: '12px', 
+                  marginBottom: '14px',
+                  fontSize: '13px',
+                  color: '#334155'
+                }}>
+                  {exercise.restTime && (
+                    <div style={{ marginBottom: '8px', display: 'flex', gap: '6px', alignItems: 'center', fontWeight: '700', color: '#0f172a' }}>
+                      <Timer size={16} color="#00b464" />
+                      <span>Descanso Prescrito: <strong style={{ color: '#00b464' }}>{exercise.restTime}</strong></span>
+                    </div>
+                  )}
+                  {exercise.biomechanics && (
+                    <p style={{ fontSize: '12px', lineHeight: '1.5', margin: '0 0 10px 0' }}>
+                      <strong>Mecánica & Respiración: </strong>{exercise.biomechanics}
+                    </p>
+                  )}
+                  <button className="btn-search" onClick={openSearch} style={{ width: '100%', justifyContent: 'center' }}>
+                    <Search size={14} /> Consultar Postures en Google AI / Images
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* LISTA DE SERIES 100% MOBILE-FIRST (Diseño compacto en rejilla táctil) */}
+          <div className="sets-grid">
+            {setsArray.map((setNum) => {
+              const currentSet = exerciseData[setNum] || {};
+              const prevSet = previousData[setNum] || {};
+              const hasPrevSet = prevSet.weight !== undefined && prevSet.reps !== undefined;
+              
+              return (
+                <div 
+                  key={setNum} 
+                  className={`set-item-card ${currentSet.completed ? 'completed' : ''}`}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px dashed #cbd5e1', paddingBottom: '6px', marginBottom: '2px', width: '100%' }}>
+                    <span style={{ fontWeight: '700', fontSize: '13px', color: '#0f172a' }}>
+                      Serie #{setNum} <span style={{ fontSize: '11px', color: '#64748b', fontWeight: '500' }}>({exercise.reps})</span>
+                    </span>
+                    {hasPrevSet && (
+                      <span style={{ fontSize: '11px', color: '#334155', background: '#e2e8f0', padding: '2px 6px', borderRadius: '6px' }}>
+                        ⏮️ Ant: <strong>{prevSet.weight || 0} {prevSet.unit || 'lbs'}</strong> × <strong>{prevSet.reps} reps</strong>
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="input-row-mobile">
+                    {!isTime && (
+                      <div className="input-group">
+                        <span className="input-label">Carga ({unit.toUpperCase()})</span>
+                        <input 
+                          type="number" 
+                          placeholder={hasPrevSet && prevSet.weight ? String(prevSet.weight) : '0'} 
+                          value={currentSet.weight !== undefined ? currentSet.weight : (hasPrevSet ? (prevSet.weight || '') : '')}
+                          onChange={(e) => handleSetChange(setNum, 'weight', e.target.value)}
+                        />
+                      </div>
+                    )}
+                    
+                    <div className="input-group">
+                      <span className="input-label">{isTime ? 'Tiempo (s)' : 'Reps Real'}</span>
+                      <input 
+                        type={isTime ? "text" : "number"}
+                        placeholder={exercise.reps} 
+                        value={currentSet.reps !== undefined ? currentSet.reps : ''}
+                        onChange={(e) => handleSetChange(setNum, 'reps', e.target.value)}
+                        style={{ fontWeight: currentSet.reps ? '700' : '500' }}
+                      />
+                    </div>
+                    
+                    <div className="input-group rpe-select-mobile">
+                      <span className="input-label">Esfuerzo (RPE)</span>
+                      <select
+                        value={currentSet.rpe || '8'}
+                        onChange={(e) => handleSetChange(setNum, 'rpe', e.target.value)}
+                        style={{ padding: '8px 4px', fontSize: '13px' }}
+                      >
+                        <option value="10">RPE 10 (Fallo)</option>
+                        <option value="9.5">RPE 9.5 (0.5 RIR)</option>
+                        <option value="9">RPE 9 (1 RIR)</option>
+                        <option value="8.5">RPE 8.5 (1-2 RIR)</option>
+                        <option value="8">RPE 8 (2 RIR)</option>
+                        <option value="7">RPE 7 (3 RIR)</option>
+                        <option value="6">RPE 6 (Calentam.)</option>
+                      </select>
+                    </div>
+                    
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                      <span className="input-label" style={{ visibility: 'hidden' }}>OK</span>
+                      <input 
+                        type="checkbox" 
+                        className="set-checkbox"
+                        checked={!!currentSet.completed}
+                        onChange={(e) => handleSetChange(setNum, 'completed', e.target.checked)}
+                      />
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div style={{ marginTop: '12px', textAlign: 'center' }}>
+            <button 
+              onClick={addExtraSet}
+              style={{
+                background: '#ffffff',
+                border: '1px dashed #0066ff',
+                color: '#0066ff',
+                padding: '8px 14px',
+                borderRadius: '10px',
+                fontSize: '12px',
+                fontWeight: '700',
+                cursor: 'pointer',
+                width: '100%',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '6px'
+              }}
+            >
+              <Plus size={16} color="#0066ff" /> + Agregar Serie Adicional
+            </button>
+          </div>
         </div>
       )}
     </div>

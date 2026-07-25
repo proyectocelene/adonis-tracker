@@ -3,7 +3,7 @@ import { scientificProtocol } from '../data/scientificProtocol';
 import ExerciseRow from './ExerciseRow';
 import CardioLogger from './CardioLogger';
 import { useLocalStorage } from '../hooks/useLocalStorage';
-import { CheckCircle, Calendar, ArrowLeft, ArrowRight, Save, Flame, RefreshCcw, Plus, X, Dumbbell } from 'lucide-react';
+import { CheckCircle, Calendar, ArrowLeft, ArrowRight, Save, Flame, RefreshCcw, Plus, X, Dumbbell, ShieldCheck } from 'lucide-react';
 
 export default function WorkoutDay() {
   const [currentDayIndex, setCurrentDayIndex] = useState(() => {
@@ -13,9 +13,8 @@ export default function WorkoutDay() {
   });
   
   const baseDay = scientificProtocol[currentDayIndex];
-  
-  // Ejercicios personalizados agregados por el usuario a cada día
   const [customExercisesMap, setCustomExercisesMap] = useLocalStorage('coachv2_custom_day_exercises', {});
+  
   const [isAddingExercise, setIsAddingExercise] = useState(false);
   const [newExName, setNewExName] = useState('');
   const [newExSets, setNewExSets] = useState('3');
@@ -23,11 +22,9 @@ export default function WorkoutDay() {
   const [newExRest, setNewExRest] = useState('90 s');
   const [newExBiomech, setNewExBiomech] = useState('');
 
-  // Almacenamiento del entrenamiento activo e historial global
   const [currentSessions, setCurrentSessions] = useLocalStorage('coachv2_active_workouts', {});
   const [workoutHistory, setWorkoutHistory] = useLocalStorage('coachv2_history', []);
 
-  // Combinar ejercicios base del protocolo con los agregados por el usuario para este día
   const userCustomForDay = customExercisesMap[baseDay.id] || [];
   const currentDay = {
     ...baseDay,
@@ -38,7 +35,6 @@ export default function WorkoutDay() {
   const previousSession = [...workoutHistory].reverse().find(s => s.dayId === currentDay.id) || {};
   const previousExercisesData = previousSession.exercises || {};
 
-  // Actualizar sets de un ejercicio
   const handleUpdateSet = (exerciseId, setNumber, setData) => {
     setCurrentSessions(prev => {
       const dayData = prev[currentDay.id] || {};
@@ -56,7 +52,6 @@ export default function WorkoutDay() {
     });
   };
 
-  // Actualizar datos del módulo de cardio
   const handleUpdateCardio = (exerciseId, cardioData) => {
     setCurrentSessions(prev => {
       const dayData = prev[currentDay.id] || {};
@@ -70,7 +65,6 @@ export default function WorkoutDay() {
     });
   };
 
-  // Agregar ejercicio nuevo a este día
   const handleAddCustomExercise = (e) => {
     e.preventDefault();
     if (!newExName.trim()) return;
@@ -81,8 +75,8 @@ export default function WorkoutDay() {
       sets: parseInt(newExSets) || 3,
       reps: newExReps.trim() || '10-12',
       restTime: newExRest.trim() || '90 s',
-      biomechanics: newExBiomech.trim() || 'Ejecución técnica estricta con control del rango articular y exhalación en el esfuerzo.',
-      searchQuery: `${newExName} proper form anatomical exercise`,
+      biomechanics: newExBiomech.trim() || 'Ejecución técnica estricta con control articular.',
+      searchQuery: `${newExName} biomechanics execution`,
       defaultUnit: 'lbs'
     };
 
@@ -96,7 +90,6 @@ export default function WorkoutDay() {
     setNewExBiomech('');
   };
 
-  // Cálculo de volumen en vivo y series terminadas
   const calculateTotalVolume = () => {
     let volume = 0;
     let completedSets = 0;
@@ -104,16 +97,13 @@ export default function WorkoutDay() {
 
     Object.keys(todayWorkoutData).forEach(exId => {
       const exData = todayWorkoutData[exId];
-      // Si es cardio (tiene machine y duration)
       if (exData && exData.machine) {
         if (exData.completed) cardioCompleted++;
       } else if (exData) {
-        // Es un ejercicio normal con series
         Object.keys(exData).forEach(setNum => {
           const set = exData[setNum];
           if (set && set.completed && set.weight && set.reps) {
             let w = parseFloat(set.weight) || 0;
-            // Si el set está en KG, convertir a libras para el volumen global estándar (~2.2 lbs por kg)
             if (set.unit === 'kg') w = w * 2.20462;
             const r = parseFloat(set.reps) || 0;
             volume += (w * r);
@@ -131,11 +121,11 @@ export default function WorkoutDay() {
 
   const handleFinishWorkout = () => {
     if (completedSets === 0 && cardioCompleted === 0) {
-      alert("No has marcado ninguna serie o sesión aeróbica como completada (✓). Registra al menos un ejercicio terminado para archivar tu análisis.");
+      alert("No has marcado ninguna serie o sesión de cardio como completada (✓). Registra al menos un check antes de archivar la sesión en tu laboratorio de análisis.");
       return;
     }
 
-    if (!confirm(`¿Deseas finalizar el entrenamiento y guardar el registro científico?\n\nSeries de fuerza listadas: ${completedSets}\nMódulos aeróbicos completados: ${cardioCompleted}\nVolumen Total (Carga x Reps): ${volume.toLocaleString()} lbs`)) {
+    if (!confirm(`¿Deseas finalizar la sesión de hoy y archivar el análisis científico?\n\nSeries completadas: ${completedSets}\nMódulos aeróbicos listos: ${cardioCompleted}\nVolumen levantado: ${volume.toLocaleString()} lbs`)) {
       return;
     }
 
@@ -159,11 +149,11 @@ export default function WorkoutDay() {
       [currentDay.id]: {}
     }));
 
-    alert("¡Sesión archivada con éxito al 100%! Consulta la pestaña 'Análisis' para ver tu Heatmap de consistencia y curvas de fuerza.");
+    alert("¡Sesión archivada al 100%! Revisa la pestaña 'Análisis' para admirar tu nueva curva Epley y Heatmap.");
   };
 
   const handleResetCurrent = () => {
-    if(confirm("¿Seguro que deseas reiniciar los casilleros de hoy sin guardar en la bitácora estadística?")) {
+    if(confirm("¿Seguro que deseas limpiar las casillas chequeadas de hoy sin guardar en el historial?")) {
       setCurrentSessions(prev => ({
         ...prev,
         [currentDay.id]: {}
@@ -171,38 +161,63 @@ export default function WorkoutDay() {
     }
   };
 
+  // Determinar el índice del primer ejercicio incompleto para expandirlo en automático y cerrar los demás
+  const getFirstUncompletedIdx = () => {
+    for (let idx = 0; idx < currentDay.exercises.length; idx++) {
+      const ex = currentDay.exercises[idx];
+      const data = todayWorkoutData[ex.id];
+      if (ex.isCardio) {
+        if (!data?.completed) return idx;
+      } else {
+        const totalSets = parseInt(ex.sets) || 3;
+        let completed = 0;
+        if (data) {
+          for (let s = 1; s <= totalSets; s++) {
+            if (data[s]?.completed) completed++;
+          }
+        }
+        if (completed < totalSets) return idx;
+      }
+    }
+    return 0; // Si todo está completado o es nuevo, desplegar el primero por defecto
+  };
+
+  const firstUncompletedIdx = getFirstUncompletedIdx();
+
   return (
     <div className="container">
-      {/* Navegación del Calendario */}
-      <div className="flex-between card" style={{ padding: '10px 14px', marginBottom: '16px', background: '#ffffff' }}>
+      {/* Navegación del Calendario de la Semana (Liquid Glass iOS) */}
+      <div className="card flex-between" style={{ padding: '12px 14px', marginBottom: '12px' }}>
         <button 
           className="btn btn-outline" 
-          style={{ width: 'auto', padding: '8px 12px' }}
+          style={{ width: 'auto', padding: '8px 12px', borderRadius: '12px' }}
           onClick={() => setCurrentDayIndex(prev => prev > 0 ? prev - 1 : 6)}
         >
-          <ArrowLeft size={20} />
+          <ArrowLeft size={18} />
         </button>
         
-        <div style={{ textAlign: 'center', flex: 1, padding: '0 8px' }}>
-          <span className="badge badge-blue" style={{ marginBottom: '4px' }}>Día {currentDay.dayNumber} de 7</span>
-          <h1 style={{ margin: 0, fontSize: '17px', color: '#0f172a' }}>{currentDay.name}</h1>
+        <div style={{ textAlign: 'center', flex: 1, minWidth: 0, padding: '0 4px' }}>
+          <span className="badge badge-blue" style={{ marginBottom: '3px', fontSize: '10px' }}>Día {currentDay.dayNumber} de 7</span>
+          <h1 style={{ margin: 0, fontSize: '16px', fontWeight: '700', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            {currentDay.name}
+          </h1>
         </div>
         
         <button 
           className="btn btn-outline" 
-          style={{ width: 'auto', padding: '8px 12px' }}
+          style={{ width: 'auto', padding: '8px 12px', borderRadius: '12px' }}
           onClick={() => setCurrentDayIndex(prev => prev < 6 ? prev + 1 : 0)}
         >
-          <ArrowRight size={20} />
+          <ArrowRight size={18} />
         </button>
       </div>
 
-      {/* Enfoque Anatómico y Biomecánico del Día */}
-      <div className="card card-highlight" style={{ padding: '14px 16px', marginBottom: '18px', background: '#ffffff' }}>
+      {/* Enfoque Biomecánico */}
+      <div className="card card-highlight" style={{ padding: '14px', marginBottom: '12px' }}>
         <div className="flex-between">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Flame size={20} color="var(--accent-blue)" />
-            <h3 style={{ margin: 0, fontSize: '15px' }}>Objetivo Fisiológico & Enfoque</h3>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <Flame size={18} color="#0066ff" />
+            <h3 style={{ margin: 0, fontSize: '14px', fontWeight: '700' }}>Enfoque Fisiológico</h3>
           </div>
           {previousSession.dateString && (
             <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: '600' }}>
@@ -210,44 +225,63 @@ export default function WorkoutDay() {
             </span>
           )}
         </div>
-        <p style={{ fontSize: '13px', marginTop: '6px', color: '#334155', fontWeight: '500' }}>
+        <p style={{ fontSize: '12px', marginTop: '6px', color: '#334155', fontWeight: '500', lineHeight: '1.4' }}>
           {currentDay.focus}
         </p>
       </div>
 
-      {/* Indicadores Clínicos en Vivo de la Sesión */}
+      {/* Barritas KPI en vivo (Totalmente contenidas en móvil sin desbordar) */}
       {currentDay.type === 'workout' && (
-        <div className="flex-between" style={{ background: '#0f172a', color: '#fff', padding: '12px 16px', borderRadius: '14px', marginBottom: '20px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+        <div style={{ 
+          background: '#0f172a', 
+          color: '#fff', 
+          padding: '12px 16px', 
+          borderRadius: '20px', 
+          marginBottom: '16px', 
+          boxShadow: '0 8px 24px rgba(15,23,42,0.15)',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: '8px',
+          flexWrap: 'wrap'
+        }}>
           <div>
             <span style={{ fontSize: '10px', color: '#94a3b8', display: 'block', textTransform: 'uppercase', fontWeight: '700' }}>Carga Acumulada</span>
-            <strong style={{ fontSize: '18px', color: '#ffffff' }}>{volume.toLocaleString()} <span style={{ fontSize: '12px', color: '#94a3b8' }}>lbs-reps</span></strong>
+            <strong style={{ fontSize: '17px', color: '#ffffff' }}>{volume.toLocaleString()} <span style={{ fontSize: '11px', color: '#94a3b8' }}>lbs-reps</span></strong>
           </div>
           <div>
             <span style={{ fontSize: '10px', color: '#94a3b8', display: 'block', textTransform: 'uppercase', fontWeight: '700' }}>Series Listo</span>
-            <strong style={{ fontSize: '18px', color: '#10b981' }}>{completedSets} <span style={{ fontSize: '12px', color: '#94a3b8' }}>Fuerza</span></strong>
+            <strong style={{ fontSize: '17px', color: '#00b464' }}>{completedSets} <span style={{ fontSize: '11px', color: '#94a3b8' }}>Fuerza</span></strong>
           </div>
           <button 
             onClick={handleResetCurrent} 
-            title="Reiniciar checks del día" 
-            style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: '8px', padding: '8px', color: '#94a3b8', cursor: 'pointer' }}
+            title="Reiniciar casillas hoy" 
+            style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: '12px', padding: '8px', color: '#94a3b8', cursor: 'pointer' }}
           >
             <RefreshCcw size={16} />
           </button>
         </div>
       )}
 
-      {/* Contenido del Día (Ejercicios o Descanso) */}
+      {/* Contenedor de Chips Desplegables por Ejercicio */}
       {currentDay.type === 'rest' && currentDay.exercises.length === 0 ? (
-        <div className="card card-success" style={{ padding: '30px 20px', textAlign: 'center', margin: '20px 0' }}>
-          <CheckCircle size={48} color="var(--accent-green)" style={{ margin: '0 auto 12px auto' }} />
-          <h2 style={{ color: '#0f172a' }}>Día de Síntesis Fibrilar & Recuperación</h2>
-          <p style={{ marginTop: '10px', color: '#334155', fontSize: '14px' }}>
-            Descanso absoluto para permitir la reparación del daño muscular y regulación del sistema nervioso central.
+        <div className="card card-success" style={{ padding: '30px 18px', textAlign: 'center', margin: '16px 0' }}>
+          <CheckCircle size={44} color="#00b464" style={{ margin: '0 auto 12px auto' }} />
+          <h2 style={{ color: '#0f172a', fontSize: '18px' }}>Día de Síntesis Fibrilar & Descanso</h2>
+          <p style={{ marginTop: '8px', color: '#334155', fontSize: '13px' }}>
+            Descanso programado para optimizar la reparación miofibrilar, reposición celular y regulación del sistema nervioso central.
           </p>
         </div>
       ) : (
         <div>
-          {currentDay.exercises.map((exercise) => {
+          <div style={{ marginBottom: '6px', fontSize: '11px', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', display: 'flex', justifyContent: 'space-between', padding: '0 4px' }}>
+            <span>Rutina Preconfigurada (Toca para Desplegar ▼):</span>
+            <span>{currentDay.exercises.length} módulos</span>
+          </div>
+
+          {currentDay.exercises.map((exercise, idx) => {
+            const isTargetExpanded = (idx === firstUncompletedIdx);
+
             if (exercise.isCardio) {
               return (
                 <CardioLogger
@@ -255,6 +289,7 @@ export default function WorkoutDay() {
                   exercise={exercise}
                   exerciseData={todayWorkoutData[exercise.id]}
                   onUpdateCardio={(data) => handleUpdateCardio(exercise.id, data)}
+                  initiallyExpanded={isTargetExpanded}
                 />
               );
             }
@@ -266,17 +301,18 @@ export default function WorkoutDay() {
                 exerciseData={todayWorkoutData[exercise.id]}
                 previousData={previousExercisesData[exercise.id]}
                 onUpdateSet={(setNum, setData) => handleUpdateSet(exercise.id, setNum, setData)}
+                initiallyExpanded={isTargetExpanded}
               />
             );
           })}
 
-          {/* Modal / Panel Integrado de Agregar Ejercicio al Día */}
+          {/* Módulo de Agregar Nuevo Ejercicio */}
           {isAddingExercise ? (
-            <div className="card" style={{ padding: '18px', borderTop: '4px solid var(--accent-blue)', background: '#f8fafc', marginBottom: '24px' }}>
-              <div className="flex-between" style={{ marginBottom: '14px' }}>
+            <div className="card" style={{ padding: '16px', borderTop: '4px solid #0066ff', background: '#ffffff', marginBottom: '20px' }}>
+              <div className="flex-between" style={{ marginBottom: '12px' }}>
                 <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-                  <Dumbbell size={18} color="var(--accent-blue)" />
-                  <h3 style={{ margin: 0 }}>Nuevo Ejercicio en {currentDay.name.split(':')[0]}</h3>
+                  <Dumbbell size={16} color="#0066ff" />
+                  <h3 style={{ margin: 0, fontSize: '15px' }}>Nuevo Ejercicio Personalizado</h3>
                 </div>
                 <button onClick={() => setIsAddingExercise(false)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: '4px' }}>
                   <X size={20} color="#64748b" />
@@ -285,59 +321,57 @@ export default function WorkoutDay() {
 
               <form onSubmit={handleAddCustomExercise}>
                 <div style={{ marginBottom: '10px' }}>
-                  <label className="input-label" style={{ display: 'block', textAlign: 'left', marginBottom: '4px', fontSize: '12px' }}>Nombre Científico o Comercial del Ejercicio:</label>
+                  <label className="input-label" style={{ display: 'block', textAlign: 'left', marginBottom: '4px' }}>Nombre del Ejercicio:</label>
                   <input 
                     type="text" 
                     required 
                     placeholder="Ej. Curl de Bíceps en Banco Scott con Barra Z" 
                     value={newExName} 
                     onChange={e => setNewExName(e.target.value)} 
-                    style={{ width: '100%', textAlign: 'left' }}
+                    style={{ textAlign: 'left' }}
                   />
                 </div>
 
                 <div className="grid-2" style={{ marginBottom: '10px' }}>
-                  <div>
-                    <label className="input-label" style={{ display: 'block', textAlign: 'left', marginBottom: '4px', fontSize: '12px' }}>Series Meta:</label>
+                  <div className="input-group">
+                    <label className="input-label" style={{ textAlign: 'left', marginBottom: '4px' }}>Series Meta:</label>
                     <input 
                       type="number" 
                       placeholder="3" 
                       value={newExSets} 
                       onChange={e => setNewExSets(e.target.value)} 
-                      style={{ width: '100%' }}
                     />
                   </div>
-                  <div>
-                    <label className="input-label" style={{ display: 'block', textAlign: 'left', marginBottom: '4px', fontSize: '12px' }}>Rango de Reps:</label>
+                  <div className="input-group">
+                    <label className="input-label" style={{ textAlign: 'left', marginBottom: '4px' }}>Rango de Reps:</label>
                     <input 
                       type="text" 
                       placeholder="10-12" 
                       value={newExReps} 
                       onChange={e => setNewExReps(e.target.value)} 
-                      style={{ width: '100%' }}
                     />
                   </div>
                 </div>
 
                 <div style={{ marginBottom: '10px' }}>
-                  <label className="input-label" style={{ display: 'block', textAlign: 'left', marginBottom: '4px', fontSize: '12px' }}>Descanso Prescrito (Segundos / Minutos):</label>
+                  <label className="input-label" style={{ display: 'block', textAlign: 'left', marginBottom: '4px' }}>Descanso Prescrito:</label>
                   <input 
                     type="text" 
-                    placeholder="Ej. 90 s (Aislamiento)" 
+                    placeholder="Ej. 90 s" 
                     value={newExRest} 
                     onChange={e => setNewExRest(e.target.value)} 
-                    style={{ width: '100%', textAlign: 'left' }}
+                    style={{ textAlign: 'left' }}
                   />
                 </div>
 
-                <div style={{ marginBottom: '16px' }}>
-                  <label className="input-label" style={{ display: 'block', textAlign: 'left', marginBottom: '4px', fontSize: '12px' }}>Indicación Biomecánica / Técnica:</label>
+                <div style={{ marginBottom: '14px' }}>
+                  <label className="input-label" style={{ display: 'block', textAlign: 'left', marginBottom: '4px' }}>Indicación Biomecánica / Técnica:</label>
                   <input 
                     type="text" 
-                    placeholder="Ej. Mantener codos firmes contra el banco sin contraer hombros." 
+                    placeholder="Ej. Mantener codos firmes y postura estricta." 
                     value={newExBiomech} 
                     onChange={e => setNewExBiomech(e.target.value)} 
-                    style={{ width: '100%', textAlign: 'left' }}
+                    style={{ textAlign: 'left' }}
                   />
                 </div>
 
@@ -348,20 +382,20 @@ export default function WorkoutDay() {
               </form>
             </div>
           ) : (
-            <div style={{ marginBottom: '24px' }}>
+            <div style={{ marginBottom: '20px', marginTop: '14px' }}>
               <button 
                 className="btn btn-outline" 
                 onClick={() => setIsAddingExercise(true)}
-                style={{ background: '#ffffff', border: '2px dashed #94a3b8', color: '#334155', fontWeight: '700' }}
+                style={{ background: 'rgba(255, 255, 255, 0.85)', border: '2px dashed #94a3b8', color: '#334155', fontWeight: '700' }}
               >
-                <Plus size={18} color="var(--accent-blue)" /> + Agregar Ejercicio a este Día
+                <Plus size={18} color="#0066ff" /> + Agregar Ejercicio a este Día
               </button>
             </div>
           )}
 
-          {/* Botón Principal de Finalizar y Guardar Sesión */}
-          <div style={{ marginTop: '32px', marginBottom: '20px' }}>
-            <button className="btn btn-primary" onClick={handleFinishWorkout} style={{ padding: '16px', fontSize: '16px', boxShadow: '0 6px 20px rgba(37, 99, 235, 0.35)' }}>
+          {/* Botón Principal de Finalizar */}
+          <div style={{ marginTop: '24px', marginBottom: '16px' }}>
+            <button className="btn btn-primary" onClick={handleFinishWorkout} style={{ padding: '16px', fontSize: '16px', borderRadius: '18px' }}>
               <Save size={22} /> Guardar Sesión en Bitácora Científica
             </button>
           </div>
