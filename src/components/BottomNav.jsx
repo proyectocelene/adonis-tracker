@@ -1,5 +1,5 @@
 import React from 'react';
-import { Dumbbell, Utensils, LineChart } from 'lucide-react';
+import { Dumbbell, Utensils, Activity } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 
 export default function BottomNav() {
@@ -7,20 +7,20 @@ export default function BottomNav() {
   const path = location.pathname;
 
   return (
-    <div className="bottom-nav glass-nav">
+    <div className="bottom-nav">
       <Link to="/" className={`nav-item ${path === '/' ? 'active' : ''}`}>
-        <Dumbbell size={24} />
+        <Dumbbell size={22} />
         <span>Rutina</span>
       </Link>
       
       <Link to="/nutrition" className={`nav-item ${path === '/nutrition' ? 'active' : ''}`}>
-        <Utensils size={24} />
+        <Utensils size={22} />
         <span>Nutrición</span>
       </Link>
       
       <Link to="/history" className={`nav-item ${path === '/history' ? 'active' : ''}`}>
-        <LineChart size={24} />
-        <span>Progreso</span>
+        <Activity size={22} />
+        <span>Análisis</span>
       </Link>
     </div>
   );

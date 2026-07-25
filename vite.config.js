@@ -10,11 +10,11 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
       manifest: {
-        name: 'Adonis Tracker',
-        short_name: 'Adonis',
-        description: 'Aplicación para llevar el control del Protocolo Adonis',
-        theme_color: '#000000',
-        background_color: '#0f0f0f',
+        name: 'COACH V2 - Control Científico',
+        short_name: 'COACH V2',
+        description: 'Aplicación de registro científico del entrenamiento y esfuerzo percibido',
+        theme_color: '#ffffff',
+        background_color: '#f8fafc',
         display: 'standalone',
         icons: [
           {

@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
+import { Droplet, Award, RefreshCw, Plus } from 'lucide-react';
 
 export default function NutritionTracker() {
-  const [nutrition, setNutrition] = useLocalStorage('adonis_nutrition_data', {
+  const [nutrition, setNutrition] = useLocalStorage('coachv2_nutrition_data', {
     protein: 0,
     water: 0
   });
@@ -10,7 +11,7 @@ export default function NutritionTracker() {
   const [tempProtein, setTempProtein] = useState('');
 
   const addProtein = (amount) => {
-    setNutrition(prev => ({ ...prev, protein: Math.min(160, prev.protein + amount) }));
+    setNutrition(prev => ({ ...prev, protein: Math.min(250, prev.protein + amount) }));
   };
 
   const addWater = () => {
@@ -18,7 +19,7 @@ export default function NutritionTracker() {
   };
 
   const resetDaily = () => {
-    if(confirm("¿Estás seguro de reiniciar tu progreso de hoy?")) {
+    if(confirm("¿Estás seguro de reiniciar los registros nutricionales de hoy?")) {
       setNutrition({ protein: 0, water: 0 });
     }
   };
@@ -31,75 +32,114 @@ export default function NutritionTracker() {
     }
   };
 
+  const proteinPercentage = Math.min(100, Math.round((nutrition.protein / 160) * 100));
+
   return (
     <div className="container">
-      <h1 style={{ textAlign: 'center', marginBottom: '24px' }}>Nutrición & Recuperación</h1>
+      <div className="flex-between" style={{ marginBottom: '20px' }}>
+        <div>
+          <span className="badge badge-blue">Módulo Combustible</span>
+          <h1 style={{ marginTop: '4px' }}>Nutrición & Hidratación</h1>
+        </div>
+        <button 
+          className="btn btn-outline" 
+          style={{ width: 'auto', padding: '8px 12px', fontSize: '13px' }} 
+          onClick={resetDaily}
+        >
+          <RefreshCw size={14} /> Reiniciar Día
+        </button>
+      </div>
       
-      <div className="glass-panel" style={{ padding: '24px', marginBottom: '24px' }}>
-        <h2 style={{ color: 'var(--accent-gold)', display: 'flex', justifyContent: 'space-between' }}>
-          <span>Proteína</span>
-          <span>{nutrition.protein} / 160g</span>
-        </h2>
+      {/* Tarjeta de Proteínas */}
+      <div className="card card-highlight" style={{ padding: '20px', marginBottom: '20px' }}>
+        <div className="flex-between" style={{ marginBottom: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Award size={22} color="var(--accent-blue)" />
+            <h2 style={{ margin: 0 }}>Síntesis Proteica</h2>
+          </div>
+          <span className="badge badge-green">{nutrition.protein}g / 160g meta</span>
+        </div>
+
+        <p style={{ fontSize: '13px', marginBottom: '16px' }}>
+          Combustible indispensable para reparar tejido e inducir hipertrofia del Protocolo Adonis.
+        </p>
         
-        <div style={{ background: 'rgba(0,0,0,0.3)', height: '12px', borderRadius: '6px', margin: '16px 0', overflow: 'hidden' }}>
+        {/* Barra de Progreso */}
+        <div style={{ background: 'var(--border-color)', height: '14px', borderRadius: '7px', marginBottom: '20px', overflow: 'hidden' }}>
           <div 
             style={{ 
-              background: 'var(--accent-gold)', 
+              background: 'var(--accent-blue)', 
               height: '100%', 
-              width: `${(nutrition.protein / 160) * 100}%`,
-              transition: 'width 0.3s ease'
+              width: `${proteinPercentage}%`,
+              transition: 'width 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
             }} 
           />
         </div>
         
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
-          <button className="btn-primary" style={{ background: 'var(--glass-bg)', color: 'var(--text-main)', border: '1px solid var(--glass-border)' }} onClick={() => addProtein(25)}>
-            +25g (Scoop)
+        <div className="grid-2" style={{ marginBottom: '14px' }}>
+          <button className="btn btn-outline" onClick={() => addProtein(25)}>
+            <Plus size={16} /> 25g (Scoop Whey)
           </button>
-          <button className="btn-primary" style={{ background: 'var(--glass-bg)', color: 'var(--text-main)', border: '1px solid var(--glass-border)' }} onClick={() => addProtein(40)}>
-            +40g (Comida)
+          <button className="btn btn-outline" onClick={() => addProtein(40)}>
+            <Plus size={16} /> 40g (Comida Principal)
           </button>
         </div>
 
-        <div style={{ display: 'flex', gap: '8px' }}>
+        <div style={{ display: 'flex', gap: '10px' }}>
           <input 
             type="number" 
-            placeholder="Otro (ej. 15g)" 
+            placeholder="Gramos personalizados (ej. 15)" 
             value={tempProtein}
             onChange={(e) => setTempProtein(e.target.value)}
+            style={{ flex: 1 }}
           />
-          <button className="btn-primary" style={{ width: 'auto' }} onClick={handleCustomProteinAdd}>Añadir</button>
+          <button className="btn btn-primary" style={{ width: 'auto', padding: '8px 18px' }} onClick={handleCustomProteinAdd}>
+            Añadir
+          </button>
         </div>
       </div>
 
-      <div className="glass-panel" style={{ padding: '24px', marginBottom: '24px' }}>
-        <h2 style={{ color: 'var(--accent-cyan)', display: 'flex', justifyContent: 'space-between' }}>
-          <span>Agua</span>
-          <span>{nutrition.water} Vasos</span>
-        </h2>
+      {/* Tarjeta de Agua / Hidratación */}
+      <div className="card" style={{ padding: '20px', marginBottom: '20px', borderLeft: '4px solid #06b6d4' }}>
+        <div className="flex-between" style={{ marginBottom: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Droplet size={22} color="#06b6d4" />
+            <h2 style={{ margin: 0 }}>Hidratación Óptima</h2>
+          </div>
+          <span style={{ fontWeight: '700', color: '#0f172a', fontSize: '16px' }}>{nutrition.water} Vasos</span>
+        </div>
+
+        <p style={{ fontSize: '13px', marginBottom: '16px' }}>
+          La hidratación celular previene lesiones y optimiza la contracción y volumen muscular.
+        </p>
         
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '16px', marginBottom: '24px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(8, 1fr)', gap: '6px', marginBottom: '12px' }}>
           {[...Array(8)].map((_, i) => (
             <div 
               key={i} 
-              onClick={() => i === nutrition.water ? addWater() : null}
+              onClick={() => addWater()}
+              title={`Vasos: ${i + 1}`}
               style={{ 
-                width: '32px', height: '40px', 
-                borderRadius: '4px',
-                border: '2px solid var(--accent-cyan)',
-                background: i < nutrition.water ? 'var(--accent-cyan)' : 'transparent',
+                height: '48px', 
+                borderRadius: '8px',
+                border: '2px solid #06b6d4',
+                background: i < nutrition.water ? '#06b6d4' : 'transparent',
                 cursor: 'pointer',
-                transition: 'all 0.2s'
+                transition: 'all 0.2s ease',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: i < nutrition.water ? '#ffffff' : '#06b6d4',
+                fontSize: '11px',
+                fontWeight: '700'
               }} 
-            />
+            >
+              {i + 1}
+            </div>
           ))}
         </div>
-        <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>*Meta recomendada: 8 vasos al día.</p>
+        <p style={{ fontSize: '11px', color: 'var(--text-muted)' }}>* Toca cualquier casillero para sumar un vaso más (250ml aprox).</p>
       </div>
-
-      <button className="btn-primary" style={{ background: 'transparent', border: '1px solid var(--accent-gold)', color: 'var(--accent-gold)' }} onClick={resetDaily}>
-        Reiniciar Día
-      </button>
 
     </div>
   );
