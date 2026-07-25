@@ -3,7 +3,7 @@ import { scientificProtocol } from '../data/scientificProtocol';
 import ExerciseRow from './ExerciseRow';
 import CardioLogger from './CardioLogger';
 import { useLocalStorage } from '../hooks/useLocalStorage';
-import { CheckCircle, Calendar, ArrowLeft, ArrowRight, Save, Flame, RefreshCcw, Plus, X, Dumbbell, ShieldCheck } from 'lucide-react';
+import { CheckCircle, Calendar, ArrowLeft, ArrowRight, Save, Flame, RefreshCcw, Plus, X, Dumbbell, ShieldCheck, BookOpen, ShieldAlert, Zap } from 'lucide-react';
 
 export default function WorkoutDay() {
   const [currentDayIndex, setCurrentDayIndex] = useState(() => {
@@ -21,6 +21,8 @@ export default function WorkoutDay() {
   const [newExReps, setNewExReps] = useState('10-12');
   const [newExRest, setNewExRest] = useState('90 s');
   const [newExBiomech, setNewExBiomech] = useState('');
+
+  const [showProtocolRules, setShowProtocolRules] = useState(false);
 
   const [currentSessions, setCurrentSessions] = useLocalStorage('coachv2_active_workouts', {});
   const [workoutHistory, setWorkoutHistory] = useLocalStorage('coachv2_history', []);
@@ -168,7 +170,7 @@ export default function WorkoutDay() {
       [currentDay.id]: {}
     }));
 
-    alert("¡Sesión archivada al 100%! Consulta la pestaña 'Análisis' para ver tu curva Epley 1RM y tu nuevo Heatmap verde.");
+    alert("¡Sesión archivada al 100%! Consulta la pestaña 'Análisis' para admirar tu nueva gráfica Epley 1RM y tu avance en el Heatmap.");
   };
 
   const handleResetCurrent = () => {
@@ -205,7 +207,7 @@ export default function WorkoutDay() {
   return (
     <div className="container">
       {/* Navegación del Calendario (Texto completamente visible sin recortes o puntos suspensivos) */}
-      <div className="card" style={{ padding: '16px 14px', marginBottom: '16px' }}>
+      <div className="card" style={{ padding: '16px 14px', marginBottom: '14px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '10px' }}>
           <button 
             className="btn btn-outline" 
@@ -217,7 +219,7 @@ export default function WorkoutDay() {
           
           <div style={{ flex: 1, textAlign: 'center', minWidth: 0, padding: '0 4px' }}>
             <span className="badge badge-blue" style={{ marginBottom: '6px', fontSize: '11px' }}>
-              Día {currentDay.dayNumber} de 7
+              Día {currentDay.dayNumber} de 7 • Protocolo Adonis
             </span>
             <h1 style={{ margin: 0, fontSize: '18px', fontWeight: '800', whiteSpace: 'normal', lineBreak: 'strict', lineHeight: '1.35', color: '#0f172a' }}>
               {currentDay.name}
@@ -234,12 +236,53 @@ export default function WorkoutDay() {
         </div>
       </div>
 
+      {/* MANUAL Y REGLAS INQUEBRANTABLES DEL PROTOCOLO (ACORDEÓN DESPLEGABLE) */}
+      <div className="card" style={{ padding: '14px 16px', marginBottom: '14px', background: '#f8fafc', borderLeft: '5px solid #7c3aed' }}>
+        <div 
+          onClick={() => setShowProtocolRules(!showProtocolRules)}
+          style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', userSelect: 'none' }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <BookOpen size={18} color="#7c3aed" />
+            <span style={{ fontSize: '14px', fontWeight: '800', color: '#0f172a' }}>📖 Manual y Reglas Inquebrantables del Coach</span>
+          </div>
+          <span style={{ fontSize: '12px', fontWeight: '800', color: '#7c3aed' }}>{showProtocolRules ? '▲ Ocultar' : '▼ Leer'}</span>
+        </div>
+
+        {showProtocolRules && (
+          <div className="animate-fade" style={{ marginTop: '14px', paddingTop: '14px', borderTop: '1px dashed #cbd5e1', fontSize: '13px', color: '#334155', lineHeight: '1.5' }}>
+            
+            <div style={{ marginBottom: '12px', background: '#f5f3ff', padding: '10px 12px', borderRadius: '12px', border: '1px solid #ddd6fe' }}>
+              <strong style={{ display: 'block', color: '#5b21b6', marginBottom: '4px' }}>⚠️ 1. LA REGLA DE LA HERNIA (Presión IAP):</strong>
+              EXHALA (bota el aire por la boca) en el momento de mayor esfuerzo de cada repetición. NUNCA aguantes la respiración ni ejecutes la maniobra de Valsalva cerrada para resguardar tu pared abdominal.
+            </div>
+
+            <div style={{ marginBottom: '12px', background: '#e6faf1', padding: '10px 12px', borderRadius: '12px', border: '1px solid #a7f3d0' }}>
+              <strong style={{ display: 'block', color: '#047857', marginBottom: '4px' }}>📈 2. DOBLE PROGRESIÓN (Cómo subir peso):</strong>
+              Cuando logres hacer el máximo de repeticiones indicadas (ej. 10 reps) en TODAS las series con excelente técnica, <strong>ese es el indicador exacto para subir el peso</strong> (entre 2.5 y 5 lbs) en tu siguiente sesión. Tus reps bajarán y volverás a escalar.
+            </div>
+
+            <div style={{ marginBottom: '12px', background: '#ecfeff', padding: '10px 12px', borderRadius: '12px', border: '1px solid #a5f3fc' }}>
+              <strong style={{ display: 'block', color: '#0e7490', marginBottom: '4px' }}>⏱️ 3. TIEMPOS DE DESCANSO & CARDIO ZONA 2:</strong>
+              Descansa 2 a 3 min para ejercicios grandes (Hack Squat, Press Inclinado, Remos) y 90 seg para aislamiento. <br/>
+              <strong>¿HIIT o Correr? NUNCA:</strong> El impacto y la respiración forzada disparan la presión intraabdominal y destruyen músculo. Tu cardio es exclusivamente Zona 2 (Caminadora inclinada, bici o elíptica).
+            </div>
+
+            <div style={{ background: '#f8fafc', padding: '10px 12px', borderRadius: '12px', border: '1px solid #cbd5e1' }}>
+              <strong style={{ display: 'block', color: '#0f172a', marginBottom: '4px' }}>🛠️ 4. PROTOCOLO DE CALENTAMIENTO DIARIO:</strong>
+              1) 5 min caminadora suave. 2) Círculos de brazos o balanceo de piernas. 3) 2 series de aproximación con el 50% del peso en el primer ejercicio del día para lubricar articulaciones.
+            </div>
+
+          </div>
+        )}
+      </div>
+
       {/* Enfoque Fisiológico */}
       <div className="card card-highlight" style={{ padding: '16px', marginBottom: '16px' }}>
         <div className="flex-between">
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Flame size={20} color="#0066ff" />
-            <h3 style={{ margin: 0, fontSize: '15px', fontWeight: '800' }}>Enfoque Fisiológico</h3>
+            <h3 style={{ margin: 0, fontSize: '15px', fontWeight: '800', whiteSpace: 'normal' }}>Enfoque Fisiológico del Día</h3>
           </div>
           {previousSession.dateString && (
             <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: '700' }}>
@@ -290,9 +333,9 @@ export default function WorkoutDay() {
       {currentDay.type === 'rest' && currentDay.exercises.length === 0 ? (
         <div className="card card-success" style={{ padding: '36px 22px', textAlign: 'center', margin: '20px 0' }}>
           <CheckCircle size={52} color="#00b464" style={{ margin: '0 auto 16px auto' }} />
-          <h2 style={{ color: '#0f172a', fontSize: '20px' }}>Día de Síntesis Fibrilar & Descanso</h2>
+          <h2 style={{ color: '#0f172a', fontSize: '20px', whiteSpace: 'normal' }}>Día de Síntesis Fibrilar & Descanso Total</h2>
           <p style={{ marginTop: '10px', color: '#334155', fontSize: '14px', lineHeight: '1.6' }}>
-            Descanso programado para permitir la remodelación miofibrilar, reposición de glucógeno y recuperación óptima del sistema nervioso central.
+            Descanso absoluto programado por el Protocolo Adonis. Dedícate a tus compromisos laborales y a la preparación de tus comidas para cumplir con tus 160g de proteína y carbohidratos de reparación.
           </p>
         </div>
       ) : (
@@ -336,7 +379,7 @@ export default function WorkoutDay() {
               <div className="flex-between" style={{ marginBottom: '14px' }}>
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                   <Dumbbell size={18} color="#0066ff" />
-                  <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '800' }}>Nuevo Ejercicio en Rutina</h3>
+                  <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '800', whiteSpace: 'normal' }}>Nuevo Ejercicio en Rutina</h3>
                 </div>
                 <button onClick={() => setIsAddingExercise(false)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: '4px' }}>
                   <X size={22} color="#64748b" />

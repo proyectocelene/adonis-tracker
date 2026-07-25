@@ -3,10 +3,14 @@ import { useLocalStorage } from '../hooks/useLocalStorage';
 import { scientificProtocol } from '../data/scientificProtocol';
 import ConsistencyHeatmap from './ConsistencyHeatmap';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { Activity, TrendingUp, Award, Clock, ChevronDown, ChevronUp, Trash2, ShieldCheck, Zap, HeartPulse, Dumbbell, Calendar, Sparkles, Settings2 } from 'lucide-react';
+import { Activity, TrendingUp, Award, Clock, ChevronDown, ChevronUp, Trash2, ShieldCheck, Zap, HeartPulse, Dumbbell, Calendar, Sparkles, Settings2, Download, Database, AlertOctagon } from 'lucide-react';
 
 export default function HistoryView() {
   const [workoutHistory, setWorkoutHistory] = useLocalStorage('coachv2_history', []);
+  const [currentSessions, setCurrentSessions] = useLocalStorage('coachv2_active_workouts', {});
+  const [customExercisesMap, setCustomExercisesMap] = useLocalStorage('coachv2_custom_day_exercises', {});
+  const [nutrition, setNutrition] = useLocalStorage('coachv2_nutrition_data', { protein: 0, water: 0 });
+
   const [selectedExId, setSelectedExId] = useState('d1_e1');
   const [expandedSessionId, setExpandedSessionId] = useState(null);
 
@@ -20,13 +24,6 @@ export default function HistoryView() {
       });
     }
   });
-
-  const simulatedGlobalHistory = [
-    { name: 'Sem 1', volumen: 9200, rpe: 7.8, f1rm: 96 },
-    { name: 'Sem 2', volumen: 10400, rpe: 8.2, f1rm: 102 },
-    { name: 'Sem 3', volumen: 11100, rpe: 8.5, f1rm: 108 },
-    { name: 'Sem 4', volumen: 12200, rpe: 9.0, f1rm: 115 },
-  ];
 
   const totalSessions = workoutHistory.length;
   const totalVolumeLifted = workoutHistory.reduce((acc, ses) => acc + (ses.volume || 0), 0);
@@ -48,13 +45,13 @@ export default function HistoryView() {
         });
       }
     });
-    return rpeCount > 0 ? (rpeSum / rpeCount).toFixed(1) : '8.3';
+    return rpeCount > 0 ? (rpeSum / rpeCount).toFixed(1) : '0.0';
   };
 
   const getChartData = () => {
-    if (workoutHistory.length === 0) return simulatedGlobalHistory;
+    if (workoutHistory.length === 0) return [];
     
-    return workoutHistory.slice(-10).map(ses => {
+    return workoutHistory.slice(-12).map(ses => {
       let max1RM = 0;
       let sessionRpeSum = 0;
       let sessionRpeCount = 0;
@@ -134,14 +131,43 @@ export default function HistoryView() {
   const selectedExDef = allAvailableExercises.find(x => x.id === selectedExId) || allAvailableExercises[0] || { name: 'Ejercicio Seleccionado' };
 
   const handleDeleteSession = (id) => {
-    if (confirm("¿Estás seguro de eliminar este registro de tu laboratorio de progreso?")) {
+    if (confirm("¿Estás seguro de eliminar este registro del historial científico?")) {
       setWorkoutHistory(prev => prev.filter(s => s.id !== id));
     }
   };
 
-  const handleClearAll = () => {
-    if(confirm("⚠️ ¿Deseas limpiar el laboratorio analítico y borrar el historial guardado?")) {
+  // FUNCIÓN PARA EXPORTAR LA BASE DE DATOS
+  const handleExportDatabase = () => {
+    const fullDatabase = {
+      appVersion: "COACH V2 - Protocolo Adonis Científico",
+      exportTimestamp: new Date().toISOString(),
+      workoutHistory,
+      currentActiveSessions: currentSessions,
+      customExercises: customExercisesMap,
+      nutritionData: nutrition
+    };
+
+    const jsonString = `data:text/json;charset=utf-8,${encodeURIComponent(JSON.stringify(fullDatabase, null, 2))}`;
+    const downloadAnchor = document.createElement('a');
+    downloadAnchor.setAttribute("href", jsonString);
+    downloadAnchor.setAttribute("download", `COACH_V2_BaseDeDatos_${new Date().toISOString().split('T')[0]}.json`);
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
+  };
+
+  // FUNCIÓN PARA BORRAR TODOS LOS DATOS (RESET TOTAL SIN PREDEFINIDOS)
+  const handleWipeAllData = () => {
+    if (confirm("⚠️ ¿ADVERTENCIA CRÍTICA: Estás seguro de BORRAR TODOS LOS DATOS DE LA APP?\n\nEsto eliminará permanentemente todo tu historial científico, rutinas activas y contadores para dejar la base de datos completamente limpia y sin datos predeterminados.")) {
       setWorkoutHistory([]);
+      setCurrentSessions({});
+      setCustomExercisesMap({});
+      setNutrition({ protein: 0, water: 0 });
+      localStorage.removeItem('coachv2_history');
+      localStorage.removeItem('coachv2_active_workouts');
+      localStorage.removeItem('coachv2_custom_day_exercises');
+      localStorage.removeItem('coachv2_nutrition_data');
+      alert("✅ Base de datos restablecida a cero. No existen registros en memoria.");
     }
   };
 
@@ -151,30 +177,52 @@ export default function HistoryView() {
   };
 
   return (
-    <div className="container" style={{ paddingBottom: '35px' }}>
-      <div className="flex-between" style={{ marginBottom: '16px' }}>
-        <div>
+    <div className="container" style={{ paddingBottom: '45px' }}>
+      {/* Cabecera del Laboratorio y Centro de Datos */}
+      <div className="card" style={{ padding: '16px', marginBottom: '18px', borderTop: '4px solid #0066ff' }}>
+        <div style={{ marginBottom: '12px' }}>
           <span className="badge badge-blue">Analítica & Fisiología</span>
-          <h1 style={{ marginTop: '6px', fontSize: '22px', fontWeight: '800', whiteSpace: 'normal' }}>Laboratorio de Progreso</h1>
+          <h1 style={{ marginTop: '6px', fontSize: '22px', fontWeight: '800', whiteSpace: 'normal', color: '#0f172a' }}>
+            Laboratorio de Progreso & Base de Datos
+          </h1>
+          <p style={{ fontSize: '12px', margin: '4px 0 0 0', color: '#64748b' }}>
+            Administra tus récords en tiempo real. Esta app opera estrictamente sin datos ficticios ni predeterminados.
+          </p>
         </div>
-        {workoutHistory.length > 0 && (
-          <button className="btn btn-outline" style={{ width: 'auto', padding: '8px 14px', fontSize: '12px', color: '#ff3b30', borderColor: '#fecdd3', borderRadius: '14px', fontWeight: '700' }} onClick={handleClearAll}>
-            <Trash2 size={16} /> Limpiar Datos
+
+        {/* BOTones DE EXPORTACIÓN Y BORRADO DE BASE DE DATOS */}
+        <div className="grid-2" style={{ marginTop: '14px', gap: '10px' }}>
+          <button 
+            onClick={handleExportDatabase} 
+            className="btn btn-primary" 
+            style={{ padding: '12px', fontSize: '13px', borderRadius: '14px', fontWeight: '800', background: '#0e7490' }}
+            title="Exportar archivo JSON con tu historial completo"
+          >
+            <Download size={16} /> Exportar Base de Datos
           </button>
-        )}
+          
+          <button 
+            onClick={handleWipeAllData} 
+            className="btn btn-outline" 
+            style={{ padding: '12px', fontSize: '13px', borderRadius: '14px', color: '#ff3b30', borderColor: '#fecdd3', fontWeight: '800', background: '#fff' }}
+            title="Eliminas todos los récords de la memoria"
+          >
+            <AlertOctagon size={16} color="#ff3b30" /> Borrar Todos los Datos
+          </button>
+        </div>
       </div>
 
       {/* KPIs Clínicos Apple Liquid Glass */}
       <div className="grid-3" style={{ marginBottom: '18px' }}>
         <div className="card" style={{ padding: '14px 6px', textAlign: 'center', margin: 0 }}>
           <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '800', textTransform: 'uppercase' }}>Sesiones</span>
-          <strong style={{ fontSize: '20px', color: '#0f172a', display: 'block', margin: '3px 0', fontWeight: '800' }}>{totalSessions}</strong>
+          <strong style={{ fontSize: '22px', color: '#0f172a', display: 'block', margin: '3px 0', fontWeight: '800' }}>{totalSessions}</strong>
           <span style={{ fontSize: '11px', color: '#00b464', fontWeight: '800' }}>Archivadas</span>
         </div>
         
         <div className="card" style={{ padding: '14px 6px', textAlign: 'center', margin: 0, borderTop: '4px solid #0066ff' }}>
           <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '800', textTransform: 'uppercase' }}>Volumen Global</span>
-          <strong style={{ fontSize: '17px', color: '#0066ff', display: 'block', margin: '3px 0', fontWeight: '800' }}>{totalVolumeLifted.toLocaleString()}</strong>
+          <strong style={{ fontSize: '18px', color: '#0066ff', display: 'block', margin: '3px 0', fontWeight: '800' }}>{totalVolumeLifted.toLocaleString()}</strong>
           <span style={{ fontSize: '11px', color: '#64748b', fontWeight: '700' }}>Lbs-Reps</span>
         </div>
         
@@ -185,7 +233,7 @@ export default function HistoryView() {
         </div>
       </div>
 
-      {/* Heatmap de Consistencia Estilo GitHub (Ahora 100% libre de errores Lbs) */}
+      {/* Heatmap de Consistencia Sin Datos Ficticios */}
       <ConsistencyHeatmap workoutHistory={workoutHistory} />
 
       {/* Sección de Análisis por Ejercicio Individual */}
@@ -193,9 +241,9 @@ export default function HistoryView() {
         <div style={{ marginBottom: '14px' }}>
           <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '6px' }}>
             <Dumbbell size={20} color="#0066ff" />
-            <h2 style={{ margin: 0, fontSize: '16px', fontWeight: '800' }}>Curva Evolutiva por Ejercicio</h2>
+            <h2 style={{ margin: 0, fontSize: '16px', fontWeight: '800', whiteSpace: 'normal' }}>Curva Evolutiva por Ejercicio</h2>
           </div>
-          <p style={{ fontSize: '13px', margin: 0, color: '#334155' }}>Selecciona cualquier ejercicio para auditar tu ganancia real de fuerza 1RM:</p>
+          <p style={{ fontSize: '13px', margin: 0, color: '#334155' }}>Selecciona cualquier ejercicio del Protocolo Adonis para auditar tu ganancia real 1RM:</p>
         </div>
 
         <div style={{ marginBottom: '16px' }}>
@@ -215,15 +263,15 @@ export default function HistoryView() {
             background: '#f8fafc',
             border: '2px dashed #cbd5e1',
             borderRadius: '16px',
-            padding: '24px 18px',
+            padding: '26px 18px',
             textAlign: 'center',
             color: '#475569'
           }}>
             <Sparkles size={32} color="#0066ff" style={{ margin: '0 auto 12px auto' }} />
-            <h3 style={{ fontSize: '16px', color: '#0f172a', margin: '0 0 8px 0', fontWeight: '800' }}>📈 Estado: Pendiente de Línea Base</h3>
+            <h3 style={{ fontSize: '16px', color: '#0f172a', margin: '0 0 8px 0', fontWeight: '800', whiteSpace: 'normal' }}>📈 Estado: Pendiente de Línea Base</h3>
             <p style={{ fontSize: '13px', margin: 0, lineHeight: '1.5' }}>
-              Aún no has archivado un entrenamiento que contenga <strong>{selectedExDef.name}</strong>.  
-              Al guardar tu primera sesión, tu peso y repeticiones trazarán aquí tu <strong>Línea Base</strong> de fuerza Epley 1RM en vivo.
+              Sin datos predeterminados ni ficticios. Aún no has archivado un entrenamiento que contenga <strong>{selectedExDef.name}</strong>.  
+              Al guardar tu primera sesión en la pestaña Rutina, tus series trazarán aquí tu curva real Epley 1RM.
             </p>
           </div>
         ) : (
@@ -246,44 +294,54 @@ export default function HistoryView() {
         )}
       </div>
 
-      {/* Gráfico de Sobrecarga Progresiva Global */}
+      {/* Gráfico de Sobrecarga Progresiva Global SIN DATOS PREDETERMINados */}
       <div className="card" style={{ padding: '18px', marginBottom: '22px' }}>
         <div className="flex-between" style={{ marginBottom: '14px' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <TrendingUp size={18} color="#0e7490" />
-              <h2 style={{ margin: 0, fontSize: '16px', fontWeight: '800' }}>Sobrecarga Progresiva Global</h2>
+              <h2 style={{ margin: 0, fontSize: '16px', fontWeight: '800', whiteSpace: 'normal' }}>Sobrecarga Progresiva Global</h2>
             </div>
             <p style={{ fontSize: '12px', margin: '2px 0 0 0', color: '#64748b' }}>Carga mecánica total (Lbs-Reps) por sesión archivada</p>
           </div>
           <span className="badge badge-green">Hipertrofia</span>
         </div>
         
-        <div style={{ width: '100%', height: '200px' }}>
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData} margin={{ top: 10, right: 10, left: -15, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-              <XAxis dataKey="name" stroke="#64748b" fontSize={11} tickLine={false} />
-              <YAxis stroke="#64748b" fontSize={11} tickLine={false} axisLine={false} />
-              <Tooltip contentStyle={{ backgroundColor: '#ffffff', border: '1.5px solid #cbd5e1', borderRadius: '14px' }} />
-              <Bar dataKey="volumen" name="Volumen (lbs-reps)" fill="#0066ff" radius={[8, 8, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
+        {chartData.length === 0 ? (
+          <div style={{ padding: '24px', textAlign: 'center', background: '#f8fafc', borderRadius: '14px', border: '1px dashed #cbd5e1' }}>
+            <Activity size={28} color="#94a3b8" style={{ margin: '0 auto 8px auto' }} />
+            <h4 style={{ margin: '0 0 4px 0', fontSize: '14px', color: '#334155', fontWeight: '800', whiteSpace: 'normal' }}>Sin Sesiones Registradas Aún</h4>
+            <p style={{ fontSize: '12px', color: '#64748b', margin: 0 }}>
+              Aquí verás tus barras en azul real subiendo semana tras semana cada vez que pulses "Guardar Sesión".
+            </p>
+          </div>
+        ) : (
+          <div style={{ width: '100%', height: '200px' }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={chartData} margin={{ top: 10, right: 10, left: -15, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+                <XAxis dataKey="name" stroke="#64748b" fontSize={11} tickLine={false} />
+                <YAxis stroke="#64748b" fontSize={11} tickLine={false} axisLine={false} />
+                <Tooltip contentStyle={{ backgroundColor: '#ffffff', border: '1.5px solid #cbd5e1', borderRadius: '14px' }} />
+                <Bar dataKey="volumen" name="Volumen (lbs-reps)" fill="#0066ff" radius={[8, 8, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        )}
       </div>
 
       {/* Bitácora del Atleta */}
       <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '12px' }}>
         <Clock size={18} color="#475569" />
-        <h2 style={{ margin: 0, fontSize: '18px', fontWeight: '800', color: '#0f172a' }}>Bitácora de Sesiones Pasadas</h2>
+        <h2 style={{ margin: 0, fontSize: '18px', fontWeight: '800', color: '#0f172a', whiteSpace: 'normal' }}>Bitácora de Sesiones Pasadas</h2>
       </div>
       
       {workoutHistory.length === 0 ? (
         <div className="card" style={{ padding: '28px', textAlign: 'center', backgroundColor: '#f8fafc', border: '1.5px dashed #cbd5e1' }}>
           <Calendar size={34} color="#94a3b8" style={{ margin: '0 auto 12px auto' }} />
-          <h3 style={{ color: '#334155', margin: 0, fontSize: '16px', fontWeight: '800' }}>Bitácora limpia</h3>
+          <h3 style={{ color: '#334155', margin: 0, fontSize: '16px', fontWeight: '800', whiteSpace: 'normal' }}>Bitácora limpia sin registros predeterminados</h3>
           <p style={{ marginTop: '8px', fontSize: '13px', lineHeight: '1.5' }}>
-            Al pulsar el botón de Guardar Sesión en tu pestaña de Rutina, tus series, RPE y configuración de máquinas quedarán inmortalizados en esta bitácora científica.
+            Al pulsar el botón de Guardar Sesión al final de tus entrenamientos en la pestaña Rutina, tu análisis, cargas y calibración de máquinas quedarán inmortalizados en este laboratorio.
           </p>
         </div>
       ) : (

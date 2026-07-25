@@ -32,19 +32,14 @@ export default function ConsistencyHeatmap({ workoutHistory = [] }) {
     });
   }
 
-  const isSimulated = workoutHistory.length === 0;
+  const hasRealHistory = workoutHistory.length > 0;
+  const adherencePercent = hasRealHistory ? Math.round((activeDaysCount / totalDays) * 100) : 0;
   
-  const getCellColor = (index, vol) => {
-    if (!isSimulated) {
-      if (vol === 0) return '#e2e8f0';
-      if (vol < 8000) return '#34d399';
-      if (vol < 15000) return '#10b981';
-      return '#047857';
-    } else {
-      const dayMod = index % 7;
-      if (dayMod === 3 || dayMod === 6) return '#e2e8f0';
-      return index % 3 === 0 ? '#047857' : '#10b981';
-    }
+  const getCellColor = (vol) => {
+    if (vol === 0) return '#e2e8f0';
+    if (vol < 8000) return '#34d399';
+    if (vol < 15000) return '#10b981';
+    return '#047857';
   };
 
   return (
@@ -52,15 +47,15 @@ export default function ConsistencyHeatmap({ workoutHistory = [] }) {
       <div className="flex-between" style={{ marginBottom: '12px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
           <Calendar size={20} color="#00b464" />
-          <h2 style={{ margin: 0, fontSize: '16px', fontWeight: '700' }}>Heatmap de Consistencia (12 Semanas)</h2>
+          <h2 style={{ margin: 0, fontSize: '16px', fontWeight: '800', whiteSpace: 'normal' }}>Heatmap de Consistencia (12 Semanas)</h2>
         </div>
-        <span className="badge badge-green">
-          {isSimulated ? 'Simulación de Adherencia' : `Adherencia: ${Math.round((activeDaysCount / totalDays) * 100)}%`}
+        <span className="badge badge-green" style={{ fontWeight: '800' }}>
+          {hasRealHistory ? `Adherencia: ${adherencePercent}%` : `0% (Sin registros archivados)`}
         </span>
       </div>
 
       <p style={{ fontSize: '13px', marginBottom: '16px', color: '#475569', lineHeight: '1.5' }}>
-        Cada celda representa un día del calendario de tu tratamiento deportivo. La intensidad del color verde aumenta según el volumen mecánico total (Lbs × Reps) alcanzado en cada sesión.
+        Cada celda representa un día del calendario. La intensidad del color verde aumentará exclusivamente según el volumen mecánico real (Lbs × Reps) alcanzado en tus sesiones archivadas. Sin datos predeterminados.
       </p>
 
       <div style={{ overflowX: 'auto', paddingBottom: '6px' }}>
@@ -72,18 +67,18 @@ export default function ConsistencyHeatmap({ workoutHistory = [] }) {
           minWidth: '280px'
         }}>
           {daysArray.map((item, idx) => {
-            const color = getCellColor(idx, item.volume);
+            const color = getCellColor(item.volume);
             return (
               <div 
                 key={idx} 
-                title={`${item.dateString}: ${isSimulated ? (idx % 7 === 3 || idx % 7 === 6 ? 'Descanso' : 'Entrenamiento Completado') : (item.volume > 0 ? `${item.volume.toLocaleString()} lbs-reps` : 'Sin actividad')}`}
+                title={`${item.dateString}: ${item.volume > 0 ? `${item.volume.toLocaleString()} lbs-reps` : 'Sin actividad registrada'}`}
                 style={{
                   width: '15px',
                   height: '15px',
                   backgroundColor: color,
                   borderRadius: '4px',
                   boxShadow: item.volume > 0 ? '0 2px 4px rgba(0, 180, 100, 0.2)' : 'none',
-                  transition: 'all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1)'
+                  transition: 'all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1)'
                 }}
               />
             );
@@ -91,8 +86,8 @@ export default function ConsistencyHeatmap({ workoutHistory = [] }) {
         </div>
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '14px', fontSize: '11px', color: '#64748b', fontWeight: '600' }}>
-        <span>Menor carga / Descanso</span>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '14px', fontSize: '11px', color: '#64748b', fontWeight: '700' }}>
+        <span>0 Carga / Inactivo</span>
         <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
           <div style={{ width: '13px', height: '13px', background: '#e2e8f0', borderRadius: '3px' }} />
           <div style={{ width: '13px', height: '13px', background: '#34d399', borderRadius: '3px' }} />
