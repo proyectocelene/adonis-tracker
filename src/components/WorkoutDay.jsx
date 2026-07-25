@@ -3,7 +3,7 @@ import { scientificProtocol } from '../data/scientificProtocol';
 import ExerciseRow from './ExerciseRow';
 import CardioLogger from './CardioLogger';
 import { useLocalStorage } from '../hooks/useLocalStorage';
-import { CheckCircle, Calendar, ArrowLeft, ArrowRight, Save, Flame, RefreshCcw, Plus, X, Dumbbell, ShieldCheck, BookOpen, ShieldAlert, Zap } from 'lucide-react';
+import { CheckCircle, Calendar, ArrowLeft, ArrowRight, Save, Flame, RefreshCcw, Plus, X, Dumbbell, ShieldCheck, BookOpen, ShieldAlert, Zap, CheckCircle2, ChevronDown, ChevronUp, AlertTriangle, Activity } from 'lucide-react';
 
 export default function WorkoutDay() {
   const [currentDayIndex, setCurrentDayIndex] = useState(() => {
@@ -23,6 +23,9 @@ export default function WorkoutDay() {
   const [newExBiomech, setNewExBiomech] = useState('');
 
   const [showProtocolRules, setShowProtocolRules] = useState(false);
+  
+  // Acordeón Exclusivo (sólo 1 abierto a la vez)
+  const [expandedExerciseId, setExpandedExerciseId] = useState(null);
 
   const [currentSessions, setCurrentSessions] = useLocalStorage('coachv2_active_workouts', {});
   const [workoutHistory, setWorkoutHistory] = useLocalStorage('coachv2_history', []);
@@ -142,7 +145,7 @@ export default function WorkoutDay() {
 
   const handleFinishWorkout = () => {
     if (completedSets === 0 && cardioCompleted === 0) {
-      alert("No has marcado ninguna serie o sesión de cardio como completada (✓). Registra al menos una casilla checada para archivar la sesión en tu laboratorio analítico.");
+      alert("No has marcado ninguna serie o sesión de cardio como completada (✓). Registra al menos una casilla checada para archivar la sesión.");
       return;
     }
 
@@ -170,7 +173,7 @@ export default function WorkoutDay() {
       [currentDay.id]: {}
     }));
 
-    alert("¡Sesión archivada al 100%! Consulta la pestaña 'Análisis' para admirar tu nueva gráfica Epley 1RM y tu avance en el Heatmap.");
+    alert("¡Sesión archivada con éxito en tu Laboratorio Analítico! Consulta la pestaña 'Análisis' para ver tus nuevos progresos.");
   };
 
   const handleResetCurrent = () => {
@@ -212,7 +215,10 @@ export default function WorkoutDay() {
           <button 
             className="btn btn-outline" 
             style={{ width: '48px', height: '48px', padding: '0', borderRadius: '16px', flexShrink: 0 }}
-            onClick={() => setCurrentDayIndex(prev => prev > 0 ? prev - 1 : 6)}
+            onClick={() => {
+              setCurrentDayIndex(prev => prev > 0 ? prev - 1 : 6);
+              setExpandedExerciseId(null);
+            }}
           >
             <ArrowLeft size={22} />
           </button>
@@ -229,50 +235,116 @@ export default function WorkoutDay() {
           <button 
             className="btn btn-outline" 
             style={{ width: '48px', height: '48px', padding: '0', borderRadius: '16px', flexShrink: 0 }}
-            onClick={() => setCurrentDayIndex(prev => prev < 6 ? prev + 1 : 0)}
+            onClick={() => {
+              setCurrentDayIndex(prev => prev < 6 ? prev + 1 : 0);
+              setExpandedExerciseId(null);
+            }}
           >
             <ArrowRight size={22} />
           </button>
         </div>
       </div>
 
-      {/* MANUAL Y REGLAS INQUEBRANTABLES DEL PROTOCOLO (ACORDEÓN DESPLEGABLE) */}
-      <div className="card" style={{ padding: '14px 16px', marginBottom: '14px', background: '#f8fafc', borderLeft: '5px solid #7c3aed' }}>
+      {/* MANUAL Y REGLAS INQUEBRANTABLES DEL PROTOCOLO (DISEÑO PREMIUM CON VIÑETAS Y TARJETAS) */}
+      <div className="card" style={{ padding: '16px', marginBottom: '16px', background: 'linear-gradient(145deg, #ffffff 0%, #f5f3ff 100%)', borderLeft: '6px solid #7c3aed', boxShadow: '0 10px 25px rgba(124, 58, 237, 0.08)' }}>
         <div 
           onClick={() => setShowProtocolRules(!showProtocolRules)}
-          style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', userSelect: 'none' }}
+          style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', userSelect: 'none', flexWrap: 'wrap', gap: '10px' }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <BookOpen size={18} color="#7c3aed" />
-            <span style={{ fontSize: '14px', fontWeight: '800', color: '#0f172a' }}>📖 Manual y Reglas Inquebrantables del Coach</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: '1 1 auto' }}>
+            <div style={{ width: '36px', height: '36px', borderRadius: '12px', background: '#7c3aed', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', flexShrink: 0 }}>
+              <BookOpen size={18} />
+            </div>
+            <div>
+              <h3 style={{ margin: 0, fontSize: '15px', fontWeight: '800', color: '#1e1b4b' }}>Manual de Operaciones & Reglas</h3>
+              <span style={{ fontSize: '11px', color: '#6d28d9', fontWeight: '700', display: 'block' }}>Protocolo Adonis • Las 4 Leyes Científicas</span>
+            </div>
           </div>
-          <span style={{ fontSize: '12px', fontWeight: '800', color: '#7c3aed' }}>{showProtocolRules ? '▲ Ocultar' : '▼ Leer'}</span>
+
+          <button 
+            type="button"
+            style={{ 
+              background: showProtocolRules ? '#1e1b4b' : 'linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)', 
+              color: '#ffffff', 
+              border: 'none', 
+              padding: '10px 18px', 
+              borderRadius: '20px', 
+              fontSize: '12px', 
+              fontWeight: '800', 
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              boxShadow: showProtocolRules ? 'none' : '0 4px 15px rgba(124, 58, 237, 0.3)',
+              transition: 'all 0.25s ease'
+            }}
+          >
+            {showProtocolRules ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+            {showProtocolRules ? 'Ocultar Manual' : '📖 Leer Manual'}
+          </button>
         </div>
 
         {showProtocolRules && (
-          <div className="animate-fade" style={{ marginTop: '14px', paddingTop: '14px', borderTop: '1px dashed #cbd5e1', fontSize: '13px', color: '#334155', lineHeight: '1.5' }}>
+          <div className="animate-fade" style={{ marginTop: '18px', paddingTop: '18px', borderTop: '1.5px dashed #ddd6fe', fontSize: '13px', color: '#334155' }}>
             
-            <div style={{ marginBottom: '12px', background: '#f5f3ff', padding: '10px 12px', borderRadius: '12px', border: '1px solid #ddd6fe' }}>
-              <strong style={{ display: 'block', color: '#5b21b6', marginBottom: '4px' }}>⚠️ 1. LA REGLA DE LA HERNIA (Presión IAP):</strong>
-              EXHALA (bota el aire por la boca) en el momento de mayor esfuerzo de cada repetición. NUNCA aguantes la respiración ni ejecutes la maniobra de Valsalva cerrada para resguardar tu pared abdominal.
-            </div>
+            <p style={{ fontSize: '12px', color: '#4c1d95', margin: '0 0 16px 0', fontWeight: '600', fontStyle: 'italic', background: '#ede9fe', padding: '10px 14px', borderRadius: '12px' }}>
+              💡 <strong>Nota del Coach:</strong> Estas reglas protegen tu pared abdominal contra sobrepresión y aseguran la hipertrofia pura de las próximas 8 semanas.
+            </p>
 
-            <div style={{ marginBottom: '12px', background: '#e6faf1', padding: '10px 12px', borderRadius: '12px', border: '1px solid #a7f3d0' }}>
-              <strong style={{ display: 'block', color: '#047857', marginBottom: '4px' }}>📈 2. DOBLE PROGRESIÓN (Cómo subir peso):</strong>
-              Cuando logres hacer el máximo de repeticiones indicadas (ej. 10 reps) en TODAS las series con excelente técnica, <strong>ese es el indicador exacto para subir el peso</strong> (entre 2.5 y 5 lbs) en tu siguiente sesión. Tus reps bajarán y volverás a escalar.
-            </div>
+            <div style={{ display: 'grid', gap: '14px' }}>
+              
+              {/* Ley 1: La Regla de la Hernia */}
+              <div style={{ background: '#ffffff', border: '1.5px solid #fca5a5', borderLeft: '5px solid #ef4444', borderRadius: '14px', padding: '14px', boxShadow: '0 4px 12px rgba(0,0,0,0.02)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                  <AlertTriangle size={18} color="#dc2626" />
+                  <strong style={{ fontSize: '14px', color: '#991b1b', textTransform: 'uppercase', letterSpacing: '0.4px' }}>1. La Regla de la Hernia (Presión IAP)</strong>
+                </div>
+                <ul style={{ margin: 0, paddingLeft: '20px', lineHeight: '1.6', color: '#334155', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <li><strong>EXHALA FUERTE</strong> (bota el aire por la boca) en el momento exacto de mayor esfuerzo en cada repetición.</li>
+                  <li><strong>NUNCA aguantes la respiración</strong> ni uses la maniobra de Valsalva cerrada. El flujo de aire constante disminuye drásticamente la presión intraabdominal para proteger contra hernias.</li>
+                </ul>
+              </div>
 
-            <div style={{ marginBottom: '12px', background: '#ecfeff', padding: '10px 12px', borderRadius: '12px', border: '1px solid #a5f3fc' }}>
-              <strong style={{ display: 'block', color: '#0e7490', marginBottom: '4px' }}>⏱️ 3. TIEMPOS DE DESCANSO & CARDIO ZONA 2:</strong>
-              Descansa 2 a 3 min para ejercicios grandes (Hack Squat, Press Inclinado, Remos) y 90 seg para aislamiento. <br/>
-              <strong>¿HIIT o Correr? NUNCA:</strong> El impacto y la respiración forzada disparan la presión intraabdominal y destruyen músculo. Tu cardio es exclusivamente Zona 2 (Caminadora inclinada, bici o elíptica).
-            </div>
+              {/* Ley 2: Tiempos y Cardio */}
+              <div style={{ background: '#ffffff', border: '1.5px solid #93c5fd', borderLeft: '5px solid #3b82f6', borderRadius: '14px', padding: '14px', boxShadow: '0 4px 12px rgba(0,0,0,0.02)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                  <Activity size={18} color="#2563eb" />
+                  <strong style={{ fontSize: '14px', color: '#1e40af', textTransform: 'uppercase', letterSpacing: '0.4px' }}>2. Descansos & Cardio Zona 2</strong>
+                </div>
+                <ul style={{ margin: 0, paddingLeft: '20px', lineHeight: '1.6', color: '#334155', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <li><strong>Tiempos de Descanso:</strong> 2 a 3 minutos para ejercicios compuestos o grandes (Hack Squat, Press Inclinado, Remos). 90 segundos estrictos para ejercicios de aislamiento (Bíceps, Tríceps, Elevaciones Laterales).</li>
+                  <li><strong>¿Cuándo hacer HIIT o Correr? NUNCA.</strong> El impacto de correr y la respiración forzada del HIIT disparan la presión intraabdominal y generan un <em>"efecto de interferencia"</em> que destruye tu músculo recién sintetizado.</li>
+                  <li><strong>Tu Cardio (Zona 2):</strong> Caminadora con inclinación (velocidad 4-5 km/h, inclinación 10-12%), Bicicleta o Elíptica. <strong>NO uses la Stairmaster (Escaleras)</strong>, ya que la fatiga altera la postura lumbar y presiona el abdomen. Mantén una intensidad donde puedas mantener una conversación fluida.</li>
+                </ul>
+              </div>
 
-            <div style={{ background: '#f8fafc', padding: '10px 12px', borderRadius: '12px', border: '1px solid #cbd5e1' }}>
-              <strong style={{ display: 'block', color: '#0f172a', marginBottom: '4px' }}>🛠️ 4. PROTOCOLO DE CALENTAMIENTO DIARIO:</strong>
-              1) 5 min caminadora suave. 2) Círculos de brazos o balanceo de piernas. 3) 2 series de aproximación con el 50% del peso en el primer ejercicio del día para lubricar articulaciones.
-            </div>
+              {/* Ley 3: Sobrecarga Progresiva */}
+              <div style={{ background: '#ffffff', border: '1.5px solid #86efac', borderLeft: '5px solid #10b981', borderRadius: '14px', padding: '14px', boxShadow: '0 4px 12px rgba(0,0,0,0.02)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                  <Zap size={18} color="#047857" />
+                  <strong style={{ fontSize: '14px', color: '#065f46', textTransform: 'uppercase', letterSpacing: '0.4px' }}>3. Doble Progresión (Cómo Subir Peso)</strong>
+                </div>
+                <ul style={{ margin: 0, paddingLeft: '20px', lineHeight: '1.6', color: '#334155', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <li>Si un ejercicio prescribe <strong>"3 series de 8 a 10 reps"</strong> e inicias haciendo 3 series de 8 con 80 lbs, tu meta la semana siguiente será hacer 9 reps y luego 10.</li>
+                  <li><strong>LA REGLA DE ORO:</strong> Cuando logres hacer el máximo de repeticiones indicadas (10 reps) en TODAS las series con excelente técnica, <strong>ese es el indicador exacto para subir el peso</strong> (a 85 o 90 lbs) en tu siguiente sesión.</li>
+                  <li>Al subir el peso, tus repeticiones bajarán a 8, y volverás a escalar.</li>
+                </ul>
+              </div>
 
+              {/* Ley 4: Protocolo de Calentamiento */}
+              <div style={{ background: '#ffffff', border: '1.5px solid #cbd5e1', borderLeft: '5px solid #475569', borderRadius: '14px', padding: '14px', boxShadow: '0 4px 12px rgba(0,0,0,0.02)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                  <ShieldCheck size={18} color="#475569" />
+                  <strong style={{ fontSize: '14px', color: '#1e293b', textTransform: 'uppercase', letterSpacing: '0.4px' }}>4. Protocolo de Calentamiento Diario</strong>
+                </div>
+                <ul style={{ margin: 0, paddingLeft: '20px', lineHeight: '1.6', color: '#334155', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <li><strong>General (5 min):</strong> Caminadora a ritmo suave para elevar temperatura central.</li>
+                  <li><strong>Dinámico (2 min):</strong> Círculos con brazos al frente y atrás (Días de Torso) o balanceo de piernas adelante y a los lados (Días de Pierna).</li>
+                  <li><strong>Específico (Aclimatación):</strong> Antes del primer ejercicio del día, haz <strong>2 series de aproximación con el 50% de tu carga de trabajo</strong> para lubricar articulaciones y sincronizar tu respiración IAP.</li>
+                </ul>
+              </div>
+
+            </div>
           </div>
         )}
       </div>
@@ -341,12 +413,23 @@ export default function WorkoutDay() {
       ) : (
         <div>
           <div style={{ marginBottom: '10px', fontSize: '12px', fontWeight: '800', color: '#475569', textTransform: 'uppercase', display: 'flex', justifyContent: 'space-between', padding: '0 4px', letterSpacing: '0.3px' }}>
-            <span>Rutina Preconfigurada (Toca para Desplegar ▼):</span>
+            <span>Rutina Preconfigurada (Toca una tarjeta para abrir):</span>
             <span>{currentDay.exercises.length} Módulos</span>
           </div>
 
           {currentDay.exercises.map((exercise, idx) => {
-            const isTargetExpanded = (idx === firstUncompletedIdx);
+            // Si expandedExerciseId tiene un ID explícito, lo comparamos. Si es null (recién abre la página), abrimos el firstUncompletedIdx
+            const isCurrentlyExpanded = expandedExerciseId !== null 
+              ? (expandedExerciseId === exercise.id) 
+              : (idx === firstUncompletedIdx);
+
+            const handleToggle = () => {
+              if (isCurrentlyExpanded) {
+                setExpandedExerciseId('none'); // Cierra todos
+              } else {
+                setExpandedExerciseId(exercise.id); // Abre el actual y cierra el resto automáticamente
+              }
+            };
 
             if (exercise.isCardio) {
               return (
@@ -355,7 +438,9 @@ export default function WorkoutDay() {
                   exercise={exercise}
                   exerciseData={todayWorkoutData[exercise.id]}
                   onUpdateCardio={(data) => handleUpdateCardio(exercise.id, data)}
-                  initiallyExpanded={isTargetExpanded}
+                  initiallyExpanded={false}
+                  isExpanded={isCurrentlyExpanded}
+                  onToggleExpand={handleToggle}
                 />
               );
             }
@@ -368,7 +453,9 @@ export default function WorkoutDay() {
                 previousData={previousExercisesData[exercise.id]}
                 onUpdateSet={(setNum, setData) => handleUpdateSet(exercise.id, setNum, setData)}
                 onUpdateExerciseMeta={(meta) => handleUpdateExerciseMeta(exercise.id, meta)}
-                initiallyExpanded={isTargetExpanded}
+                initiallyExpanded={false}
+                isExpanded={isCurrentlyExpanded}
+                onToggleExpand={handleToggle}
               />
             );
           })}
