@@ -4,8 +4,10 @@ import { scientificProtocol } from '../data/scientificProtocol';
 import ConsistencyHeatmap from './ConsistencyHeatmap';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { Activity, TrendingUp, Award, Clock, ChevronDown, ChevronUp, Trash2, ShieldCheck, Zap, HeartPulse, Dumbbell, Calendar, Sparkles, Settings2, Download, Upload, AlertOctagon, Settings, X, ShieldAlert, Database } from 'lucide-react';
+import { useModal, LiquidDropdown } from './common/UIComponents';
 
 export default function HistoryView() {
+  const modal = useModal();
   const [workoutHistory, setWorkoutHistory] = useLocalStorage('coachv2_history', []);
   const [currentSessions, setCurrentSessions] = useLocalStorage('coachv2_active_workouts', {});
   const [customExercisesMap, setCustomExercisesMap] = useLocalStorage('coachv2_custom_day_exercises', {});
@@ -18,11 +20,14 @@ export default function HistoryView() {
   const fileInputRef = useRef(null);
 
   const allAvailableExercises = [];
+  const exerciseOptions = [];
+
   scientificProtocol.forEach(day => {
     if (day.exercises) {
       day.exercises.forEach(ex => {
         if (!ex.isCardio && !ex.isTime) {
           allAvailableExercises.push({ id: ex.id, name: ex.name, day: day.name.split(':')[0] });
+          exerciseOptions.push({ value: ex.id, label: `${day.name.split(':')[0]} • ${ex.name}` });
         }
       });
     }
@@ -134,9 +139,17 @@ export default function HistoryView() {
   const selectedExDef = allAvailableExercises.find(x => x.id === selectedExId) || allAvailableExercises[0] || { name: 'Ejercicio Seleccionado' };
 
   const handleDeleteSession = (id) => {
-    if (confirm("¿Estás seguro de eliminar este registro del historial científico?")) {
-      setWorkoutHistory(prev => prev.filter(s => s.id !== id));
-    }
+    modal.showConfirm({
+      title: "🗑️ ¿Eliminar Bitácora de Sesión?",
+      message: "Este registro se borrará permanentemente de tu gráfico de sobrecarga progresiva y de tu historial científico.",
+      confirmText: "Eliminar Registro",
+      cancelText: "Mantener",
+      variant: "danger",
+      onConfirm: () => {
+        setWorkoutHistory(prev => prev.filter(s => s.id !== id));
+        modal.showAlert({ title: "🗑️ Registro Eliminado", message: "La sesión fue removida de tu bitácora satisfactoriamente.", variant: "info" });
+      }
+    });
   };
 
   // EXPORTAR BASE DE DATOS
@@ -158,6 +171,12 @@ export default function HistoryView() {
     document.body.appendChild(downloadAnchor);
     downloadAnchor.click();
     downloadAnchor.remove();
+
+    modal.showAlert({
+      title: "💾 Respaldo Exportado con Éxito",
+      message: "Tu archivo JSON con el 100% de tus rutinas, pesos levantados y medidas corporales ha sido guardado en la memoria de tu dispositivo.",
+      variant: "success"
+    });
   };
 
   // IMPORTAR BASE DE DATOS
@@ -169,17 +188,32 @@ export default function HistoryView() {
     reader.onload = (event) => {
       try {
         const data = JSON.parse(event.target.result);
-        if (confirm("¿Estás seguro de restaurar el respaldo seleccionado? Esto reemplazará los datos actuales en memoria con el archivo cargado.")) {
-          if (data.workoutHistory) setWorkoutHistory(data.workoutHistory);
-          if (data.currentActiveSessions) setCurrentSessions(data.currentActiveSessions);
-          if (data.customExercises) setCustomExercisesMap(data.customExercises);
-          if (data.nutritionData) setNutrition(data.nutritionData);
-          if (data.bodyMetrics) setBodyMetrics(data.bodyMetrics);
-          alert("✅ ¡Base de datos restaurada con éxito desde el archivo de respaldo!");
-          setShowConfigModal(false);
-        }
+        modal.showConfirm({
+          title: "📥 ¿Restaurar Base de Datos?",
+          message: `El archivo seleccionado fue verificado con éxito. ¿Estás seguro de sobrescribir tu memoria actual y cargar este respaldo del sistema?`,
+          confirmText: "Restaurar Ahora",
+          cancelText: "Cancelar",
+          variant: "warning",
+          onConfirm: () => {
+            if (data.workoutHistory) setWorkoutHistory(data.workoutHistory);
+            if (data.currentActiveSessions) setCurrentSessions(data.currentActiveSessions);
+            if (data.customExercises) setCustomExercisesMap(data.customExercises);
+            if (data.nutritionData) setNutrition(data.nutritionData);
+            if (data.bodyMetrics) setBodyMetrics(data.bodyMetrics);
+            setShowConfigModal(false);
+            modal.showAlert({
+              title: "🎉 Base de Datos Restaurada",
+              message: "Tus datos históricos y configuraciones se han cargado íntegramente.",
+              variant: "success"
+            });
+          }
+        });
       } catch (err) {
-        alert("❌ Error: El archivo seleccionado no es un archivo JSON válido del sistema COACH V2.");
+        modal.showAlert({
+          title: "❌ Archivo Inválido",
+          message: "El documento seleccionado no cumple con la estructura JSON de COACH V2.",
+          variant: "danger"
+        });
       }
     };
     reader.readAsText(file);
@@ -187,20 +221,31 @@ export default function HistoryView() {
 
   // BORRAR TODOS LOS DATOS (RESET TOTAL SIN PREDEFINIDOS)
   const handleWipeAllData = () => {
-    if (confirm("⚠️ ¿ADVERTENCIA CRÍTICA: Estás seguro de BORRAR TODOS LOS DATOS DE LA APP?\n\nEsto eliminará permanentemente todo tu historial científico, rutinas activas, medidas corporales y contadores de nutrición para dejar la base de datos completamente limpia a cero.")) {
-      setWorkoutHistory([]);
-      setCurrentSessions({});
-      setCustomExercisesMap({});
-      setNutrition({ protein: 0, water: 0 });
-      setBodyMetrics([]);
-      localStorage.removeItem('coachv2_history');
-      localStorage.removeItem('coachv2_active_workouts');
-      localStorage.removeItem('coachv2_custom_day_exercises');
-      localStorage.removeItem('coachv2_nutrition_data');
-      localStorage.removeItem('coachv2_body_metrics_history');
-      alert("✅ Base de datos restablecida a cero. No existen registros en memoria.");
-      setShowConfigModal(false);
-    }
+    modal.showConfirm({
+      title: "🚨 ZONA ROJA: Reset Total",
+      message: "¿ADVERTENCIA CRÍTICA: Estás verdaderamente seguro de BORRAR TODOS LOS DATOS de tu aplicación COACH V2?\n\nEsta acción eliminará por completo tus marcas de 1RM, bitácora del gimnasio, registros de peso y calibraciones de máquina para empezar desde cero en una base absolutamente limpia.",
+      confirmText: "⚠️ SÍ, BORRAR TODO A CERO",
+      cancelText: "Mantener mis datos",
+      variant: "danger",
+      onConfirm: () => {
+        setWorkoutHistory([]);
+        setCurrentSessions({});
+        setCustomExercisesMap({});
+        setNutrition({ protein: 0, water: 0 });
+        setBodyMetrics([]);
+        localStorage.removeItem('coachv2_history');
+        localStorage.removeItem('coachv2_active_workouts');
+        localStorage.removeItem('coachv2_custom_day_exercises');
+        localStorage.removeItem('coachv2_nutrition_data');
+        localStorage.removeItem('coachv2_body_metrics_history');
+        setShowConfigModal(false);
+        modal.showAlert({
+          title: "✅ Reset Total Terminado",
+          message: "La memoria del laboratorio ha quedado impecable a cero. No existen datos simulados, listo para tu nuevo ciclo de entrenamiento.",
+          variant: "info"
+        });
+      }
+    });
   };
 
   const findExerciseDefinition = (dayId, exId) => {
@@ -222,6 +267,7 @@ export default function HistoryView() {
           </div>
 
           <button 
+            type="button"
             onClick={() => setShowConfigModal(true)}
             style={{ 
               background: '#0f172a', 
@@ -248,37 +294,45 @@ export default function HistoryView() {
 
       {/* MODAL / DRAWER DE CONFIGURACION DE LA APP & DATAFORCE */}
       {showConfigModal && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(15, 23, 42, 0.65)',
-          backdropFilter: 'blur(8px)',
-          zIndex: 999,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '16px',
-          animation: 'fadeIn 0.2s ease'
-        }}>
-          <div style={{
-            background: '#ffffff',
-            width: '100%',
-            maxWidth: '440px',
-            borderRadius: '24px',
-            padding: '24px',
-            boxShadow: '0 20px 50px rgba(0, 0, 0, 0.3)',
-            maxHeight: '90vh',
-            overflowY: 'auto'
-          }}>
+        <div 
+          onClick={() => setShowConfigModal(false)}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(15, 23, 42, 0.65)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
+            zIndex: 999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '16px',
+            animation: 'fadeIn 0.2s ease'
+          }}
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: '#ffffff',
+              width: '100%',
+              maxWidth: '440px',
+              borderRadius: '24px',
+              padding: '24px',
+              boxShadow: '0 20px 50px rgba(0, 0, 0, 0.3)',
+              maxHeight: '90vh',
+              overflowY: 'auto'
+            }}
+          >
             <div className="flex-between" style={{ marginBottom: '18px', borderBottom: '1.5px solid #f1f5f9', paddingBottom: '12px' }}>
               <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                 <Database size={22} color="#0066ff" />
                 <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '800', color: '#0f172a' }}>Gestión de Base de Datos</h3>
               </div>
               <button 
+                type="button"
                 onClick={() => setShowConfigModal(false)}
                 style={{ background: '#f1f5f9', border: 'none', width: '36px', height: '36px', borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
               >
@@ -293,6 +347,7 @@ export default function HistoryView() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               {/* Opción Exportar */}
               <button 
+                type="button"
                 onClick={handleExportDatabase} 
                 className="btn btn-primary" 
                 style={{ padding: '15px', fontSize: '14px', borderRadius: '16px', background: '#0e7490', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', boxShadow: '0 6px 18px rgba(14, 116, 144, 0.25)' }}
@@ -310,6 +365,7 @@ export default function HistoryView() {
                   accept=".json" 
                 />
                 <button 
+                  type="button"
                   onClick={() => fileInputRef.current?.click()} 
                   className="btn btn-outline" 
                   style={{ width: '100%', padding: '14px', fontSize: '14px', borderRadius: '16px', fontWeight: '800', background: '#f8fafc', color: '#334155', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
@@ -330,6 +386,7 @@ export default function HistoryView() {
                   Elimina todos tus entrenamientos, nutrición y récords para comenzar desde cero:
                 </p>
                 <button 
+                  type="button"
                   onClick={handleWipeAllData} 
                   style={{ 
                     background: '#dc2626', 
@@ -350,6 +407,7 @@ export default function HistoryView() {
             </div>
 
             <button 
+              type="button"
               onClick={() => setShowConfigModal(false)}
               style={{ width: '100%', padding: '14px', marginTop: '20px', background: 'transparent', border: '1px solid #cbd5e1', borderRadius: '16px', fontWeight: '800', color: '#64748b', cursor: 'pointer' }}
             >
@@ -383,7 +441,7 @@ export default function HistoryView() {
       {/* Heatmap de Consistencia Sin Datos Ficticios */}
       <ConsistencyHeatmap workoutHistory={workoutHistory} />
 
-      {/* Sección de Análisis por Ejercicio Individual */}
+      {/* Sección de Análisis por Ejercicio Individual con LiquidDropdown */}
       <div className="card card-highlight" style={{ padding: '18px', marginBottom: '20px' }}>
         <div style={{ marginBottom: '14px' }}>
           <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '6px' }}>
@@ -394,15 +452,13 @@ export default function HistoryView() {
         </div>
 
         <div style={{ marginBottom: '16px' }}>
-          <select 
+          <LiquidDropdown
+            label="EJERCICIO REGISTRADO EN MEMORIA:"
+            icon={Dumbbell}
+            options={exerciseOptions}
             value={selectedExId}
-            onChange={(e) => setSelectedExId(e.target.value)}
-            style={{ width: '100%', padding: '12px 14px', fontWeight: '800', fontSize: '15px', borderRadius: '14px' }}
-          >
-            {allAvailableExercises.map(ex => (
-              <option key={ex.id} value={ex.id}>{ex.day} - {ex.name}</option>
-            ))}
-          </select>
+            onChange={(newVal) => setSelectedExId(newVal)}
+          />
         </div>
 
         {exerciseProgData.length === 0 ? (
@@ -522,6 +578,7 @@ export default function HistoryView() {
 
                 <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexShrink: 0 }}>
                   <button 
+                    type="button"
                     onClick={(e) => { e.stopPropagation(); handleDeleteSession(ses.id); }} 
                     style={{ background: 'transparent', border: 'none', color: '#ff3b30', padding: '6px', cursor: 'pointer' }}
                     title="Borrar registro"

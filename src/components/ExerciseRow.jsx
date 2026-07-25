@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Info, CheckCircle2, Circle, RotateCcw, TrendingUp, Flame, AlertCircle, Sparkles, ChevronDown, ChevronUp, Settings2 } from 'lucide-react';
+import { useModal, UnitToggle } from './common/UIComponents';
 
 export default function ExerciseRow({ 
   exercise, 
@@ -11,6 +12,7 @@ export default function ExerciseRow({
   isExpanded: controlledExpanded,
   onToggleExpand
 }) {
+  const modal = useModal();
   const [internalExpanded, setInternalExpanded] = useState(initiallyExpanded);
   const isExpanded = controlledExpanded !== undefined ? controlledExpanded : internalExpanded;
 
@@ -44,7 +46,11 @@ export default function ExerciseRow({
   const handleSaveMachineSetup = () => {
     if (onUpdateExerciseMeta) {
       onUpdateExerciseMeta({ machineSetup: machineSetupInput });
-      alert("✅ ¡Configuración de equipo guardada para futuras sesiones!");
+      modal.showAlert({
+        title: "✅ Calibración del Equipo Guardada",
+        message: `Los ajustes mecánicos ("${machineSetupInput || 'Sin anotación'}") se preservarán automáticamente para tus sesiones futuras de este ejercicio en el Protocolo Adonis.`,
+        variant: "success"
+      });
     }
   };
 
@@ -203,6 +209,7 @@ export default function ExerciseRow({
             marginBottom: '16px' 
           }}>
             <button 
+              type="button"
               onClick={() => setActiveTab('logger')}
               style={{
                 flex: 1,
@@ -221,6 +228,7 @@ export default function ExerciseRow({
               📊 Bitácora de Series
             </button>
             <button 
+              type="button"
               onClick={() => setActiveTab('technique')}
               style={{
                 flex: 1,
@@ -253,11 +261,12 @@ export default function ExerciseRow({
                   <strong style={{ color: '#0f172a', fontSize: '14px', fontWeight: '800' }}>Indicación Biomecánica & IAP:</strong>
                 </div>
                 <p style={{ fontSize: '13px', color: '#334155', margin: '0 0 16px 0', lineHeight: '1.6' }}>
-                  {exercise.biomechanics || 'Mantener estabilidad en columna, controlar fase excéntrica en 3 segundos y exhalar en el máximo esfuerzo mecánimo.'}
+                  {exercise.biomechanics || 'Mantener estabilidad en columna, controlar fase excéntrica en 3 segundos y exhalar en el máximo esfuerzo mecánico.'}
                 </p>
 
                 <div className="grid-2" style={{ gap: '10px' }}>
                   <button 
+                    type="button"
                     onClick={(e) => handleSearchExercise(e, exercise.searchQuery || exercise.name)}
                     className="btn btn-outline"
                     style={{ fontSize: '12px', padding: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
@@ -265,6 +274,7 @@ export default function ExerciseRow({
                     <Search size={14} color="#0066ff" /> Ver en Google Imágenes
                   </button>
                   <button 
+                    type="button"
                     onClick={(e) => handleSearchAI(e, exercise.searchQuery || exercise.name)}
                     className="btn btn-primary"
                     style={{ fontSize: '12px', padding: '10px', background: '#7c3aed', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
@@ -274,14 +284,14 @@ export default function ExerciseRow({
                 </div>
               </div>
 
-              {/* Ajuste Biometrico del Equipo */}
+              {/* Ajuste Biométrico del Equipo */}
               <div style={{ background: '#f5f3ff', border: '1.5px solid #ddd6fe', borderRadius: '16px', padding: '16px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
                   <Settings2 size={18} color="#6d28d9" />
                   <strong style={{ color: '#4c1d95', fontSize: '14px', fontWeight: '800' }}>Preconfiguración de Máquina / Asiento:</strong>
                 </div>
                 <p style={{ fontSize: '12px', color: '#5b21b6', margin: '0 0 10px 0' }}>
-                  Anota aquí el número de asiento, agujero de polea o ángulo de respaldo para mantener la misma tensión mecánica exactamennte en cada sesión:
+                  Anota aquí el número de asiento, agujero de polea o ángulo de respaldo para mantener la misma tensión mecánica exactamente en cada sesión:
                 </p>
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <input 
@@ -289,12 +299,13 @@ export default function ExerciseRow({
                     placeholder="Ej. Asiento Nivel 4, Respaldo B, Agarre Neutro..."
                     value={machineSetupInput}
                     onChange={(e) => setMachineSetupInput(e.target.value)}
-                    style={{ flex: 1, fontSize: '13px', padding: '10px 12px', textAlign: 'left' }}
+                    style={{ flex: 1, fontSize: '13px', padding: '10px 12px', textAlign: 'left', borderRadius: '12px', border: '1.5px solid #cbd5e1' }}
                   />
                   <button 
+                    type="button"
                     onClick={handleSaveMachineSetup}
                     className="btn btn-primary"
-                    style={{ background: '#6d28d9', padding: '10px 16px', fontWeight: '800', width: 'auto' }}
+                    style={{ background: '#6d28d9', padding: '10px 16px', fontWeight: '800', width: 'auto', borderRadius: '12px' }}
                   >
                     Guardar
                   </button>
@@ -322,84 +333,93 @@ export default function ExerciseRow({
                       key={setNum}
                       style={{
                         display: 'grid',
-                        gridTemplateColumns: 'auto 1fr auto',
+                        gridTemplateColumns: 'auto 1fr',
                         alignItems: 'center',
                         gap: '12px',
                         padding: '12px 14px',
                         background: currentSet.completed ? '#f0fdf4' : '#f8fafc',
                         border: currentSet.completed ? '1.5px solid #22c55e' : '1.5px solid #e2e8f0',
-                        borderRadius: '16px',
+                        borderRadius: '18px',
                         transition: 'all 0.2s ease'
                       }}
                     >
                       {/* Check de Completado */}
                       <button 
+                        type="button"
                         onClick={() => toggleSetComplete(setNum)}
                         style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: '4px' }}
                       >
                         {currentSet.completed ? (
-                          <CheckCircle2 size={26} color="#00b464" />
+                          <CheckCircle2 size={30} color="#00b464" />
                         ) : (
-                          <Circle size={26} color="#cbd5e1" />
+                          <Circle size={30} color="#cbd5e1" />
                         )}
                       </button>
 
                       {/* Inputs de Peso, Reps y RPE */}
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <strong style={{ fontSize: '13px', color: '#0f172a' }}>Serie {setNum}</strong>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '4px' }}>
+                          <strong style={{ fontSize: '13px', color: '#0f172a' }}>Serie #{setNum}</strong>
                           {prevSet?.weight ? (
-                            <span style={{ fontSize: '11px', color: '#64748b', fontWeight: '600' }}>
-                              Anterior: <strong>{prevSet.weight} {prevSet.unit} x {prevSet.reps || targetReps}</strong>
+                            <span style={{ fontSize: '11px', color: '#64748b', fontWeight: '700', background: '#e2e8f0', padding: '2px 8px', borderRadius: '8px' }}>
+                              ⏮ Anterior: <strong>{prevSet.weight} {prevSet.unit} x {prevSet.reps || targetReps} reps</strong>
                             </span>
                           ) : (
-                            <span style={{ fontSize: '11px', color: '#94a3b8' }}>Meta: {targetReps} reps</span>
+                            <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '600' }}>Meta: {targetReps} reps</span>
                           )}
                         </div>
 
-                        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
                           {/* Peso */}
-                          <div style={{ flex: '1 1 90px', minWidth: '85px', display: 'flex', alignItems: 'center', background: '#fff', border: '1.5px solid #cbd5e1', borderRadius: '10px', overflow: 'hidden' }}>
-                            <input 
-                              type="number"
-                              placeholder="0"
-                              value={currentSet.weight}
-                              onChange={(e) => handleSetChange(setNum, 'weight', e.target.value)}
-                              style={{ width: '100%', border: 'none', padding: '8px 6px', textAlign: 'center', fontWeight: '800', fontSize: '14px', background: 'transparent' }}
+                          <div style={{ flex: '1 1 80px', minWidth: '80px' }}>
+                            <span style={{ fontSize: '10px', color: '#64748b', fontWeight: '800', display: 'block', marginBottom: '2px', textTransform: 'uppercase' }}>Carga</span>
+                            <div style={{ display: 'flex', alignItems: 'center', background: '#fff', border: '1.5px solid #cbd5e1', borderRadius: '14px', padding: '2px 8px' }}>
+                              <input 
+                                type="number"
+                                placeholder="0"
+                                value={currentSet.weight}
+                                onChange={(e) => handleSetChange(setNum, 'weight', e.target.value)}
+                                style={{ width: '100%', border: 'none', padding: '6px 4px', textAlign: 'center', fontWeight: '800', fontSize: '15px', background: 'transparent', color: '#0066ff' }}
+                              />
+                            </div>
+                          </div>
+
+                          {/* Selector Rápido Lbs/Kg Nativamente diseñado */}
+                          <div style={{ paddingTop: '16px', flexShrink: 0 }}>
+                            <UnitToggle 
+                              value={currentSet.unit || 'lbs'} 
+                              onChange={(newUnit) => handleSetChange(setNum, 'unit', newUnit)} 
                             />
-                            <select
-                              value={currentSet.unit || 'lbs'}
-                              onChange={(e) => handleSetChange(setNum, 'unit', e.target.value)}
-                              style={{ border: 'none', background: '#f1f5f9', padding: '8px 4px', fontSize: '11px', fontWeight: '800', color: '#0f172a', cursor: 'pointer' }}
-                            >
-                              <option value="lbs">lbs</option>
-                              <option value="kg">kg</option>
-                            </select>
                           </div>
 
                           {/* Reps */}
-                          <div style={{ flex: '1 1 70px', minWidth: '70px', background: '#fff', border: '1.5px solid #cbd5e1', borderRadius: '10px' }}>
-                            <input 
-                              type="text"
-                              placeholder={targetReps}
-                              value={currentSet.reps}
-                              onChange={(e) => handleSetChange(setNum, 'reps', e.target.value)}
-                              style={{ width: '100%', border: 'none', padding: '8px 4px', textAlign: 'center', fontWeight: '800', fontSize: '14px', background: 'transparent' }}
-                            />
+                          <div style={{ flex: '1 1 70px', minWidth: '65px' }}>
+                            <span style={{ fontSize: '10px', color: '#64748b', fontWeight: '800', display: 'block', marginBottom: '2px', textTransform: 'uppercase' }}>Reps Logradas</span>
+                            <div style={{ background: '#fff', border: '1.5px solid #cbd5e1', borderRadius: '14px', padding: '2px 8px' }}>
+                              <input 
+                                type="text"
+                                placeholder={targetReps}
+                                value={currentSet.reps}
+                                onChange={(e) => handleSetChange(setNum, 'reps', e.target.value)}
+                                style={{ width: '100%', border: 'none', padding: '6px 4px', textAlign: 'center', fontWeight: '800', fontSize: '15px', background: 'transparent', color: '#0f172a' }}
+                              />
+                            </div>
                           </div>
 
                           {/* RPE */}
-                          <div style={{ flex: '1 1 80px', minWidth: '80px', display: 'flex', alignItems: 'center', background: '#fff', border: '1.5px solid #cbd5e1', borderRadius: '10px', padding: '0 6px' }}>
-                            <span style={{ fontSize: '10px', fontWeight: '800', color: '#64748b' }}>RPE</span>
-                            <input 
-                              type="number"
-                              step="0.5"
-                              min="6"
-                              max="10"
-                              value={currentSet.rpe}
-                              onChange={(e) => handleSetChange(setNum, 'rpe', e.target.value)}
-                              style={{ width: '100%', border: 'none', padding: '8px 2px', textAlign: 'right', fontWeight: '800', fontSize: '14px', background: 'transparent', color: '#d97706' }}
-                            />
+                          <div style={{ flex: '1 1 70px', minWidth: '65px' }}>
+                            <span style={{ fontSize: '10px', color: '#d97706', fontWeight: '800', display: 'block', marginBottom: '2px', textTransform: 'uppercase' }}>RPE (6-10)</span>
+                            <div style={{ display: 'flex', alignItems: 'center', background: '#fff', border: '1.5px solid #cbd5e1', borderRadius: '14px', padding: '2px 8px' }}>
+                              <input 
+                                type="number"
+                                step="0.5"
+                                min="6"
+                                max="10"
+                                value={currentSet.rpe}
+                                onChange={(e) => handleSetChange(setNum, 'rpe', e.target.value)}
+                                style={{ width: '100%', border: 'none', padding: '6px 4px', textAlign: 'center', fontWeight: '800', fontSize: '15px', background: 'transparent', color: '#d97706' }}
+                              />
+                            </div>
                           </div>
                         </div>
                       </div>

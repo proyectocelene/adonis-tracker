@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { HeartPulse, Search, CheckCircle2, Info, Timer, Gauge, Activity, ChevronDown, ChevronUp, Sparkles, Settings2 } from 'lucide-react';
+import { LiquidDropdown } from './common/UIComponents';
 
 export default function CardioLogger({ 
   exercise, 
@@ -19,6 +20,13 @@ export default function CardioLogger({
   const [heartRate, setHeartRate] = useState(exerciseData.heartRate || '125');
   const [machineSetup, setMachineSetup] = useState(exerciseData.machineSetup || '');
   const [completed, setCompleted] = useState(exerciseData.completed || false);
+
+  const cardioMachines = [
+    { value: 'Caminadora Inclinada (Zona 2)', label: '🏃‍♂️ Caminadora Inclinada (10-12% incl / 4.8 km/h)' },
+    { value: 'Bicicleta Estática (Ergómetro)', label: '🚴‍♂️ Bicicleta Estática (Ergómetro Bajo Impacto)' },
+    { value: 'Elíptica de Bajo Impacto', label: '🚶‍♂️ Elíptica de Bajo Impacto Articular' },
+    { value: 'Remo Ergómetro Suave', label: '🚣‍♂️ Remo Ergómetro Suave (Zona 2)' }
+  ];
 
   useEffect(() => {
     onUpdateCardio({
@@ -94,7 +102,7 @@ export default function CardioLogger({
           
           <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
             <span className="badge" style={{ background: '#ecfeff', color: '#0e7490', fontSize: '11px', padding: '4px 8px' }}>
-              🎯 {machine}
+              🎯 {machine.split('(')[0]}
             </span>
             <span className={`badge ${completed ? 'badge-green' : 'badge-warning'}`} style={{ fontSize: '11px', padding: '4px 8px' }}>
               {completed ? '¡Módulo Terminado!' : `${duration} min • Pendiente`}
@@ -104,11 +112,12 @@ export default function CardioLogger({
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
           <button 
+            type="button"
             onClick={toggleCompleted}
             style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: '2px' }}
             title={completed ? "Desmarcar" : "Marcar completado"}
           >
-            <CheckCircle2 size={28} color={completed ? '#00b464' : '#cbd5e1'} />
+            <CheckCircle2 size={30} color={completed ? '#00b464' : '#cbd5e1'} />
           </button>
 
           <div 
@@ -144,6 +153,7 @@ export default function CardioLogger({
               {exercise.biomechanics || 'Evitar el impacto violento (correr) y el esfuerzo extremo (HIIT/Stairmaster) para no disparar la presión intraabdominal ni comprometer el desarrollo muscular.'}
             </p>
             <button 
+              type="button"
               onClick={handleSearchAI} 
               className="btn btn-outline"
               style={{ fontSize: '11px', padding: '6px 12px', width: 'auto', display: 'inline-flex', alignItems: 'center', gap: '6px', borderColor: '#06b6d4', color: '#0e7490', fontWeight: '800' }}
@@ -152,30 +162,24 @@ export default function CardioLogger({
             </button>
           </div>
 
-          <div style={{ marginBottom: '12px' }}>
-            <label className="input-label" style={{ display: 'block', textAlign: 'left', marginBottom: '4px', color: '#0e7490', fontWeight: '800' }}>
-              Equipo Aeróbico Seleccionado:
-            </label>
-            <select
+          <div style={{ marginBottom: '16px' }}>
+            <LiquidDropdown
+              label="EQUIPO AERÓBICO SELECCIONADO (ZONA 2):"
+              icon={Activity}
+              options={cardioMachines}
               value={machine}
-              onChange={(e) => setMachine(e.target.value)}
-              style={{ width: '100%', padding: '12px 14px', fontSize: '14px', fontWeight: '800', border: '1.5px solid #cbd5e1', borderRadius: '14px', background: '#fff' }}
-            >
-              <option value="Caminadora Inclinada (Zona 2)">Caminadora Inclinada (10-12% incl / 4.8 km/h)</option>
-              <option value="Bicicleta Estática (Ergómetro)">Bicicleta Estática (Ergómetro de Bajo Impacto)</option>
-              <option value="Elíptica de Bajo Impacto">Elíptica de Bajo Impacto Articular</option>
-              <option value="Remo Ergómetro Suave">Remo Ergómetro Suave</option>
-            </select>
+              onChange={(newVal) => setMachine(newVal)}
+            />
           </div>
 
-          <div className="grid-3" style={{ marginBottom: '14px', gap: '10px' }}>
+          <div className="grid-3" style={{ marginBottom: '16px', gap: '10px' }}>
             <div>
               <label className="input-label" style={{ textAlign: 'left', display: 'block', marginBottom: '4px', fontSize: '11px' }}>Tiempo (min):</label>
               <input 
                 type="number" 
                 value={duration} 
                 onChange={(e) => setDuration(e.target.value)}
-                style={{ textAlign: 'center', fontWeight: '800' }} 
+                style={{ textAlign: 'center', fontWeight: '800', padding: '10px', borderRadius: '14px', border: '1.5px solid #cbd5e1' }} 
               />
             </div>
 
@@ -186,7 +190,7 @@ export default function CardioLogger({
                 placeholder="4.8km/h / 12%" 
                 value={speed} 
                 onChange={(e) => setSpeed(e.target.value)}
-                style={{ textAlign: 'center', fontWeight: '700' }} 
+                style={{ textAlign: 'center', fontWeight: '700', padding: '10px', borderRadius: '14px', border: '1.5px solid #cbd5e1' }} 
               />
             </div>
 
@@ -197,25 +201,24 @@ export default function CardioLogger({
                 placeholder="125" 
                 value={heartRate} 
                 onChange={(e) => setHeartRate(e.target.value)}
-                style={{ textAlign: 'center', fontWeight: '800', color: '#ff3b30' }} 
+                style={{ textAlign: 'center', fontWeight: '800', color: '#ff3b30', padding: '10px', borderRadius: '14px', border: '1.5px solid #cbd5e1' }} 
               />
             </div>
           </div>
 
           {/* Ajustes del Equipo de Cardio */}
-          <div style={{ background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: '14px', padding: '12px' }}>
+          <div style={{ background: '#f8fafc', border: '1.5px solid #cbd5e1', borderRadius: '16px', padding: '14px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
               <Settings2 size={16} color="#475569" />
-              <strong style={{ fontSize: '12px', color: '#334155' }}>Ajustes del Equipo (Altura de asiento de bici, perfil, etc.):</strong>
+              <strong style={{ fontSize: '13px', color: '#334155', fontWeight: '800' }}>Calibración y Ajustes del Equipo Aeróbico:</strong>
             </div>
             <input 
               type="text"
               placeholder="Ej. Asiento de bicicleta en número 7, resistencia nivel 4..."
               value={machineSetup}
               onChange={(e) => setMachineSetup(e.target.value)}
-              style={{ width: '100%', fontSize: '12px', padding: '10px', textAlign: 'left', border: '1px solid #cbd5e1', background: '#ffffff' }}
-            >
-            </input>
+              style={{ width: '100%', fontSize: '13px', padding: '12px', textAlign: 'left', border: '1.5px solid #cbd5e1', background: '#ffffff', borderRadius: '12px' }}
+            />
           </div>
 
         </div>

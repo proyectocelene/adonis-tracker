@@ -4,8 +4,10 @@ import ExerciseRow from './ExerciseRow';
 import CardioLogger from './CardioLogger';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { CheckCircle, Calendar, ArrowLeft, ArrowRight, Save, Flame, RefreshCcw, Plus, X, Dumbbell, ShieldCheck, BookOpen, ShieldAlert, Zap, CheckCircle2, ChevronDown, ChevronUp, AlertTriangle, Activity } from 'lucide-react';
+import { useModal } from './common/UIComponents';
 
 export default function WorkoutDay() {
+  const modal = useModal();
   const [currentDayIndex, setCurrentDayIndex] = useState(() => {
     let day = new Date().getDay();
     if (day === 0) day = 7; 
@@ -89,7 +91,10 @@ export default function WorkoutDay() {
 
   const handleAddCustomExercise = (e) => {
     e.preventDefault();
-    if (!newExName.trim()) return;
+    if (!newExName.trim()) {
+      modal.showAlert({ title: "Campo requerido", message: "Escribe el nombre del ejercicio de fuerza para continuar.", variant: "warning" });
+      return;
+    }
 
     const newEx = {
       id: `custom_${Date.now()}`,
@@ -97,7 +102,7 @@ export default function WorkoutDay() {
       sets: parseInt(newExSets) || 3,
       reps: newExReps.trim() || '10-12',
       restTime: newExRest.trim() || '90 s',
-      biomechanics: newExBiomech.trim() || 'Ejecución técnica estricta con control del rango articular.',
+      biomechanics: newExBiomech.trim() || 'Ejecución técnica estricta con control del rango articular y exhalación IAP.',
       searchQuery: `${newExName} biomechanics execution`,
       defaultUnit: 'lbs'
     };
@@ -110,6 +115,12 @@ export default function WorkoutDay() {
     setIsAddingExercise(false);
     setNewExName('');
     setNewExBiomech('');
+
+    modal.showAlert({
+      title: "✅ Ejercicio Incrustado",
+      message: `El ejercicio "${newEx.name}" se incorporó con éxito a tu rutina habitual del día ${currentDay.name}.`,
+      variant: "success"
+    });
   };
 
   const calculateTotalVolume = () => {
@@ -145,44 +156,65 @@ export default function WorkoutDay() {
 
   const handleFinishWorkout = () => {
     if (completedSets === 0 && cardioCompleted === 0) {
-      alert("No has marcado ninguna serie o sesión de cardio como completada (✓). Registra al menos una casilla checada para archivar la sesión.");
+      modal.showAlert({
+        title: "⭕️ Sesión sin marcas activas",
+        message: "Aún no has checado ninguna serie de fuerza ni módulo aeróbico en tu rutina de hoy (✓).\n\nMarca las casillas logradas con los pesos y repeticiones ejecutadas antes de archivar tu entrenamiento en el laboratorio de análisis.",
+        variant: "warning"
+      });
       return;
     }
 
-    if (!confirm(`¿Deseas finalizar el entrenamiento y guardar tu bitácora científica?\n\nSeries de fuerza listas: ${completedSets}\nMódulos aeróbicos listos: ${cardioCompleted}\nVolumen total levantado: ${volume.toLocaleString()} lbs`)) {
-      return;
-    }
+    modal.showConfirm({
+      title: `🏁 ¿Archivar Sesión en Bitácora?`,
+      message: `Estás a punto de finalizar y registrar tu entrenamiento en el Laboratorio Científico:\n\n💪 Series de fuerza logradas: ${completedSets}\n❤️ Módulos de Cardio Zona 2: ${cardioCompleted}\n🔥 Volumen Total Levantado: ${volume.toLocaleString()} lbs-reps\n\n¿Confirmar y archivar datos oficiales?`,
+      confirmText: "💾 Sí, Archivar Ahora",
+      cancelText: "Continuar Entrenado",
+      variant: "success",
+      onConfirm: () => {
+        const newSessionLog = {
+          id: `ses_${Date.now()}`,
+          timestamp: new Date().toISOString(),
+          dateString: new Date().toLocaleDateString('es-ES', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }),
+          dayId: currentDay.id,
+          dayName: currentDay.name,
+          focus: currentDay.focus,
+          volume,
+          completedSets,
+          cardioCompleted,
+          exercises: todayWorkoutData
+        };
 
-    const newSessionLog = {
-      id: `ses_${Date.now()}`,
-      timestamp: new Date().toISOString(),
-      dateString: new Date().toLocaleDateString('es-ES', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }),
-      dayId: currentDay.id,
-      dayName: currentDay.name,
-      focus: currentDay.focus,
-      volume,
-      completedSets,
-      cardioCompleted,
-      exercises: todayWorkoutData
-    };
+        setWorkoutHistory(prev => [...prev, newSessionLog]);
 
-    setWorkoutHistory(prev => [...prev, newSessionLog]);
+        setCurrentSessions(prev => ({
+          ...prev,
+          [currentDay.id]: {}
+        }));
 
-    setCurrentSessions(prev => ({
-      ...prev,
-      [currentDay.id]: {}
-    }));
-
-    alert("¡Sesión archivada con éxito en tu Laboratorio Analítico! Consulta la pestaña 'Análisis' para ver tus nuevos progresos.");
+        modal.showAlert({
+          title: "🎉 ¡Sesión Archivado al 100%!",
+          message: "Tu hazaña de hoy quedó registrada en tu historial clínico sin simulaciones ni datos predeterminados. Consulta tu evolución real en la pestaña 'Análisis'.",
+          variant: "success",
+          buttonText: "¡Excelente, al descanso!"
+        });
+      }
+    });
   };
 
   const handleResetCurrent = () => {
-    if(confirm("¿Seguro que deseas reiniciar y desmarcar las casillas de hoy sin archivar los datos?")) {
-      setCurrentSessions(prev => ({
-        ...prev,
-        [currentDay.id]: {}
-      }));
-    }
+    modal.showConfirm({
+      title: "🔄 ¿Reiniciar Casillas del Día?",
+      message: "Si desmarcas todas las casillas del día de hoy no se perderá tu historial guardado, pero sí se limpiarán los checks actuales para que puedas iniciar la sesión desde cero.",
+      confirmText: "Reiniciar Hoy",
+      cancelText: "Mantener",
+      variant: "warning",
+      onConfirm: () => {
+        setCurrentSessions(prev => ({
+          ...prev,
+          [currentDay.id]: {}
+        }));
+      }
+    });
   };
 
   const getFirstUncompletedIdx = () => {
@@ -213,6 +245,7 @@ export default function WorkoutDay() {
       <div className="card" style={{ padding: '16px 14px', marginBottom: '14px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '10px' }}>
           <button 
+            type="button"
             className="btn btn-outline" 
             style={{ width: '48px', height: '48px', padding: '0', borderRadius: '16px', flexShrink: 0 }}
             onClick={() => {
@@ -233,6 +266,7 @@ export default function WorkoutDay() {
           </div>
           
           <button 
+            type="button"
             className="btn btn-outline" 
             style={{ width: '48px', height: '48px', padding: '0', borderRadius: '16px', flexShrink: 0 }}
             onClick={() => {
@@ -392,6 +426,7 @@ export default function WorkoutDay() {
             <strong style={{ fontSize: '20px', color: '#00b464', fontWeight: '800' }}>{completedSets} <span style={{ fontSize: '13px', color: '#94a3b8', fontWeight: '600' }}>Fuerza</span></strong>
           </div>
           <button 
+            type="button"
             onClick={handleResetCurrent} 
             title="Reiniciar casillas hoy" 
             style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '14px', padding: '10px', color: '#ffffff', cursor: 'pointer', transition: 'all 0.2s ease' }}
@@ -418,16 +453,15 @@ export default function WorkoutDay() {
           </div>
 
           {currentDay.exercises.map((exercise, idx) => {
-            // Si expandedExerciseId tiene un ID explícito, lo comparamos. Si es null (recién abre la página), abrimos el firstUncompletedIdx
             const isCurrentlyExpanded = expandedExerciseId !== null 
               ? (expandedExerciseId === exercise.id) 
               : (idx === firstUncompletedIdx);
 
             const handleToggle = () => {
               if (isCurrentlyExpanded) {
-                setExpandedExerciseId('none'); // Cierra todos
+                setExpandedExerciseId('none');
               } else {
-                setExpandedExerciseId(exercise.id); // Abre el actual y cierra el resto automáticamente
+                setExpandedExerciseId(exercise.id);
               }
             };
 
@@ -468,7 +502,7 @@ export default function WorkoutDay() {
                   <Dumbbell size={18} color="#0066ff" />
                   <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '800', whiteSpace: 'normal' }}>Nuevo Ejercicio en Rutina</h3>
                 </div>
-                <button onClick={() => setIsAddingExercise(false)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: '4px' }}>
+                <button type="button" onClick={() => setIsAddingExercise(false)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: '4px' }}>
                   <X size={22} color="#64748b" />
                 </button>
               </div>
@@ -482,18 +516,19 @@ export default function WorkoutDay() {
                     placeholder="Ej. Curl de Bíceps en Banco Scott con Barra Z" 
                     value={newExName} 
                     onChange={e => setNewExName(e.target.value)} 
-                    style={{ textAlign: 'left' }}
+                    style={{ textAlign: 'left', padding: '10px 12px', width: '100%', borderRadius: '14px', border: '1.5px solid #cbd5e1' }}
                   />
                 </div>
 
-                <div className="grid-2" style={{ marginBottom: '12px' }}>
+                <div className="grid-2" style={{ marginBottom: '12px', gap: '10px' }}>
                   <div className="input-group">
                     <label className="input-label" style={{ textAlign: 'left', marginBottom: '4px' }}>Series Meta:</label>
                     <input 
                       type="number" 
                       placeholder="3" 
                       value={newExSets} 
-                      onChange={e => setNewExSets(e.target.value)} 
+                      onChange={e => setNewExSets(e.target.value)}
+                      style={{ padding: '10px', width: '100%', borderRadius: '14px', border: '1.5px solid #cbd5e1' }} 
                     />
                   </div>
                   <div className="input-group">
@@ -502,7 +537,8 @@ export default function WorkoutDay() {
                       type="text" 
                       placeholder="10-12" 
                       value={newExReps} 
-                      onChange={e => setNewExReps(e.target.value)} 
+                      onChange={e => setNewExReps(e.target.value)}
+                      style={{ padding: '10px', width: '100%', borderRadius: '14px', border: '1.5px solid #cbd5e1' }} 
                     />
                   </div>
                 </div>
@@ -514,7 +550,7 @@ export default function WorkoutDay() {
                     placeholder="Ej. 90 s" 
                     value={newExRest} 
                     onChange={e => setNewExRest(e.target.value)} 
-                    style={{ textAlign: 'left' }}
+                    style={{ textAlign: 'left', padding: '10px 12px', width: '100%', borderRadius: '14px', border: '1.5px solid #cbd5e1' }}
                   />
                 </div>
 
@@ -525,11 +561,11 @@ export default function WorkoutDay() {
                     placeholder="Ej. Mantener codos firmes sin balancear el torso." 
                     value={newExBiomech} 
                     onChange={e => setNewExBiomech(e.target.value)} 
-                    style={{ textAlign: 'left' }}
+                    style={{ textAlign: 'left', padding: '10px 12px', width: '100%', borderRadius: '14px', border: '1.5px solid #cbd5e1' }}
                   />
                 </div>
 
-                <div className="grid-2">
+                <div className="grid-2" style={{ gap: '12px' }}>
                   <button type="button" className="btn btn-outline" onClick={() => setIsAddingExercise(false)}>Cancelar</button>
                   <button type="submit" className="btn btn-primary">Guardar en Rutina</button>
                 </div>
@@ -538,6 +574,7 @@ export default function WorkoutDay() {
           ) : (
             <div style={{ marginBottom: '24px', marginTop: '16px' }}>
               <button 
+                type="button"
                 className="btn btn-outline" 
                 onClick={() => setIsAddingExercise(true)}
                 style={{ background: 'rgba(255, 255, 255, 0.9)', border: '2px dashed #94a3b8', color: '#334155', fontWeight: '800', padding: '15px' }}
@@ -549,7 +586,7 @@ export default function WorkoutDay() {
 
           {/* Botón Principal de Finalizar */}
           <div style={{ marginTop: '28px', marginBottom: '20px' }}>
-            <button className="btn btn-primary" onClick={handleFinishWorkout} style={{ padding: '18px', fontSize: '17px', borderRadius: '20px', fontWeight: '800', boxShadow: '0 8px 25px rgba(0, 102, 255, 0.4)' }}>
+            <button type="button" className="btn btn-primary" onClick={handleFinishWorkout} style={{ padding: '18px', fontSize: '17px', borderRadius: '20px', fontWeight: '800', boxShadow: '0 8px 25px rgba(0, 102, 255, 0.4)' }}>
               <Save size={24} /> Guardar Sesión en Bitácora Científica
             </button>
           </div>
