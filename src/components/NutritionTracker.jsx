@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
-import { Droplet, Award, RefreshCw, Plus, Heart, Scale, TrendingDown, TrendingUp, UserCheck, Trash2, Calendar, Sparkles, Activity, ShieldCheck, FileText, CheckCircle2, Circle, ChevronDown, ChevronUp, AlertCircle, Flame, Apple, Zap, BookOpen, Info, Check, ShieldAlert, Package, ShoppingCart, Key, Lock, CheckCheck, BarChart2, PieChart, TrendingUp as TrendUpIcon, Layers, MoveRight, Bookmark, BookmarkCheck, Download, Database, FileSpreadsheet } from 'lucide-react';
+import { Droplet, Award, RefreshCw, Plus, Heart, Scale, TrendingDown, TrendingUp, UserCheck, Trash2, Calendar, Sparkles, Activity, ShieldCheck, FileText, CheckCircle2, Circle, ChevronDown, ChevronUp, AlertCircle, Flame, Apple, Zap, BookOpen, Info, Check, ShieldAlert, Package, ShoppingCart, Key, Lock, CheckCheck, BarChart2, PieChart, TrendingUp as TrendUpIcon, Layers, MoveRight, Bookmark, BookmarkCheck, Download, Database, FileSpreadsheet, Settings, Send, Share2, Copy } from 'lucide-react';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { useModal, UnitToggle } from './common/UIComponents';
+import { analyzeFullDatabaseWithAI } from '../services/deepseek';
 
 import MealCard from './nutrition/MealCard';
 import AlacenaView from './nutrition/AlacenaView';
@@ -17,21 +18,25 @@ export default function NutritionTracker() {
     carbs: 0,
     fats: 0,
     water: 0,
-    completedMeals: {},        // { desayuno: true... }
-    completedRationIndices: {}, // { desayuno: [0, 1, 2], comida: [0, 2]... }
+    completedMeals: {},
+    completedRationIndices: {},
     savedMealTexts: {},
     savedMealAnalysis: {},
-    migratedItems: {},          // { comida: [ ... ] }
-    mealExcesses: {}            // { cena: [ { id, name: '8x Pizza', calories: 1920, carbs: 240, fats: 80 } ] }
+    migratedItems: {},
+    mealExcesses: {}
   });
 
-  // Historial y estadística nutricional diaria preservada para análisis (Cero datos ficticios)
+  // Historial y estadística nutricional diaria preservada para análisis
   const [nutritionHistory, setNutritionHistory] = useLocalStorage('coachv2_nutrition_history', []);
   
   // Clave de API de DeepSeek
   const [deepSeekApiKey, setDeepSeekApiKey] = useLocalStorage('coachv2_deepseek_api_key', '');
   const [showApiInput, setShowApiInput] = useState(false);
   const [apiInputVal, setApiInputVal] = useState('');
+
+  // Auditoría AI sobre toda la base de datos
+  const [isAuditingDb, setIsAuditingDb] = useState(false);
+  const [aiDbAuditResult, setAiDbAuditResult] = useState(null);
 
   useEffect(() => {
     if (deepSeekApiKey) {
@@ -43,10 +48,9 @@ export default function NutritionTracker() {
   const [bodyMetrics, setBodyMetrics] = useLocalStorage('coachv2_body_metrics_history', []);
   const [calorieDayType, setCalorieDayType] = useLocalStorage('coachv2_calorie_day_type', 'standard'); 
 
-  // Tabs principales: menu | alacena | stats | report | metrics
+  // Tabs de navegación principal de Nutrición: 'menu' | 'alacena' | 'stats' | 'settings' | 'report' | 'metrics'
   const [activeTab, setActiveTab] = useState('menu');
   const [expandedMealId, setExpandedMealId] = useState('desayuno');
-  const [showGuidelines, setShowGuidelines] = useState(false);
 
   // Formulario para Nueva Medición Biométrica
   const [isAddingMetric, setIsAddingMetric] = useState(false);
@@ -163,85 +167,110 @@ export default function NutritionTracker() {
     };
   });
 
-  // Guardar clave API de DeepSeek
   const handleSaveApiKey = (e) => {
     e.preventDefault();
     setDeepSeekApiKey(apiInputVal.trim());
     setShowApiInput(false);
     modal.showAlert({
       title: "🔑 Clave DeepSeek Almacenada",
-      message: "Tu API Key se guardó cifrada y privada de forma local. Ahora puedes usar el Asistente AI sin limitaciones.",
+      message: "Tu API Key se guardó cifrada y privada en tu dispositivo local. Habilitando Inteligencia Artificial en toda tu app.",
       variant: "success"
     });
   };
 
-  // ===================== EXPORTAR TODA LA BASE DE DATOS LOCAL =====================
+  // ===================== EXPORTACIÓN INTELIGENTE DE LA BASE DE DATOS =====================
+  const getCompleteDatabaseObject = () => {
+    const db = {};
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith('coachv2_')) {
+        try {
+          db[key] = JSON.parse(localStorage.getItem(key));
+        } catch (err) {
+          db[key] = localStorage.getItem(key);
+        }
+      }
+    }
+    return {
+      meta: {
+        app: "COACH V2 • Control Científico & Protocolo Adonis",
+        atleta: "CARLOS DONATO",
+        fechaExportacion: new Date().toISOString(),
+        version: "3.0 Liquid Glass iOS AI"
+      },
+      database: db
+    };
+  };
+
   const handleExportAllData = (format = 'json') => {
     try {
-      const db = {};
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key && key.startsWith('coachv2_')) {
-          try {
-            db[key] = JSON.parse(localStorage.getItem(key));
-          } catch (err) {
-            db[key] = localStorage.getItem(key);
-          }
+      const dbObj = getCompleteDatabaseObject();
+
+      if (format === 'ai-prompt') {
+        // Generar un Prompt estructurado en lenguaje natural listo para pegar en DeepSeek / ChatGPT / Google AI
+        let aiText = `🤖 *PROMPT ESTRUCTURADO PARA AUDITORÍA AI (DEEPSEEK / CHATGPT / GOOGLE AI)*\n`;
+        aiText += `Rol: Nutriólogo Clínico y Científico Deportivo Jefe de NutriConsult.\n`;
+        aiText += `Atleta: CARLOS DONATO (26 años, 174 cm, Objetivo: Déficit Calórico de 2,201 kcal/día & 150g proteína para recomposicion).\n\n`;
+        aiText += `*DATOS REALES ALMACENADOS EN BITÁCORA LOCAL:*\n`;
+        aiText += `1. **Nutrición Hoy**: ${Math.round(nutrition.calories || 0)} kcal, ${Math.round(nutrition.protein || 0)}g proteína magras.\n`;
+        aiText += `2. **Excesos / Cheat Meals Detectados**: ${JSON.stringify(nutrition.mealExcesses || {})}\n`;
+        aiText += `3. **Historial de Jornadas pasadas**: ${JSON.stringify(nutritionHistory, null, 2)}\n`;
+        aiText += `4. **Evolución de Peso Corporal**: ${JSON.stringify(bodyMetrics, null, 2)}\n`;
+        aiText += `5. **Inventario en Alacena y Compras**: ${JSON.stringify(dbObj.database['coachv2_alacena_items'] || [], null, 2)}\n`;
+        aiText += `6. **Bitácora de Costos en el Súper**: ${JSON.stringify(dbObj.database['coachv2_grocery_prices'] || [], null, 2)}\n\n`;
+        aiText += `INSTRUCCIÓN PARA EL AI: Analiza estadísticamente mis patrones de adherencia calórica, evalúa si los excesos o cheat meals están ralentizando el progreso hacia los 68.0 kg (meta Lorentz), y dame 3 consejos prácticos sobre compras e inventario en mi cocina sin desperdiciar dinero en tiendas caras.`;
+
+        if (navigator.clipboard) {
+          navigator.clipboard.writeText(aiText);
+          modal.showAlert({
+            title: "🤖 Base de Datos AI Copiada al Portapapeles",
+            message: "¡Toda tu base de datos y bitácora clínica fue convertida en un prompt ultra limpio y copiada a tu portapapeles! Ahora puedes pegarla directamente en DeepSeek AI, ChatGPT o Google Gemini para una auditoría instantánea.",
+            variant: "success"
+          });
         }
+        return;
       }
 
       if (format === 'csv') {
-        // Generar CSV analítico de historial nutricional para Excel / Python
         let csvContent = "Fecha,Calorias_Reales,Meta_Calorica,Proteina_Reales_g,Meta_Proteina,Carbohidratos_g,Grasas_g,Agua_ml,Tipo_Jornada\n";
         
-        const history = db['coachv2_nutrition_history'] || [];
+        const history = dbObj.database['coachv2_nutrition_history'] || [];
         history.forEach(item => {
           csvContent += `"${item.date || ''}",${item.calories || 0},${item.targetCalories || 2201},${item.protein || 0},${item.targetProtein || 150},${item.carbs || 0},${item.fats || 0},${item.water || 0},"${item.calorieType || 'standard'}"\n`;
         });
         
-        // Sumar hoy en vivo al CSV
         csvContent += `"Hoy (En Vivo)",${Math.round(nutrition.calories || 0)},${targetCalories},${Math.round(nutrition.protein || 0)},${targetProtein},${Math.round(nutrition.carbs || 0)},${Math.round(nutrition.fats || 0)},${nutrition.water || 0},"${calorieDayType}"\n`;
 
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.setAttribute('href', url);
-        link.setAttribute('download', `COACH_V2_Analisis_Nutricional_${new Date().toISOString().slice(0,10)}.csv`);
+        link.setAttribute('download', `COACH_V2_Estadisticas_CarlosDonato_${new Date().toISOString().slice(0,10)}.csv`);
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
         
         modal.showAlert({
-          title: "📊 Tabla CSV Analítica Exportada",
-          message: "El archivo CSV con tu historial diario, calorías reales, proteínas y excesos se ha descargado a tu dispositivo para análisis en Excel o herramientas estadísticas.",
+          title: "📊 Tabla CSV Analítica Descargada",
+          message: "Archivo CSV generado. Contiene tus calorías reales (con excesos sumados) y proteínas para analizar en Excel o software estadístico.",
           variant: "success"
         });
         return;
       }
 
-      // Exportar todo como JSON estructurado (Respaldo total de Base de Datos)
-      const fullExportObj = {
-        meta: {
-          app: "COACH V2 • Protocolo Adonis",
-          atleta: "CARLOS DONATO",
-          fechaRespaldo: new Date().toISOString(),
-          version: "2.5 Liquid Glass iOS"
-        },
-        database: db
-      };
-
-      const blob = new Blob([JSON.stringify(fullExportObj, null, 2)], { type: 'application/json' });
+      // Respaldo JSON Integral
+      const blob = new Blob([JSON.stringify(dbObj, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.setAttribute('href', url);
-      link.setAttribute('download', `COACH_V2_BaseDatos_Total_CarlosDonato_${new Date().toISOString().slice(0,10)}.json`);
+      link.setAttribute('download', `COACH_V2_BaseDatos_Total_${new Date().toISOString().slice(0,10)}.json`);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
 
       modal.showAlert({
-        title: "💾 Respaldo de Base de Datos Completa Exportado",
-        message: "¡Toda la base de datos local de COACH V2 (rutinas, pesos, alacena, nutrición y bitácoras) fue exportada y guardada en tu dispositivo en archivo JSON inviolable!",
+        title: "💾 Respaldo JSON de Base de Datos Exportada",
+        message: "¡Toda tu base de datos de COACH V2 fue guardada localmente en tu dispositivo!",
         variant: "success"
       });
     } catch (error) {
@@ -249,7 +278,49 @@ export default function NutritionTracker() {
     }
   };
 
-  // Alternar completado completo de comida
+  // Auditoría AI in-app con DeepSeek
+  const handleRunAiAuditInApp = async () => {
+    if (!deepSeekApiKey) {
+      modal.showAlert({
+        title: "🔑 Clave API Requerida",
+        message: "Para que DeepSeek realice la auditoría clínica sobre tu base de datos en vivo dentro de la aplicación, configura primero tu clave en el botón de arriba.",
+        variant: "warning"
+      });
+      return;
+    }
+    setIsAuditingDb(true);
+    try {
+      const dbObj = getCompleteDatabaseObject();
+      const res = await analyzeFullDatabaseWithAI({ apiKey: deepSeekApiKey, dbBackup: dbObj });
+      setAiDbAuditResult(res);
+      modal.showAlert({ title: "🏆 Auditoría Clínica DeepSeek Terminada", message: `Tu puntuación de adherencia general fue evaluada por la IA: ${res.puntajeAdherencia}`, variant: "success" });
+    } catch (error) {
+      modal.showAlert({ title: "❌ Error al Consultar AI", message: error.message, variant: "danger" });
+    } finally {
+      setIsAuditingDb(false);
+    }
+  };
+
+  // Borrar todos los datos de fábrica (Asegurado en Ajustes)
+  const handleClearDatabase = () => {
+    modal.showConfirm({
+      title: "🗑️ ¿Borrar Toda la Base de Datos de COACH V2?",
+      message: "ADVERTENCIA: Esta acción limpiará todo tu historial de peso, inventario de alacena, tickets del súper y rutinas en tu dispositivo actual para comenzar desde cero. ¿Estás absolutamente seguro?",
+      confirmText: "⚠️ Sí, Borrar Todo",
+      cancelText: "No, Preservar Datos",
+      variant: "danger",
+      onConfirm: () => {
+        localStorage.clear();
+        modal.showAlert({
+          title: "✨ Base de Datos Reiniciada",
+          message: "Tu aplicación se limpió y restableció las fórmulas clínicas de NutriConsult.",
+          variant: "info",
+          onClose: () => window.location.reload()
+        });
+      }
+    });
+  };
+
   const toggleMealCompleted = (mealObj, forceState = null) => {
     const currentlyCompleted = !!nutrition.completedMeals?.[mealObj.id];
     const newStatus = forceState !== null ? forceState : !currentlyCompleted;
@@ -278,13 +349,12 @@ export default function NutritionTracker() {
     if (newStatus && forceState === null) {
       modal.showAlert({
         title: `✅ ${mealObj.title} Registrado`,
-        message: `Sumado a tu balance calórico:\n\n🔥 +${cal} kcal • 💪 +${prot}g Proteína`,
+        message: `Sumado al combustible diario:\n\n🔥 +${cal} kcal • 💪 +${prot}g Proteína Magra`,
         variant: 'success'
       });
     }
   };
 
-  // Alternar marcaje de índices de ración individual
   const handleToggleRationIndex = (mealId, indicesArray) => {
     setNutrition(prev => ({
       ...prev,
@@ -295,14 +365,13 @@ export default function NutritionTracker() {
     }));
   };
 
-  // Migrar raciones pendientes a comida elegida
   const handleMigrateRations = (fromMealId, targetMealId, uncheckedIndices, itemsToMigrate) => {
     const fromMeal = baseMealsList.find(m => m.id === fromMealId);
     
     const convertedItems = itemsToMigrate.map(item => ({
       group: `[Migrado] ${item.group.split('(')[0].trim()}`,
       rations: `${item.rations}`,
-      desc: `Porción no consumida en ${fromMeal?.title.split(' ')[1] || 'comida previa'}. ${item.desc}`,
+      desc: `Porción pendiente en ${fromMeal?.title.split(' ')[1] || 'comida previa'}. ${item.desc}`,
       isMigrated: true
     }));
 
@@ -329,7 +398,6 @@ export default function NutritionTracker() {
     }
   };
 
-  // Añadir un exceso calórico o cheat meal (ej. 8 rebanadas de pizza, cervezas)
   const handleAddExcessItem = (mealId, excessItem) => {
     setNutrition(prev => {
       const currentExcesses = prev.mealExcesses?.[mealId] || [];
@@ -347,7 +415,6 @@ export default function NutritionTracker() {
     });
   };
 
-  // Quitar un exceso calórico
   const handleRemoveExcessItem = (mealId, excessItem) => {
     setNutrition(prev => {
       const currentExcesses = prev.mealExcesses?.[mealId] || [];
@@ -364,10 +431,9 @@ export default function NutritionTracker() {
         }
       };
     });
-    modal.showAlert({ title: "🗑️ Exceso Eliminado", message: `Se restaron las ${excessItem.calories} kcal de ese exceso de tus contadores diarios.`, variant: "info" });
+    modal.showAlert({ title: "🗑️ Exceso Eliminado", message: `Se restaron las ${excessItem.calories} kcal de ese consumo extra.`, variant: "info" });
   };
 
-  // Aplicar macros calculados por la IA de DeepSeek
   const handleApplyCalculatedMacros = (mealId, data) => {
     setNutrition(prev => ({
       ...prev,
@@ -394,11 +460,10 @@ export default function NutritionTracker() {
     }));
   };
 
-  // Guardar y archivar el día en el Historial Estadístico para Gráficas reales
   const handleArchiveDayToStats = () => {
     modal.showConfirm({
       title: "💾 ¿Guardar Jornada en Historial Estadístico?",
-      message: `Esto guardará tus totales de hoy (${Math.round(nutrition.calories || 0)} kcal, incluyendo excesos si hubo, y ${Math.round(nutrition.protein || 0)}g proteína) en tu bitácora analítica y reiniciará tus contadores limpios para mañana.`,
+      message: `Guardarás tus totales de hoy (${Math.round(nutrition.calories || 0)} kcal reales y ${Math.round(nutrition.protein || 0)}g proteína) y se reiniciarán tus contadores limpios para mañana.`,
       confirmText: "✨ Guardar y Reiniciar Día",
       cancelText: "Mantener Actual",
       variant: "success",
@@ -421,27 +486,25 @@ export default function NutritionTracker() {
         setNutritionHistory(prev => [...prev, newArchive]);
         setNutrition({ protein: 0, calories: 0, carbs: 0, fats: 0, water: 0, completedMeals: {}, completedRationIndices: {}, savedMealTexts: {}, savedMealAnalysis: {}, migratedItems: {}, mealExcesses: {} });
         
-        modal.showAlert({ title: "📊 Jornada Archivada con Éxito", message: "Tu progreso y balance real se ha guardado sin adulterar en la sección de Análisis & Estadística.", variant: "info" });
+        modal.showAlert({ title: "📊 Jornada Archivada con Éxito", message: "Progreso sumado a la sección de Análisis & Estadística.", variant: "info" });
       }
     });
   };
 
-  // Reiniciar contadores del día actual a cero sin archivar
   const handleResetNutrition = () => {
     modal.showConfirm({
       title: "🔄 ¿Reiniciar Contadores a Cero?",
-      message: "¿Deseas limpiar todos los checks, excesos marcados, análisis AI y migraciones de tu jornada actual?",
+      message: "¿Deseas limpiar tus checks y excesos de hoy a estado base?",
       confirmText: "Sí, Limpiar a Cero",
       cancelText: "Cancelar",
       variant: "warning",
       onConfirm: () => {
         setNutrition({ protein: 0, calories: 0, carbs: 0, fats: 0, water: 0, completedMeals: {}, completedRationIndices: {}, savedMealTexts: {}, savedMealAnalysis: {}, migratedItems: {}, mealExcesses: {} });
-        modal.showAlert({ title: "💧 Contadores Limpios", message: "Tu menú diario fue devuelto a estado base.", variant: "info" });
+        modal.showAlert({ title: "💧 Contadores Limpios", message: "Menú devuelto a estado base.", variant: "info" });
       }
     });
   };
 
-  // Guardar nueva medición corporal
   const handleSaveMetric = (e) => {
     e.preventDefault();
     if (!weight) return;
@@ -470,13 +533,11 @@ export default function NutritionTracker() {
     setBodyMetrics(prev => prev.filter(item => item.id !== id));
   };
 
-  // Porcentajes de avance de KPIs en vivo (Puede exceder 100% en caso de pizzas o cerveza)
   const calPercentage = Math.round(((nutrition.calories || 0) / targetCalories) * 100);
   const protPercentage = Math.round(((nutrition.protein || 0) / targetProtein) * 100);
   const waterPercentage = Math.round(((nutrition.water || 0) / targetWater) * 100);
   const isCalorieExceeded = calPercentage > 105;
 
-  // Datos de Peso para Gráfica
   const getWeightChartData = () => {
     if (bodyMetrics.length === 0) return [];
     return bodyMetrics.slice(-15).map(m => {
@@ -485,7 +546,6 @@ export default function NutritionTracker() {
     });
   };
 
-  // Datos para la gráfica de Análisis y Estadística Nutricional (Real y con excesos reflejados)
   const getStatsChartData = () => {
     const historical = nutritionHistory.slice(-10).map(h => ({
       dia: h.date ? h.date.split(',')[0] : 'Ant',
@@ -534,42 +594,32 @@ export default function NutritionTracker() {
               
               {deepSeekApiKey ? (
                 <span className="badge" style={{ background: '#dcfce7', color: '#15803d', fontWeight: '800', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                  🟢 DeepSeek AI Listo
+                  🟢 DeepSeek AI Activo
                 </span>
               ) : (
                 <span className="badge" style={{ background: '#fef3c7', color: '#92400e', fontWeight: '700', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                  🟡 Sin Clave DeepSeek (Opción Google Activa)
+                  🟡 Sin Clave AI (Opción Google Activa)
                 </span>
               )}
             </div>
 
             <h1 style={{ marginTop: '8px', marginBottom: '4px', fontSize: '22px', fontWeight: '800', whiteSpace: 'normal', color: '#0f172a' }}>
-              Nutrición Inteligente & Control de Excesos
+              Nutrición, Alacena & Control de Excesos
             </h1>
             <span style={{ fontSize: '12px', color: isCalorieExceeded ? '#dc2626' : '#047857', fontWeight: '700', display: 'block' }}>
-              {isCalorieExceeded ? '⚠️ Alerta: Superaste la meta calórica del día por consumos extras o excesos' : 'Déficit Calórico con Protección Muscular • 2,201 kcal & 150g Proteína'}
+              {isCalorieExceeded ? '⚠️ Alerta: Superaste la meta calórica del día (Refleja consumos extra / pizza / cerveza)' : 'Déficit Calórico con Protección Muscular • 2,201 kcal & 150g Proteína'}
             </span>
           </div>
 
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
             <button 
               type="button"
-              onClick={() => handleExportAllData('json')}
+              onClick={() => setActiveTab('settings')}
               className="btn btn-outline"
               style={{ width: 'auto', height: '42px', padding: '0 12px', borderRadius: '14px', background: '#e0f2fe', border: '1px solid #7dd3fc', color: '#0369a1', fontWeight: '800', fontSize: '12px', display: 'flex', gap: '6px', alignItems: 'center' }}
-              title="Exportar toda la base de datos de COACH V2 para respaldo y análisis"
+              title="Ir a Ajustes, Exportar DB y Prompts AI"
             >
-              <Database size={17} color="#0284c7" /> Exportar DB
-            </button>
-
-            <button 
-              type="button"
-              onClick={handleArchiveDayToStats}
-              className="btn btn-outline"
-              style={{ width: '42px', height: '42px', padding: 0, borderRadius: '14px', background: '#dcfce7', border: '1px solid #86efac' }}
-              title="Guardar día actual en Historial Estadístico"
-            >
-              <Bookmark size={18} color="#15803d" />
+              <Settings size={17} color="#0284c7" /> Ajustes & Exportar DB
             </button>
 
             <button 
@@ -601,8 +651,8 @@ export default function NutritionTracker() {
               <Key size={18} color="#0066ff" />
               <strong style={{ fontSize: '14px', color: '#1e293b', fontWeight: '800' }}>Configuración de Inteligencia DeepSeek AI:</strong>
             </div>
-            <p style={{ fontSize: '12px', color: '#475569', margin: '0 0 10px 0', lineHeight: '1.4' }}>
-              Tu clave te habilita para analizar en lenguaje natural tus platillos y excesos calóricos, así como generar recetas desde tu Alacena. Se guarda 100% cifrada de forma local. ¿No deseas usar clave? Todo el sistema de excesos manual y búsquedas en Google AI Search está habilitado para ti.
+            <p style={{ fontSize: '12px', color: '#475569', margin: '0 0 10px 0', lineHeight: '1.4', fontWeight: '600' }}>
+              Tu clave habilita el análisis inteligente de Alacena, evaluación de precios y costos en el súper, recetas prácticas rápidas y registro automático de excesos en lenguaje natural. Se almacena 100% privada de forma local.
             </p>
             <form onSubmit={handleSaveApiKey} style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
               <input
@@ -629,7 +679,7 @@ export default function NutritionTracker() {
               Ciclo Calórico Semanal (Zigzag):
             </strong>
           </div>
-          <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '600' }}>Ajusta al entreno</span>
+          <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '600' }}>Ajusta al entreno de tu jornada</span>
         </div>
 
         <div className="grid-3" style={{ gap: '8px' }}>
@@ -760,29 +810,29 @@ export default function NutritionTracker() {
         </div>
       </div>
 
-      {/* NAVEGACIÓN TABS PRINCIPALES */}
-      <div style={{ display: 'flex', background: '#e2e8f0', borderRadius: '18px', padding: '4px', marginBottom: '20px', gap: '4px', flexWrap: 'wrap' }}>
+      {/* MENÚ DE NAVEGACIÓN INTELIGENTE CON 6 MÓDULOS DE ORO */}
+      <div style={{ display: 'flex', background: '#e2e8f0', borderRadius: '20px', padding: '5px', marginBottom: '22px', gap: '5px', flexWrap: 'wrap', border: '1px solid #cbd5e1' }}>
         <button
           type="button"
           onClick={() => setActiveTab('menu')}
           style={{
-            flex: '1 1 calc(33% - 4px)', padding: '10px 4px', border: 'none', borderRadius: '14px',
+            flex: '1 1 calc(33% - 6px)', padding: '11px 4px', border: 'none', borderRadius: '15px',
             background: activeTab === 'menu' ? '#10b981' : 'transparent',
-            color: activeTab === 'menu' ? '#ffffff' : '#475569', fontWeight: '800', fontSize: '11px', cursor: 'pointer',
-            boxShadow: activeTab === 'menu' ? '0 4px 12px rgba(16, 185, 129, 0.3)' : 'none'
+            color: activeTab === 'menu' ? '#ffffff' : '#334155', fontWeight: '800', fontSize: '11px', cursor: 'pointer',
+            boxShadow: activeTab === 'menu' ? '0 4px 12px rgba(16, 185, 129, 0.3)' : 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px'
           }}
         >
-          🥗 Menú & Excesos
+          🥗 Dieta & Excesos
         </button>
         
         <button
           type="button"
           onClick={() => setActiveTab('alacena')}
           style={{
-            flex: '1 1 calc(33% - 4px)', padding: '10px 4px', border: 'none', borderRadius: '14px',
+            flex: '1 1 calc(33% - 6px)', padding: '11px 4px', border: 'none', borderRadius: '15px',
             background: activeTab === 'alacena' ? '#0066ff' : 'transparent',
-            color: activeTab === 'alacena' ? '#ffffff' : '#475569', fontWeight: '800', fontSize: '11px', cursor: 'pointer',
-            boxShadow: activeTab === 'alacena' ? '0 4px 12px rgba(0, 102, 255, 0.3)' : 'none'
+            color: activeTab === 'alacena' ? '#ffffff' : '#334155', fontWeight: '800', fontSize: '11px', cursor: 'pointer',
+            boxShadow: activeTab === 'alacena' ? '0 4px 12px rgba(0, 102, 255, 0.3)' : 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px'
           }}
         >
           📦 Alacena & Súper
@@ -792,36 +842,49 @@ export default function NutritionTracker() {
           type="button"
           onClick={() => setActiveTab('stats')}
           style={{
-            flex: '1 1 calc(33% - 4px)', padding: '10px 4px', border: 'none', borderRadius: '14px',
+            flex: '1 1 calc(33% - 6px)', padding: '11px 4px', border: 'none', borderRadius: '15px',
             background: activeTab === 'stats' ? '#d97706' : 'transparent',
-            color: activeTab === 'stats' ? '#ffffff' : '#475569', fontWeight: '800', fontSize: '11px', cursor: 'pointer',
-            boxShadow: activeTab === 'stats' ? '0 4px 12px rgba(217, 119, 6, 0.3)' : 'none'
+            color: activeTab === 'stats' ? '#ffffff' : '#334155', fontWeight: '800', fontSize: '11px', cursor: 'pointer',
+            boxShadow: activeTab === 'stats' ? '0 4px 12px rgba(217, 119, 6, 0.3)' : 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px'
           }}
         >
-          📈 Estadística Dieta
+          📈 Estadística & Precios
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('settings')}
+          style={{
+            flex: '1 1 calc(33% - 6px)', padding: '11px 4px', border: 'none', borderRadius: '15px',
+            background: activeTab === 'settings' ? '#0284c7' : 'transparent',
+            color: activeTab === 'settings' ? '#ffffff' : '#334155', fontWeight: '800', fontSize: '11px', cursor: 'pointer',
+            boxShadow: activeTab === 'settings' ? '0 4px 12px rgba(2, 132, 199, 0.3)' : 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', marginTop: '3px'
+          }}
+        >
+          ⚙️ Ajustes & Exportar AI
         </button>
 
         <button
           type="button"
           onClick={() => setActiveTab('report')}
           style={{
-            flex: '1 1 calc(50% - 4px)', padding: '10px 4px', border: 'none', borderRadius: '14px',
+            flex: '1 1 calc(33% - 6px)', padding: '11px 4px', border: 'none', borderRadius: '15px',
             background: activeTab === 'report' ? '#7c3aed' : 'transparent',
-            color: activeTab === 'report' ? '#ffffff' : '#475569', fontWeight: '800', fontSize: '11px', cursor: 'pointer',
-            boxShadow: activeTab === 'report' ? '0 4px 12px rgba(124, 58, 237, 0.3)' : 'none', marginTop: '2px'
+            color: activeTab === 'report' ? '#ffffff' : '#334155', fontWeight: '800', fontSize: '11px', cursor: 'pointer',
+            boxShadow: activeTab === 'report' ? '0 4px 12px rgba(124, 58, 237, 0.3)' : 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', marginTop: '3px'
           }}
         >
-          📋 Reporte Médico
+          📋 Reporte Nutricional
         </button>
 
         <button
           type="button"
           onClick={() => setActiveTab('metrics')}
           style={{
-            flex: '1 1 calc(50% - 4px)', padding: '10px 4px', border: 'none', borderRadius: '14px',
+            flex: '1 1 calc(33% - 6px)', padding: '11px 4px', border: 'none', borderRadius: '15px',
             background: activeTab === 'metrics' ? '#0e7490' : 'transparent',
-            color: activeTab === 'metrics' ? '#ffffff' : '#475569', fontWeight: '800', fontSize: '11px', cursor: 'pointer',
-            boxShadow: activeTab === 'metrics' ? '0 4px 12px rgba(14, 116, 144, 0.3)' : 'none', marginTop: '2px'
+            color: activeTab === 'metrics' ? '#ffffff' : '#334155', fontWeight: '800', fontSize: '11px', cursor: 'pointer',
+            boxShadow: activeTab === 'metrics' ? '0 4px 12px rgba(14, 116, 144, 0.3)' : 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', marginTop: '3px'
           }}
         >
           ⚖️ Pesaje & IMC
@@ -835,8 +898,8 @@ export default function NutritionTracker() {
             <Apple size={22} color="#10b981" style={{ flexShrink: 0 }} />
             <div style={{ flex: 1 }}>
               <strong style={{ fontSize: '13px', color: '#065f46', display: 'block', fontWeight: '800' }}>Marcaje de Raciones, Excesos & Migración ✅</strong>
-              <span style={{ fontSize: '11px', color: '#047857', lineHeight: '1.4', display: 'block' }}>
-                Marca con ✓ tus raciones. Si comes de más (*pizzas, cerveza, cheat meal*), usa el botón <strong>⚠️ + Registrar Exceso</strong> o descríbelo al AI para llevar una cuenta calórica real y honesta.
+              <span style={{ fontSize: '11px', color: '#047857', lineHeight: '1.4', display: 'block', fontWeight: '600' }}>
+                Marca con ✓ tus raciones. Si consumes algo extra (*pizzas, cervezas, hamburguesa*), toca <strong>⚠️ + Registrar Exceso</strong> o descríbelo al AI para proteger tu balance calórico real.
               </span>
             </div>
           </div>
@@ -872,7 +935,7 @@ export default function NutritionTracker() {
       )}
 
       {activeTab === 'alacena' && (
-        /* ================= VISTA 2: ALACENA INTELIGENTE & SUPERMERCADO ================= */
+        /* ================= VISTA 2: ALACENA INTELIGENTE, SÚPER, WHATSAPP & PRECIOS ================= */
         <AlacenaView
           mealsList={mealsList}
           apiKey={deepSeekApiKey}
@@ -880,7 +943,7 @@ export default function NutritionTracker() {
       )}
 
       {activeTab === 'stats' && (
-        /* ================= VISTA 3: ANÁLISIS ESTADÍSTICO & EXPORTACIÓN ANALÍTICA ================= */
+        /* ================= VISTA 3: ANÁLISIS ESTADÍSTICO & CURVAS DE ADHERENCIA ================= */
         <div className="animate-fade">
           <div className="card" style={{ padding: '20px', background: '#ffffff', borderTop: '5px solid #d97706', marginBottom: '18px' }}>
             <div className="flex-between" style={{ borderBottom: '1.5px solid #f1f5f9', paddingBottom: '14px', marginBottom: '16px', flexWrap: 'wrap', gap: '10px' }}>
@@ -888,7 +951,7 @@ export default function NutritionTracker() {
                 <BarChart2 size={24} color="#d97706" />
                 <div>
                   <h2 style={{ margin: 0, fontSize: '19px', fontWeight: '800', color: '#0f172a' }}>
-                    Análisis Estadístico Nutricional
+                    Análisis Estadístico & Rendimiento
                   </h2>
                   <span style={{ fontSize: '12px', color: '#d97706', fontWeight: '700' }}>Evaluación de Consistencia, Excesos & Retención Muscular</span>
                 </div>
@@ -938,7 +1001,7 @@ export default function NutritionTracker() {
               </div>
             </div>
 
-            {/* Gráficas de Rendimiento de Proteína & Calorías */}
+            {/* Gráficas de Rendimiento */}
             <h3 style={{ fontSize: '15px', color: '#0f172a', fontWeight: '800', marginBottom: '12px', display: 'flex', gap: '6px', alignItems: 'center' }}>
               <TrendUpIcon size={18} color="#0066ff" /> Curva de Consumo de Proteínas vs Meta (150g)
             </h3>
@@ -957,7 +1020,6 @@ export default function NutritionTracker() {
               </ResponsiveContainer>
             </div>
 
-            {/* Gráfica de Calorías y Excesos */}
             <h3 style={{ fontSize: '15px', color: '#0f172a', fontWeight: '800', marginBottom: '12px', display: 'flex', gap: '6px', alignItems: 'center' }}>
               <Flame size={18} color="#d97706" /> Adherencia Calórica Diaria (Refleja Cheat Meals y Excesos)
             </h3>
@@ -976,44 +1038,12 @@ export default function NutritionTracker() {
               </ResponsiveContainer>
             </div>
 
-            {/* Centro de Respaldos de Base de Datos */}
-            <div style={{ background: '#f8fafc', padding: '18px', borderRadius: '20px', border: '1px solid #cbd5e1', marginBottom: '16px' }}>
-              <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '10px' }}>
-                <Database size={24} color="#0066ff" />
-                <div>
-                  <strong style={{ fontSize: '15px', color: '#1e293b', fontWeight: '800', display: 'block' }}>
-                    💾 Respaldo y Exportación Analítica Completa
-                  </strong>
-                  <span style={{ fontSize: '12px', color: '#475569', fontWeight: '600', display: 'block' }}>
-                    Todos tus datos almacenados en LocalStorage (entrenamientos, pesajes, alacena y bitácoras nutricionales) son 100% tuyos y exportables.
-                  </span>
-                </div>
-              </div>
-
-              <div className="grid-2" style={{ gap: '10px' }}>
-                <button
-                  type="button"
-                  onClick={() => handleExportAllData('json')}
-                  style={{ padding: '12px', borderRadius: '14px', background: '#0066ff', color: '#ffffff', border: 'none', fontWeight: '800', fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
-                >
-                  <Download size={18} /> Respaldo JSON Completo (Base de Datos)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleExportAllData('csv')}
-                  style={{ padding: '12px', borderRadius: '14px', background: '#10b981', color: '#ffffff', border: 'none', fontWeight: '800', fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
-                >
-                  <FileSpreadsheet size={18} /> Exportar Tabla CSV para Analizar
-                </button>
-              </div>
-            </div>
-
             {/* Distribución Ideal NutriConsult */}
             <div style={{ background: '#f8fafc', padding: '16px', borderRadius: '18px', border: '1px solid #e2e8f0' }}>
               <h4 style={{ margin: '0 0 8px 0', fontSize: '14px', color: '#1e293b', fontWeight: '800' }}>
                 ⚖️ Distribución Macro NutriConsult (2,201 kcal):
               </h4>
-              <p style={{ fontSize: '12px', color: '#475569', margin: '0 0 12px 0', lineHeight: '1.5' }}>
+              <p style={{ fontSize: '12px', color: '#475569', margin: '0 0 12px 0', lineHeight: '1.5', fontWeight: '600' }}>
                 En déficit calórico para hipertrofia, esta proporción asegura que quemarás tejido graso preservando el 100% del tejido magro en brazos y tórax:
               </p>
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
@@ -1032,8 +1062,151 @@ export default function NutritionTracker() {
         </div>
       )}
 
+      {activeTab === 'settings' && (
+        /* ================= VISTA 4: AJUSTES, RESPALDOS & EXPORTAR BASE DE DATOS LISTA PARA IA ================= */
+        <div className="animate-fade">
+          <div className="card" style={{ padding: '22px', background: '#ffffff', borderTop: '5px solid #0284c7', marginBottom: '18px' }}>
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'center', borderBottom: '1.5px solid #f1f5f9', paddingBottom: '14px', marginBottom: '18px' }}>
+              <Settings size={28} color="#0284c7" />
+              <div>
+                <h2 style={{ margin: 0, fontSize: '20px', fontWeight: '900', color: '#0f172a' }}>
+                  Ajustes, Respaldos & Exportación Inteligente AI
+                </h2>
+                <span style={{ fontSize: '12px', color: '#0284c7', fontWeight: '700' }}>Control absoluto de tu base de datos y auditoría en Inteligencia Artificial</span>
+              </div>
+            </div>
+
+            {/* Tarjeta de Exportación de Prompt para AI (DeepSeek / ChatGPT / Gemini) */}
+            <div style={{ background: 'linear-gradient(135deg, #eff6ff 0%, #f5f3ff 100%)', border: '2px solid #8b5cf6', borderRadius: '22px', padding: '20px', marginBottom: '22px', boxShadow: '0 8px 25px rgba(139, 92, 246, 0.12)' }}>
+              <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start', marginBottom: '14px' }}>
+                <span style={{ fontSize: '32px' }}>🤖</span>
+                <div style={{ flex: 1 }}>
+                  <strong style={{ fontSize: '17px', color: '#5b21b6', fontWeight: '900', display: 'block' }}>
+                    Exportar Base de Datos Estructurada para Prompt AI
+                  </strong>
+                  <span style={{ fontSize: '13px', color: '#475569', fontWeight: '600', lineHeight: '1.4', display: 'block', marginTop: '4px' }}>
+                    Este botón compila 100% de tus rutinas, calorías diarias, excesos marcados (pizza/cerveza), pesajes, inventarios y precios en un prompt ultra limpio. ¡Listo para pegar directamente en DeepSeek AI, ChatGPT o Google AI para un análisis médico al instante!
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid-2" style={{ gap: '12px' }}>
+                <button
+                  type="button"
+                  onClick={() => handleExportAllData('ai-prompt')}
+                  style={{ padding: '14px', borderRadius: '16px', background: '#7c3aed', color: '#ffffff', border: 'none', fontWeight: '900', fontSize: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', boxShadow: '0 6px 18px rgba(124, 58, 237, 0.3)' }}
+                >
+                  <Copy size={18} /> 🤖 Copiar Prompt AI de DB al Portapapeles
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleRunAiAuditInApp}
+                  disabled={isAuditingDb}
+                  style={{ padding: '14px', borderRadius: '16px', background: '#0066ff', color: '#ffffff', border: 'none', fontWeight: '900', fontSize: '14px', cursor: isAuditingDb ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                >
+                  {isAuditingDb ? <RefreshCw size={18} style={{ animation: 'spin 1s linear infinite' }} /> : <Sparkles size={18} />}
+                  🧠 Auditar Mi Base de Datos Ahora (AI In-App)
+                </button>
+              </div>
+
+              {/* Resultado de auditoría In-App */}
+              {aiDbAuditResult && (
+                <div className="animate-fade" style={{ marginTop: '18px', paddingTop: '16px', borderTop: '1px dashed #c4b5fd', background: '#ffffff', padding: '16px', borderRadius: '16px' }}>
+                  <div className="flex-between" style={{ marginBottom: '10px' }}>
+                    <strong style={{ fontSize: '16px', color: '#5b21b6', fontWeight: '900' }}>🏆 Auditoría Clínica DeepSeek AI:</strong>
+                    <span className="badge" style={{ background: '#dcfce7', color: '#15803d', fontSize: '14px', fontWeight: '900', padding: '4px 10px' }}>
+                      Adherencia: {aiDbAuditResult.puntajeAdherencia}
+                    </span>
+                  </div>
+                  
+                  {aiDbAuditResult.hallazgosClave?.map((h, idx) => (
+                    <div key={idx} style={{ background: '#f8fafc', padding: '10px 12px', borderRadius: '12px', marginBottom: '8px', border: '1px solid #e2e8f0' }}>
+                      <strong style={{ fontSize: '13px', color: '#0f172a', display: 'block', fontWeight: '800' }}>• {h.titulo}</strong>
+                      <span style={{ fontSize: '12px', color: '#475569', fontWeight: '600' }}>{h.detalle}</span>
+                    </div>
+                  ))}
+
+                  <div style={{ background: '#eff6ff', padding: '12px', borderRadius: '12px', color: '#1e40af', fontSize: '12px', fontWeight: '700', marginTop: '10px' }}>
+                    🎯 <strong>Predicción Fisiológica:</strong> {aiDbAuditResult.predicciónFisiologica}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Respaldos Tradicionales en Archivos */}
+            <h3 style={{ fontSize: '16px', color: '#0f172a', fontWeight: '900', marginBottom: '12px' }}>
+              📁 Respaldo Físico & Descarga de Archivos de Base de Datos:
+            </h3>
+            
+            <div className="grid-2" style={{ gap: '12px', marginBottom: '24px' }}>
+              <div style={{ background: '#f8fafc', padding: '16px', borderRadius: '18px', border: '1px solid #cbd5e1', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                <div>
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '6px' }}>
+                    <Database size={20} color="#0066ff" />
+                    <strong style={{ fontSize: '15px', color: '#0f172a', fontWeight: '800' }}>Respaldo JSON Completo</strong>
+                  </div>
+                  <span style={{ fontSize: '12px', color: '#64748b', fontWeight: '600', display: 'block', marginBottom: '12px' }}>
+                    Descarga el archivo maestro `.json` que almacena 100% de tus tablas, dietas, alacena y rutinas en tu teléfono o PC.
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleExportAllData('json')}
+                  className="btn btn-primary"
+                  style={{ background: '#0066ff', padding: '12px', borderRadius: '14px', fontWeight: '800', fontSize: '13px', display: 'flex', justifyContent: 'center', gap: '8px' }}
+                >
+                  <Download size={17} /> Descargar Base de Datos (.json)
+                </button>
+              </div>
+
+              <div style={{ background: '#f8fafc', padding: '16px', borderRadius: '18px', border: '1px solid #cbd5e1', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                <div>
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '6px' }}>
+                    <FileSpreadsheet size={20} color="#10b981" />
+                    <strong style={{ fontSize: '15px', color: '#0f172a', fontWeight: '800' }}>Tabla CSV Analítica</strong>
+                  </div>
+                  <span style={{ fontSize: '12px', color: '#64748b', fontWeight: '600', display: 'block', marginBottom: '12px' }}>
+                    Descarga una hoja de cálculo `.csv` limpia con tu historial diario de calorías y proteínas para analizar en Excel o software estadístico.
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleExportAllData('csv')}
+                  className="btn btn-primary"
+                  style={{ background: '#10b981', padding: '12px', borderRadius: '14px', fontWeight: '800', fontSize: '13px', display: 'flex', justifyContent: 'center', gap: '8px' }}
+                >
+                  <FileSpreadsheet size={17} /> Descargar Tabla Analítica (.csv)
+                </button>
+              </div>
+            </div>
+
+            {/* Zona de Reinicio y Mantenimiento */}
+            <div style={{ background: '#fef2f2', border: '1.5px solid #fca5a5', borderRadius: '18px', padding: '18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+              <div>
+                <strong style={{ fontSize: '15px', color: '#991b1b', fontWeight: '900', display: 'block' }}>
+                  🗑️ Limpiar & Restablecer Todos los Datos de Fábrica
+                </strong>
+                <span style={{ fontSize: '12px', color: '#7f1d1d', fontWeight: '600' }}>
+                  Asegurado aquí para evitar toques accidentales. Borrará tus bitácoras locales devolviendo COACH V2 a su estado inicial.
+                </span>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleClearDatabase}
+                style={{ background: '#dc2626', color: '#ffffff', border: 'none', padding: '12px 18px', borderRadius: '14px', fontWeight: '900', fontSize: '13px', cursor: 'pointer' }}
+              >
+                Resetear Todos los Datos
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+
       {activeTab === 'report' && (
-        /* ================= VISTA 4: REPORTE CLÍNICO NUTRICONSULT ================= */
+        /* ================= VISTA 5: REPORTE CLÍNICO NUTRICONSULT ================= */
         <div className="animate-fade">
           <div className="card" style={{ padding: '20px', background: '#ffffff', borderTop: '5px solid #7c3aed' }}>
             <div className="flex-between" style={{ borderBottom: '1.5px solid #f1f5f9', paddingBottom: '14px', marginBottom: '16px', flexWrap: 'wrap', gap: '10px' }}>
@@ -1046,7 +1219,6 @@ export default function NutritionTracker() {
                 <span style={{ fontSize: '11px', color: '#64748b' }}>26 años • 174 cm • Déficit -500 kcal</span>
               </div>
             </div>
-            {/* Resumen clínico del Doctor */}
             <div className="grid-2" style={{ gap: '10px', marginBottom: '20px' }}>
               <div style={{ background: '#f8fafc', padding: '14px', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
                 <span style={{ fontSize: '11px', color: '#64748b', fontWeight: '800', textTransform: 'uppercase' }}>Metabolismo Basal / TDEE</span>
@@ -1067,7 +1239,7 @@ export default function NutritionTracker() {
       )}
 
       {activeTab === 'metrics' && (
-        /* ================= VISTA 5: BITÁCORA DE PESAJES Y MEDIDAS ================= */
+        /* ================= VISTA 6: BITÁCORA DE PESAJES Y MEDIDAS ================= */
         <div className="animate-fade">
           <div className="card card-highlight" style={{ padding: '16px', marginBottom: '18px', borderLeft: '6px solid #0e7490', background: '#ecfeff' }}>
             <div className="flex-between" style={{ marginBottom: '10px', flexWrap: 'wrap', gap: '6px' }}>

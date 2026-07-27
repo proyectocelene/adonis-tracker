@@ -1,6 +1,6 @@
 /* ============================================================================
    DEEPSEEK AI NUTRITION & RECIPE SERVICE (Coach V2 - Atleta: Carlos Donato)
-   Conecta con la API de DeepSeek para análisis nutricional y recetas prácticas
+   Conecta con la API de DeepSeek para análisis nutricional, alacena y costos
 ============================================================================ */
 
 const DEEPSEEK_API_URL = 'https://api.deepseek.com/chat/completions';
@@ -121,4 +121,57 @@ ${shoppingItems && shoppingItems.length > 0 ? shoppingItems.map(i => typeof i ==
 Genera una receta muy práctica, sabrosa y rápida para lograr sus macros sin complicaciones.`;
 
   return callDeepSeek({ apiKey, systemPrompt, userPrompt, temperature: 0.5 });
+}
+
+/**
+ * 3. Analizar Bitácora de Precios y Súper ("¿Dónde conviene comprar mis proteínas y frutas de temporada?")
+ */
+export async function analyzeGroceryPricesWithAI({ apiKey, groceryHistory, alacenaItems }) {
+  const systemPrompt = `Eres un Asesor Financiero Deportivo y Experto en Nutrición Fitness para Carlos Donato.
+Tu tarea es analizar su historial de compras y precios de alimentos (Pechugas, Huevos, Avena, Frutas de temporada, Lácteos) y darle un ANÁLISIS ESTADÍSTICO INTELIGENTE SOBRE DÓNDE CONVIENE COMPRAR para optimizar su presupuesto y adherencia a sus 150g de proteína magra.
+DEBES responder STRICTAMENTE en formato JSON con la siguiente estructura:
+{
+  "analisisGeneral": "Resumen claro y contundente sobre los precios registrados y dónde se está ahorrando o gastando más.",
+  "mejoresTiendas": [
+    { "tienda": "Nombre tienda o Mercado", "ventaja": "Por qué conviene (ej. Mejor precio por kilo de pechuga o frutas de temporada baratas)", "ahorroEstimado": "Porcentaje o cantidad de ahorro" }
+  ],
+  "recomendacionesDeTemporada": [
+    { "alimento": "Nombre del producto (ej. Manzanas / Berries / Nopales)", "consejo": "Cuándo y cómo comprarlo para ahorrar al máximo" }
+  ],
+  "veredictoFinal": "Consejo maestro de compra inteligente para hipertrofia sin desperdicio."
+}`;
+
+  const userPrompt = `Historial de compras y precios registrados en el súper por Carlos:
+${JSON.stringify(groceryHistory, null, 2)}
+
+Alacena actual:
+${JSON.stringify(alacenaItems, null, 2)}
+
+Analiza estadísticamente qué tienda o mercado conviene más y danos tu evaluación inteligente.`;
+
+  return callDeepSeek({ apiKey, systemPrompt, userPrompt, temperature: 0.4 });
+}
+
+/**
+ * 4. Auditoría Integral AI sobre Base de Datos Completa de COACH V2
+ */
+export async function analyzeFullDatabaseWithAI({ apiKey, dbBackup }) {
+  const systemPrompt = `Eres el Científico Deportivo Jefe de NutriConsult analizando la base de datos completa local de COACH V2 de Carlos Donato (rutinas Protocolo Adonis, pesos corporales, dieta, alacena y excesos calóricos).
+Realiza una auditoría exhaustiva e inteligente identificando patrones de adherencia, correlación entre excesos calóricos y estancamiento de peso, e inventario en alacena.
+DEBES responder STRICTAMENTE en formato JSON con la siguiente estructura:
+{
+  "puntajeAdherencia": "Puntuación sobre 100 de su consistencia clínica (ej. 92/100)",
+  "hallazgosClave": [
+    { "titulo": "Titular del hallazgo (ej. Control Proteico Sólido / Exceso de Pizza el Finde)", "detalle": "Explicación analítica basada en sus datos" }
+  ],
+  "predicciónFisiologica": "Estimación de tiempo o progreso hacia sus 68.0 kg si mantiene esta tasa calórica",
+  "ajustadorDeAlacena": "Consejo inteligente para evitar faltantes en su cocina."
+}`;
+
+  const userPrompt = `Base de datos exportada y estructurada de Carlos Donato:
+${JSON.stringify(dbBackup, null, 2)}
+
+Danos tu auditoría científica integral.`;
+
+  return callDeepSeek({ apiKey, systemPrompt, userPrompt, temperature: 0.3 });
 }
