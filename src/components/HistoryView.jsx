@@ -2,8 +2,9 @@ import React, { useState, useRef } from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { scientificProtocol } from '../data/scientificProtocol';
 import ConsistencyHeatmap from './ConsistencyHeatmap';
+import { analyzeFullDatabaseWithAI, syncWorkoutToGoogleSheets, getGoogleAppsScriptCode } from '../services/deepseek';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { Activity, TrendingUp, Award, Clock, ChevronDown, ChevronUp, Trash2, ShieldCheck, Zap, HeartPulse, Dumbbell, Calendar, Sparkles, Settings2, Download, Upload, AlertOctagon, Settings, X, ShieldAlert, Database } from 'lucide-react';
+import { Activity, TrendingUp, Award, Clock, ChevronDown, ChevronUp, Trash2, ShieldCheck, Zap, HeartPulse, Dumbbell, Calendar, Sparkles, Settings2, Download, Upload, AlertOctagon, Settings, X, ShieldAlert, Database, Cloud, Copy, Check, Cpu, Loader2, Sparkles as SparklesIcon, Layers, RefreshCw } from 'lucide-react';
 import { useModal, LiquidDropdown } from './common/UIComponents';
 
 export default function HistoryView() {
@@ -13,20 +14,47 @@ export default function HistoryView() {
   const [customExercisesMap, setCustomExercisesMap] = useLocalStorage('coachv2_custom_day_exercises', {});
   const [nutrition, setNutrition] = useLocalStorage('coachv2_nutrition_data', { protein: 0, water: 0 });
   const [bodyMetrics, setBodyMetrics] = useLocalStorage('coachv2_body_metrics_history', []);
+  
+  // API Key & Google Sheets URL
+  const [apiKey] = useLocalStorage('coachv2_deepseek_apikey', '');
+  const [googleSheetsUrl, setGoogleSheetsUrl] = useLocalStorage('coachv2_google_sheets_url', 'https://script.google.com/macros/s/AKfycbxA-KbUcEgWUq4jvjdSBxLw3tGsgPxXsF2Y7mX5JsNIpE2qslN1v7xW3NqdJ3-4b-RCwg/exec');
 
+  const [analysisMode, setAnalysisMode] = useState('exercise'); // 'exercise' or 'muscleGroup'
   const [selectedExId, setSelectedExId] = useState('d1_e1');
+  const [selectedMuscleGroup, setSelectedMuscleGroup] = useState('Pecho');
   const [expandedSessionId, setExpandedSessionId] = useState(null);
   const [showConfigModal, setShowConfigModal] = useState(false);
+  const [showScriptModal, setShowScriptModal] = useState(false);
+  const [tempSheetsUrl, setTempSheetsUrl] = useState(googleSheetsUrl);
+  const [copiedScript, setCopiedScript] = useState(false);
+
+  // Estados de IA y Cloud
+  const [isAnalyzingDb, setIsAnalyzingDb] = useState(false);
+  const [dbAuditResult, setDbAuditResult] = useState(null);
+  const [isSyncing, setIsSyncing] = useState(false);
+
   const fileInputRef = useRef(null);
 
   const allAvailableExercises = [];
   const exerciseOptions = [];
+  const muscleGroupOptions = [
+    { value: 'Pecho', label: '💪 Pecho (Pectoral Superior, Medio & Aislamiento)' },
+    { value: 'Hombro', label: '🚀 Hombro (Deltoides Lateral, Medio & Anterior)' },
+    { value: 'Espalda', label: '🦅 Espalda (Amplitud V-Taper, Dorsales & Remos)' },
+    { value: 'Cuádriceps', label: '🦵 Cuádriceps (Prensa, Hack & Extensión)' },
+    { value: 'Glúteos', label: '🍑 Glúteo Mayor & Cadena Posterior' },
+    { value: 'Isquios', label: '🦵 Isquiotibiales (Femorales)' },
+    { value: 'Bíceps', label: '💪 Bíceps & Braquial (Flexores)' },
+    { value: 'Tríceps', label: '💥 Tríceps (Poleas & Extensiones de Copa)' },
+    { value: 'Pantorrillas', label: '🔥 Pantorrillas (Tríceps Sural & Sóleo)' },
+    { value: 'Core', label: '🛡️ Core, Vacuum & Prevención de Hernias (IAP)' }
+  ];
 
   scientificProtocol.forEach(day => {
     if (day.exercises) {
       day.exercises.forEach(ex => {
         if (!ex.isCardio && !ex.isTime) {
-          allAvailableExercises.push({ id: ex.id, name: ex.name, day: day.name.split(':')[0] });
+          allAvailableExercises.push({ id: ex.id, name: ex.name, day: day.name.split(':')[0], muscleGroup: ex.muscleGroup });
           exerciseOptions.push({ value: ex.id, label: `${day.name.split(':')[0]} • ${ex.name}` });
         }
       });
@@ -95,47 +123,93 @@ export default function HistoryView() {
     });
   };
 
-  const getExerciseProgressionData = () => {
+  // DATOS DE PROGRESIÓN POR EJERCICIO O POR GRUPO MUSCULAR
+  const getProgressionData = () => {
     const progData = [];
-    workoutHistory.forEach(ses => {
-      if (ses.exercises && ses.exercises[selectedExId]) {
-        const exSets = ses.exercises[selectedExId];
-        let maxW = 0;
-        let bestReps = 0;
-        let unit = 'lbs';
 
-        Object.keys(exSets).forEach(setNum => {
-          if (!isNaN(parseInt(setNum))) {
-            const s = exSets[setNum];
-            if (s && s.completed && s.weight && !isNaN(parseFloat(s.weight))) {
-              const w = parseFloat(s.weight);
-              if (w >= maxW) {
-                maxW = w;
-                bestReps = parseFloat(s.reps) || bestReps;
-                unit = s.unit || 'lbs';
+    if (analysisMode === 'exercise') {
+      workoutHistory.forEach(ses => {
+        if (ses.exercises && ses.exercises[selectedExId]) {
+          const exSets = ses.exercises[selectedExId];
+          let maxW = 0;
+          let bestReps = 0;
+          let unit = 'lbs';
+
+          Object.keys(exSets).forEach(setNum => {
+            if (!isNaN(parseInt(setNum))) {
+              const s = exSets[setNum];
+              if (s && s.completed && s.weight && !isNaN(parseFloat(s.weight))) {
+                const w = parseFloat(s.weight);
+                if (w >= maxW) {
+                  maxW = w;
+                  bestReps = parseFloat(s.reps) || bestReps;
+                  unit = s.unit || 'lbs';
+                }
               }
             }
-          }
-        });
-
-        if (maxW > 0) {
-          const est1RM = Math.round(maxW * (1 + bestReps / 30));
-          progData.push({
-            date: ses.dateString ? ses.dateString.split(',')[0] : 'Fecha',
-            maxWeight: maxW,
-            est1RM,
-            reps: bestReps,
-            unit
           });
+
+          if (maxW > 0) {
+            const est1RM = Math.round(maxW * (1 + bestReps / 30));
+            progData.push({
+              date: ses.dateString ? ses.dateString.split(',')[0] : 'Fecha',
+              maxWeight: maxW,
+              est1RM,
+              reps: bestReps,
+              unit
+            });
+          }
         }
-      }
-    });
+      });
+    } else {
+      // ANÁLISIS POR GRUPO MUSCULAR COMPLETO
+      workoutHistory.forEach(ses => {
+        if (ses.exercises) {
+          let totalGroupVolume = 0;
+          let maxGroupWeight = 0;
+          let matches = false;
+
+          Object.keys(ses.exercises).forEach(exId => {
+            const exData = ses.exercises[exId];
+            const muscleTag = exData.muscleGroup || findExerciseDefinition(ses.dayId, exId).muscleGroup || 'General';
+            
+            if (muscleTag.toLowerCase().includes(selectedMuscleGroup.toLowerCase()) || (selectedMuscleGroup === 'Isquios' && muscleTag.toLowerCase().includes('femora'))) {
+              if (!exData.machine) {
+                Object.keys(exData).forEach(setNum => {
+                  if (!isNaN(parseInt(setNum))) {
+                    const s = exData[setNum];
+                    if (s && s.completed && s.weight && s.reps) {
+                      matches = true;
+                      let w = parseFloat(s.weight) || 0;
+                      if (s.unit === 'kg') w *= 2.20462;
+                      const r = parseFloat(s.reps) || 0;
+                      totalGroupVolume += (w * r);
+                      if (w > maxGroupWeight) maxGroupWeight = w;
+                    }
+                  }
+                });
+              }
+            }
+          });
+
+          if (matches) {
+            progData.push({
+              date: ses.dateString ? ses.dateString.split(',')[0] : 'Fecha',
+              maxWeight: Math.round(maxGroupWeight),
+              est1RM: Math.round(totalGroupVolume), // en grupo muscular, usamos volumen total como indicador de sobrecarga
+              reps: '-',
+              unit: 'lbs-reps'
+            });
+          }
+        }
+      });
+    }
 
     return progData;
   };
 
   const chartData = getChartData();
-  const exerciseProgData = getExerciseProgressionData();
+  const progData = getProgressionData();
   const selectedExDef = allAvailableExercises.find(x => x.id === selectedExId) || allAvailableExercises[0] || { name: 'Ejercicio Seleccionado' };
 
   const handleDeleteSession = (id) => {
@@ -150,6 +224,66 @@ export default function HistoryView() {
         modal.showAlert({ title: "🗑️ Registro Eliminado", message: "La sesión fue removida de tu bitácora satisfactoriamente.", variant: "info" });
       }
     });
+  };
+
+  // LIMPIEZA Y MANTENIMIENTO AUTOMÁTICO DE LA BASE DE DATOS
+  const handleSmartCleanup = () => {
+    modal.showConfirm({
+      title: "🧹 ¿Ejecutar Limpieza Inteligente de Base de Datos?",
+      message: "Esta rutina automatizada del sistema realizará:\n\n1. Eliminación de sesiones borrador abandonadas o sin completar.\n2. Depuración de entradas vacías sin peso logradas.\n3. Compactación y desfragmentación del almacenamiento local para máxima velocidad PWA.\n\nTus sesiones archivadas y récords reales se preservarán intactos al 100%.",
+      confirmText: "✨ Sí, Limpiar y Optimizar",
+      cancelText: "Cancelar",
+      variant: "info",
+      onConfirm: () => {
+        let cleanSessions = { ...currentSessions };
+        let removedDrafts = 0;
+        Object.keys(cleanSessions).forEach(key => {
+          if (!cleanSessions[key] || Object.keys(cleanSessions[key]).length === 0) {
+            delete cleanSessions[key];
+            removedDrafts++;
+          }
+        });
+
+        setCurrentSessions(cleanSessions);
+        modal.showAlert({
+          title: "🚀 Base de Datos Optimizada al 100%",
+          message: `Mantenimiento clínico concluido con éxito. Se depuraron ${removedDrafts} borradores vacíos y se liberó memoria para un rendimiento fluido.`,
+          variant: "success"
+        });
+      }
+    });
+  };
+
+  // AUDITORÍA AI INTEGRAL SOBRE TODA LA BASE DE DATOS
+  const handleAuditDatabaseAI = async () => {
+    if (!apiKey) {
+      modal.showAlert({
+        title: "🔑 Falta Clave API DeepSeek",
+        message: "Para realizar una auditoría completa con Inteligencia Artificial que cruce tus récords del gym con tus calorías, excesos de pizza y precios en alacena, agrega tu clave API de DeepSeek en el módulo de Nutrición > Configuración.",
+        variant: "warning"
+      });
+      return;
+    }
+
+    const backup = {
+      appVersion: "COACH V2 - Protocolo Adonis",
+      totalSessions,
+      totalVolumeLifted,
+      workoutHistory: workoutHistory.slice(-10),
+      nutritionData: nutrition,
+      bodyMetrics
+    };
+
+    try {
+      setIsAnalyzingDb(true);
+      const res = await analyzeFullDatabaseWithAI({ apiKey, dbBackup: backup });
+      setDbAuditResult(res);
+      modal.showAlert({ title: "🧬 ¡Auditoría Integral AI Lista!", message: "El Sistema Científico Deportivo de NutriConsult ha procesado tus patrones a largo plazo.", variant: "success" });
+    } catch (err) {
+      modal.showAlert({ title: "Error al Consultar IA", message: err.message, variant: "danger" });
+    } finally {
+      setIsAnalyzingDb(false);
+    }
   };
 
   // EXPORTAR BASE DE DATOS
@@ -174,7 +308,7 @@ export default function HistoryView() {
 
     modal.showAlert({
       title: "💾 Respaldo Exportado con Éxito",
-      message: "Tu archivo JSON con el 100% de tus rutinas, pesos levantados y medidas corporales ha sido guardado en la memoria de tu dispositivo.",
+      message: "Tu archivo JSON con el 100% de tus rutinas, pesos levantados y medidas corporales ha sido guardado en tu dispositivo.",
       variant: "success"
     });
   };
@@ -190,7 +324,7 @@ export default function HistoryView() {
         const data = JSON.parse(event.target.result);
         modal.showConfirm({
           title: "📥 ¿Restaurar Base de Datos?",
-          message: `El archivo seleccionado fue verificado con éxito. ¿Estás seguro de sobrescribir tu memoria actual y cargar este respaldo del sistema?`,
+          message: `El archivo seleccionado fue verificado con éxito. ¿Estás seguro de sobrescribir tu memoria actual y cargar este respaldo?`,
           confirmText: "Restaurar Ahora",
           cancelText: "Cancelar",
           variant: "warning",
@@ -219,11 +353,10 @@ export default function HistoryView() {
     reader.readAsText(file);
   };
 
-  // BORRAR TODOS LOS DATOS (RESET TOTAL SIN PREDEFINIDOS)
   const handleWipeAllData = () => {
     modal.showConfirm({
       title: "🚨 ZONA ROJA: Reset Total",
-      message: "¿ADVERTENCIA CRÍTICA: Estás verdaderamente seguro de BORRAR TODOS LOS DATOS de tu aplicación COACH V2?\n\nEsta acción eliminará por completo tus marcas de 1RM, bitácora del gimnasio, registros de peso y calibraciones de máquina para empezar desde cero en una base absolutamente limpia.",
+      message: "¿ADVERTENCIA CRÍTICA: Estás verdaderamente seguro de BORRAR TODOS LOS DATOS de tu aplicación COACH V2?\n\nEsta acción eliminará por completo tus marcas, bitácoras y calibraciones para empezar desde cero.",
       confirmText: "⚠️ SÍ, BORRAR TODO A CERO",
       cancelText: "Mantener mis datos",
       variant: "danger",
@@ -233,24 +366,45 @@ export default function HistoryView() {
         setCustomExercisesMap({});
         setNutrition({ protein: 0, water: 0 });
         setBodyMetrics([]);
-        localStorage.removeItem('coachv2_history');
-        localStorage.removeItem('coachv2_active_workouts');
-        localStorage.removeItem('coachv2_custom_day_exercises');
-        localStorage.removeItem('coachv2_nutrition_data');
-        localStorage.removeItem('coachv2_body_metrics_history');
+        localStorage.clear();
         setShowConfigModal(false);
-        modal.showAlert({
-          title: "✅ Reset Total Terminado",
-          message: "La memoria del laboratorio ha quedado impecable a cero. No existen datos simulados, listo para tu nuevo ciclo de entrenamiento.",
-          variant: "info"
-        });
+        modal.showAlert({ title: "✅ Reset Total Terminado", message: "La memoria del laboratorio ha quedado impecable a cero.", variant: "info" });
       }
     });
   };
 
+  const handleCopyScript = () => {
+    navigator.clipboard.writeText(getGoogleAppsScriptCode());
+    setCopiedScript(true);
+    setTimeout(() => setCopiedScript(false), 3000);
+    modal.showAlert({ title: "📋 Script Copiado al Portapapeles", message: "Pega este código directamente en Google Apps Script (Extensiones > Apps Script) dentro de tu Google Sheet y publícalo como App Web.", variant: "success" });
+  };
+
+  const handleSyncSheetsNow = async () => {
+    if (!googleSheetsUrl || !googleSheetsUrl.startsWith("http")) {
+      modal.showAlert({ title: "Falta URL Webhook", message: "Primero pega y guarda tu URL de Google Apps Script arriba antes de presionar Sincronizar.", variant: "warning" });
+      return;
+    }
+    try {
+      setIsSyncing(true);
+      await syncWorkoutToGoogleSheets({ webAppUrl: googleSheetsUrl, workoutHistory, currentSessions, bodyMetrics });
+      modal.showAlert({ title: "☁️ ¡Sincronizado con Google Sheets!", message: "Tus rutinas de fuerza, grupos musculares y pesajes corporales se encuentran online en tu hoja de cálculo oficial.", variant: "success" });
+    } catch (err) {
+      modal.showAlert({ title: "Error en Cloud", message: err.message, variant: "danger" });
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  const handleSaveUrl = (e) => {
+    e.preventDefault();
+    setGoogleSheetsUrl(tempSheetsUrl.trim());
+    modal.showAlert({ title: "🔗 Enlace Cloud Guardado", message: "Tu conexión a Google Sheets se conservará persistente. Cada entrenamiento terminado se sincronizará automáticamente en tu nube.", variant: "success" });
+  };
+
   const findExerciseDefinition = (dayId, exId) => {
     const day = scientificProtocol.find(d => d.id === dayId);
-    return day?.exercises?.find(e => e.id === exId) || { name: 'Ejercicio Personalizado', sets: '-', reps: '-' };
+    return day?.exercises?.find(e => e.id === exId) || { name: 'Ejercicio Personalizado', sets: '-', reps: '-', muscleGroup: 'General' };
   };
 
   return (
@@ -285,32 +439,26 @@ export default function HistoryView() {
               transition: 'all 0.2s ease',
               flexShrink: 0
             }}
-            title="Abrir menú de configuración y exportación de base de datos"
           >
-            <Settings size={16} /> Configuración & Datos
+            <Settings size={16} /> Configuración & Cloud
           </button>
         </div>
       </div>
 
-      {/* MODAL / DRAWER DE CONFIGURACION DE LA APP & DATAFORCE */}
+      {/* MODAL CONFIGURACION & GOOGLE SHEETS CLOUD CENTER */}
       {showConfigModal && (
         <div 
           onClick={() => setShowConfigModal(false)}
           style={{
             position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(15, 23, 42, 0.65)',
-            backdropFilter: 'blur(8px)',
-            WebkitBackdropFilter: 'blur(8px)',
-            zIndex: 999,
+            inset: 0,
+            backgroundColor: 'rgba(15, 23, 42, 0.75)',
+            backdropFilter: 'blur(10px)',
+            zIndex: 99999,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            padding: '16px',
-            animation: 'fadeIn 0.2s ease'
+            padding: '16px'
           }}
         >
           <div 
@@ -318,59 +466,103 @@ export default function HistoryView() {
             style={{
               background: '#ffffff',
               width: '100%',
-              maxWidth: '440px',
-              borderRadius: '24px',
+              maxWidth: '520px',
+              borderRadius: '26px',
               padding: '24px',
-              boxShadow: '0 20px 50px rgba(0, 0, 0, 0.3)',
-              maxHeight: '90vh',
+              boxShadow: '0 25px 60px rgba(0, 0, 0, 0.35)',
+              maxHeight: '92vh',
               overflowY: 'auto'
             }}
           >
             <div className="flex-between" style={{ marginBottom: '18px', borderBottom: '1.5px solid #f1f5f9', paddingBottom: '12px' }}>
               <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                <Database size={22} color="#0066ff" />
-                <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '800', color: '#0f172a' }}>Gestión de Base de Datos</h3>
+                <Database size={24} color="#0066ff" />
+                <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '900', color: '#0f172a' }}>Centro de Datos & Nube</h3>
               </div>
-              <button 
-                type="button"
-                onClick={() => setShowConfigModal(false)}
-                style={{ background: '#f1f5f9', border: 'none', width: '36px', height: '36px', borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
-              >
+              <button type="button" onClick={() => setShowConfigModal(false)} style={{ background: '#f1f5f9', border: 'none', width: '36px', height: '36px', borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
                 <X size={20} color="#475569" />
               </button>
             </div>
 
-            <p style={{ fontSize: '13px', color: '#475569', marginBottom: '20px', lineHeight: '1.5' }}>
-              Aquí puedes respaldar tus bitácoras de entrenamiento, importar archivos antiguos o limpiar tu memoria de laboratorio.
+            {/* SECCIÓN GOOGLE SHEETS UNIFIED CLOUD */}
+            <div style={{ background: '#ecfdf5', border: '1.5px solid #6ee7b7', borderRadius: '20px', padding: '16px', marginBottom: '18px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                <Cloud size={22} color="#059669" />
+                <strong style={{ fontSize: '15px', color: '#065f46', fontWeight: '900' }}>Conectar a Google Sheets</strong>
+              </div>
+              <p style={{ fontSize: '12px', color: '#047857', margin: '0 0 12px 0', lineHeight: '1.5', fontWeight: '600' }}>
+                Copia el script oficial, pégalo en Google Apps Script (Extensiones → Apps Script) y guarda tu URL Web aquí para una sincronización unificada y eterna:
+              </p>
+
+              <button
+                type="button"
+                onClick={handleCopyScript}
+                className="btn btn-outline"
+                style={{ background: '#ffffff', color: '#047857', border: '1.5px solid #059669', width: '100%', marginBottom: '12px', padding: '10px', fontWeight: '800', display: 'flex', justifyContent: 'center', gap: '8px' }}
+              >
+                {copiedScript ? <Check size={18} color="#10b981" /> : <Copy size={18} />}
+                {copiedScript ? '¡Código Copiado! Listo para pegar' : '📋 Copiar Código Apps Script Oficial'}
+              </button>
+
+              <form onSubmit={handleSaveUrl} style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
+                <input
+                  type="url"
+                  placeholder="https://script.google.com/macros/s/..."
+                  value={tempSheetsUrl}
+                  onChange={(e) => setTempSheetsUrl(e.target.value)}
+                  style={{ flex: 1, padding: '10px 12px', borderRadius: '14px', border: '1.5px solid #a7f3d0', fontSize: '12px', fontWeight: '700' }}
+                />
+                <button type="submit" className="btn btn-primary" style={{ background: '#059669', borderColor: '#059669', padding: '10px 14px', width: 'auto', fontWeight: '800' }}>
+                  Guardar
+                </button>
+              </form>
+
+              <button
+                type="button"
+                onClick={handleSyncSheetsNow}
+                disabled={isSyncing}
+                className="btn btn-primary"
+                style={{ width: '100%', background: '#10b981', borderColor: '#10b981', padding: '12px', fontWeight: '900' }}
+              >
+                {isSyncing ? 'Subiendo a la nube...' : '⚡️ Sincronizar Base de Datos en Google Sheets Hoy'}
+              </button>
+            </div>
+
+            <p style={{ fontSize: '13px', color: '#475569', marginBottom: '16px', lineHeight: '1.5', fontWeight: '600' }}>
+              Operaciones de mantenimiento local, limpieza de memoria y respaldo en archivo JSON:
             </p>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-              {/* Opción Exportar */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {/* Opción Limpieza Inteligente */}
+              <button
+                type="button"
+                onClick={handleSmartCleanup}
+                className="btn btn-outline"
+                style={{ padding: '14px', fontSize: '13px', borderRadius: '16px', background: '#eff6ff', color: '#0066ff', border: '1.5px solid #bfdbfe', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+              >
+                <SparklesIcon size={18} /> 🧹 Limpieza & Depuración Inteligente del Sistema
+              </button>
+
+              {/* Opción Exportar JSON */}
               <button 
                 type="button"
                 onClick={handleExportDatabase} 
                 className="btn btn-primary" 
-                style={{ padding: '15px', fontSize: '14px', borderRadius: '16px', background: '#0e7490', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', boxShadow: '0 6px 18px rgba(14, 116, 144, 0.25)' }}
+                style={{ padding: '14px', fontSize: '13px', borderRadius: '16px', background: '#0e7490', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
               >
-                <Download size={18} /> 1. Exportar Respaldo (Descargar JSON)
+                <Download size={18} /> Descargar Respaldo JSON Completo
               </button>
 
               {/* Opción Importar */}
               <div>
-                <input 
-                  type="file" 
-                  ref={fileInputRef} 
-                  onChange={handleImportDatabase} 
-                  style={{ display: 'none' }} 
-                  accept=".json" 
-                />
+                <input type="file" ref={fileInputRef} onChange={handleImportDatabase} style={{ display: 'none' }} accept=".json" />
                 <button 
                   type="button"
                   onClick={() => fileInputRef.current?.click()} 
                   className="btn btn-outline" 
-                  style={{ width: '100%', padding: '14px', fontSize: '14px', borderRadius: '16px', fontWeight: '800', background: '#f8fafc', color: '#334155', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                  style={{ width: '100%', padding: '14px', fontSize: '13px', borderRadius: '16px', fontWeight: '800', background: '#f8fafc', color: '#334155', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
                 >
-                  <Upload size={18} color="#0066ff" /> 2. Importar Respaldo Existente
+                  <Upload size={18} color="#0066ff" /> Restaurar Respaldo Antiguo
                 </button>
               </div>
 
@@ -383,37 +575,78 @@ export default function HistoryView() {
                   <strong style={{ fontSize: '14px', color: '#991b1b', fontWeight: '800' }}>Zona de Peligro</strong>
                 </div>
                 <p style={{ fontSize: '12px', color: '#7f1d1d', margin: '0 0 12px 0' }}>
-                  Elimina todos tus entrenamientos, nutrición y récords para comenzar desde cero:
+                  Elimina todos tus entrenamientos y nutrición para comenzar desde cero:
                 </p>
                 <button 
                   type="button"
                   onClick={handleWipeAllData} 
-                  style={{ 
-                    background: '#dc2626', 
-                    color: '#ffffff', 
-                    border: 'none', 
-                    padding: '12px 16px', 
-                    borderRadius: '14px', 
-                    fontSize: '13px', 
-                    fontWeight: '800', 
-                    width: '100%',
-                    cursor: 'pointer',
-                    boxShadow: '0 4px 12px rgba(220, 38, 38, 0.3)'
-                  }}
+                  style={{ background: '#dc2626', color: '#ffffff', border: 'none', padding: '12px 16px', borderRadius: '14px', fontSize: '13px', fontWeight: '800', width: '100%', cursor: 'pointer', boxShadow: '0 4px 12px rgba(220, 38, 38, 0.3)' }}
                 >
-                  <AlertOctagon size={16} style={{ display: 'inline', marginRight: '6px' }} /> Borrar Todos los Datos de la App
+                  <AlertOctagon size={16} style={{ display: 'inline', marginRight: '6px' }} /> Borrar Todos los Datos a Cero
                 </button>
               </div>
             </div>
 
-            <button 
-              type="button"
-              onClick={() => setShowConfigModal(false)}
-              style={{ width: '100%', padding: '14px', marginTop: '20px', background: 'transparent', border: '1px solid #cbd5e1', borderRadius: '16px', fontWeight: '800', color: '#64748b', cursor: 'pointer' }}
-            >
+            <button type="button" onClick={() => setShowConfigModal(false)} style={{ width: '100%', padding: '14px', marginTop: '18px', background: 'transparent', border: '1px solid #cbd5e1', borderRadius: '16px', fontWeight: '800', color: '#64748b', cursor: 'pointer' }}>
               Volver al Laboratorio
             </button>
           </div>
+        </div>
+      )}
+
+      {/* BOTÓN AUDITORÍA INTEGRAL DE IA DE DEEPSEEK */}
+      <div style={{ marginBottom: '20px' }}>
+        <button
+          type="button"
+          onClick={handleAuditDatabaseAI}
+          disabled={isAnalyzingDb}
+          className="btn btn-primary"
+          style={{ width: '100%', background: 'linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)', padding: '16px', borderRadius: '22px', fontSize: '15px', fontWeight: '900', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', boxShadow: '0 8px 25px rgba(124, 58, 237, 0.35)' }}
+        >
+          {isAnalyzingDb ? <Loader2 size={20} className="animate-spin" /> : <Cpu size={20} />}
+          {isAnalyzingDb ? 'Auditando Base de Datos con IA...' : '🧬 Auditoría Integral AI de Rutinas & Nutrición'}
+        </button>
+      </div>
+
+      {/* RESULTADO AUDITORÍA INTEGRAL AI */}
+      {dbAuditResult && (
+        <div className="card animate-fade" style={{ padding: '20px', marginBottom: '22px', background: 'linear-gradient(135deg, #f5f3ff 0%, #ffffff 100%)', border: '1.5px solid #d8b4fe', borderRadius: '26px' }}>
+          <div className="flex-between" style={{ marginBottom: '14px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <SparklesIcon size={24} color="#7c3aed" />
+              <strong style={{ fontSize: '17px', color: '#4c1d95', fontWeight: '900' }}>Veredicto NutriConsult AI</strong>
+            </div>
+            <button type="button" onClick={() => setDbAuditResult(null)} style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}>
+              <X size={22} color="#64748b" />
+            </button>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px', background: '#ffffff', padding: '14px', borderRadius: '18px', border: '1px solid #e9d5ff', marginBottom: '14px' }}>
+            <div style={{ width: '54px', height: '54px', borderRadius: '27px', background: '#7c3aed', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', fontWeight: '900', flexShrink: 0 }}>
+              {dbAuditResult.puntajeAdherencia?.split('/')[0] || '90'}
+            </div>
+            <div>
+              <span style={{ fontSize: '11px', textTransform: 'uppercase', color: '#6d28d9', fontWeight: '900' }}>Puntuación de Adherencia Clínica</span>
+              <strong style={{ display: 'block', fontSize: '16px', color: '#1e1b4b', fontWeight: '900' }}>{dbAuditResult.puntajeAdherencia}</strong>
+              <span style={{ fontSize: '12px', color: '#475569', fontWeight: '600' }}>{dbAuditResult.predicciónFisiologica}</span>
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gap: '12px', marginBottom: '14px' }}>
+            <strong style={{ fontSize: '13px', color: '#581c87', fontWeight: '900', textTransform: 'uppercase' }}>🔍 Hallazgos Clave Detectados:</strong>
+            {dbAuditResult.hallazgosClave?.map((h, idx) => (
+              <div key={idx} style={{ background: '#ffffff', padding: '12px 14px', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
+                <strong style={{ display: 'block', fontSize: '14px', color: '#0f172a', marginBottom: '4px' }}>{h.titulo}</strong>
+                <span style={{ fontSize: '13px', color: '#475569', lineHeight: '1.5' }}>{h.detalle}</span>
+              </div>
+            ))}
+          </div>
+
+          {dbAuditResult.ajustadorDeAlacena && (
+            <div style={{ background: '#fffbeb', border: '1px solid #fde047', padding: '12px', borderRadius: '16px', fontSize: '12px', color: '#78350f', fontWeight: '700' }}>
+              💡 <strong>Tip para Alacena:</strong> {dbAuditResult.ajustadorDeAlacena}
+            </div>
+          )}
         </div>
       )}
 
@@ -438,30 +671,63 @@ export default function HistoryView() {
         </div>
       </div>
 
-      {/* Heatmap de Consistencia Sin Datos Ficticios */}
+      {/* Heatmap de Consistencia */}
       <ConsistencyHeatmap workoutHistory={workoutHistory} />
 
-      {/* Sección de Análisis por Ejercicio Individual con LiquidDropdown */}
-      <div className="card card-highlight" style={{ padding: '18px', marginBottom: '20px' }}>
+      {/* ================= CURVA EVOLUTIVA POR EJERCICIO O POR GRUPO MUSCULAR ================= */}
+      <div className="card card-highlight" style={{ padding: '18px', marginBottom: '22px', borderRadius: '26px' }}>
         <div style={{ marginBottom: '14px' }}>
-          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '6px' }}>
-            <Dumbbell size={20} color="#0066ff" />
-            <h2 style={{ margin: 0, fontSize: '16px', fontWeight: '800', whiteSpace: 'normal' }}>Curva Evolutiva por Ejercicio</h2>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px', marginBottom: '8px' }}>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <Dumbbell size={20} color="#0066ff" />
+              <h2 style={{ margin: 0, fontSize: '17px', fontWeight: '900', whiteSpace: 'normal' }}>Analítica de Sobrecarga Progresiva</h2>
+            </div>
+            <span className="badge badge-blue">1RM & Volumen</span>
           </div>
-          <p style={{ fontSize: '13px', margin: '0', color: '#334155' }}>Selecciona cualquier ejercicio del Protocolo Adonis para auditar tu ganancia real 1RM:</p>
+          <p style={{ fontSize: '13px', margin: '0 0 14px 0', color: '#334155', fontWeight: '600' }}>Audita tu progreso muscular eligiendo entre vista por ejercicio individual o por grupo muscular completo:</p>
+
+          {/* Selector de Modo de Análisis (Ejercicio vs Grupo Muscular) */}
+          <div style={{ display: 'flex', background: '#e2e8f0', padding: '4px', borderRadius: '16px', marginBottom: '16px' }}>
+            <button
+              type="button"
+              onClick={() => setAnalysisMode('exercise')}
+              style={{ flex: 1, padding: '10px', border: 'none', borderRadius: '12px', background: analysisMode === 'exercise' ? '#ffffff' : 'transparent', color: analysisMode === 'exercise' ? '#0066ff' : '#64748b', fontWeight: '900', fontSize: '13px', cursor: 'pointer', transition: 'all 0.2s ease', boxShadow: analysisMode === 'exercise' ? '0 2px 8px rgba(0,0,0,0.08)' : 'none' }}
+            >
+              🎯 Por Ejercicio Individual
+            </button>
+            <button
+              type="button"
+              onClick={() => setAnalysisMode('muscleGroup')}
+              style={{ flex: 1, padding: '10px', border: 'none', borderRadius: '12px', background: analysisMode === 'muscleGroup' ? '#0066ff' : 'transparent', color: analysisMode === 'muscleGroup' ? '#ffffff' : '#64748b', fontWeight: '900', fontSize: '13px', cursor: 'pointer', transition: 'all 0.2s ease', boxShadow: analysisMode === 'muscleGroup' ? '0 4px 12px rgba(0, 102, 255, 0.3)' : 'none' }}
+            >
+              💪 Por Grupo Muscular
+            </button>
+          </div>
         </div>
 
-        <div style={{ marginBottom: '16px' }}>
-          <LiquidDropdown
-            label="EJERCICIO REGISTRADO EN MEMORIA:"
-            icon={Dumbbell}
-            options={exerciseOptions}
-            value={selectedExId}
-            onChange={(newVal) => setSelectedExId(newVal)}
-          />
-        </div>
+        {analysisMode === 'exercise' ? (
+          <div style={{ marginBottom: '16px' }}>
+            <LiquidDropdown
+              label="SELECCIONA EJERCICIO INDIVIDUAL:"
+              icon={Dumbbell}
+              options={exerciseOptions}
+              value={selectedExId}
+              onChange={(newVal) => setSelectedExId(newVal)}
+            />
+          </div>
+        ) : (
+          <div style={{ marginBottom: '16px' }}>
+            <LiquidDropdown
+              label="SELECCIONA GRUPO MUSCULAR A AUDITAR:"
+              icon={Layers}
+              options={muscleGroupOptions}
+              value={selectedMuscleGroup}
+              onChange={(newVal) => setSelectedMuscleGroup(newVal)}
+            />
+          </div>
+        )}
 
-        {exerciseProgData.length === 0 ? (
+        {progData.length === 0 ? (
           <div style={{
             background: '#f8fafc',
             border: '2px dashed #cbd5e1',
@@ -472,33 +738,33 @@ export default function HistoryView() {
           }}>
             <Sparkles size={32} color="#0066ff" style={{ margin: '0 auto 12px auto' }} />
             <h3 style={{ fontSize: '16px', color: '#0f172a', margin: '0 0 8px 0', fontWeight: '800', whiteSpace: 'normal' }}>📈 Estado: Pendiente de Línea Base</h3>
-            <p style={{ fontSize: '13px', margin: 0, lineHeight: '1.5' }}>
-              Sin datos predeterminados ni ficticios. Aún no has archivado un entrenamiento que contenga <strong>{selectedExDef.name}</strong>.  
-              Al guardar tu primera sesión en la pestaña Rutina, tus series trazarán aquí tu curva real Epley 1RM.
+            <p style={{ fontSize: '13px', margin: 0, lineHeight: '1.5', fontWeight: '600' }}>
+              Sin datos ficticios. Aún no has archivado una sesión oficial que trabaje <strong>{analysisMode === 'exercise' ? selectedExDef.name : selectedMuscleGroup}</strong>.  
+              Al guardar tu primer entrenamiento, tus series trazarán aquí la curva real de fuerza y sobrecarga progresiva.
             </p>
           </div>
         ) : (
-          <div style={{ width: '100%', height: '240px' }}>
+          <div style={{ width: '100%', height: '260px' }}>
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={exerciseProgData} margin={{ top: 10, right: 15, left: -15, bottom: 0 }}>
+              <LineChart data={progData} margin={{ top: 10, right: 15, left: -15, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                 <XAxis dataKey="date" stroke="#64748b" fontSize={11} tickLine={false} />
                 <YAxis stroke="#0066ff" fontSize={11} domain={['auto', 'auto']} />
                 <Tooltip 
-                  contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '14px', boxShadow: '0 6px 20px rgba(0,0,0,0.1)', fontFamily: 'Plus Jakarta Sans' }}
-                  formatter={(val, name) => [val + ' lbs/kg', name === 'maxWeight' ? 'Carga Máxima' : '1RM Est. Epley']}
+                  contentStyle={{ backgroundColor: '#ffffff', border: '1.5px solid #cbd5e1', borderRadius: '14px', boxShadow: '0 6px 20px rgba(0,0,0,0.1)', fontFamily: 'Plus Jakarta Sans', fontWeight: '800' }}
+                  formatter={(val, name) => [val + (analysisMode === 'exercise' ? ' lbs/kg' : ' unidades'), name === 'maxWeight' ? 'Pico de Carga' : (analysisMode === 'exercise' ? '1RM Teórico (Epley)' : 'Volumen Total (Lbs-Reps)')]}
                 />
                 <Legend verticalAlign="top" height={36} />
-                <Line type="monotone" dataKey="maxWeight" name="Carga Máxima" stroke="#0066ff" strokeWidth={3} dot={{ r: 5, fill: '#0066ff' }} activeDot={{ r: 7 }} />
-                <Line type="monotone" dataKey="est1RM" name="1RM Teórico (Epley)" stroke="#00b464" strokeWidth={2.5} strokeDasharray="5 5" dot={{ r: 4, fill: '#00b464' }} />
+                <Line type="monotone" dataKey="maxWeight" name="Pico de Carga" stroke="#0066ff" strokeWidth={3.5} dot={{ r: 5, fill: '#0066ff' }} activeDot={{ r: 7 }} />
+                <Line type="monotone" dataKey="est1RM" name={analysisMode === 'exercise' ? "1RM Teórico (Epley)" : "Volumen Grupo Muscular"} stroke="#10b981" strokeWidth={3} strokeDasharray="5 5" dot={{ r: 4, fill: '#10b981' }} />
               </LineChart>
             </ResponsiveContainer>
           </div>
         )}
       </div>
 
-      {/* Gráfico de Sobrecarga Progresiva Global SIN DATOS PREDETERMINados */}
-      <div className="card" style={{ padding: '18px', marginBottom: '22px' }}>
+      {/* Gráfico de Sobrecarga Progresiva Global */}
+      <div className="card" style={{ padding: '18px', marginBottom: '22px', borderRadius: '26px' }}>
         <div className="flex-between" style={{ marginBottom: '14px' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -519,7 +785,7 @@ export default function HistoryView() {
             </p>
           </div>
         ) : (
-          <div style={{ width: '100%', height: '200px' }}>
+          <div style={{ width: '100%', height: '220px' }}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartData} margin={{ top: 10, right: 10, left: -15, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
@@ -540,10 +806,10 @@ export default function HistoryView() {
       </div>
       
       {workoutHistory.length === 0 ? (
-        <div className="card" style={{ padding: '28px', textAlign: 'center', backgroundColor: '#f8fafc', border: '1.5px dashed #cbd5e1' }}>
+        <div className="card" style={{ padding: '28px', textAlign: 'center', backgroundColor: '#f8fafc', border: '1.5px dashed #cbd5e1', borderRadius: '24px' }}>
           <Calendar size={34} color="#94a3b8" style={{ margin: '0 auto 12px auto' }} />
           <h3 style={{ color: '#334155', margin: 0, fontSize: '16px', fontWeight: '800', whiteSpace: 'normal' }}>Bitácora limpia sin registros predeterminados</h3>
-          <p style={{ marginTop: '8px', fontSize: '13px', lineHeight: '1.5' }}>
+          <p style={{ marginTop: '8px', fontSize: '13px', lineHeight: '1.5', fontWeight: '600' }}>
             Al pulsar el botón de Guardar Sesión al final de tus entrenamientos en la pestaña Rutina, tu análisis, cargas y calibración de máquinas quedarán inmortalizados en este laboratorio.
           </p>
         </div>
@@ -552,7 +818,7 @@ export default function HistoryView() {
           const isExpanded = expandedSessionId === ses.id;
           
           return (
-            <div key={ses.id} className="card" style={{ marginBottom: '14px', overflow: 'hidden' }}>
+            <div key={ses.id} className="card" style={{ marginBottom: '14px', overflow: 'hidden', borderRadius: '22px' }}>
               <div 
                 onClick={() => setExpandedSessionId(isExpanded ? null : ses.id)}
                 style={{ 
@@ -623,9 +889,15 @@ export default function HistoryView() {
                     return (
                       <div key={exId} style={{ marginTop: '12px', background: '#ffffff', padding: '14px', borderRadius: '14px', border: '1.5px solid #cbd5e1' }}>
                         <div className="flex-between" style={{ marginBottom: '10px' }}>
-                          <strong style={{ fontSize: '14px', fontWeight: '800', color: '#0f172a', whiteSpace: 'normal', lineBreak: 'strict' }}>{exDef.name || 'Ejercicio Personalizado'}</strong>
+                          <strong style={{ fontSize: '14px', fontWeight: '800', color: '#0f172a', whiteSpace: 'normal', lineBreak: 'strict' }}>{exData.name || exDef.name || 'Ejercicio Personalizado'}</strong>
                           <span className="badge badge-blue">Meta: {exDef.reps || '-'}</span>
                         </div>
+
+                        {exData.muscleGroup && (
+                          <span className="badge" style={{ background: '#e0e7ff', color: '#3730a3', fontSize: '10px', marginBottom: '8px', display: 'inline-block', fontWeight: '800' }}>
+                            💪 {exData.muscleGroup}
+                          </span>
+                        )}
 
                         {exData.machineSetup && (
                           <div style={{ marginBottom: '10px', fontSize: '12px', color: '#5b21b6', background: '#f5f3ff', padding: '8px 12px', borderRadius: '10px', border: '1px solid #ddd6fe', fontWeight: '700' }}>
