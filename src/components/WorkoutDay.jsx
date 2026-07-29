@@ -3,7 +3,7 @@ import { scientificProtocol } from '../data/scientificProtocol';
 import ExerciseRow from './ExerciseRow';
 import CardioLogger from './CardioLogger';
 import { useLocalStorage } from '../hooks/useLocalStorage';
-import { analyzeWorkoutProgressWithAI, syncWorkoutToGoogleSheets } from '../services/deepseek';
+import { analyzeWorkoutProgressWithAI, syncWorkoutToGoogleSheets, autoSyncWithOfflineBuffer } from '../services/deepseek';
 import { CheckCircle, Calendar, ArrowLeft, ArrowRight, Save, Flame, RefreshCcw, Plus, X, Dumbbell, ShieldCheck, BookOpen, ShieldAlert, Zap, CheckCircle2, ChevronDown, ChevronUp, AlertTriangle, Activity, Sparkles, Cloud, Check, Loader2, Cpu } from 'lucide-react';
 import { useModal } from './common/UIComponents';
 
@@ -158,6 +158,7 @@ export default function WorkoutDay() {
       restTime: newExRest.trim() || '90 s',
       biomechanics: newExBiomech.trim() || 'Ejecución técnica estricta con control del rango articular y exhalación IAP.',
       searchQuery: `${newExName} biomechanics execution`,
+      unifiedFunctionCode: `[HIPER-${(newExMuscleGroup || 'CUST').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8)}-MÁQ]`,
       defaultUnit: 'lbs'
     };
 
@@ -170,9 +171,14 @@ export default function WorkoutDay() {
     setNewExName('');
     setNewExBiomech('');
 
+    // Disparar sincronización automática a Google Sheets para poblar "Rutina Maestra Adonis" al instante
+    setTimeout(() => {
+      autoSyncWithOfflineBuffer();
+    }, 500);
+
     modal.showAlert({
-      title: "✅ Ejercicio Incrustado",
-      message: `El ejercicio "${newEx.name}" (Grupo: ${newEx.muscleGroup}) se incorporó con éxito a tu rutina habitual del día ${currentDay.name}.`,
+      title: "✅ Ejercicio Incrustado & Sincronizado",
+      message: `El ejercicio "${newEx.name}" (Grupo: ${newEx.muscleGroup}) se incorporó a tu rutina habitual del día ${currentDay.name} y se sincronizó automáticamente en tu Google Sheet con el código ${newEx.unifiedFunctionCode}.`,
       variant: "success"
     });
   };

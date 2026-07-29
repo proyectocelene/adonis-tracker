@@ -270,18 +270,42 @@ export async function syncWorkoutToGoogleSheets(customPayload = {}) {
     atleta: "Carlos Donato",
     metaEstatura: "174 cm • Objetivo 68.0 kg magros",
     
-    // 1. RUTINA MAESTRA & ESTRUCTURA ADONIS
-    masterRoutine: scientificProtocol.map(day => ({
-      id: day.id,
-      dayNumber: day.dayNumber,
-      name: day.name,
-      focus: day.focus,
-      type: day.type,
-      exercises: (day.exercises || []).map(e => ({
-        ...e,
-        unifiedFunctionCode: `[HIPER-${(e.muscleGroup || 'GEN').toUpperCase().replace(/\s+/g, '-').slice(0, 10)}-01]`
-      }))
-    })),
+    // 1. RUTINA MAESTRA & ESTRUCTURA ADONIS (Incrusta en vivo tus ejercicios y máquinas agregados desde la App)
+    masterRoutine: (() => {
+      const customEx = JSON.parse(localStorage.getItem('coachv2_custom_day_exercises') || '{}');
+      const swappedEx = JSON.parse(localStorage.getItem('coachv2_swapped_exercises') || '{}');
+      
+      return scientificProtocol.map(day => {
+        const baseEx = day.exercises || [];
+        const dayCustoms = customEx[day.id] || [];
+        const daySwaps = swappedEx[day.id] || {};
+
+        const combined = [...baseEx, ...dayCustoms].map(e => {
+          const active = daySwaps[e.id] || e;
+          const isCustom = !baseEx.some(bx => bx.id === active.id);
+          const isSwapped = Boolean(daySwaps[e.id]);
+          const originLabel = isCustom ? "⚡️ Agregado en App (Personalizado)" : (isSwapped ? "🔄 Sustituto Equivalente" : "📘 Protocolo Base");
+          
+          const cleanMuscle = (active.muscleGroup || 'GEN').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8);
+          const autoCode = active.unifiedFunctionCode || `[HIPER-${cleanMuscle}-${isCustom ? 'CUST' : '01'}]`;
+
+          return {
+            ...active,
+            unifiedFunctionCode: autoCode,
+            origin: originLabel
+          };
+        });
+
+        return {
+          id: day.id,
+          dayNumber: day.dayNumber,
+          name: day.name,
+          focus: day.focus,
+          type: day.type,
+          exercises: combined
+        };
+      });
+    })(),
 
     // 2. BITÁCORAS & FUERZA EN VIVO
     workoutHistory: customPayload.workoutHistory || JSON.parse(localStorage.getItem('coachv2_history') || '[]'),
@@ -367,16 +391,16 @@ function doPost(e) {
       rutinaMaestraSheet = ss.insertSheet("Rutina Maestra Adonis");
       rutinaMaestraSheet.appendRow([
         "Día No.", "Nombre del Día", "Enfoque Fisiológico", "Tipo Sesión", "ID Ejercicio", 
-        "Nombre Ejercicio", "Grupo Muscular", "ID Función Biomecánica Unificada", "Series Meta", "Rango Reps", "Descanso Prescrito"
+        "Nombre Ejercicio", "Grupo Muscular", "ID Función Biomecánica Unificada", "Series Meta", "Rango Reps", "Descanso Prescrito", "Origen / Estado"
       ]);
-      var rHead1 = rutinaMaestraSheet.getRange(1, 1, 1, 11);
+      var rHead1 = rutinaMaestraSheet.getRange(1, 1, 1, 12);
       rHead1.setBackground("#1e1b4b").setFontColor("#ffffff").setFontWeight("bold");
       rutinaMaestraSheet.setFrozenRows(1);
     }
 
     if (payload.masterRoutine && Array.isArray(payload.masterRoutine)) {
       if (rutinaMaestraSheet.getLastRow() > 1) {
-        rutinaMaestraSheet.getRange(2, 1, rutinaMaestraSheet.getLastRow() - 1, 11).clearContent();
+        rutinaMaestraSheet.getRange(2, 1, rutinaMaestraSheet.getLastRow() - 1, 12).clearContent();
       }
       var masterRows = [];
       payload.masterRoutine.forEach(function(day) {
@@ -385,15 +409,15 @@ function doPost(e) {
             masterRows.push([
               "Día " + day.dayNumber, day.name, day.focus, day.type || "Workout", ex.id,
               ex.name, ex.muscleGroup || "Principal", ex.unifiedFunctionCode || "[FUNC-GENERAL-001]",
-              ex.sets || "3", ex.reps || "10-12", ex.restTime || "120-180 s"
+              ex.sets || "3", ex.reps || "10-12", ex.restTime || "120-180 s", ex.origin || "📘 Protocolo Base"
             ]);
           });
         } else {
-          masterRows.push(["Día " + day.dayNumber, day.name, day.focus, "Descanso Total", "-", "-", "-", "-", "-", "-", "-"]);
+          masterRows.push(["Día " + day.dayNumber, day.name, day.focus, "Descanso Total", "-", "-", "-", "-", "-", "-", "-", "Descanso"]);
         }
       });
       if (masterRows.length > 0) {
-        rutinaMaestraSheet.getRange(rutinaMaestraSheet.getLastRow() + 1, 1, masterRows.length, 11).setValues(masterRows);
+        rutinaMaestraSheet.getRange(rutinaMaestraSheet.getLastRow() + 1, 1, masterRows.length, 12).setValues(masterRows);
       }
     }
     
