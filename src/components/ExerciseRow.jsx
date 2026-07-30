@@ -3,6 +3,7 @@ import { Search, Info, CheckCircle2, Circle, RotateCcw, TrendingUp, Flame, Alert
 import { useModal, UnitToggle, LiquidDropdown } from './common/UIComponents';
 import { unifyExerciseWithAI } from '../services/deepseek';
 import { useLocalStorage } from '../hooks/useLocalStorage';
+import { UNIFIED_EXERCISE_LIBRARY } from '../data/unifiedExerciseLibrary';
 
 export default function ExerciseRow({ 
   exercise, 
@@ -551,8 +552,22 @@ export default function ExerciseRow({
                   <strong style={{ fontSize: '13px', color: '#5b21b6', fontWeight: '900' }}>¿Otra alternativa libre o variante de gimnasio?</strong>
                 </div>
                 <p style={{ fontSize: '11px', color: '#6d28d9', margin: '0 0 10px 0', lineHeight: '1.4', fontWeight: '600' }}>
-                  Escribe el ejercicio de reemplazo. La IA evaluará su equivalencia biomecánica, estimará tu ratio de carga (lbs) y lo sincronizará unificadamente en tu Google Sheet:
+                  Elige de la <strong>Base de Datos Unificada de Máquinas</strong> o escribe tu reemplazo. La IA evaluará su equivalencia biomecánica, estimará tu ratio de carga (lbs) y lo sincronizará en Google Sheets:
                 </p>
+                <div style={{ marginBottom: '10px' }}>
+                  <select
+                    defaultValue=""
+                    onChange={(e) => setCustomSwapInput(e.target.value)}
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: '12px', border: '1.5px solid #a78bfa', background: '#fff', color: '#4c1d95', fontSize: '12px', fontWeight: '800' }}
+                  >
+                    <option value="">🗂️ Seleccionar máquina de Base de Datos Unificada...</option>
+                    {UNIFIED_EXERCISE_LIBRARY.map(item => (
+                      <option key={item.id} value={item.name}>
+                        {item.muscleGroup} • {item.name} ({item.equipment})
+                      </option>
+                    ))}
+                  </select>
+                </div>
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <input
                     type="text"

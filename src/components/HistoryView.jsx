@@ -2,7 +2,8 @@ import React, { useState, useRef } from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { scientificProtocol } from '../data/scientificProtocol';
 import ConsistencyHeatmap from './ConsistencyHeatmap';
-import { analyzeFullDatabaseWithAI, syncWorkoutToGoogleSheets, getGoogleAppsScriptCode } from '../services/deepseek';
+import { analyzeFullDatabaseWithAI, unifyDatabaseExercisesWithAI, syncWorkoutToGoogleSheets, getGoogleAppsScriptCode, autoSyncWithOfflineBuffer } from '../services/deepseek';
+import { UNIFIED_EXERCISE_LIBRARY, MUSCLE_GROUPS_LIST } from '../data/unifiedExerciseLibrary';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { Activity, TrendingUp, Award, Clock, ChevronDown, ChevronUp, Trash2, ShieldCheck, Zap, HeartPulse, Dumbbell, Calendar, Sparkles, Settings2, Download, Upload, AlertOctagon, Settings, X, ShieldAlert, Database, Cloud, Copy, Check, Cpu, Loader2, Sparkles as SparklesIcon, Layers, RefreshCw } from 'lucide-react';
 import { useModal, LiquidDropdown } from './common/UIComponents';
@@ -16,8 +17,16 @@ export default function HistoryView() {
   const [bodyMetrics, setBodyMetrics] = useLocalStorage('coachv2_body_metrics_history', []);
   
   // API Key & Google Sheets URL
-  const [apiKey] = useLocalStorage('coachv2_deepseek_apikey', '');
+  const [storedApiKey1] = useLocalStorage('coachv2_deepseek_apikey', '');
+  const [storedApiKey2] = useLocalStorage('coachv2_deepseek_api_key', '');
+  const apiKey = (storedApiKey1 || storedApiKey2 || '').toString().replace(/["']/g, '').trim();
   const [googleSheetsUrl, setGoogleSheetsUrl] = useLocalStorage('coachv2_google_sheets_url', 'https://script.google.com/macros/s/AKfycbxA-KbUcEgWUq4jvjdSBxLw3tGsgPxXsF2Y7mX5JsNIpE2qslN1v7xW3NqdJ3-4b-RCwg/exec');
+
+  // Explorador de Base de Datos y Unificación AI
+  const [selectedDbFilter, setSelectedDbFilter] = useState('Todos');
+  const [dbSearchTerm, setDbSearchTerm] = useState('');
+  const [isUnifyingDb, setIsUnifyingDb] = useState(false);
+  const [unificationResult, setUnificationResult] = useState(null);
 
   const [analysisMode, setAnalysisMode] = useState('exercise'); // 'exercise' or 'muscleGroup'
   const [selectedExId, setSelectedExId] = useState('d1_e1');
@@ -283,6 +292,32 @@ export default function HistoryView() {
       modal.showAlert({ title: "Error al Consultar IA", message: err.message, variant: "danger" });
     } finally {
       setIsAnalyzingDb(false);
+    }
+  };
+
+  // UNIFICACIÓN INTELIGENTE AI DE LA BASE DE DATOS Y MÁQUINAS
+  const handleUnifyAndCleanDatabase = async () => {
+    try {
+      setIsUnifyingDb(true);
+      const result = await unifyDatabaseExercisesWithAI({
+        apiKey,
+        customExercises: customExercisesMap,
+        workoutHistory
+      });
+      setUnificationResult(result);
+      // Disparamos sincronización en segundo plano con la base de datos unificada
+      setTimeout(() => {
+        autoSyncWithOfflineBuffer();
+      }, 500);
+      modal.showAlert({
+        title: "⚡️ ¡Base de Datos Unificada con Éxito!",
+        message: "Todos los ejercicios y máquinas personalizados fueron analizados, clasificados y unificados bajo el estándar biomecánico Adonis. Tu Google Sheet ha sido actualizado con los nuevos códigos.",
+        variant: "success"
+      });
+    } catch (err) {
+      modal.showAlert({ title: "Error en Unificación", message: err.message, variant: "danger" });
+    } finally {
+      setIsUnifyingDb(false);
     }
   };
 
@@ -593,6 +628,101 @@ export default function HistoryView() {
           </div>
         </div>
       )}
+
+      {/* MÓDULO DE BASE DE DATOS UNIFICADA & MÁQUINAS */}
+      <div className="card" style={{ padding: '22px', marginBottom: '22px', background: '#f8fafc', border: '1.5px solid #e2e8f0', borderRadius: '26px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px', marginBottom: '14px', borderBottom: '2px solid #e2e8f0', paddingBottom: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Database size={22} color="#0066ff" />
+            <strong style={{ fontSize: '16px', color: '#0f172a', fontWeight: '900' }}>
+              Base de Datos Unificada de Ejercicios & Máquinas
+            </strong>
+          </div>
+          <span style={{ background: '#dbeafe', color: '#1e40af', padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: '800' }}>
+            {UNIFIED_EXERCISE_LIBRARY.length} Registros Oficiales
+          </span>
+        </div>
+
+        <p style={{ fontSize: '13px', color: '#475569', margin: '0 0 16px 0', lineHeight: '1.5', fontWeight: '600', textAlign: 'left' }}>
+          Catálogo maestro para estandarización y sincronización en Google Sheets. Utiliza el botón de abajo para que la Inteligencia Artificial analice tus ejercicios creados e historial y los unifique automáticamente:
+        </p>
+
+        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '16px' }}>
+          <input
+            type="text"
+            placeholder="🔍 Buscar máquina o ejercicio (ej: Prensa, Polea, Hack...)"
+            value={dbSearchTerm}
+            onChange={e => setDbSearchTerm(e.target.value)}
+            style={{ flex: '1 1 220px', padding: '10px 14px', borderRadius: '14px', border: '1.5px solid #cbd5e1', fontSize: '13px', fontWeight: '700', background: '#fff' }}
+          />
+          <select
+            value={selectedDbFilter}
+            onChange={e => setSelectedDbFilter(e.target.value)}
+            style={{ padding: '10px 14px', borderRadius: '14px', border: '1.5px solid #cbd5e1', fontSize: '13px', fontWeight: '800', background: '#fff', color: '#0f172a' }}
+          >
+            <option value="Todos">All Grupos Musculares</option>
+            {MUSCLE_GROUPS_LIST.map(g => <option key={g} value={g}>{g}</option>)}
+          </select>
+        </div>
+
+        {/* Lista Scroll de Máquinas */}
+        <div style={{ maxHeight: '240px', overflowY: 'auto', border: '1px solid #e2e8f0', borderRadius: '16px', background: '#ffffff', marginBottom: '18px', padding: '8px' }}>
+          {UNIFIED_EXERCISE_LIBRARY
+            .filter(ex => selectedDbFilter === 'Todos' || ex.muscleGroup === selectedDbFilter)
+            .filter(ex => !dbSearchTerm || ex.name.toLowerCase().includes(dbSearchTerm.toLowerCase()) || ex.equipment.toLowerCase().includes(dbSearchTerm.toLowerCase()))
+            .map(ex => (
+              <div key={ex.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', borderBottom: '1px solid #f1f5f9', gap: '10px', textAlign: 'left' }}>
+                <div>
+                  <strong style={{ display: 'block', fontSize: '13px', color: '#0f172a', fontWeight: '800' }}>
+                    {ex.name} <span style={{ fontSize: '11px', color: '#3b82f6', fontWeight: '700' }}>({ex.equipment})</span>
+                  </strong>
+                  <span style={{ fontSize: '11px', color: '#64748b' }}>{ex.biomechanics}</span>
+                </div>
+                <div style={{ flexShrink: 0, textAlign: 'right' }}>
+                  <code style={{ background: '#eff6ff', color: '#1e40af', padding: '3px 8px', borderRadius: '8px', fontSize: '11px', fontWeight: '800', border: '1px solid #bfdbfe' }}>
+                    {ex.unifiedCode}
+                  </code>
+                  <span style={{ display: 'block', fontSize: '10px', color: '#94a3b8', marginTop: '2px', fontWeight: '700' }}>
+                    {ex.defaultSets} series × {ex.defaultReps}
+                  </span>
+                </div>
+              </div>
+            ))}
+        </div>
+
+        <button
+          type="button"
+          onClick={handleUnifyAndCleanDatabase}
+          disabled={isUnifyingDb}
+          style={{ width: '100%', background: 'linear-gradient(135deg, #0066ff 0%, #2563eb 100%)', color: '#ffffff', padding: '15px', borderRadius: '20px', border: 'none', fontSize: '14px', fontWeight: '900', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', boxShadow: '0 6px 20px rgba(0, 102, 255, 0.3)', cursor: 'pointer' }}
+        >
+          {isUnifyingDb ? <Loader2 size={18} className="animate-spin" /> : <SparklesIcon size={18} />}
+          {isUnifyingDb ? 'Unificando Base de Datos con IA...' : '⚡️ Analizar y Unificar Base de Datos de Ejercicios con IA'}
+        </button>
+
+        {unificationResult && (
+          <div style={{ marginTop: '16px', background: '#eff6ff', padding: '16px', borderRadius: '18px', border: '1.5px solid #bfdbfe', textAlign: 'left' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+              <strong style={{ fontSize: '14px', color: '#1e3a8a', fontWeight: '900' }}>✅ {unificationResult.totalUnificados}</strong>
+              <button type="button" onClick={() => setUnificationResult(null)} style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}>
+                <X size={18} color="#64748b" />
+              </button>
+            </div>
+            <p style={{ fontSize: '12px', color: '#334155', margin: '0 0 12px 0', fontWeight: '600', lineHeight: '1.5' }}>
+              {unificationResult.resumenDeUnificacíon}
+            </p>
+            {unificationResult.mapeoUnificado?.map((m, idx) => (
+              <div key={idx} style={{ background: '#fff', padding: '10px 12px', borderRadius: '12px', border: '1px solid #dbeafe', marginBottom: '8px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                  <strong style={{ fontSize: '12px', color: '#0f172a', fontWeight: '800' }}>{m.ejercicioOriginal} ➔ <span style={{ color: '#0066ff' }}>{m.mapeoEquivalente}</span></strong>
+                  <code style={{ background: '#f1f5f9', color: '#334155', padding: '2px 6px', borderRadius: '6px', fontSize: '10px', fontWeight: '800' }}>{m.codigoOficial}</code>
+                </div>
+                <span style={{ fontSize: '11px', color: '#64748b' }}>{m.justificacion}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* BOTÓN AUDITORÍA INTEGRAL DE IA DE DEEPSEEK */}
       <div style={{ marginBottom: '20px' }}>

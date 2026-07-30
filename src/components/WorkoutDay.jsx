@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { scientificProtocol } from '../data/scientificProtocol';
+import { UNIFIED_EXERCISE_LIBRARY } from '../data/unifiedExerciseLibrary';
 import ExerciseRow from './ExerciseRow';
 import CardioLogger from './CardioLogger';
 import { useLocalStorage } from '../hooks/useLocalStorage';
@@ -31,6 +32,21 @@ export default function WorkoutDay() {
   const [newExRest, setNewExRest] = useState('90 s');
   const [newExBiomech, setNewExBiomech] = useState('');
   const [newExMuscleGroup, setNewExMuscleGroup] = useState('General');
+  const [newExUnifiedCode, setNewExUnifiedCode] = useState('');
+
+  const handlePickFromLibrary = (libId) => {
+    if (!libId) return;
+    const item = UNIFIED_EXERCISE_LIBRARY.find(x => x.id === libId);
+    if (item) {
+      setNewExName(item.name);
+      setNewExMuscleGroup(item.muscleGroup || 'General');
+      setNewExSets(item.defaultSets || 4);
+      setNewExReps(item.defaultReps || '10-12');
+      setNewExRest(item.defaultRest || '90 s');
+      setNewExBiomech(item.biomechanics || '');
+      setNewExUnifiedCode(item.unifiedCode || '');
+    }
+  };
 
   const [showProtocolRules, setShowProtocolRules] = useState(false);
   
@@ -158,7 +174,7 @@ export default function WorkoutDay() {
       restTime: newExRest.trim() || '90 s',
       biomechanics: newExBiomech.trim() || 'Ejecución técnica estricta con control del rango articular y exhalación IAP.',
       searchQuery: `${newExName} biomechanics execution`,
-      unifiedFunctionCode: `[HIPER-${(newExMuscleGroup || 'CUST').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8)}-MÁQ]`,
+      unifiedFunctionCode: newExUnifiedCode || `[HIPER-${(newExMuscleGroup || 'CUST').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8)}-MÁQ]`,
       defaultUnit: 'lbs'
     };
 
@@ -170,6 +186,7 @@ export default function WorkoutDay() {
     setIsAddingExercise(false);
     setNewExName('');
     setNewExBiomech('');
+    setNewExUnifiedCode('');
 
     // Disparar sincronización automática a Google Sheets para poblar "Rutina Maestra Adonis" al instante
     setTimeout(() => {
@@ -836,8 +853,26 @@ export default function WorkoutDay() {
               </div>
 
               <form onSubmit={handleAddCustomExercise}>
+                <div style={{ background: '#f5f3ff', border: '1.5px solid #a78bfa', padding: '12px', borderRadius: '14px', marginBottom: '14px', textAlign: 'left' }}>
+                  <label className="input-label" style={{ display: 'block', marginBottom: '6px', color: '#5b21b6', fontWeight: '900', fontSize: '12px' }}>
+                    ⚡️ Elegir de Base de Datos de Máquinas Unificada (Recomendado):
+                  </label>
+                  <select
+                    defaultValue=""
+                    onChange={(e) => handlePickFromLibrary(e.target.value)}
+                    style={{ width: '100%', padding: '10px 12px', borderRadius: '12px', border: '1px solid #7c3aed', background: '#ffffff', color: '#1e1b4b', fontWeight: '700', fontSize: '13px' }}
+                  >
+                    <option value="">👆 Seleccionar máquina / ejercicio oficial...</option>
+                    {UNIFIED_EXERCISE_LIBRARY.map(ex => (
+                      <option key={ex.id} value={ex.id}>
+                        [{ex.muscleGroup}] • {ex.name} ({ex.equipment})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
                 <div style={{ marginBottom: '12px' }}>
-                  <label className="input-label" style={{ display: 'block', textAlign: 'left', marginBottom: '4px' }}>Nombre del Ejercicio:</label>
+                  <label className="input-label" style={{ display: 'block', textAlign: 'left', marginBottom: '4px' }}>Nombre del Ejercicio (o Edición Libre):</label>
                   <input 
                     type="text" 
                     required 

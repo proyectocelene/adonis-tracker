@@ -169,11 +169,14 @@ export default function NutritionTracker() {
 
   const handleSaveApiKey = (e) => {
     e.preventDefault();
-    setDeepSeekApiKey(apiInputVal.trim());
+    const cleanKey = apiInputVal.toString().replace(/["']/g, '').trim();
+    setDeepSeekApiKey(cleanKey);
+    localStorage.setItem('coachv2_deepseek_apikey', JSON.stringify(cleanKey));
+    localStorage.setItem('coachv2_deepseek_api_key', JSON.stringify(cleanKey));
     setShowApiInput(false);
     modal.showAlert({
-      title: "🔑 Clave DeepSeek Almacenada",
-      message: "Tu API Key se guardó cifrada y privada en tu dispositivo local. Habilitando Inteligencia Artificial en toda tu app.",
+      title: "🔑 Clave DeepSeek Almacenada y Limpia",
+      message: "Tu API Key de DeepSeek se limpió de comillas/espacios y quedó sincronizada exitosamente en todos los módulos de Inteligencia Artificial (Rutinas, Unificación de Máquinas y Nutrición).",
       variant: "success"
     });
   };
