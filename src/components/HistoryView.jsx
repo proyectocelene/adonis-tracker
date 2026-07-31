@@ -60,13 +60,22 @@ export default function HistoryView() {
   ];
 
   scientificProtocol.forEach(day => {
-    if (day.exercises) {
-      day.exercises.forEach(ex => {
-        if (!ex.isCardio && !ex.isTime) {
-          allAvailableExercises.push({ id: ex.id, name: ex.name, day: day.name.split(':')[0], muscleGroup: ex.muscleGroup });
-          exerciseOptions.push({ value: ex.id, label: `${day.name.split(':')[0]} • ${ex.name}` });
-        }
-      });
+    const dayPrefix = day.name.split(':')[0];
+    const baseEx = day.exercises || [];
+    const customEx = customExercisesMap[day.id] || [];
+    [...baseEx, ...customEx].forEach(ex => {
+      if (!ex.isCardio && !ex.isTime && !allAvailableExercises.some(a => a.id === ex.id)) {
+        allAvailableExercises.push({ id: ex.id, name: ex.name, day: dayPrefix, muscleGroup: ex.muscleGroup, biomechanics: ex.biomechanics });
+        exerciseOptions.push({ value: ex.id, label: `${dayPrefix} • ${ex.name}` });
+      }
+    });
+  });
+
+  // Asegurar que cualquier ejercicio personalizado adicional creado en la app aparezca en la lista de análisis
+  Object.values(customExercisesMap).flat().forEach(ex => {
+    if (ex && ex.id && !ex.isCardio && !allAvailableExercises.some(a => a.id === ex.id)) {
+      allAvailableExercises.push({ id: ex.id, name: ex.name, day: '⚡️ Creado', muscleGroup: ex.muscleGroup, biomechanics: ex.biomechanics });
+      exerciseOptions.push({ value: ex.id, label: `⚡️ Creado • ${ex.name}` });
     }
   });
 
@@ -221,6 +230,39 @@ export default function HistoryView() {
   const progData = getProgressionData();
   const selectedExDef = allAvailableExercises.find(x => x.id === selectedExId) || allAvailableExercises[0] || { name: 'Ejercicio Seleccionado' };
 
+  // Métrica y Diagnóstico Inteligente para el Ejercicio Seleccionado
+  const latestLog = progData.length > 0 ? progData[progData.length - 1] : null;
+  const previousLog = progData.length > 1 ? progData[progData.length - 2] : null;
+  const personalRecord = progData.length > 0 ? Math.max(...progData.map(p => p.maxWeight || 0)) : 0;
+  
+  let deltaWeight = 0;
+  let deltaReps = 0;
+  let smartDiagnosis = "Sin datos suficientes para evaluar tendencia de sobrecarga.";
+  let smartSuggestion = "Inicia con una carga controlada que te permita completar el rango prescrito con RPE 8.";
+
+  if (latestLog) {
+    if (previousLog) {
+      deltaWeight = latestLog.maxWeight - previousLog.maxWeight;
+      deltaReps = (parseInt(latestLog.reps) || 0) - (parseInt(previousLog.reps) || 0);
+      if (deltaWeight > 0) {
+        smartDiagnosis = `🚀 ¡Sobrecarga mecánica lograda! Aumentaste +${deltaWeight} ${latestLog.unit} vs tu sesión anterior.`;
+        smartSuggestion = `Mantén este peso (${latestLog.maxWeight} ${latestLog.unit}) hasta lograr el tope superior del rango de repeticiones antes de volver a incrementar.`;
+      } else if (deltaWeight === 0 && deltaReps > 0) {
+        smartDiagnosis = `🔥 ¡Progresión en volumen muscular! Mantuviste la carga y lograste +${deltaReps} repeticiones adicionales.`;
+        smartSuggestion = `Estás consolidando fuerza. Si ya alcanzaste el tope de reps prescritas (ej. 12-15), sube +5 lbs/kg en tu próxima sesión.`;
+      } else if (deltaWeight < 0 || deltaReps < 0) {
+        smartDiagnosis = `⚠️ Ligero descenso temporal en carga o reps vs sesión anterior.`;
+        smartSuggestion = `Fisiológicamente normal en semanas de fatiga del SNC. Prioriza calidad técnica, exhalación IAP y descanso completo entre series.`;
+      } else {
+        smartDiagnosis = `⚖️ Estabilidad mecánica: Mantienes exactamente la misma carga y repeticiones.`;
+        smartSuggestion = `Hoy intenta sacar al menos +1 repetición extra en tu última serie para reactivar la señal de hipertrofia.`;
+      }
+    } else {
+      smartDiagnosis = `📌 Línea base oficial establecida con ${latestLog.maxWeight} ${latestLog.unit} x ${latestLog.reps} reps.`;
+      smartSuggestion = `Tu siguiente entrenamiento comparará automáticamente tu rendimiento contra este pico para trazar tu curva de progresión.`;
+    }
+  }
+
   const handleDeleteSession = (id) => {
     modal.showConfirm({
       title: "🗑️ ¿Eliminar Bitácora de Sesión?",
@@ -321,29 +363,60 @@ export default function HistoryView() {
     }
   };
 
-  // EXPORTAR BASE DE DATOS
+  // EXPORTAR BASE DE DATOS TOTAL (RUTINAS, HISTORIAL, ALACENA, MEDIDAS Y CONFIGURACIONES)
   const handleExportDatabase = () => {
+    const rawCustom = JSON.parse(localStorage.getItem('coachv2_custom_day_exercises') || '{}');
+    const rawSwapped = JSON.parse(localStorage.getItem('coachv2_swapped_exercises') || '{}');
+
+    // Construcción completa de la Rutina Maestra actual
+    const masterRoutineExport = scientificProtocol.map(day => ({
+      id: day.id,
+      dayNumber: day.dayNumber,
+      name: day.name,
+      focus: day.focus,
+      exercises: [...(day.exercises || []), ...(rawCustom[day.id] || [])].map(ex => {
+        const sw = (rawSwapped[day.id] || {})[ex.id] || ex;
+        return { ...ex, ...sw };
+      })
+    }));
+
     const fullDatabase = {
-      appVersion: "COACH V2 - Protocolo Adonis Científico",
+      appVersion: "COACH V2 - Protocolo Adonis Científico (Backup Maestro 100%)",
       exportTimestamp: new Date().toISOString(),
+      atleta: "Carlos Donato",
+      rutinaMaestraEstructurada: masterRoutineExport,
       workoutHistory,
       currentActiveSessions: currentSessions,
-      customExercises: customExercisesMap,
-      nutritionData: nutrition,
-      bodyMetrics
+      customExercises: rawCustom,
+      swappedExercises: rawSwapped,
+      nutritionData: JSON.parse(localStorage.getItem('coachv2_nutrition_data') || '{"protein":0,"water":0}'),
+      alacenaInventory: JSON.parse(localStorage.getItem('coachv2_alacena_inventory') || '[]'),
+      shoppingList: JSON.parse(localStorage.getItem('coachv2_shopping_list') || '[]'),
+      mealLogs: JSON.parse(localStorage.getItem('coachv2_meal_history') || '[]'),
+      groceryPrices: JSON.parse(localStorage.getItem('coachv2_grocery_price_history') || '[]'),
+      bodyMetrics: JSON.parse(localStorage.getItem('coachv2_body_metrics_history') || '[]'),
+      rawLocalStorageDump: Object.keys(localStorage)
+        .filter(k => k.startsWith('coachv2_'))
+        .reduce((acc, k) => {
+          try { acc[k] = JSON.parse(localStorage.getItem(k)); } 
+          catch { acc[k] = localStorage.getItem(k); }
+          return acc;
+        }, {})
     };
 
-    const jsonString = `data:text/json;charset=utf-8,${encodeURIComponent(JSON.stringify(fullDatabase, null, 2))}`;
+    const blob = new Blob([JSON.stringify(fullDatabase, null, 2)], { type: 'application/json;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
     const downloadAnchor = document.createElement('a');
-    downloadAnchor.setAttribute("href", jsonString);
-    downloadAnchor.setAttribute("download", `COACH_V2_Backup_${new Date().toISOString().split('T')[0]}.json`);
+    downloadAnchor.setAttribute("href", url);
+    downloadAnchor.setAttribute("download", `COACH_V2_Backup_Total_${new Date().toISOString().split('T')[0]}.json`);
     document.body.appendChild(downloadAnchor);
     downloadAnchor.click();
     downloadAnchor.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
 
     modal.showAlert({
-      title: "💾 Respaldo Exportado con Éxito",
-      message: "Tu archivo JSON con el 100% de tus rutinas, pesos levantados y medidas corporales ha sido guardado en tu dispositivo.",
+      title: "💾 Respaldo Maestro Exportado con Éxito",
+      message: "Se descargó el archivo JSON con el 100% de tu Rutina Maestra Adonis estructurada por días, tus ejercicios creados, historial completo de cargas, alacena y registros.",
       variant: "success"
     });
   };
@@ -874,21 +947,65 @@ export default function HistoryView() {
             </p>
           </div>
         ) : (
-          <div style={{ width: '100%', height: '260px' }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={progData} margin={{ top: 10, right: 15, left: -15, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                <XAxis dataKey="date" stroke="#64748b" fontSize={11} tickLine={false} />
-                <YAxis stroke="#0066ff" fontSize={11} domain={['auto', 'auto']} />
-                <Tooltip 
-                  contentStyle={{ backgroundColor: '#ffffff', border: '1.5px solid #cbd5e1', borderRadius: '14px', boxShadow: '0 6px 20px rgba(0,0,0,0.1)', fontFamily: 'Plus Jakarta Sans', fontWeight: '800' }}
-                  formatter={(val, name) => [val + (analysisMode === 'exercise' ? ' lbs/kg' : ' unidades'), name === 'maxWeight' ? 'Pico de Carga' : (analysisMode === 'exercise' ? '1RM Teórico (Epley)' : 'Volumen Total (Lbs-Reps)')]}
-                />
-                <Legend verticalAlign="top" height={36} />
-                <Line type="monotone" dataKey="maxWeight" name="Pico de Carga" stroke="#0066ff" strokeWidth={3.5} dot={{ r: 5, fill: '#0066ff' }} activeDot={{ r: 7 }} />
-                <Line type="monotone" dataKey="est1RM" name={analysisMode === 'exercise' ? "1RM Teórico (Epley)" : "Volumen Grupo Muscular"} stroke="#10b981" strokeWidth={3} strokeDasharray="5 5" dot={{ r: 4, fill: '#10b981' }} />
-              </LineChart>
-            </ResponsiveContainer>
+          <div>
+            {analysisMode === 'exercise' && (
+              <div style={{ background: 'linear-gradient(135deg, #eff6ff 0%, #ffffff 100%)', border: '1.5px solid #bfdbfe', borderRadius: '22px', padding: '16px', marginBottom: '18px', boxShadow: '0 8px 25px rgba(0, 102, 255, 0.07)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Activity size={20} color="#0066ff" />
+                    <strong style={{ fontSize: '15px', color: '#1e3a8a', fontWeight: '900' }}>Análisis Biomecánico y Avance: {selectedExDef.name}</strong>
+                  </div>
+                  <span className="badge" style={{ background: '#dbeafe', color: '#1d4ed8', fontWeight: '800', fontSize: '11px' }}>
+                    🏆 Récord Personal (PR): {personalRecord} {latestLog?.unit || 'lbs'}
+                  </span>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '12px' }}>
+                  <div style={{ background: '#ffffff', padding: '12px', borderRadius: '16px', border: '1px solid #dbeafe' }}>
+                    <span style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', fontWeight: '800', display: 'block', marginBottom: '4px' }}>🏋️ Último Peso Utilizado</span>
+                    <div style={{ fontSize: '18px', fontWeight: '900', color: '#0f172a' }}>
+                      {latestLog ? `${latestLog.maxWeight} ${latestLog.unit}` : '-'} <span style={{ fontSize: '13px', color: '#475569', fontWeight: '700' }}>({latestLog?.reps || 0} reps)</span>
+                    </div>
+                  </div>
+                  <div style={{ background: '#ffffff', padding: '12px', borderRadius: '16px', border: '1px solid #dbeafe' }}>
+                    <span style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', fontWeight: '800', display: 'block', marginBottom: '4px' }}>📈 Tendencia vs Anterior</span>
+                    <div style={{ fontSize: '14px', fontWeight: '800', color: deltaWeight >= 0 ? '#059669' : '#dc2626', lineBreak: 'strict' }}>
+                      {deltaWeight > 0 ? `▲ +${deltaWeight} ${latestLog?.unit}` : (deltaWeight === 0 ? (deltaReps > 0 ? `▲ +${deltaReps} reps` : '• Carga Constante') : `▼ ${deltaWeight} ${latestLog?.unit}`)}
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ background: '#ffffff', padding: '12px', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
+                  <div style={{ fontSize: '12px', color: '#0f172a', fontWeight: '800', marginBottom: '4px' }}>
+                    {smartDiagnosis}
+                  </div>
+                  <div style={{ fontSize: '12px', color: '#475569', fontWeight: '600', lineHeight: '1.4' }}>
+                    💡 <strong>Recomendación Inteligente:</strong> {smartSuggestion}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div style={{ width: '100%', height: '260px' }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={progData} margin={{ top: 10, right: 15, left: -15, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                  <XAxis dataKey="date" stroke="#64748b" fontSize={11} tickLine={false} />
+                  <YAxis stroke="#0066ff" fontSize={11} domain={['auto', 'auto']} />
+                  <Tooltip 
+                    contentStyle={{ backgroundColor: '#ffffff', border: '1.5px solid #cbd5e1', borderRadius: '14px', boxShadow: '0 6px 20px rgba(0,0,0,0.1)', fontFamily: 'Plus Jakarta Sans', fontWeight: '800' }}
+                    formatter={(val, name, props) => {
+                      if (name === 'Pico de Carga') return [val + ' ' + (props.payload.unit || 'lbs') + ` (${props.payload.reps} reps)`, '🏋️ Peso Máximo Utilizado'];
+                      if (name === '1RM Teórico (Epley)') return [val + ' ' + (props.payload.unit || 'lbs'), '⚡ 1RM Teórico Estimado'];
+                      return [val, name];
+                    }}
+                  />
+                  <Legend verticalAlign="top" height={36} />
+                  <Line type="monotone" dataKey="maxWeight" name="Pico de Carga" stroke="#0066ff" strokeWidth={3.5} dot={{ r: 5, fill: '#0066ff' }} activeDot={{ r: 7 }} />
+                  <Line type="monotone" dataKey="est1RM" name={analysisMode === 'exercise' ? "1RM Teórico (Epley)" : "Volumen Grupo Muscular"} stroke="#10b981" strokeWidth={3} strokeDasharray="5 5" dot={{ r: 4, fill: '#10b981' }} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
           </div>
         )}
       </div>

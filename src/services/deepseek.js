@@ -6,6 +6,7 @@
 ============================================================================ */
 
 import { scientificProtocol } from '../data/scientificProtocol';
+import { UNIFIED_EXERCISE_LIBRARY } from '../data/unifiedExerciseLibrary';
 
 const DEEPSEEK_API_URL = 'https://api.deepseek.com/chat/completions';
 const MODEL_NAME = 'deepseek-chat';
@@ -325,13 +326,76 @@ export async function syncWorkoutToGoogleSheets(customPayload = {}) {
           const isSwapped = Boolean(daySwaps[e.id]);
           const originLabel = isCustom ? "⚡️ Agregado en App (Personalizado)" : (isSwapped ? "🔄 Sustituto Equivalente" : "📘 Protocolo Base");
           
-          const cleanMuscle = (active.muscleGroup || 'GEN').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8);
-          const autoCode = active.unifiedFunctionCode || `[HIPER-${cleanMuscle}-${isCustom ? 'CUST' : '01'}]`;
+          let muscle = active.muscleGroup || 'General';
+          let code = active.unifiedFunctionCode;
+          const nameLower = (active.name || '').toLowerCase();
+
+          // Inteligencia de corrección y asignación biomecánica automática para ejercicios personalizados
+          if (isCustom || muscle === 'General' || muscle === 'Principal') {
+            if (nameLower.includes('overhead press') || nameLower.includes('hombro') || nameLower.includes('lateral')) {
+              muscle = "Hombros (Deltoides Anterior/Medio)";
+              code = code && !code.includes('GEN') ? code : "[HIPER-HOMBROPR-01]";
+            } else if (nameLower.includes('tricep') || nameLower.includes('copa') || nameLower.includes('extensi')) {
+              muscle = "Tríceps (Cabeza Larga & Lateral)";
+              code = code && !code.includes('GEN') ? code : "[HIPER-TRCEPSCA-01]";
+            } else if (nameLower.includes('adduc') || nameLower.includes('adductor') || nameLower.includes('cerrar')) {
+              muscle = "Muslo Interno (Adductores & Gracilis)";
+              code = code && !code.includes('GEN') ? code : "[HIPER-MUSLOINT-01]";
+            } else if (nameLower.includes('abduc') || nameLower.includes('abductor') || nameLower.includes('patada') || nameLower.includes('glute')) {
+              muscle = "Glúteos (Glúteo Medio & Mayor)";
+              code = code && !code.includes('GEN') ? code : "[HIPER-GLTEOMED-01]";
+            } else if (nameLower.includes('calf') || nameLower.includes('pantorrilla') || nameLower.includes('sural')) {
+              muscle = "Pantorrillas (Tríceps Sural & Sóleo)";
+              code = code && !code.includes('GEN') ? code : "[HIPER-PANTORRI-01]";
+            } else if (nameLower.includes('chest') || nameLower.includes('pecho') || nameLower.includes('pec') || nameLower.includes('incline')) {
+              muscle = "Pecho (Pectoral Mayor & Clavicular)";
+              code = code && !code.includes('GEN') ? code : "[HIPER-PECHOPEC-01]";
+            } else if (nameLower.includes('lat') || nameLower.includes('espalda') || nameLower.includes('row') || nameLower.includes('remo') || nameLower.includes('pulldown') || nameLower.includes('pull-over')) {
+              muscle = "Espalda (Dorsal Ancho & V-Taper)";
+              code = code && !code.includes('GEN') ? code : "[HIPER-ESPALDAD-01]";
+            } else if (nameLower.includes('bicep') || nameLower.includes('curl')) {
+              muscle = "Bíceps (Flexores del Codo)";
+              code = code && !code.includes('GEN') ? code : "[HIPER-BCEPSFLE-01]";
+            }
+          }
+
+          const cleanMuscle = muscle.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8);
+          const autoCode = code || `[HIPER-${cleanMuscle}-${isCustom ? 'CUST' : '01'}]`;
+
+          let bio = active.biomechanics || active.instructions || '';
+          if (!bio || bio.trim() === '' || bio.toLowerCase().includes('no identifica') || bio.length < 5) {
+            const matchedLib = UNIFIED_EXERCISE_LIBRARY.find(item => item.id === active.id || item.name.toLowerCase() === (active.name || '').toLowerCase() || (active.name && item.name.toLowerCase().includes(active.name.toLowerCase())));
+            if (matchedLib && matchedLib.biomechanics) {
+              bio = matchedLib.biomechanics;
+            } else if (muscle.toLowerCase().includes('pecho') || muscle.toLowerCase().includes('chest')) {
+              bio = "Retracción escapular con esternón elevado. Exhala por la boca en fase concéntrica y protege la pared abdominal (IAP).";
+            } else if (muscle.toLowerCase().includes('hombro') || muscle.toLowerCase().includes('deltoid') || muscle.toLowerCase().includes('press')) {
+              bio = "Control del ritmo escapular sin impulso lumbar. Ligera flexión de codo y respiración exhalatoria IAP.";
+            } else if (muscle.toLowerCase().includes('trícep') || muscle.toLowerCase().includes('tricep') || muscle.toLowerCase().includes('extension')) {
+              bio = "Fijación del húmero y extensión completa del codo. Tensión continua sin hiper-extender la muñeca.";
+            } else if (muscle.toLowerCase().includes('bícep') || muscle.toLowerCase().includes('bicep') || muscle.toLowerCase().includes('curl')) {
+              bio = "Supinación completa con codos fijos al costado del torso. Control excéntrico de 3 segundos al descender.";
+            } else if (muscle.toLowerCase().includes('espalda') || muscle.toLowerCase().includes('dors') || muscle.toLowerCase().includes('remo')) {
+              bio = "Iniciación del tiraje con depresión escapular (V-Taper). Tira desde el codo evitando la compresión lumbar.";
+            } else if (muscle.toLowerCase().includes('cuádricep') || muscle.toLowerCase().includes('piern') || muscle.toLowerCase().includes('squat')) {
+              bio = "Alineación fémur-tibia-pie sin valgo de rodilla. Control intraabdominal estricto (IAP) sin retención de aire.";
+            } else if (muscle.toLowerCase().includes('glúte') || muscle.toLowerCase().includes('abduc') || muscle.toLowerCase().includes('cadera')) {
+              bio = "Empuje concentrado desde el talón, con extensión de cadera completa y bloqueo isométrico en pico de contracción.";
+            } else if (muscle.toLowerCase().includes('isquio') || muscle.toLowerCase().includes('femoral')) {
+              bio = "Flexión de rodilla en máxima contracción excéntrica. Estabilidad pélvica sin despegue del asiento.";
+            } else if (muscle.toLowerCase().includes('pantorril') || muscle.toLowerCase().includes('calf') || muscle.toLowerCase().includes('sural')) {
+              bio = "Elongación máxima en el descenso y pausa isométrica de 1 segundo en la cima de la flexión plantar.";
+            } else {
+              bio = "Ejecución articular estricta sin compresión lumbar y control de respiración exhalatoria (IAP).";
+            }
+          }
 
           return {
             ...active,
+            muscleGroup: muscle,
             unifiedFunctionCode: autoCode,
-            origin: originLabel
+            origin: originLabel,
+            biomechanics: bio
           };
         });
 
@@ -386,20 +450,18 @@ export async function syncWorkoutToGoogleSheets(customPayload = {}) {
 }
 
 /**
- * 8. autoSyncWithOfflineBuffer: Motor en segundo plano para sincronización automática y rescate offline
+ * 8. autoSyncWithOfflineBuffer: Motor en segundo plano para sincronización automática en tiempo real y rescate offline
  */
 export async function autoSyncWithOfflineBuffer() {
-  const queuedData = localStorage.getItem('coachv2_offline_sync_queue');
-  const lastSync = localStorage.getItem('coachv2_last_cloud_sync');
   const url = localStorage.getItem('coachv2_google_sheets_url')?.replace(/"/g, '') || DEFAULT_SHEETS_URL;
 
-  // Si hay datos pendientes por fallo offline, o si el último respaldo fue hace más de 1 hora, sincronizamos en segundo plano
-  if (navigator.onLine && (queuedData || !lastSync)) {
+  // Sincronizar automáticamente siempre que haya conexión en vivo
+  if (typeof navigator === 'undefined' || navigator.onLine !== false) {
     try {
       await syncWorkoutToGoogleSheets({ webAppUrl: url });
-      console.log('☁️ Respaldo unificado automático de COACH V2 en Google Sheets completado exitosamente.');
+      console.log('☁️ Respaldo automático en Google Sheets ejecutado con éxito.');
     } catch (e) {
-      console.log('Sincronización en segundo plano postergada:', e.message);
+      console.warn('Fallo de red temporal. Sincronización en segundo plano postergada:', e.message);
     }
   }
 }

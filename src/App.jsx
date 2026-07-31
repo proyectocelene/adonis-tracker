@@ -21,10 +21,10 @@ function App() {
 
     window.addEventListener('online', handleOnline);
 
-    // 3. Verificación periódica en segundo plano cada 15 minutos mientras entrena
+    // 3. Verificación periódica y sincronización en segundo plano cada 30 segundos en vivo
     const interval = setInterval(() => {
       autoSyncWithOfflineBuffer();
-    }, 15 * 60 * 1000);
+    }, 30 * 1000);
 
     return () => {
       window.removeEventListener('online', handleOnline);

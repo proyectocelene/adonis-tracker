@@ -338,25 +338,88 @@ export const scientificProtocol = [
   {
     id: "d4",
     dayNumber: 4,
-    name: "Jueves: Descanso Activo & Oxigenación Vascular",
-    type: "rest",
-    focus: "Regeneración del Sistema Nervioso Central y oxigenación tisular para eliminación de metabolitos. Cero cargas pesadas ni impacto intraabdominal.",
+    name: "Jueves: Empuje (Repetir Lunes - Pecho, Hombro y Tríceps)",
+    type: "workout",
+    focus: "Segunda sesión semanal de hipertrofia en haz clavicular y amplitud bi-acromial. Repetición del estímulo superior del lunes con máxima técnica e IAP.",
     exercises: [
       {
         id: "d4_e1",
-        name: "Cardio Opcional Aeróbico de Recuperación (Zona 2)",
-        muscleGroup: "Cardiovascular (Recuperación Activa)",
-        isCardio: true,
-        sets: 1,
-        reps: "40 min",
-        restTime: "-",
-        defaultUnit: "min",
-        biomechanics: "Opcional si decides asistir al gimnasio: 40 minutos de Caminadora Inclinada o Bicicleta Estática (puedes escuchar un podcast o revisar tu móvil). CERO PESAS ni esfuerzos mecánicos. Estiramientos suaves.",
-        warmup: "🔥 Caminata relajada inicial para desentumecer articulaciones del tren inferior.",
-        searchQuery: "zone 2 low intensity cardiovascular health",
+        name: "Press Inclinado con Mancuernas (DB Incline Press)",
+        muscleGroup: "Pecho (Pectoral Superior)",
+        sets: 4,
+        reps: "8-10",
+        restTime: "120-180 s",
+        defaultUnit: "lbs",
+        biomechanics: "Inicia con mancuernas de 30 o 35 lbs por mano. Controla la fase excéntrica en 3 segundos. Exhala con fuerza por la boca al empujar en el punto de mayor esfuerzo (IAP).",
+        warmup: "🔥 Calentamiento de aproximación: 1 serie al 50% de tu peso efectivo x 15 reps rápidas para lubricar hombros y codos.",
+        searchQuery: "dumbbell incline chest press proper execution biomechanics",
         equivalents: [
-          { id: "d4_e1_eq1", name: "Caminata al Aire Libre a Ritmo Moderado", desc: "Oxigena la mente y relaja el sistema nervioso en el exterior.", ratio: 1.0 },
-          { id: "d4_e1_eq2", name: "Bicicleta Estática de Baja Resistencia", desc: "Movilidad fluida y lavado de ácido lácteo muscular.", ratio: 1.0 }
+          { id: "d4_e1_eq1", name: "Nitro Incline Press Machine (Máquina)", desc: "Tensión continua sin necesidad de estabilizar mancuernas, ideal para fatiga final.", ratio: 2.2 },
+          { id: "d4_e1_eq2", name: "Press Inclinado en Máquina Smith", desc: "Seguro al fallo con recorrido guiado 30-45 grados.", ratio: 2.0 }
+        ]
+      },
+      {
+        id: "d4_e2",
+        name: "Nitro Incline Press Machine",
+        muscleGroup: "Pecho (Pectoral Superior & Medio)",
+        sets: 3,
+        reps: "8-10",
+        restTime: "120-180 s",
+        defaultUnit: "lbs",
+        biomechanics: "Inicia con referencia de 80 lbs. Ajusta el asiento de modo que los manerales queden alineados con las clavículas y el pectoral superior.",
+        warmup: "🔥 1 serie ligera de 10 reps con 50 lbs para calibrar altura de asiento y recorrido.",
+        searchQuery: "incline chest press machine exercise setup",
+        equivalents: [
+          { id: "d4_e2_eq1", name: "Press Plano o Inclinado con Mancuernas", desc: "Mayor reclutamiento de fibras estabilizadoras pectorales.", ratio: 0.45 },
+          { id: "d4_e2_eq2", name: "Press de Pecho en Polea Dobre (Cable Press)", desc: "Tensión convergente al centro de los pectorales.", ratio: 0.6 }
+        ]
+      },
+      {
+        id: "d4_e3",
+        name: "Pec Deck (Cristos en máquina para Pectoral)",
+        muscleGroup: "Pecho (Aislamiento Pectoral)",
+        sets: 3,
+        reps: "12-15",
+        restTime: "90 s",
+        defaultUnit: "lbs",
+        biomechanics: "Aislamiento pectoral. Enfócate en apretar el pecho al centro durante 1 segundo en máxima contracción. Mantén el esternón elevado.",
+        warmup: "🔥 Serie de activación de 12 reps ligeras para estiramiento escapular sin dolor.",
+        searchQuery: "pec deck fly machine proper posture",
+        equivalents: [
+          { id: "d4_e3_eq1", name: "Aperturas con Mancuernas en Banco Inclinado (Dumbbell Flys)", desc: "Máximo estiramiento de fibras en la fase inferior.", ratio: 0.4 },
+          { id: "d4_e3_eq2", name: "Cruce de Poleas Medias / Altas (Cable Crossover)", desc: "Tensión constante con pico de contracción al cruzar manos.", ratio: 0.8 }
+        ]
+      },
+      {
+        id: "d4_e4",
+        name: "Elevaciones Laterales con Mancuernas (Dumbbell Lateral Raise)",
+        muscleGroup: "Hombro (Deltoides Medio)",
+        sets: 4,
+        reps: "12-15",
+        restTime: "90 s",
+        defaultUnit: "lbs",
+        biomechanics: "Inicia con mancuernas de 15 o 20 lbs. Abducción del húmero en el plano escapular (30° hacia adelante del plano lateral).",
+        warmup: "🔥 1 serie ligera con mancuernas de 10 lbs x 15 reps con rotación escapular suave.",
+        searchQuery: "standing dumbbell lateral raise scapular plane",
+        equivalents: [
+          { id: "d4_e4_eq1", name: "Elevaciones Laterales en Máquina (Machine Lateral Raise)", desc: "Tensión directa en el húmero aislando deltoides sin encoger trapecio.", ratio: 1.5 },
+          { id: "d4_e4_eq2", name: "Elevaciones Laterales en Polea Baja (Cable Lateral Raise)", desc: "Resistencia constante desde el inicio del recorrido.", ratio: 0.8 }
+        ]
+      },
+      {
+        id: "d4_e5",
+        name: "Extensión de Tríceps en Polea Alta (con Cuerda)",
+        muscleGroup: "Tríceps (Cabeza Lateral y Medial)",
+        sets: 4,
+        reps: "12-15",
+        restTime: "90 s",
+        defaultUnit: "lbs",
+        biomechanics: "Inicia con referencia de 50 o 60 lbs en polea. Codos pegados a las costillas sin balanceo. Separa los extremos de la cuerda abajo al extender completamente.",
+        warmup: "🔥 1 serie de 15 reps con peso suave para lubricar el codo.",
+        searchQuery: "triceps rope pushdown form elbow position",
+        equivalents: [
+          { id: "d4_e5_eq1", name: "Extensión de Tríceps con Barra V o Recta (Pushdown)", desc: "Permite movilizar cargas un 15% más pesadas.", ratio: 1.15 },
+          { id: "d4_e5_eq2", name: "Press Francés con Mancuernas o Barra Z", desc: "Elongación extrema de la cabeza larga en banco plano.", ratio: 0.9 }
         ]
       }
     ]

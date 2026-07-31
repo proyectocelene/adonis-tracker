@@ -5,7 +5,7 @@ import ExerciseRow from './ExerciseRow';
 import CardioLogger from './CardioLogger';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { analyzeWorkoutProgressWithAI, syncWorkoutToGoogleSheets, autoSyncWithOfflineBuffer } from '../services/deepseek';
-import { CheckCircle, Calendar, ArrowLeft, ArrowRight, Save, Flame, RefreshCcw, Plus, X, Dumbbell, ShieldCheck, BookOpen, ShieldAlert, Zap, CheckCircle2, ChevronDown, ChevronUp, AlertTriangle, Activity, Sparkles, Cloud, Check, Loader2, Cpu } from 'lucide-react';
+import { CheckCircle, Calendar, ArrowLeft, ArrowRight, Save, Flame, RefreshCcw, Plus, X, Dumbbell, ShieldCheck, BookOpen, ShieldAlert, Zap, CheckCircle2, ChevronDown, ChevronUp, AlertTriangle, Activity, Sparkles, Cloud, Check, Loader2, Cpu, Layers, Database, History, Trash2, Copy, Share2, MessageSquare } from 'lucide-react';
 import { useModal } from './common/UIComponents';
 
 export default function WorkoutDay() {
@@ -26,6 +26,7 @@ export default function WorkoutDay() {
   const [googleSheetsUrl, setGoogleSheetsUrl] = useLocalStorage('coachv2_google_sheets_url', 'https://script.google.com/macros/s/AKfycbxA-KbUcEgWUq4jvjdSBxLw3tGsgPxXsF2Y7mX5JsNIpE2qslN1v7xW3NqdJ3-4b-RCwg/exec');
   
   const [isAddingExercise, setIsAddingExercise] = useState(false);
+  const [showRoutineBuilder, setShowRoutineBuilder] = useState(false);
   const [newExName, setNewExName] = useState('');
   const [newExSets, setNewExSets] = useState('3');
   const [newExReps, setNewExReps] = useState('10-12');
@@ -33,6 +34,8 @@ export default function WorkoutDay() {
   const [newExBiomech, setNewExBiomech] = useState('');
   const [newExMuscleGroup, setNewExMuscleGroup] = useState('General');
   const [newExUnifiedCode, setNewExUnifiedCode] = useState('');
+  const [newExTargetDay, setNewExTargetDay] = useState(baseDay.id);
+  const [selectedBuilderExHistory, setSelectedBuilderExHistory] = useState(null);
 
   const handlePickFromLibrary = (libId) => {
     if (!libId) return;
@@ -178,9 +181,12 @@ export default function WorkoutDay() {
       defaultUnit: 'lbs'
     };
 
+    const targetId = newExTargetDay || baseDay.id;
+    const targetDayObj = scientificProtocol.find(d => d.id === targetId) || currentDay;
+
     setCustomExercisesMap(prev => ({
       ...prev,
-      [baseDay.id]: [...(prev[baseDay.id] || []), newEx]
+      [targetId]: [...(prev[targetId] || []), newEx]
     }));
 
     setIsAddingExercise(false);
@@ -191,11 +197,42 @@ export default function WorkoutDay() {
     // Disparar sincronización automática a Google Sheets para poblar "Rutina Maestra Adonis" al instante
     setTimeout(() => {
       autoSyncWithOfflineBuffer();
-    }, 500);
+    }, 200);
 
     modal.showAlert({
       title: "✅ Ejercicio Incrustado & Sincronizado",
-      message: `El ejercicio "${newEx.name}" (Grupo: ${newEx.muscleGroup}) se incorporó a tu rutina habitual del día ${currentDay.name} y se sincronizó automáticamente en tu Google Sheet con el código ${newEx.unifiedFunctionCode}.`,
+      message: `El ejercicio "${newEx.name}" (Grupo: ${newEx.muscleGroup}) se incorporó al día: "${targetDayObj.name}" y se sincronizó automáticamente en tu Google Sheet.`,
+      variant: "success"
+    });
+  };
+
+  const handleRemoveCustomExerciseFromDay = (dayId, exId) => {
+    modal.showConfirm({
+      title: "🗑️ ¿Quitar ejercicio de la rutina?",
+      message: "Este ejercicio personalizado se sacará del día seleccionado. Podrás volver a agregarlo desde la base de datos.",
+      confirmText: "Quitar de la Rutina",
+      variant: "danger",
+      onConfirm: () => {
+        setCustomExercisesMap(prev => ({
+          ...prev,
+          [dayId]: (prev[dayId] || []).filter(item => item.id !== exId)
+        }));
+        setTimeout(() => autoSyncWithOfflineBuffer(), 200);
+      }
+    });
+  };
+
+  const handleAssignExistingToDay = (exObj, targetDayId) => {
+    const clonedEx = { ...exObj, id: `custom_${Date.now()}` };
+    const targetDayObj = scientificProtocol.find(d => d.id === targetDayId);
+    setCustomExercisesMap(prev => ({
+      ...prev,
+      [targetDayId]: [...(prev[targetDayId] || []), clonedEx]
+    }));
+    setTimeout(() => autoSyncWithOfflineBuffer(), 200);
+    modal.showAlert({
+      title: "📌 Ejercicio Asignado",
+      message: `"${exObj.name}" ha sido estructurado dentro de la rutina del día: ${targetDayObj ? targetDayObj.name : targetDayId}.`,
       variant: "success"
     });
   };
@@ -417,6 +454,58 @@ export default function WorkoutDay() {
     modal.showAlert({ title: "☁️ Conexión Guardada", message: "Ahora cada vez que archives una rutina o hagas clic en sincronizar, tus datos irán en vivo a tu Google Sheet.", variant: "success" });
   };
 
+  const handleCopyRoutineForCoach = () => {
+    let summaryText = `💪 PROTOCOLO ADONIS - RUTINA DE HOY\n`;
+    summaryText += `📅 Día ${currentDay.dayNumber}: ${currentDay.name}\n`;
+    summaryText += `🏋️ Atleta: Dr. Carlos Donato (174 cm • Meta: 68.0 kg magros • Proteína: 160g)\n`;
+    summaryText += `🎯 Enfoque Fisiológico: ${currentDay.focus}\n\n`;
+    summaryText += `📌 EJERCICIOS Y CARGAS PROGRAMADAS:\n`;
+    
+    currentDay.exercises.forEach((ex, idx) => {
+      const sets = ex.isCardio ? "1" : (ex.sets || "3");
+      const reps = ex.isCardio ? (ex.reps || "30 min") : (ex.reps || "10-12");
+      const rest = ex.restTime || "90 s";
+      const muscle = ex.muscleGroup || "Hipertrofia General";
+      const code = ex.unifiedFunctionCode || "[HIPER-GEN-01]";
+      const bio = ex.biomechanics || "Control de técnica estricto e IAP.";
+
+      summaryText += `\n${idx + 1}. ${ex.name} [${muscle}]\n`;
+      summaryText += `   • Meta: ${sets} series x ${reps} reps • Descanso: ${rest}\n`;
+      summaryText += `   • Código: ${code}\n`;
+      summaryText += `   • Técnica: ${bio}\n`;
+
+      const logs = todayWorkoutData[ex.id];
+      if (logs && !ex.isCardio) {
+        let loggedInfo = [];
+        Object.keys(logs).forEach(setNum => {
+          if (!isNaN(parseInt(setNum)) && logs[setNum].weight) {
+            loggedInfo.push(`S${setNum}: ${logs[setNum].weight} ${logs[setNum].unit || 'lbs'} x ${logs[setNum].reps || 0} reps (RPE ${logs[setNum].rpe || '-'})`);
+          }
+        });
+        if (loggedInfo.length > 0) {
+          summaryText += `   📊 Log Hoy/Reciente: ${loggedInfo.join(" | ")}\n`;
+        }
+      }
+    });
+
+    summaryText += `\n❓ SOLICITUD DE RECOMENDACIÓN:\n`;
+    summaryText += `Entrenador / Asesor IA: Analiza esta progresión de cargas y estructura biomecánica. ¿Qué sugerencias o ajustes me recomiendas para este entrenamiento?\n`;
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(summaryText).then(() => {
+        modal.showAlert({
+          title: "📋 Rutina Copiada Exitosamente",
+          message: "El resumen científico completa con todas tus series, pesos recientes, códigos y biomecánica se copió al portapapeles. ¡Listo para enviarse por WhatsApp, correo o ChatGPT/Claude/DeepSeek para recibir recomendaciones de tu entrenador!",
+          variant: "success"
+        });
+      }).catch(() => {
+        modal.showAlert({ title: "⚠️ Aviso", message: "No se pudo copiar en automático. Selecciona y copia manualmente.", variant: "warning" });
+      });
+    } else {
+      modal.showAlert({ title: "⚠️ Aviso", message: "Portapapeles no disponible en este navegador.", variant: "warning" });
+    }
+  };
+
   const getFirstUncompletedIdx = () => {
     for (let idx = 0; idx < currentDay.exercises.length; idx++) {
       const ex = currentDay.exercises[idx];
@@ -479,17 +568,17 @@ export default function WorkoutDay() {
         </div>
       </div>
 
-      {/* BOTONES RÁPIDOS INGENIOSOS: AI OPTIMIZER & GOOGLE SHEETS SYNC */}
-      <div className="grid-2" style={{ gap: '12px', marginBottom: '16px' }}>
+      {/* BOTONES RÁPIDOS INGENIOSOS: AI OPTIMIZER, GOOGLE SHEETS SYNC & COPIAR RUTINA */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '10px' }}>
         <button 
           type="button"
           onClick={handleOptimizeWithAI}
           disabled={isAnalyzingAI}
           className="btn btn-primary"
-          style={{ background: 'linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)', padding: '12px', borderRadius: '18px', fontSize: '13px', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', boxShadow: '0 4px 15px rgba(124, 58, 237, 0.25)' }}
+          style={{ background: 'linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)', padding: '12px', borderRadius: '16px', fontSize: '12px', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', boxShadow: '0 4px 15px rgba(124, 58, 237, 0.25)' }}
         >
-          {isAnalyzingAI ? <Loader2 size={18} className="animate-spin" /> : <Cpu size={18} />}
-          {isAnalyzingAI ? 'Consultando AI...' : '🧠 Optimizar con AI (DeepSeek)'}
+          {isAnalyzingAI ? <Loader2 size={16} className="animate-spin" /> : <Cpu size={16} />}
+          {isAnalyzingAI ? 'Consultando AI...' : '🧠 Optimizar AI'}
         </button>
 
         <button 
@@ -497,10 +586,21 @@ export default function WorkoutDay() {
           onClick={handleTriggerSync}
           disabled={isSyncingSheets}
           className="btn btn-outline"
-          style={{ background: '#ecfdf5', color: '#047857', border: '1.5px solid #6ee7b7', padding: '12px', borderRadius: '18px', fontSize: '13px', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', boxShadow: '0 4px 15px rgba(16, 185, 129, 0.15)' }}
+          style={{ background: '#ecfdf5', color: '#047857', border: '1.5px solid #6ee7b7', padding: '12px', borderRadius: '16px', fontSize: '12px', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', boxShadow: '0 4px 15px rgba(16, 185, 129, 0.15)' }}
         >
-          {isSyncingSheets ? <Loader2 size={18} className="animate-spin" /> : <Cloud size={18} color="#10b981" />}
-          {isSyncingSheets ? 'Subiendo datos...' : '☁️ Guardar en Google Sheets'}
+          {isSyncingSheets ? <Loader2 size={16} className="animate-spin" /> : <Cloud size={16} color="#10b981" />}
+          {isSyncingSheets ? 'Subiendo...' : '☁️ Guardar Nube'}
+        </button>
+      </div>
+
+      <div style={{ marginBottom: '18px' }}>
+        <button 
+          type="button"
+          onClick={handleCopyRoutineForCoach}
+          style={{ width: '100%', background: 'linear-gradient(135deg, #0284c7 0%, #2563eb 100%)', color: '#ffffff', border: 'none', padding: '13px 16px', borderRadius: '18px', fontSize: '13px', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', cursor: 'pointer', boxShadow: '0 6px 20px rgba(2, 132, 199, 0.25)', transition: 'all 0.2s ease' }}
+        >
+          <Copy size={18} />
+          📋 Copiar Rutina de Hoy (Enviar a Entrenador / IA)
         </button>
       </div>
 
@@ -937,7 +1037,7 @@ export default function WorkoutDay() {
                   />
                 </div>
 
-                <div style={{ marginBottom: '18px' }}>
+                <div style={{ marginBottom: '14px' }}>
                   <label className="input-label" style={{ display: 'block', textAlign: 'left', marginBottom: '4px' }}>Indicación Biomecánica / Técnica:</label>
                   <input 
                     type="text" 
@@ -948,6 +1048,21 @@ export default function WorkoutDay() {
                   />
                 </div>
 
+                <div style={{ background: '#eff6ff', border: '1.5px solid #3b82f6', padding: '12px', borderRadius: '14px', marginBottom: '18px', textAlign: 'left' }}>
+                  <label className="input-label" style={{ display: 'block', marginBottom: '4px', color: '#1e3a8a', fontWeight: '900', fontSize: '12px' }}>
+                    🗓️ ¿En qué día de tu rutina deseas estructurarlo?:
+                  </label>
+                  <select
+                    value={newExTargetDay || baseDay.id}
+                    onChange={e => setNewExTargetDay(e.target.value)}
+                    style={{ width: '100%', padding: '10px 12px', borderRadius: '12px', border: '1px solid #2563eb', background: '#ffffff', color: '#1e3a8a', fontWeight: '800', fontSize: '13px' }}
+                  >
+                    {scientificProtocol.map(d => (
+                      <option key={d.id} value={d.id}>{d.name}</option>
+                    ))}
+                  </select>
+                </div>
+
                 <div className="grid-2" style={{ gap: '12px' }}>
                   <button type="button" className="btn btn-outline" onClick={() => setIsAddingExercise(false)}>Cancelar</button>
                   <button type="submit" className="btn btn-primary">Guardar en Rutina</button>
@@ -955,14 +1070,23 @@ export default function WorkoutDay() {
               </form>
             </div>
           ) : (
-            <div style={{ marginBottom: '24px', marginTop: '16px' }}>
+            <div style={{ marginBottom: '24px', marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <button 
                 type="button"
                 className="btn btn-outline" 
                 onClick={() => setIsAddingExercise(true)}
                 style={{ background: 'rgba(255, 255, 255, 0.9)', border: '2px dashed #94a3b8', color: '#334155', fontWeight: '800', padding: '15px' }}
               >
-                <Plus size={18} color="#0066ff" /> + Agregar Ejercicio a este Día
+                <Plus size={18} color="#0066ff" style={{ display: 'inline', marginRight: '6px' }} /> + Agregar Ejercicio a este Día
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setShowRoutineBuilder(true)}
+                style={{ background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)', color: '#ffffff', border: 'none', padding: '16px', borderRadius: '20px', fontSize: '14px', fontWeight: '900', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', boxShadow: '0 6px 20px rgba(15, 23, 42, 0.35)', cursor: 'pointer' }}
+              >
+                <Layers size={18} color="#38bdf8" />
+                🛠️ Base de Datos de Ejercicios Creados & Estructurador de Rutina
               </button>
             </div>
           )}
@@ -971,6 +1095,171 @@ export default function WorkoutDay() {
           <div style={{ marginTop: '28px', marginBottom: '20px' }}>
             <button type="button" className="btn btn-primary" onClick={handleFinishWorkout} style={{ padding: '18px', fontSize: '17px', borderRadius: '20px', fontWeight: '800', boxShadow: '0 8px 25px rgba(0, 102, 255, 0.4)' }}>
               <Save size={24} /> Guardar Sesión en Bitácora Científica
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL MAESTRO: GESTOR DE RUTINAS, BASE DE DATOS Y REGISTRO DE DATOS HISTÓRICOS */}
+      {showRoutineBuilder && (
+        <div className="modal-backdrop animate-fade" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.85)', backdropFilter: 'blur(8px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '12px' }}>
+          <div className="modal-content" style={{ width: '100%', maxWidth: '640px', maxHeight: '90vh', background: '#ffffff', borderRadius: '28px', padding: '24px', overflowY: 'auto', border: '1.5px solid #cbd5e1', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.35)' }}>
+            
+            <div className="flex-between" style={{ borderBottom: '2px solid #e2e8f0', paddingBottom: '14px', marginBottom: '18px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <Database size={24} color="#0066ff" />
+                <div>
+                  <strong style={{ display: 'block', fontSize: '17px', color: '#0f172a', fontWeight: '900', textAlign: 'left' }}>
+                    Gestor Maestro de Rutina & Ejercicios
+                  </strong>
+                  <span style={{ fontSize: '12px', color: '#64748b', fontWeight: '600' }}>
+                    Estructura tu semana Lunes a Sábado y consulta tu histórico
+                  </span>
+                </div>
+              </div>
+              <button type="button" onClick={() => { setShowRoutineBuilder(false); setSelectedBuilderExHistory(null); }} style={{ background: '#f1f5f9', border: 'none', padding: '8px', borderRadius: '14px', cursor: 'pointer' }}>
+                <X size={22} color="#475569" />
+              </button>
+            </div>
+
+            {/* SECCIÓN 1: MIS EJERCICIOS CREADOS & REGISTROS */}
+            <div style={{ background: '#f8fafc', padding: '16px', borderRadius: '22px', border: '1px solid #e2e8f0', marginBottom: '20px', textAlign: 'left' }}>
+              <strong style={{ fontSize: '15px', color: '#1e293b', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                <Dumbbell size={18} color="#3b82f6" /> Base de Datos de Mis Ejercicios Creados:
+              </strong>
+              <p style={{ fontSize: '12px', color: '#475569', margin: '0 0 14px 0', lineHeight: '1.4' }}>
+                Todos tus ejercicios personalizados guardados. Puedes estructurarlos en cualquier día o consultar tu histórico de series y pesos registrados:
+              </p>
+
+              {Object.values(customExercisesMap || {}).flat().length === 0 ? (
+                <div style={{ padding: '16px', background: '#ffffff', borderRadius: '16px', border: '1px dashed #cbd5e1', textCenter: 'center', color: '#64748b', fontSize: '13px', fontWeight: '600' }}>
+                  Aún no has creado ejercicios personalizados. Usa el botón "+ Agregar Ejercicio" o elige del catálogo unificado.
+                </div>
+              ) : (
+                <div style={{ maxHeight: '220px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px', paddingRight: '4px' }}>
+                  {Object.entries(customExercisesMap || {}).flatMap(([dId, list]) => (list || []).map(ex => ({ ...ex, currentDayId: dId }))).map((ex, idx) => {
+                    const dayObj = scientificProtocol.find(d => d.id === ex.currentDayId);
+                    return (
+                      <div key={ex.id || idx} style={{ background: '#ffffff', padding: '12px 14px', borderRadius: '16px', border: '1.5px solid #e2e8f0', display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '10px' }}>
+                        <div>
+                          <strong style={{ display: 'block', fontSize: '14px', color: '#0f172a', fontWeight: '800' }}>{ex.name}</strong>
+                          <span style={{ fontSize: '11px', color: '#2563eb', fontWeight: '700' }}>Asignado a: {dayObj ? dayObj.name.split(':')[0] : 'General'} • [{ex.muscleGroup}]</span>
+                        </div>
+                        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                          <button
+                            type="button"
+                            onClick={() => setSelectedBuilderExHistory(ex)}
+                            style={{ background: '#eff6ff', color: '#1e40af', border: '1px solid #bfdbfe', padding: '6px 10px', borderRadius: '10px', fontSize: '11px', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+                          >
+                            <History size={13} /> Historial
+                          </button>
+                          <select
+                            defaultValue=""
+                            onChange={(e) => {
+                              if (e.target.value) handleAssignExistingToDay(ex, e.target.value);
+                            }}
+                            style={{ padding: '6px 8px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '11px', fontWeight: '800', background: '#f8fafc', color: '#0f172a', cursor: 'pointer' }}
+                          >
+                            <option value="">➕ Copiar a día...</option>
+                            {scientificProtocol.map(d => <option key={d.id} value={d.id}>{d.name.split(':')[0]}</option>)}
+                          </select>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveCustomExerciseFromDay(ex.currentDayId, ex.id)}
+                            style={{ background: '#fee2e2', color: '#dc2626', border: 'none', padding: '6px 9px', borderRadius: '10px', fontSize: '12px', fontWeight: '900', cursor: 'pointer' }}
+                            title="Quitar de este día"
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* MODAL SECUNDARIO DE HISTORIAL E INSPECCIÓN DE DATOS DEL EJERCICIO */}
+            {selectedBuilderExHistory && (
+              <div style={{ background: '#fffbeb', border: '2px solid #f59e0b', padding: '16px', borderRadius: '22px', marginBottom: '20px', textAlign: 'left' }}>
+                <div className="flex-between" style={{ marginBottom: '10px' }}>
+                  <strong style={{ fontSize: '15px', color: '#b45309', fontWeight: '900' }}>
+                    📊 Registro y Datos del Ejercicio: {selectedBuilderExHistory.name}
+                  </strong>
+                  <button type="button" onClick={() => setSelectedBuilderExHistory(null)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontWeight: '900', color: '#b45309' }}>X</button>
+                </div>
+                <p style={{ fontSize: '12px', color: '#78350f', margin: '0 0 12px 0', fontWeight: '600' }}>
+                  Histórico de cargas, repeticiones y fechas guardados en tu bitácora de Google Sheets y local:
+                </p>
+                <div style={{ maxHeight: '160px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  {(() => {
+                    const records = (workoutHistory || []).filter(h => h.exercises && h.exercises[selectedBuilderExHistory.id]);
+                    if (records.length === 0) {
+                      return <span style={{ fontSize: '12px', color: '#92400e', fontStyle: 'italic' }}>Aún no hay registros de peso levantado en sesiones pasadas para este ejercicio.</span>;
+                    }
+                    return records.map((rec, rIdx) => {
+                      const exLog = rec.exercises[selectedBuilderExHistory.id];
+                      return (
+                        <div key={rIdx} style={{ background: '#ffffff', padding: '8px 12px', borderRadius: '10px', border: '1px solid #fde68a', fontSize: '12px' }}>
+                          <strong style={{ color: '#0f172a' }}>📅 {new Date(rec.date).toLocaleDateString('es-MX', { dateStyle: 'medium' })}</strong> • 
+                          <span style={{ color: '#b45309', fontWeight: '700' }}> Cargas registradas: </span>
+                          {Object.keys(exLog || {}).filter(k => !isNaN(parseInt(k))).map(sNum => `${exLog[sNum].weight || 0} lbs x ${exLog[sNum].reps || 0} reps`).join(' | ')}
+                        </div>
+                      );
+                    });
+                  })()}
+                </div>
+              </div>
+            )}
+
+            {/* SECCIÓN 2: ESTRUCTURADOR SEMANAL DE RUTINAS ADONIS */}
+            <div style={{ textAlign: 'left' }}>
+              <strong style={{ fontSize: '16px', color: '#0f172a', fontWeight: '900', display: 'block', marginBottom: '6px' }}>
+                📅 Estructurador de Rutina Semanal (Lunes a Sábado):
+              </strong>
+              <p style={{ fontSize: '12px', color: '#64748b', margin: '0 0 14px 0', lineHeight: '1.4', fontWeight: '600' }}>
+                Tu estructura oficial sincronizada con Google Sheets. Verifica o limpia los ejercicios de cada uno de tus días:
+              </p>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                {scientificProtocol.map(dayObj => {
+                  const dayCustoms = (customExercisesMap || {})[dayObj.id] || [];
+                  const allEx = [...(dayObj.exercises || []), ...dayCustoms];
+                  return (
+                    <div key={dayObj.id} style={{ border: '1.5px solid #e2e8f0', borderRadius: '20px', padding: '14px', background: dayObj.id === currentDay.id ? '#eff6ff' : '#ffffff', borderColor: dayObj.id === currentDay.id ? '#3b82f6' : '#e2e8f0' }}>
+                      <div className="flex-between" style={{ marginBottom: '8px' }}>
+                        <strong style={{ fontSize: '14px', color: '#1e293b', fontWeight: '900' }}>
+                          {dayObj.name} {dayObj.id === currentDay.id && '📍 (Día Actual)'}
+                        </strong>
+                        <span style={{ background: '#e2e8f0', color: '#334155', padding: '2px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: '800' }}>
+                          {allEx.length} ejercicios
+                        </span>
+                      </div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                        {allEx.map(ex => {
+                          const isCustom = dayCustoms.some(c => c.id === ex.id);
+                          return (
+                            <span key={ex.id} style={{ background: isCustom ? '#dbeafe' : '#f1f5f9', color: isCustom ? '#1e40af' : '#475569', border: '1px solid', borderColor: isCustom ? '#93c5fd' : '#cbd5e1', padding: '5px 10px', borderRadius: '12px', fontSize: '11px', fontWeight: '700', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                              {ex.name}
+                              {isCustom && (
+                                <button type="button" onClick={() => handleRemoveCustomExerciseFromDay(dayObj.id, ex.id)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, color: '#dc2626', fontWeight: '900', fontSize: '12px' }} title="Remover">✕</button>
+                              )}
+                            </span>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setShowRoutineBuilder(false)}
+              style={{ width: '100%', background: '#0f172a', color: '#ffffff', border: 'none', padding: '16px', borderRadius: '18px', fontSize: '15px', fontWeight: '900', marginTop: '24px', cursor: 'pointer' }}
+            >
+              ✅ Concluir Estructuración y Volver a Entrenar
             </button>
           </div>
         </div>
