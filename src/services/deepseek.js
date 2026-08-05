@@ -472,257 +472,357 @@ export async function autoSyncWithOfflineBuffer() {
 export function getGoogleAppsScriptCode() {
   return `/**
  * ============================================================================
- * SISTEMA CLÍNICO & DEPORTIVO - COACH V2 (PROTOCOLO ADONIS UNIFICADO)
- * Google Apps Script - Webhook Maestro Sincronizador en Vivo & Source of Truth
- * Atleta: CARLOS DONATO • Meta: 68.0 kg magro (Déficit Calórico & Hipertrofia)
+ * ENGINE: COACH V2 - ADONIS MASTER DATABASE & SYNCHRONIZER
+ * ATLETA: Dr. Carlos Donato | SISTEMA DE RECOMPOSICIÓN Y ALTA EFICIENCIA
  * ============================================================================
  */
 
 function doPost(e) {
-  var output = ContentService.createTextOutput();
-  output.setMimeType(ContentService.MimeType.JSON);
-
   try {
-    var payload = JSON.parse(e.postData.contents);
+    var data;
+    if (e && e.postData && e.postData.contents) {
+      data = JSON.parse(e.postData.contents);
+    } else {
+      return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "No payload received" }))
+                           .setMimeType(ContentService.MimeType.JSON);
+    }
+
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     
-    // ================= 1. TABLA DE RUTINA MAESTRA ADONIS (ESTRUCTURA DE LA APP) =================
-    var rutinaMaestraSheet = ss.getSheetByName("Rutina Maestra Adonis");
-    if (!rutinaMaestraSheet) {
-      rutinaMaestraSheet = ss.insertSheet("Rutina Maestra Adonis");
-      rutinaMaestraSheet.appendRow([
-        "Día No.", "Nombre del Día", "Enfoque Fisiológico", "Tipo Sesión", "ID Ejercicio", 
-        "Nombre Ejercicio", "Grupo Muscular", "ID Función Biomecánica Unificada", "Series Meta", "Rango Reps", "Descanso Prescrito", "Origen / Estado"
-      ]);
-      var rHead1 = rutinaMaestraSheet.getRange(1, 1, 1, 12);
-      rHead1.setBackground("#1e1b4b").setFontColor("#ffffff").setFontWeight("bold");
-      rutinaMaestraSheet.setFrozenRows(1);
-    }
-
-    if (payload.masterRoutine && Array.isArray(payload.masterRoutine)) {
-      if (rutinaMaestraSheet.getLastRow() > 1) {
-        rutinaMaestraSheet.getRange(2, 1, rutinaMaestraSheet.getLastRow() - 1, 12).clearContent();
-      }
-      var masterRows = [];
-      payload.masterRoutine.forEach(function(day) {
-        if (day.exercises && day.exercises.length > 0) {
-          day.exercises.forEach(function(ex) {
-            masterRows.push([
-              "Día " + day.dayNumber, day.name, day.focus, day.type || "Workout", ex.id,
-              ex.name, ex.muscleGroup || "Principal", ex.unifiedFunctionCode || "[FUNC-GENERAL-001]",
-              ex.sets || "3", ex.reps || "10-12", ex.restTime || "120-180 s", ex.origin || "📘 Protocolo Base"
-            ]);
-          });
-        } else {
-          masterRows.push(["Día " + day.dayNumber, day.name, day.focus, "Descanso Total", "-", "-", "-", "-", "-", "-", "-", "Descanso"]);
-        }
-      });
-      if (masterRows.length > 0) {
-        rutinaMaestraSheet.getRange(rutinaMaestraSheet.getLastRow() + 1, 1, masterRows.length, 12).setValues(masterRows);
-      }
+    // 1. SINCRONIZAR "RUTINA MAESTRA ADONIS" (13 COLUMNAS)
+    if (data.masterRoutine) {
+      syncMasterRoutineExact(ss, data.masterRoutine);
+      // 2. GENERAR Y ACTUALIZAR "BASE DE DATOS EJERCICIOS" UNIFICADA
+      syncExerciseDatabase(ss, data.masterRoutine, data.customExercises || {});
     }
     
-    // ================= 2. TABLA DE BITÁCORA FUERZA & SERIES (CON UNIFICACIÓN BIOMECÁNICA) =================
-    var rutinasSheet = ss.getSheetByName("Bitácora Rutinas");
-    if (!rutinasSheet) {
-      rutinasSheet = ss.insertSheet("Bitácora Rutinas");
-      rutinasSheet.appendRow([
-        "Fecha Registro", "Día / Sesión", "Enfoque", "Ejercicio Realizado", "Ejercicio Original (Si hubo Swap)", 
-        "ID Biomecánico Unified", "Grupo Muscular", "No. Serie", "Peso Levantado", "Unidad", "Reps Logradas", "RPE", "1RM Est. (Epley)", "Equipo / Ajuste"
-      ]);
-      var headerRange2 = rutinasSheet.getRange(1, 1, 1, 14);
-      headerRange2.setBackground("#0066ff").setFontColor("#ffffff").setFontWeight("bold");
-      rutinasSheet.setFrozenRows(1);
+    // 3. SINCRONIZAR "HISTORIAL DE ENTRENAMIENTOS" (DETALLE SERIE POR SERIE POR SEMANA)
+    if (data.workoutHistory) {
+      syncWorkoutHistory(ss, data.workoutHistory);
+      // 4. GENERAR "RESUMEN POR SESIÓN" (TONELAJE Y MÉTRICAS POR DÍA)
+      syncSessionSummary(ss, data.workoutHistory);
     }
     
-    // ================= 3. TABLA DE RESUMEN POR SESIÓN & IA =================
-    var resumenSheet = ss.getSheetByName("Resumen por Sesión");
-    if (!resumenSheet) {
-      resumenSheet = ss.insertSheet("Resumen por Sesión");
-      resumenSheet.appendRow(["ID Sesión", "Fecha", "Día Protocolo", "Volumen Total (lbs-reps)", "Series de Fuerza", "Módulos Cardio Zona 2", "RPE Promedio", "Veredicto Sobrecarga"]);
-      var headerRange3 = resumenSheet.getRange(1, 1, 1, 8);
-      headerRange3.setBackground("#0e7490").setFontColor("#ffffff").setFontWeight("bold");
-      resumenSheet.setFrozenRows(1);
+    // 5. SINCRONIZAR "ALACENA E INVENTARIO"
+    if (data.alacenaInventory || data.shoppingList) {
+      syncAlacena(ss, data.alacenaInventory || [], data.shoppingList || [], data.groceryPrices || []);
     }
 
-    if (payload.workoutHistory && Array.isArray(payload.workoutHistory)) {
-      if (rutinasSheet.getLastRow() > 1) {
-        rutinasSheet.getRange(2, 1, rutinasSheet.getLastRow() - 1, 14).clearContent();
-      }
-      if (resumenSheet.getLastRow() > 1) {
-        resumenSheet.getRange(2, 1, resumenSheet.getLastRow() - 1, 8).clearContent();
-      }
-
-      var rowsRutinas = [];
-      var rowsResumen = [];
-
-      payload.workoutHistory.forEach(function(ses) {
-        var fecha = ses.dateString || ses.timestamp || new Date().toLocaleDateString("es-ES");
-        var diaNombre = ses.dayName || "Rutina Adonis";
-        var enfoque = ses.focus || "Hipertrofia";
-        var volTotal = ses.volume || 0;
-        var seriesTotales = ses.completedSets || 0;
-        var cardioTotal = ses.cardioCompleted || 0;
-        var rpeSum = 0, rpeCount = 0;
-
-        if (ses.exercises) {
-          Object.keys(ses.exercises).forEach(function(exId) {
-            var exData = ses.exercises[exId];
-            if (exData && exData.machine) {
-              rowsRutinas.push([
-                fecha, diaNombre, enfoque, "❤️ " + exData.machine, "-", 
-                "[CARDIO-ZONA2]", "Cardiovascular", "Módulos", "-", "-", 
-                exData.duration + " min", "-", "-", exData.machineSetup ? "Ajuste: " + exData.machineSetup : "Vel: " + (exData.speed||"-")
-              ]);
-            } else if (exData) {
-              var nombreEx = exData.name || exId;
-              var nombreOrg = exData.originalName || nombreEx;
-              var grupoMuscular = exData.muscleGroup || "General";
-              var maquinaAjuste = exData.machineSetup ? "Ajuste: " + exData.machineSetup : "Ejecución técnica";
-              var funcId = "[HIPER-" + grupoMuscular.toUpperCase().replace(/[^A-Z]/g, "").slice(0, 8) + "-UNIF]";
-
-              Object.keys(exData).forEach(function(setNum) {
-                if (!isNaN(parseInt(setNum))) {
-                  var set = exData[setNum];
-                  if (set && set.completed) {
-                    var peso = parseFloat(set.weight) || 0;
-                    var reps = parseFloat(set.reps) || 0;
-                    var unidad = set.unit || "lbs";
-                    var rpe = set.rpe || 8;
-                    var est1RM = (peso > 0 && reps > 0) ? Math.round(peso * (1 + reps / 30)) : 0;
-
-                    if (!isNaN(parseFloat(rpe))) {
-                      rpeSum += parseFloat(rpe);
-                      rpeCount++;
-                    }
-
-                    rowsRutinas.push([
-                      fecha, diaNombre, enfoque, nombreEx, (nombreOrg !== nombreEx ? nombreOrg : "-"),
-                      funcId, grupoMuscular, "Serie #" + setNum, peso, unidad, reps, "RPE " + rpe,
-                      est1RM > 0 ? est1RM + " " + unidad : "-", maquinaAjuste
-                    ]);
-                  }
-                }
-              });
-            }
-          });
-        }
-
-        var rpePromedio = rpeCount > 0 ? (rpeSum / rpeCount).toFixed(1) : "8.0";
-        rowsResumen.push([
-          ses.id || "ses_" + Date.now(), fecha, diaNombre, volTotal, seriesTotales, 
-          cardioTotal + " módulos", "RPE " + rpePromedio, volTotal > 5000 ? "Sobrecarga Sólida 🟢" : "Cumplido 🔵"
-        ]);
-      });
-
-      if (rowsRutinas.length > 0) {
-        rutinasSheet.getRange(rutinasSheet.getLastRow() + 1, 1, rowsRutinas.length, 14).setValues(rowsRutinas);
-      }
-      if (rowsResumen.length > 0) {
-        resumenSheet.getRange(resumenSheet.getLastRow() + 1, 1, rowsResumen.length, 8).setValues(rowsResumen);
-      }
+    // 6. SINCRONIZAR "REGISTRO NUTRICIONAL"
+    if (data.nutritionData || data.mealLogs) {
+      syncNutrition(ss, data.nutritionData || {}, data.mealLogs || []);
     }
 
-    // ================= 4. TABLA DE ALACENA, LISTA DE COMPRAS & NUTRICIÓN =================
-    var alacenaSheet = ss.getSheetByName("Alacena y Nutricion");
-    if (!alacenaSheet) {
-      alacenaSheet = ss.insertSheet("Alacena y Nutricion");
-      alacenaSheet.appendRow(["Tipo Registro", "Nombre / Alimento", "Cantidad / Inventario", "Categoría", "Estado / Calorías", "Última Actualización"]);
-      var headerRange4 = alacenaSheet.getRange(1, 1, 1, 6);
-      headerRange4.setBackground("#7c3aed").setFontColor("#ffffff").setFontWeight("bold");
-      alacenaSheet.setFrozenRows(1);
+    // 7. SINCRONIZAR "MEDIDAS CORPORALES"
+    if (data.bodyMetrics) {
+      syncBodyMetrics(ss, data.bodyMetrics);
     }
 
-    if (alacenaSheet && (payload.alacenaInventory || payload.shoppingList)) {
-      if (alacenaSheet.getLastRow() > 1) {
-        alacenaSheet.getRange(2, 1, alacenaSheet.getLastRow() - 1, 6).clearContent();
-      }
-      var nutRows = [];
-      
-      // Nutrición del Día
-      if (payload.nutritionData) {
-        nutRows.push(["Nutrición Diario", "Meta Proteina Atleta", payload.nutritionData.protein || "0", "Gramos (g)", "Objetivo 150g magros", new Date().toLocaleDateString("es-MX")]);
-        nutRows.push(["Nutrición Diario", "Consumo Agua", payload.nutritionData.water || "0", "Vasos / Litros", "Hidratación IAP", new Date().toLocaleDateString("es-MX")]);
-      }
-      
-      // Inventario Alacena
-      if (payload.alacenaInventory && Array.isArray(payload.alacenaInventory)) {
-        payload.alacenaInventory.forEach(function(item) {
-          if (typeof item === 'string') {
-            nutRows.push(["Alacena (En casa)", item, "Disponible", "Alimento", "Stock Activo 🟢", new Date().toLocaleDateString("es-MX")]);
-          } else if (item && item.name) {
-            nutRows.push(["Alacena (En casa)", item.name, item.quantity || "1", item.category || "General", "Stock Activo 🟢", new Date().toLocaleDateString("es-MX")]);
-          }
-        });
-      }
+    // 8. BÓVEDA DE "RESPALDO MAESTRO JSON"
+    syncRawBackup(ss, data);
 
-      // Lista de Compras
-      if (payload.shoppingList && Array.isArray(payload.shoppingList)) {
-        payload.shoppingList.forEach(function(item) {
-          var name = typeof item === 'string' ? item : (item.name || item);
-          var qty = typeof item === 'string' ? "Por comprar" : (item.quantity || "Por comprar");
-          nutRows.push(["Lista de Compras", name, qty, "Supermercado", "Pendiente Comprar 🛒", new Date().toLocaleDateString("es-MX")]);
-        });
-      }
-
-      if (nutRows.length > 0) {
-        alacenaSheet.getRange(alacenaSheet.getLastRow() + 1, 1, nutRows.length, 6).setValues(nutRows);
-      }
-    }
-
-    // ================= 5. TABLA DE EVOLUCIÓN CORPORAL & BIOMETRÍA =================
-    var bioSheet = ss.getSheetByName("Evolución Corporal");
-    if (!bioSheet) {
-      bioSheet = ss.insertSheet("Evolución Corporal");
-      bioSheet.appendRow(["Fecha Pesaje", "Peso Registrado (kg)", "Grasa % (U.S. Navy)", "Masa Magra Estimada", "Cintura (cm)", "Cuello (cm)", "Meta Lorentz"]);
-      var headerRange5 = bioSheet.getRange(1, 1, 1, 7);
-      headerRange5.setBackground("#10b981").setFontColor("#ffffff").setFontWeight("bold");
-      bioSheet.setFrozenRows(1);
-    }
-
-    if (payload.bodyMetrics && Array.isArray(payload.bodyMetrics) && bioSheet) {
-      if (bioSheet.getLastRow() > 1) {
-        bioSheet.getRange(2, 1, bioSheet.getLastRow() - 1, 7).clearContent();
-      }
-      var rowsBio = [];
-      payload.bodyMetrics.forEach(function(bm) {
-        rowsBio.push([
-          bm.dateString || new Date(bm.date || Date.now()).toLocaleDateString("es-MX"),
-          bm.weight || "-",
-          bm.bodyFat ? bm.bodyFat + "%" : "20.7%",
-          bm.leanMass ? bm.leanMass + " kg" : "62 kg",
-          bm.waist || "-",
-          bm.neck || "-",
-          "68.0 kg magros"
-        ]);
-      });
-      if (rowsBio.length > 0) {
-        bioSheet.getRange(bioSheet.getLastRow() + 1, 1, rowsBio.length, 7).setValues(rowsBio);
-      }
-    }
-
-    output.setContent(JSON.stringify({ status: "success", message: "Sincronización Cloud COACH V2 completada e integrada en todas tus hojas." }));
-    return output;
-
-  } catch(err) {
-    output.setContent(JSON.stringify({ status: "error", message: err.toString() }));
-    return output;
+    return ContentService.createTextOutput(JSON.stringify({ 
+      status: "success", 
+      timestamp: new Date().toISOString(),
+      message: "Ecosistema COACH V2 (8 Pestañas Oficiales) sincronizado sin errores con soporte de Semanas." 
+    })).setMimeType(ContentService.MimeType.JSON);
+    
+  } catch (error) {
+    return ContentService.createTextOutput(JSON.stringify({ 
+      status: "error", 
+      error: error.toString() 
+    })).setMimeType(ContentService.MimeType.JSON);
   }
 }
 
-/**
- * Endpoint doGet para consultar en vivo la base de datos de Google Sheets o verificar conectividad
- */
 function doGet(e) {
-  var output = ContentService.createTextOutput(JSON.stringify({ 
-    status: "online", 
-    system: "COACH V2 - Webhook Adonis Activo", 
-    atleta: "Carlos Donato", 
-    meta: "68.0 kg", 
-    sincronizacionUnificada: "100% Operacional" 
-  }));
-  output.setMimeType(ContentService.MimeType.JSON);
-  return output;
+  return ContentService.createTextOutput("Servidor COACH V2 Activo y Conectado para el Dr. Carlos Donato.");
+}
+
+/* ================== GENERADOR DE HIERRO PARA TABLAS OFICIALES ================== */
+
+function getOrCreateSheet(ss, sheetName, headers, headerBgColor) {
+  var sheet = ss.getSheetByName(sheetName);
+  if (!sheet) {
+    sheet = ss.insertSheet(sheetName);
+    sheet.appendRow(headers);
+    var headerRange = sheet.getRange(1, 1, 1, headers.length);
+    headerRange.setBackground(headerBgColor || "#0066FF");
+    headerRange.setFontColor("#FFFFFF");
+    headerRange.setFontWeight("bold");
+    sheet.setFrozenRows(1);
+  }
+  return sheet;
+}
+
+// 1. RUTINA MAESTRA ADONIS (13 Columnas)
+function syncMasterRoutineExact(ss, masterRoutine) {
+  var headers = [
+    "Día No.", "Nombre del Día", "Enfoque Fisiológico", "Tipo Sesión", 
+    "ID Ejercicio", "Nombre Ejercicio", "Grupo Muscular", "ID Función Biomecánica Unificada", 
+    "Series Meta", "Rango Reps", "Descanso Prescrito", "Origen / Estado en App", "Indicaciones Biomecánicas"
+  ];
+  var sheet = getOrCreateSheet(ss, "Rutina Maestra Adonis", headers, "#1E293B");
+  sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+
+  if (sheet.getLastRow() > 1) {
+    sheet.getRange(2, 1, sheet.getLastRow() - 1, headers.length).clearContent();
+  }
+
+  var rows = [];
+  masterRoutine.forEach(function(day) {
+    var dayNo = "Día " + (day.dayNumber || "1");
+    var dayName = day.name || ("Día " + day.dayNumber);
+    var focus = day.focus || "Estimulación mecánica con protección abdominal IAP.";
+    var type = day.type || "workout";
+    
+    var exList = day.exercises || [];
+    if (exList.length === 0 && type === 'rest') {
+      rows.push([dayNo, dayName, focus, "Descanso Total", "-", "-", "-", "-", "-", "-", "-", "📘 Protocolo Base", "Descanso del SNC y síntesis proteica"]);
+    } else {
+      exList.forEach(function(ex) {
+        var setsVal = ex.isCardio ? "1" : (ex.sets || "3");
+        var repsVal = ex.isCardio ? (ex.reps || "30 min") : (ex.reps || "10-12");
+        var originVal = ex.origin || (ex.id.toString().indexOf("custom") !== -1 ? "⚡️ Agregado en App" : "📘 Protocolo Base");
+        
+        rows.push([
+          dayNo, dayName, focus, type,
+          ex.id || "-", ex.name || "Ejercicio", ex.muscleGroup || "General",
+          ex.unifiedFunctionCode || "[HIPER-GEN-01]", setsVal, repsVal,
+          ex.restTime || "90 s", originVal, ex.biomechanics || "Control de técnica y respiración IAP."
+        ]);
+      });
+    }
+  });
+
+  if (rows.length > 0) {
+    sheet.getRange(2, 1, rows.length, headers.length).setValues(rows);
+  }
+}
+
+// 2. BASE DE DATOS EJERCICIOS (Catálogo Maestro Limpio y Unificado)
+function syncExerciseDatabase(ss, masterRoutine, customExercises) {
+  var headers = [
+    "Código Unificado", "ID Técnico", "Nombre Oficial del Ejercicio / Máquina", 
+    "Grupo Muscular Principal", "Tipo de Estimulación", "Origen de Datos", "Indicación Biomecánica Estándar"
+  ];
+  var sheet = getOrCreateSheet(ss, "Base de Datos Ejercicios", headers, "#0284C7");
+  sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+
+  if (sheet.getLastRow() > 1) {
+    sheet.getRange(2, 1, sheet.getLastRow() - 1, headers.length).clearContent();
+  }
+
+  var seenIds = {};
+  var rows = [];
+
+  masterRoutine.forEach(function(day) {
+    (day.exercises || []).forEach(function(ex) {
+      if (!seenIds[ex.id]) {
+        seenIds[ex.id] = true;
+        rows.push([
+          ex.unifiedFunctionCode || "[HIPER-GEN-01]",
+          ex.id || "-",
+          ex.name || "Ejercicio sin título",
+          ex.muscleGroup || "Hipertrofia General",
+          ex.isCardio ? "Aeróbico Zona 2" : "Fuerza / Tensión Mecánica",
+          ex.origin || (ex.id.toString().indexOf("custom") !== -1 ? "⚡️ Personalizado" : "📘 Catálogo Adonis"),
+          ex.biomechanics || "Ejecución articular estricta sin compresión lumbar."
+        ]);
+      }
+    });
+  });
+
+  if (rows.length > 0) {
+    sheet.getRange(2, 1, rows.length, headers.length).setValues(rows);
+  }
+}
+
+// 3. HISTORIAL DE ENTRENAMIENTOS (Detalle Serie a Serie con No. de Semana)
+function syncWorkoutHistory(ss, history) {
+  var headers = [
+    "No. Semana", "Fecha Sesión", "Sesión / Día", "ID Ejercicio", "Nombre del Ejercicio", 
+    "No. Serie", "Peso (lbs/kg)", "Repeticiones", "RPE / Sensación", "Notas / Cardio"
+  ];
+  var sheet = getOrCreateSheet(ss, "Historial de Entrenamientos", headers, "#2563EB");
+  sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+
+  if (sheet.getLastRow() > 1) {
+    sheet.getRange(2, 1, sheet.getLastRow() - 1, headers.length).clearContent();
+  }
+
+  var rows = [];
+  history.forEach(function(session) {
+    var semana = session.weekName || ("Semana " + (session.weekNumber || 1));
+    var dateStr = session.dateString || (session.timestamp ? session.timestamp.split("T")[0] : (session.date ? session.date.split("T")[0] : new Date().toLocaleDateString("es-MX")));
+    var dayName = session.dayName || "Sesión";
+    var exercises = session.exercises || {};
+
+    Object.keys(exercises).forEach(function(exId) {
+      var exLogs = exercises[exId];
+      var nombreEx = exLogs.name || exId;
+
+      if (exLogs.machine || exLogs.cardioDone) {
+        rows.push([
+          semana, dateStr, dayName, exId, exLogs.machine ? ("❤️ " + exLogs.machine) : "Cardiovascular Aeróbico", "Única",
+          "-", "-", "-", (exLogs.duration || 40) + " minutos en Zona 2" + (exLogs.machineSetup ? " • " + exLogs.machineSetup : "")
+        ]);
+      } else if (exLogs) {
+        Object.keys(exLogs).forEach(function(key) {
+          if (!isNaN(parseInt(key))) {
+            var setData = exLogs[key] || {};
+            if (setData.weight || setData.reps || setData.completed) {
+              rows.push([
+                semana, dateStr, dayName, exId, nombreEx, "Serie " + key,
+                setData.weight || 0, setData.reps || 0, setData.rpe || 8, setData.completed ? "✅ Completada" : "-"
+              ]);
+            }
+          }
+        });
+      }
+    });
+  });
+
+  if (rows.length > 0) {
+    sheet.getRange(2, 1, rows.length, headers.length).setValues(rows);
+  }
+}
+
+// 4. RESUMEN POR SESIÓN (Métricas de Tonelaje y Constancia con No. de Semana)
+function syncSessionSummary(ss, history) {
+  var headers = [
+    "No. Semana", "Fecha", "Nombre de la Sesión", "Total Ejercicios", "Tonelaje Total Levantado (lbs/kg x reps)", 
+    "Cardio Realizado (Minutos)", "Estado de Finalización"
+  ];
+  var sheet = getOrCreateSheet(ss, "Resumen por Sesión", headers, "#4F46E5");
+  sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+
+  if (sheet.getLastRow() > 1) {
+    sheet.getRange(2, 1, sheet.getLastRow() - 1, headers.length).clearContent();
+  }
+
+  var rows = [];
+  history.forEach(function(session) {
+    var semana = session.weekName || ("Semana " + (session.weekNumber || 1));
+    var dateStr = session.dateString || (session.timestamp ? session.timestamp.split("T")[0] : (session.date ? session.date.split("T")[0] : new Date().toLocaleDateString("es-MX")));
+    var dayName = session.dayName || "Entrenamiento de Fuerza";
+    var exercises = session.exercises || {};
+    
+    var exCount = 0;
+    var totalTonnage = session.volume || 0;
+    var cardioMins = 0;
+
+    Object.keys(exercises).forEach(function(exId) {
+      var exLogs = exercises[exId];
+      exCount++;
+      
+      if (exLogs.cardioDone || exLogs.machine) {
+        cardioMins += parseInt(exLogs.duration || 30);
+      }
+
+      if (!session.volume) {
+        Object.keys(exLogs).forEach(function(key) {
+          if (!isNaN(parseInt(key))) {
+            var w = parseFloat(exLogs[key].weight || 0);
+            var r = parseInt(exLogs[key].reps || 0);
+            totalTonnage += (w * r);
+          }
+        });
+      }
+    });
+
+    rows.push([
+      semana,
+      dateStr,
+      dayName,
+      exCount + " ejercicios",
+      totalTonnage + " kg/lbs acumulados",
+      cardioMins > 0 ? (cardioMins + " min en Zona 2") : (session.cardioCompleted > 0 ? (session.cardioCompleted + " módulos") : "Sin cardio hoy"),
+      "✅ Misión Completada (S" + (session.weekNumber || 1) + ")"
+    ]);
+  });
+
+  if (rows.length > 0) {
+    sheet.getRange(2, 1, rows.length, headers.length).setValues(rows);
+  }
+}
+
+// 5. ALACENA E INVENTARIO
+function syncAlacena(ss, inventory, shoppingList, prices) {
+  var headers = ["Categoría", "Alimento", "Cantidad", "Unidad", "¿En Lista de Compras?", "Precio Estimado", "Estado"];
+  var sheet = getOrCreateSheet(ss, "Alacena e Inventario", headers, "#059669");
+
+  if (sheet.getLastRow() > 1) {
+    sheet.getRange(2, 1, sheet.getLastRow() - 1, headers.length).clearContent();
+  }
+
+  var rows = [];
+  inventory.forEach(function(item) {
+    var inList = shoppingList.some(function(s) { return s.name && item.name && s.name.toLowerCase() === item.name.toLowerCase(); });
+    rows.push([
+      item.category || "General", item.name || "Alimento", item.quantity || 1,
+      item.unit || "pz/ración", inList ? "🛒 SÍ" : "No", item.price || "-",
+      item.quantity <= (item.minStock || 1) ? "⚠️ Reabastecer" : "✅ En Stock"
+    ]);
+  });
+
+  if (rows.length > 0) {
+    sheet.getRange(2, 1, rows.length, headers.length).setValues(rows);
+  }
+}
+
+// 6. REGISTRO NUTRICIONAL (Sin duplicados para el mismo día)
+function syncNutrition(ss, nutrition, mealLogs) {
+  var headers = ["Fecha", "Proteína Acumulada (g)", "Agua Consumida (ml/L)", "Total Comidas Registradas", "Detalle JSON Comidas"];
+  var sheet = getOrCreateSheet(ss, "Registro Nutricional", headers, "#D97706");
+
+  var today = new Date().toISOString().split("T")[0];
+  var lastRow = sheet.getLastRow();
+  var values = [
+    today, nutrition.protein || 0, nutrition.water || 0,
+    (mealLogs && mealLogs.length) ? mealLogs.length : 0, JSON.stringify(mealLogs || [])
+  ];
+
+  if (lastRow > 1) {
+    var lastDate = sheet.getRange(lastRow, 1).getValue();
+    if (lastDate && lastDate.toString().indexOf(today) !== -1) {
+      sheet.getRange(lastRow, 1, 1, headers.length).setValues([values]);
+      return;
+    }
+  }
+  sheet.appendRow(values);
+}
+
+// 7. MEDIDAS CORPORALES
+function syncBodyMetrics(ss, metrics) {
+  var headers = ["Fecha Registro", "Peso Corporal (kg)", "Cintura Abdominal (cm)", "Meta Magros", "Observaciones"];
+  var sheet = getOrCreateSheet(ss, "Medidas Corporales", headers, "#7C3AED");
+
+  if (sheet.getLastRow() > 1) {
+    sheet.getRange(2, 1, sheet.getLastRow() - 1, headers.length).clearContent();
+  }
+
+  var rows = [];
+  metrics.forEach(function(m) {
+    rows.push([
+      m.date || new Date().toISOString().split("T")[0],
+      m.weight || "-", m.waist || "-", "68.0 kg magros", m.notes || "-"
+    ]);
+  });
+
+  if (rows.length > 0) {
+    sheet.getRange(2, 1, rows.length, headers.length).setValues(rows);
+  }
+}
+
+// 8. BÓVEDA DE RESPALDO CRUCIBLE
+function syncRawBackup(ss, payload) {
+  var headers = ["Fecha Respaldo", "Atleta", "Estado Bóveda", "JSON Completo (Rescate Offline)"];
+  var sheet = getOrCreateSheet(ss, "Respaldo Maestro JSON", headers, "#475569");
+
+  sheet.getRange("A2:D2").setValues([[
+    new Date().toLocaleString("es-MX"), "Dr. Carlos Donato", "🔒 Respaldo Seguro al 100%", JSON.stringify(payload)
+  ]]);
 }
 `;
 }

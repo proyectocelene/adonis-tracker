@@ -32,6 +32,7 @@ export default function HistoryView() {
   const [selectedExId, setSelectedExId] = useState('d1_e1');
   const [selectedMuscleGroup, setSelectedMuscleGroup] = useState('Pecho');
   const [expandedSessionId, setExpandedSessionId] = useState(null);
+  const [selectedWeekFilter, setSelectedWeekFilter] = useState('ALL');
   const [showConfigModal, setShowConfigModal] = useState(false);
   const [showScriptModal, setShowScriptModal] = useState(false);
   const [tempSheetsUrl, setTempSheetsUrl] = useState(googleSheetsUrl);
@@ -133,7 +134,7 @@ export default function HistoryView() {
       }
 
       return {
-        name: ses.dateString ? ses.dateString.split(',')[0] : 'Sesión',
+        name: ses.weekNumber ? `S${ses.weekNumber}: ${ses.dayName ? ses.dayName.split(':')[0] : 'Sesión'}` : (ses.dateString ? ses.dateString.split(',')[0] : 'Sesión'),
         volumen: ses.volume || 0,
         rpe: sessionRpeCount > 0 ? parseFloat((sessionRpeSum / sessionRpeCount).toFixed(1)) : 8,
         f1rm: max1RM
@@ -1049,8 +1050,60 @@ export default function HistoryView() {
       {/* Bitácora del Atleta */}
       <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '12px' }}>
         <Clock size={18} color="#475569" />
-        <h2 style={{ margin: 0, fontSize: '18px', fontWeight: '800', color: '#0f172a', whiteSpace: 'normal' }}>Bitácora de Sesiones Pasadas</h2>
+        <h2 style={{ margin: 0, fontSize: '18px', fontWeight: '800', color: '#0f172a', whiteSpace: 'normal' }}>Bitácora y Mesociclo de Sesiones</h2>
       </div>
+
+      {workoutHistory.length > 0 && (() => {
+        const availableWeeks = Array.from(new Set(workoutHistory.map(s => s.weekNumber || 1))).sort((a, b) => a - b);
+        return (
+          <div style={{ marginBottom: '16px', display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '6px' }}>
+            <button
+              type="button"
+              onClick={() => setSelectedWeekFilter('ALL')}
+              style={{
+                padding: '8px 16px',
+                borderRadius: '20px',
+                border: selectedWeekFilter === 'ALL' ? '2px solid #0066ff' : '1.5px solid #cbd5e1',
+                background: selectedWeekFilter === 'ALL' ? '#0066ff' : '#ffffff',
+                color: selectedWeekFilter === 'ALL' ? '#ffffff' : '#475569',
+                fontSize: '13px',
+                fontWeight: '800',
+                cursor: 'pointer',
+                flexShrink: 0,
+                boxShadow: selectedWeekFilter === 'ALL' ? '0 4px 12px rgba(0,102,255,0.25)' : 'none',
+                transition: 'all 0.2s'
+              }}
+            >
+              🌟 Todas ({workoutHistory.length})
+            </button>
+            {availableWeeks.map(wk => {
+              const count = workoutHistory.filter(s => (s.weekNumber || 1) === wk).length;
+              return (
+                <button
+                  key={wk}
+                  type="button"
+                  onClick={() => setSelectedWeekFilter(wk)}
+                  style={{
+                    padding: '8px 16px',
+                    borderRadius: '20px',
+                    border: selectedWeekFilter === wk ? '2px solid #0066ff' : '1.5px solid #cbd5e1',
+                    background: selectedWeekFilter === wk ? '#0066ff' : '#ffffff',
+                    color: selectedWeekFilter === wk ? '#ffffff' : '#475569',
+                    fontSize: '13px',
+                    fontWeight: '800',
+                    cursor: 'pointer',
+                    flexShrink: 0,
+                    boxShadow: selectedWeekFilter === wk ? '0 4px 12px rgba(0,102,255,0.25)' : 'none',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  🗓️ Semana {wk} ({count})
+                </button>
+              );
+            })}
+          </div>
+        );
+      })()}
       
       {workoutHistory.length === 0 ? (
         <div className="card" style={{ padding: '28px', textAlign: 'center', backgroundColor: '#f8fafc', border: '1.5px dashed #cbd5e1', borderRadius: '24px' }}>
@@ -1061,11 +1114,15 @@ export default function HistoryView() {
           </p>
         </div>
       ) : (
-        [...workoutHistory].reverse().map((ses) => {
+        (selectedWeekFilter === 'ALL' 
+          ? [...workoutHistory]
+          : [...workoutHistory].filter(s => (s.weekNumber || 1) === selectedWeekFilter)
+        ).reverse().map((ses) => {
           const isExpanded = expandedSessionId === ses.id;
+          const wkNum = ses.weekNumber || 1;
           
           return (
-            <div key={ses.id} className="card" style={{ marginBottom: '14px', overflow: 'hidden', borderRadius: '22px' }}>
+            <div key={ses.id} className="card" style={{ marginBottom: '14px', overflow: 'hidden', borderRadius: '22px', border: '1px solid #cbd5e1' }}>
               <div 
                 onClick={() => setExpandedSessionId(isExpanded ? null : ses.id)}
                 style={{ 
@@ -1079,7 +1136,10 @@ export default function HistoryView() {
                 }}
               >
                 <div style={{ flex: 1, minWidth: 0, paddingRight: '10px' }}>
-                  <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap', marginBottom: '4px' }}>
+                  <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap', marginBottom: '6px' }}>
+                    <span className="badge" style={{ background: '#e0f2fe', color: '#0369a1', fontSize: '11px', fontWeight: '900', border: '1px solid #7dd3fc' }}>
+                      🗓️ {ses.weekName || `Semana ${wkNum}`}
+                    </span>
                     <strong style={{ fontSize: '15px', fontWeight: '800', color: '#0f172a', whiteSpace: 'normal', lineBreak: 'strict' }}>{ses.dayName}</strong>
                     {ses.completedSets > 0 && <span className="badge badge-green" style={{ fontSize: '10px' }}>{ses.completedSets} series</span>}
                     {ses.cardioCompleted > 0 && <span className="badge" style={{ background: '#ecfeff', color: '#0e7490', fontSize: '10px' }}>Cardio</span>}

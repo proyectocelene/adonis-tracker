@@ -17,6 +17,8 @@ export default function WorkoutDay() {
   });
   
   const baseDay = scientificProtocol[currentDayIndex];
+  const [currentWeek, setCurrentWeek] = useLocalStorage('coachv2_current_week', 1);
+  const [totalWeeks, setTotalWeeks] = useLocalStorage('coachv2_total_weeks', 8);
   const [customExercisesMap, setCustomExercisesMap] = useLocalStorage('coachv2_custom_day_exercises', {});
   const [swappedExercisesMap, setSwappedExercisesMap] = useLocalStorage('coachv2_swapped_exercises', {});
   const [globalWarmupDone, setGlobalWarmupDone] = useLocalStorage('coachv2_global_warmup', {});
@@ -82,54 +84,121 @@ export default function WorkoutDay() {
     })
   };
 
-  const todayWorkoutData = currentSessions[currentDay.id] || {};
-  const previousSession = [...workoutHistory].reverse().find(s => s.dayId === currentDay.id) || {};
-  const previousExercisesData = previousSession.exercises || {};
+  // Sistema Resiliente de Semanas: Obtener datos activos de la semana actual o migrar transparentemente si venía del formato raíz
+  const getDayDataForWeek = (sessions, week, dayId) => {
+    const weekKey = `week_${week}`;
+    if (!sessions[weekKey] && week === 1 && sessions[dayId]) {
+      return sessions[dayId] || {};
+    }
+    return sessions[weekKey] ? (sessions[weekKey][dayId] || {}) : {};
+  };
 
-  const handleUpdateSet = (exerciseId, setNumber, setData) => {
+  const todayWorkoutData = getDayDataForWeek(currentSessions, currentWeek, currentDay.id);
+
+  // Guía inteligente de progresión: Buscar datos de la semana anterior para comparar y aplicar sobrecarga progresiva
+  const getPreviousDataForDay = () => {
+    if (currentWeek > 1) {
+      const prevWeekLog = [...workoutHistory].reverse().find(s => s.dayId === currentDay.id && s.weekNumber === (currentWeek - 1));
+      if (prevWeekLog && prevWeekLog.exercises) return prevWeekLog.exercises;
+
+      const prevWeekActive = getDayDataForWeek(currentSessions, currentWeek - 1, currentDay.id);
+      if (Object.keys(prevWeekActive).length > 0) return prevWeekActive;
+    }
+    const lastLog = [...workoutHistory].reverse().find(s => s.dayId === currentDay.id && (s.weekNumber || 1) < currentWeek);
+    return lastLog ? (lastLog.exercises || {}) : {};
+  };
+
+  const previousExercisesData = getPreviousDataForDay();
+
+  const updateSessionDataForCurrentDay = (updater) => {
     setCurrentSessions(prev => {
-      const dayData = prev[currentDay.id] || {};
-      const exData = dayData[exerciseId] || {};
+      const weekKey = `week_${currentWeek}`;
+      let existingWeekData = prev[weekKey] || {};
+      if (currentWeek === 1 && !prev[weekKey] && (prev.day_1 || prev.day_2 || prev.day_3 || prev.day_4 || prev.day_5 || prev.day_6)) {
+        existingWeekData = { ...prev };
+      }
+      const dayData = existingWeekData[currentDay.id] || {};
+      const newDayData = updater(dayData);
+
       return {
         ...prev,
-        [currentDay.id]: {
-          ...dayData,
-          [exerciseId]: {
-            ...exData,
-            [setNumber]: setData
-          }
+        [weekKey]: {
+          ...existingWeekData,
+          [currentDay.id]: newDayData
+        }
+      };
+    });
+  };
+
+  const handleUpdateSet = (exerciseId, setNumber, setData) => {
+    updateSessionDataForCurrentDay(dayData => {
+      const exData = dayData[exerciseId] || {};
+      return {
+        ...dayData,
+        [exerciseId]: {
+          ...exData,
+          [setNumber]: setData
         }
       };
     });
   };
 
   const handleUpdateExerciseMeta = (exerciseId, metaData) => {
-    setCurrentSessions(prev => {
-      const dayData = prev[currentDay.id] || {};
+    updateSessionDataForCurrentDay(dayData => {
       const exData = dayData[exerciseId] || {};
       return {
-        ...prev,
-        [currentDay.id]: {
-          ...dayData,
-          [exerciseId]: {
-            ...exData,
-            ...metaData
-          }
+        ...dayData,
+        [exerciseId]: {
+          ...exData,
+          ...metaData
         }
       };
     });
   };
 
   const handleUpdateCardio = (exerciseId, cardioData) => {
-    setCurrentSessions(prev => {
-      const dayData = prev[currentDay.id] || {};
+    updateSessionDataForCurrentDay(dayData => {
       return {
-        ...prev,
-        [currentDay.id]: {
-          ...dayData,
-          [exerciseId]: cardioData
-        }
+        ...dayData,
+        [exerciseId]: cardioData
       };
+    });
+  };
+
+  // Clonación rápida de pesos de la semana anterior para facilitar la sobrecarga progresiva sin rellenar desde cero
+  const handleClonePreviousWeek = () => {
+    if (currentWeek <= 1) return;
+    const prevData = getPreviousDataForDay();
+    if (!prevData || Object.keys(prevData).length === 0) {
+      modal.showAlert({
+        title: "⚠️ Sin registros previos en S" + (currentWeek - 1),
+        message: `No se encontraron datos registrados en la Semana ${currentWeek - 1} para el día: "${currentDay.name}".\n\nAsegúrate de haber registrado tus cargas en la semana anterior para usar el autocompletado inteligente.`,
+        variant: "warning"
+      });
+      return;
+    }
+
+    const clonedDayData = {};
+    Object.keys(prevData).forEach(exId => {
+      const exVal = prevData[exId];
+      if (exVal && exVal.machine) {
+        clonedDayData[exId] = { ...exVal, completed: false };
+      } else if (exVal) {
+        clonedDayData[exId] = { ...exVal };
+        Object.keys(exVal).forEach(k => {
+          if (!isNaN(parseInt(k))) {
+            clonedDayData[exId][k] = { ...exVal[k], completed: false };
+          }
+        });
+      }
+    });
+
+    updateSessionDataForCurrentDay(() => clonedDayData);
+
+    modal.showAlert({
+      title: "⚡️ ¡Pesos Clonados Exitosamente!",
+      message: `Se importaron tus pesos, repeticiones y calibraciones de la Semana ${currentWeek - 1} al día de hoy.\n\n🔥 Las casillas están listas y desmarcadas (✓) para que registres tu progresión de hoy.`,
+      variant: "success"
     });
   };
 
@@ -287,6 +356,8 @@ export default function WorkoutDay() {
       onConfirm: async () => {
         const newSessionLog = {
           id: `ses_${Date.now()}`,
+          weekNumber: currentWeek,
+          weekName: `Semana ${currentWeek}`,
           timestamp: new Date().toISOString(),
           dateString: new Date().toLocaleDateString('es-ES', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }),
           dayId: currentDay.id,
@@ -298,13 +369,20 @@ export default function WorkoutDay() {
           exercises: todayWorkoutData
         };
 
-        const updatedHistory = [...workoutHistory, newSessionLog];
+        // Si ya existe un registro en el historial para ESTA MISMA semana y día, lo actualizamos para preservar integridad sin duplicar
+        const existingIndex = workoutHistory.findIndex(s => (s.weekNumber || 1) === currentWeek && s.dayId === currentDay.id);
+        let updatedHistory;
+        if (existingIndex >= 0) {
+          newSessionLog.id = workoutHistory[existingIndex].id || newSessionLog.id;
+          updatedHistory = [...workoutHistory];
+          updatedHistory[existingIndex] = newSessionLog;
+        } else {
+          updatedHistory = [...workoutHistory, newSessionLog];
+        }
+        
         setWorkoutHistory(updatedHistory);
 
-        setCurrentSessions(prev => ({
-          ...prev,
-          [currentDay.id]: {}
-        }));
+        // NOTA CIENTÍFICA: No borramos las sesiones activas de esta semana para preservar tu programa visual intacto en la Semana actual. Al cambiar a una nueva semana en el selector, tendrás casillas limpias.
 
         // Sincronización en segundo plano con Google Sheets si está configurada la URL
         let cloudMsg = "";
@@ -313,7 +391,7 @@ export default function WorkoutDay() {
             await syncWorkoutToGoogleSheets({
               webAppUrl: googleSheetsUrl,
               workoutHistory: updatedHistory,
-              currentSessions: {},
+              currentSessions,
               bodyMetrics
             });
             cloudMsg = "\n\n☁️ ¡Sincronización Cloud exitosa con tu Google Sheets en vivo!";
@@ -323,8 +401,8 @@ export default function WorkoutDay() {
         }
 
         modal.showAlert({
-          title: "🎉 ¡Sesión Archivado al 100%!",
-          message: `Tu hazaña de hoy quedó registrada en tu historial clínico sin simulaciones ni datos predeterminados.${cloudMsg}\n\nConsulta tu evolución real y por grupo muscular en la pestaña 'Análisis'.`,
+          title: `🎉 ¡Sesión de la Semana ${currentWeek} Archivada al 100%!`,
+          message: `Tu entrenamiento del día "${currentDay.name}" quedó registrado intacto en tu historial clínico para la Semana ${currentWeek}.${cloudMsg}\n\n🗓️ Tus datos no se sobrescribirán: al avanzar a la siguiente semana en el selector superior, iniciarás tu nueva progresión de forma independiente.`,
           variant: "success",
           buttonText: "¡Excelente, al descanso!"
         });
@@ -334,18 +412,16 @@ export default function WorkoutDay() {
 
   const handleResetCurrent = () => {
     modal.showConfirm({
-      title: "🔄 ¿Reiniciar Casillas del Día?",
-      message: "Si desmarcas todas las casillas del día de hoy no se perderá tu historial guardado, pero sí se limpiarán los checks actuales para que puedas iniciar la sesión desde cero.",
+      title: `🔄 ¿Reiniciar Casillas de la Semana ${currentWeek} - Día de Hoy?`,
+      message: `Si desmarcas las casillas de hoy para la Semana ${currentWeek}, se limpiarán los checks actuales de esta semana para iniciar desde cero. Todo tu historial de otras semanas se preserva intacto.`,
       confirmText: "Reiniciar Hoy",
       cancelText: "Mantener",
       variant: "warning",
       onConfirm: () => {
-        setCurrentSessions(prev => ({
-          ...prev,
-          [currentDay.id]: {}
-        }));
+        updateSessionDataForCurrentDay(() => ({}));
         setGlobalWarmupDone(prev => ({
           ...prev,
+          [`week_${currentWeek}_${currentDay.id}`]: false,
           [currentDay.id]: false
         }));
       }
@@ -456,6 +532,7 @@ export default function WorkoutDay() {
 
   const handleCopyRoutineForCoach = () => {
     let summaryText = `💪 PROTOCOLO ADONIS - RUTINA DE HOY\n`;
+    summaryText += `🗓️ Semana ${currentWeek} de ${totalWeeks} (Mesociclo)\n`;
     summaryText += `📅 Día ${currentDay.dayNumber}: ${currentDay.name}\n`;
     summaryText += `🏋️ Atleta: Dr. Carlos Donato (174 cm • Meta: 68.0 kg magros • Proteína: 160g)\n`;
     summaryText += `🎯 Enfoque Fisiológico: ${currentDay.focus}\n\n`;
@@ -528,8 +605,92 @@ export default function WorkoutDay() {
 
   const firstUncompletedIdx = getFirstUncompletedIdx();
 
+  const warmupKey = `${currentWeek}_${currentDay.id}`;
+  const isWarmupDone = !!(globalWarmupDone[warmupKey] || (currentWeek === 1 && globalWarmupDone[currentDay.id]));
+
   return (
     <div className="container">
+      {/* SELECTOR Y CONTROL DE SEMANAS (MESOCICLO ADONIS) */}
+      <div className="card animate-fade" style={{ padding: '16px', marginBottom: '14px', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', border: '1.5px solid #334155', borderRadius: '24px', color: '#ffffff', boxShadow: '0 10px 25px rgba(15, 23, 42, 0.25)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Calendar size={18} color="#38bdf8" />
+            <span style={{ fontSize: '12px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.5px', color: '#38bdf8' }}>
+              Mesociclo Científico
+            </span>
+          </div>
+          <button 
+            type="button"
+            onClick={() => {
+              const newTotal = totalWeeks + 1;
+              setTotalWeeks(newTotal);
+              setCurrentWeek(newTotal);
+              modal.showAlert({
+                title: "🗓️ ¡Nueva Semana Agregada!",
+                message: `Has ampliado tu ciclo de entrenamiento a la Semana ${newTotal}. Todo tu historial y programa anterior permanecen guardados e inalterables.`,
+                variant: "success"
+              });
+            }}
+            style={{ background: 'rgba(56, 189, 248, 0.15)', border: '1px solid rgba(56, 189, 248, 0.4)', color: '#38bdf8', padding: '6px 14px', borderRadius: '14px', fontSize: '11px', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', transition: 'all 0.2s' }}
+          >
+            <Plus size={14} /> + Nueva Semana
+          </button>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', background: 'rgba(15, 23, 42, 0.7)', padding: '8px', borderRadius: '20px', border: '1px solid #334155' }}>
+          <button 
+            type="button"
+            disabled={currentWeek <= 1}
+            onClick={() => {
+              if (currentWeek > 1) {
+                setCurrentWeek(currentWeek - 1);
+                setExpandedExerciseId(null);
+              }
+            }}
+            style={{ width: '44px', height: '44px', background: currentWeek <= 1 ? 'rgba(51, 65, 85, 0.3)' : '#0066ff', color: '#ffffff', border: 'none', borderRadius: '16px', cursor: currentWeek <= 1 ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: currentWeek <= 1 ? 0.4 : 1, transition: 'all 0.2s', flexShrink: 0 }}
+          >
+            <ArrowLeft size={22} />
+          </button>
+
+          <div style={{ textAlign: 'center', flex: 1, minWidth: 0, padding: '0 4px' }}>
+            <div style={{ fontSize: '19px', fontWeight: '900', color: '#ffffff', letterSpacing: '-0.3px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+              <span>🗓️ Semana {currentWeek}</span>
+              <span style={{ fontSize: '13px', fontWeight: '700', color: '#94a3b8', background: 'rgba(255,255,255,0.08)', padding: '2px 8px', borderRadius: '10px' }}>de {totalWeeks}</span>
+            </div>
+            <div style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '700', marginTop: '4px' }}>
+              {currentWeek === 1 ? '🌱 Semana de Calibración & Línea Base' : `🔥 Fase de Sobrecarga Progresiva (S${currentWeek})`}
+            </div>
+          </div>
+
+          <button 
+            type="button"
+            disabled={currentWeek >= totalWeeks}
+            onClick={() => {
+              if (currentWeek < totalWeeks) {
+                setCurrentWeek(currentWeek + 1);
+                setExpandedExerciseId(null);
+              }
+            }}
+            style={{ width: '44px', height: '44px', background: currentWeek >= totalWeeks ? 'rgba(51, 65, 85, 0.3)' : '#0066ff', color: '#ffffff', border: 'none', borderRadius: '16px', cursor: currentWeek >= totalWeeks ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: currentWeek >= totalWeeks ? 0.4 : 1, transition: 'all 0.2s', flexShrink: 0 }}
+          >
+            <ArrowRight size={22} />
+          </button>
+        </div>
+
+        {currentWeek > 1 && (
+          <div style={{ marginTop: '12px' }}>
+            <button 
+              type="button"
+              onClick={handleClonePreviousWeek}
+              style={{ width: '100%', background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', color: '#ffffff', border: '1px solid rgba(255,255,255,0.2)', padding: '12px', borderRadius: '16px', fontSize: '12px', fontWeight: '900', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', boxShadow: '0 4px 15px rgba(16, 185, 129, 0.3)', transition: 'all 0.2s' }}
+            >
+              <Zap size={18} fill="#ffffff" />
+              ⚡️ Clonar Pesos de Semana {currentWeek - 1} (Autocompletar)
+            </button>
+          </div>
+        )}
+      </div>
+
       {/* Navegación del Calendario */}
       <div className="card" style={{ padding: '16px 14px', marginBottom: '14px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '10px' }}>
@@ -847,14 +1008,14 @@ export default function WorkoutDay() {
             <div 
               onClick={() => {
                 setGlobalWarmupDone(prev => {
-                  const newVal = !(prev[currentDay.id]);
+                  const newVal = !isWarmupDone;
                   if (newVal) modal.showAlert({ title: "🔥 Activación General Lista", message: "Temperatura corporal elevada y fluido sinovial lubricado en tus articulaciones. ¡Listo para iniciar tu primera serie de fuerza!", variant: "success" });
-                  return { ...prev, [currentDay.id]: newVal };
+                  return { ...prev, [warmupKey]: newVal, ...(currentWeek === 1 ? { [currentDay.id]: newVal } : {}) };
                 });
               }}
               style={{
-                background: (globalWarmupDone[currentDay.id]) ? '#ecfdf5' : 'linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)',
-                border: (globalWarmupDone[currentDay.id]) ? '2px solid #34d399' : '2px solid #f59e0b',
+                background: isWarmupDone ? '#ecfdf5' : 'linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)',
+                border: isWarmupDone ? '2px solid #34d399' : '2px solid #f59e0b',
                 borderRadius: '24px',
                 padding: '16px',
                 marginBottom: '20px',
@@ -862,30 +1023,30 @@ export default function WorkoutDay() {
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 cursor: 'pointer',
-                boxShadow: (globalWarmupDone[currentDay.id]) ? '0 8px 25px rgba(16, 185, 129, 0.12)' : '0 8px 25px rgba(245, 158, 11, 0.15)',
+                boxShadow: isWarmupDone ? '0 8px 25px rgba(16, 185, 129, 0.12)' : '0 8px 25px rgba(245, 158, 11, 0.15)',
                 transition: 'all 0.25s ease',
                 userSelect: 'none'
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flex: 1 }}>
-                <div style={{ width: '46px', height: '46px', borderRadius: '23px', background: (globalWarmupDone[currentDay.id]) ? '#10b981' : '#f59e0b', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  {(globalWarmupDone[currentDay.id]) ? <Check size={26} /> : <Flame size={26} />}
+                <div style={{ width: '46px', height: '46px', borderRadius: '23px', background: isWarmupDone ? '#10b981' : '#f59e0b', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  {isWarmupDone ? <Check size={26} /> : <Flame size={26} />}
                 </div>
                 <div>
-                  <span style={{ fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.5px', color: (globalWarmupDone[currentDay.id]) ? '#065f46' : '#92400e' }}>
-                    {(globalWarmupDone[currentDay.id]) ? '¡Fase Inicial Terminada ✓!' : '⚠️ Paso 0: Calentamiento & Movilidad (5-10 min)'}
+                  <span style={{ fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.5px', color: isWarmupDone ? '#065f46' : '#92400e' }}>
+                    {isWarmupDone ? '¡Fase Inicial Terminada ✓!' : '⚠️ Paso 0: Calentamiento & Movilidad (5-10 min)'}
                   </span>
-                  <h4 style={{ margin: '2px 0 4px 0', fontSize: '16px', fontWeight: '800', color: (globalWarmupDone[currentDay.id]) ? '#065f46' : '#78350f' }}>
-                    Activación Cardiovascular & Articular
+                  <h4 style={{ margin: '2px 0 4px 0', fontSize: '16px', fontWeight: '800', color: isWarmupDone ? '#065f46' : '#78350f' }}>
+                    Activación Cardiovascular & Articular (S{currentWeek})
                   </h4>
-                  <p style={{ margin: 0, fontSize: '12px', color: (globalWarmupDone[currentDay.id]) ? '#047857' : '#92400e', fontWeight: '600', lineHeight: '1.4' }}>
+                  <p style={{ margin: 0, fontSize: '12px', color: isWarmupDone ? '#047857' : '#92400e', fontWeight: '600', lineHeight: '1.4' }}>
                     3-5 min de caminata/bici en Zona 1 + movimientos articulares para proteger hombros, rodillas y columna. Toca para confirmar ejecución.
                   </p>
                 </div>
               </div>
               <div style={{ flexShrink: 0, marginLeft: '10px' }}>
-                <span className={`badge ${(globalWarmupDone[currentDay.id]) ? 'badge-green' : 'badge-warning'}`} style={{ fontWeight: '900', padding: '6px 12px', fontSize: '12px' }}>
-                  {(globalWarmupDone[currentDay.id]) ? '✅ LISTO' : '👆 MARCAR'}
+                <span className={`badge ${isWarmupDone ? 'badge-green' : 'badge-warning'}`} style={{ fontWeight: '900', padding: '6px 12px', fontSize: '12px' }}>
+                  {isWarmupDone ? '✅ LISTO' : '👆 MARCAR'}
                 </span>
               </div>
             </div>
