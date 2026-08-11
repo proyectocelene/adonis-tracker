@@ -536,7 +536,28 @@ function doPost(e) {
 }
 
 function doGet(e) {
-  return ContentService.createTextOutput("Servidor COACH V2 Activo y Conectado para el Dr. Carlos Donato.");
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName("Respaldo Maestro JSON");
+    if (sheet && sheet.getLastRow() >= 2) {
+      var jsonStr = sheet.getRange(2, 4).getValue();
+      if (jsonStr) {
+        var parsed = JSON.parse(jsonStr);
+        return ContentService.createTextOutput(JSON.stringify({
+          status: "success",
+          success: true,
+          data: parsed,
+          history: parsed.workoutHistory || [],
+          routine: parsed.masterRoutine || []
+        })).setMimeType(ContentService.MimeType.JSON);
+      }
+    }
+  } catch(err) {}
+
+  return ContentService.createTextOutput(JSON.stringify({
+    status: "active",
+    message: "Servidor COACH V2 Activo y Conectado para el Dr. Carlos Donato."
+  })).setMimeType(ContentService.MimeType.JSON);
 }
 
 /* ================== GENERADOR DE HIERRO PARA TABLAS OFICIALES ================== */

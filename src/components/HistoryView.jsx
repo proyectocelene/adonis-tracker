@@ -3,6 +3,7 @@ import { useLocalStorage } from '../hooks/useLocalStorage';
 import { scientificProtocol } from '../data/scientificProtocol';
 import ConsistencyHeatmap from './ConsistencyHeatmap';
 import { analyzeFullDatabaseWithAI, unifyDatabaseExercisesWithAI, syncWorkoutToGoogleSheets, getGoogleAppsScriptCode, autoSyncWithOfflineBuffer } from '../services/deepseek';
+import { fetchCloudDataFromGoogleSheets } from '../services/googleSheetsSync';
 import { UNIFIED_EXERCISE_LIBRARY, MUSCLE_GROUPS_LIST } from '../data/unifiedExerciseLibrary';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { Activity, TrendingUp, Award, Clock, ChevronDown, ChevronUp, Trash2, ShieldCheck, Zap, HeartPulse, Dumbbell, Calendar, Sparkles, Settings2, Download, Upload, AlertOctagon, Settings, X, ShieldAlert, Database, Cloud, Copy, Check, Cpu, Loader2, Sparkles as SparklesIcon, Layers, RefreshCw } from 'lucide-react';
@@ -520,6 +521,43 @@ export default function HistoryView() {
     }
   };
 
+  const handlePullFromCloud = async () => {
+    if (!googleSheetsUrl || !googleSheetsUrl.startsWith("http")) {
+      modal.showAlert({ title: "Falta URL Webhook", message: "Primero pega y guarda tu URL de Google Apps Script arriba.", variant: "warning" });
+      return;
+    }
+    try {
+      setIsSyncing(true);
+      const cloudData = await fetchCloudDataFromGoogleSheets(googleSheetsUrl);
+      if (cloudData) {
+        if (cloudData.workoutHistory && cloudData.workoutHistory.length > 0) {
+          setWorkoutHistory(cloudData.workoutHistory);
+        }
+        if (cloudData.currentSessions && Object.keys(cloudData.currentSessions).length > 0) {
+          setCurrentSessions(cloudData.currentSessions);
+        }
+        if (cloudData.customExercises && Object.keys(cloudData.customExercises).length > 0) {
+          setCustomExercisesMap(cloudData.customExercises);
+        }
+        modal.showAlert({
+          title: "🎉 ¡Datos Extraídos de la Nube!",
+          message: `Se importaron tus datos desde Google Sheets (${cloudData.workoutHistory?.length || 0} sesiones archivadas).`,
+          variant: "success"
+        });
+      } else {
+        modal.showAlert({
+          title: "ℹ️ Conexión Exitosa",
+          message: "Servidor conectado. Para subir tus datos locales a la hoja presiona 'Subir a Google Sheets'.",
+          variant: "info"
+        });
+      }
+    } catch (err) {
+      modal.showAlert({ title: "Error al extraer datos", message: err.message, variant: "danger" });
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
   const handleSaveUrl = (e) => {
     e.preventDefault();
     setGoogleSheetsUrl(tempSheetsUrl.trim());
@@ -641,15 +679,26 @@ export default function HistoryView() {
                 </button>
               </form>
 
-              <button
-                type="button"
-                onClick={handleSyncSheetsNow}
-                disabled={isSyncing}
-                className="btn btn-primary"
-                style={{ width: '100%', background: '#10b981', borderColor: '#10b981', padding: '12px', fontWeight: '900' }}
-              >
-                {isSyncing ? 'Subiendo a la nube...' : '⚡️ Sincronizar Base de Datos en Google Sheets Hoy'}
-              </button>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', width: '100%' }}>
+                <button
+                  type="button"
+                  onClick={handleSyncSheetsNow}
+                  disabled={isSyncing}
+                  className="btn btn-primary"
+                  style={{ background: '#10b981', borderColor: '#10b981', padding: '12px 10px', fontWeight: '900', fontSize: '12px' }}
+                >
+                  {isSyncing ? 'Procesando...' : '⚡️ Subir a Nube'}
+                </button>
+                <button
+                  type="button"
+                  onClick={handlePullFromCloud}
+                  disabled={isSyncing}
+                  className="btn btn-primary"
+                  style={{ background: '#0284c7', borderColor: '#0284c7', padding: '12px 10px', fontWeight: '900', fontSize: '12px' }}
+                >
+                  {isSyncing ? 'Procesando...' : '⬇️ Extraer de Nube'}
+                </button>
+              </div>
             </div>
 
             <p style={{ fontSize: '13px', color: '#475569', marginBottom: '16px', lineHeight: '1.5', fontWeight: '600' }}>
@@ -1241,6 +1290,61 @@ export default function HistoryView() {
                             );
                           })}
                         </div>
+
+                        {/* NOTAS Y SENSA CIONES REGISTRADAS EN LA SESIÓN */}
+                        {((exData.notesHistory && exData.notesHistory.length > 0) || exData.notes) && (
+                          <div style={{ marginTop: '10px', background: '#f5f3ff', padding: '10px', borderRadius: '10px', border: '1px solid #ddd6fe' }}>
+                            <div style={{ fontSize: '11px', fontWeight: '900', color: '#6d28d9', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                              <MessageSquare size={13} color="#7c3aed" /> Notas del Ejercicio:
+                            </div>
+                            {(exData.notesHistory || [{ id: 'legacy', date: 'Nota', text: exData.notes }]).map(n => (
+                              <div key={n.id || n.text} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '6px', fontSize: '12px', color: '#334155', background: '#ffffff', padding: '6px 8px', borderRadius: '8px', marginBottom: '4px' }}>
+                                <div>
+                                  <span style={{ fontSize: '10px', color: '#64748b', fontWeight: '700', display: 'block' }}>🕒 {n.date || 'Nota'}</span>
+                                  <span>{n.text}</span>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    modal.showConfirm({
+                                      title: "🗑️ ¿Eliminar esta nota?",
+                                      message: `"${n.text}"`,
+                                      confirmText: "Borrar",
+                                      cancelText: "Cancelar",
+                                      variant: "danger",
+                                      onConfirm: () => {
+                                        const newHistory = workoutHistory.map(session => {
+                                          if (session.id === ses.id) {
+                                            const newExData = { ...session.exercises[exId] };
+                                            if (newExData.notesHistory) {
+                                              newExData.notesHistory = newExData.notesHistory.filter(item => item.id !== n.id);
+                                            }
+                                            if (newExData.notes === n.text) {
+                                              newExData.notes = '';
+                                            }
+                                            return {
+                                              ...session,
+                                              exercises: {
+                                                ...session.exercises,
+                                                [exId]: newExData
+                                              }
+                                            };
+                                          }
+                                          return session;
+                                        });
+                                        setWorkoutHistory(newHistory);
+                                        modal.showAlert({ title: "🗑️ Nota eliminada", message: "La nota fue eliminada del historial.", variant: "info" });
+                                      }
+                                    });
+                                  }}
+                                  style={{ background: '#fef2f2', color: '#ef4444', border: '1px solid #fecaca', borderRadius: '6px', padding: '2px 6px', fontSize: '10px', fontWeight: '800', cursor: 'pointer', flexShrink: 0 }}
+                                >
+                                  Borrar
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     );
                   })}

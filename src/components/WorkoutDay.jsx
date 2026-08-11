@@ -8,6 +8,7 @@ import MonthlyCalendar from './workout/MonthlyCalendar';
 import GlosarioModal from './common/GlosarioModal';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { analyzeWorkoutProgressWithAI, syncWorkoutToGoogleSheets } from '../services/deepseek';
+import { fetchCloudHistoryForExercise } from '../services/googleSheetsSync';
 import { 
   CheckCircle, Save, Flame, RefreshCcw, Plus, X, Dumbbell, ShieldCheck, 
   BookOpen, Zap, ChevronDown, ChevronUp, Activity, Sparkles, Cloud, Check, 
@@ -140,6 +141,32 @@ export default function WorkoutDay() {
 
   const previousExercisesData = getPreviousDataForDay();
   const previousSession = [...workoutHistory].reverse().find(s => s.dayId === currentDay.id);
+  const [cloudFetchedPreviousData, setCloudFetchedPreviousData] = useState({});
+
+  React.useEffect(() => {
+    const checkCloudPreviousWeights = async () => {
+      if (!googleSheetsUrl || !googleSheetsUrl.startsWith('http')) return;
+      const exercisesToCheck = currentDay.exercises || [];
+      for (const ex of exercisesToCheck) {
+        const hasLocalPrev = previousExercisesData[ex.id] && (previousExercisesData[ex.id][1]?.weight || previousExercisesData[ex.id]?.weight);
+        if (!hasLocalPrev && !cloudFetchedPreviousData[ex.id]) {
+          try {
+            const cloudData = await fetchCloudHistoryForExercise(googleSheetsUrl, ex.id, ex.name);
+            if (cloudData) {
+              setCloudFetchedPreviousData(prev => ({
+                ...prev,
+                [ex.id]: cloudData
+              }));
+            }
+          } catch (e) {
+            console.warn("Cloud weight fallback error for:", ex.name, e);
+          }
+        }
+      }
+    };
+    checkCloudPreviousWeights();
+  }, [googleSheetsUrl, currentDayIndex, currentWeek]);
+
 
   const updateSessionDataForCurrentDay = (updater) => {
     setCurrentSessions(prev => {
@@ -443,6 +470,39 @@ export default function WorkoutDay() {
       });
     } catch (err) {
       modal.showAlert({ title: "Sincronizado Local", message: err.message, variant: "info" });
+    } finally {
+      setIsSyncingSheets(false);
+    }
+  };
+
+  const handlePullFromCloud = async () => {
+    if (!googleSheetsUrl || !googleSheetsUrl.startsWith("http")) {
+      setShowSheetsModal(true);
+      return;
+    }
+    try {
+      setIsSyncingSheets(true);
+      const cloudData = await fetchCloudDataFromGoogleSheets(googleSheetsUrl);
+      if (cloudData) {
+        if (cloudData.workoutHistory && cloudData.workoutHistory.length > 0) {
+          setWorkoutHistory(cloudData.workoutHistory);
+        }
+        if (cloudData.currentSessions && Object.keys(cloudData.currentSessions).length > 0) {
+          setCurrentSessions(cloudData.currentSessions);
+        }
+        if (cloudData.customExercises && Object.keys(cloudData.customExercises).length > 0) {
+          setCustomExercisesMap(cloudData.customExercises);
+        }
+        modal.showAlert({
+          title: "🎉 ¡Datos Extraídos de la Nube!",
+          message: `Se importaron tus datos desde Google Sheets (${cloudData.workoutHistory?.length || 0} sesiones archivadas).`,
+          variant: "success"
+        });
+      } else {
+        modal.showAlert({ title: "Conexión Exitosa", message: "Conectado a Google Sheets.", variant: "info" });
+      }
+    } catch (err) {
+      modal.showAlert({ title: "Error al extraer datos", message: err.message, variant: "danger" });
     } finally {
       setIsSyncingSheets(false);
     }
@@ -786,7 +846,7 @@ export default function WorkoutDay() {
                     key={exercise.id} 
                     exercise={exercise} 
                     exerciseData={todayWorkoutData[exercise.id]}
-                    previousData={previousExercisesData[exercise.id]}
+                    previousData={previousExercisesData[exercise.id] || cloudFetchedPreviousData[exercise.id] || {}}
                     onUpdateSet={(setNum, setData) => handleUpdateSet(exercise.id, setNum, setData)}
                     onUpdateExerciseMeta={(meta) => handleUpdateExerciseMeta(exercise.id, meta)}
                     onSwapExercise={handleSwapExercise}

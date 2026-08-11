@@ -1,34 +1,68 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   ChevronDown, ChevronUp, ArrowUp, ArrowDown, Check, Clock, Info, 
-  Plus, Minus, RotateCcw, Search, Video, Play, Square, Flame, MessageSquare, GripVertical 
+  Plus, Minus, RotateCcw, Search, Video, Play, Square, Flame, MessageSquare, GripVertical, Trash2 
 } from 'lucide-react';
 import { useModal } from './common/UIComponents';
 import { unifyExerciseWithAI } from '../services/deepseek';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { UNIFIED_EXERCISE_LIBRARY } from '../data/unifiedExerciseLibrary';
 
-const playLoudFinishBeep = () => {
+const triggerRestTimerNotification = (exerciseName, durationSeconds) => {
+  // 1. Solicitar permiso si no ha sido decidido
+  if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission();
+  }
+
+  // 2. Vibración Fuerte y Repetida (Vibrar mucho y fuerte)
+  if (navigator.vibrate) {
+    navigator.vibrate([600, 200, 600, 200, 1000, 200, 1000, 200, 1200]);
+  }
+
+  // 3. Tono Sintetizado Potente (Bypass de silencio mediante Web Audio API)
   try {
     const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-    if (!AudioContextClass) return;
-    const ctx = new AudioContextClass();
-    
-    [0, 0.25, 0.5].forEach((delay) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(880, ctx.currentTime + delay);
-      osc.frequency.exponentialRampToValueAtTime(1320, ctx.currentTime + delay + 0.15);
-      gain.gain.setValueAtTime(0.6, ctx.currentTime + delay);
-      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + delay + 0.2);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start(ctx.currentTime + delay);
-      osc.stop(ctx.currentTime + delay + 0.22);
-    });
+    if (AudioContextClass) {
+      const ctx = new AudioContextClass();
+      [0, 0.25, 0.5, 0.75, 1.0].forEach((delay) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(987.77, ctx.currentTime + delay);
+        osc.frequency.exponentialRampToValueAtTime(1318.51, ctx.currentTime + delay + 0.18);
+        gain.gain.setValueAtTime(1.0, ctx.currentTime + delay);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + delay + 0.22);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(ctx.currentTime + delay);
+        osc.stop(ctx.currentTime + delay + 0.24);
+      });
+    }
   } catch (e) {
     console.warn("Audio Context error:", e);
+  }
+
+  // 4. Notificación de Sistema (PWA / Sistema Operativo)
+  if ('Notification' in window && Notification.permission === 'granted') {
+    const title = '⏱️ ¡TIEMPO DE DESCANSO CONCLUIDO!';
+    const options = {
+      body: `Tu descanso de ${durationSeconds}s para "${exerciseName}" ha concluido. ¡A dar la siguiente serie!`,
+      icon: './pwa-192x192.png',
+      badge: './pwa-192x192.png',
+      tag: `timer-${Date.now()}`,
+      renotify: true,
+      requireInteraction: true,
+      vibrate: [600, 200, 600, 200, 1000]
+    };
+    try {
+      new Notification(title, options);
+    } catch (e) {
+      if (navigator.serviceWorker && navigator.serviceWorker.ready) {
+        navigator.serviceWorker.ready.then(reg => {
+          reg.showNotification(title, options);
+        });
+      }
+    }
   }
 };
 
@@ -53,7 +87,7 @@ export default function ExerciseRow({
 
   const [activeSubTab, setActiveSubTab] = useState('logger');
   const [machineSetupInput, setMachineSetupInput] = useState(exerciseData.machineSetup || '');
-  const [exerciseNotesInput, setExerciseNotesInput] = useState(exerciseData.notes || '');
+  const [exerciseNotesInput, setExerciseNotesInput] = useState('');
   const [isUnifying, setIsUnifying] = useState(false);
   const [apiKey] = useLocalStorage('coachv2_deepseek_apikey', '');
 
@@ -77,10 +111,7 @@ export default function ExerciseRow({
     if (exerciseData.machineSetup !== undefined) {
       setMachineSetupInput(exerciseData.machineSetup);
     }
-    if (exerciseData.notes !== undefined) {
-      setExerciseNotesInput(exerciseData.notes);
-    }
-  }, [exerciseData.machineSetup, exerciseData.notes]);
+  }, [exerciseData.machineSetup]);
 
   const totalSets = exerciseData.customSetsCount ? parseInt(exerciseData.customSetsCount) : (parseInt(exercise.sets) || 3);
   const targetReps = exercise.reps || '10-12';
@@ -98,14 +129,17 @@ export default function ExerciseRow({
       }, 1000);
     } else if (restTimerSeconds === 0 && isTimerActive) {
       setIsTimerActive(false);
-      playLoudFinishBeep();
-      if (navigator.vibrate) navigator.vibrate([300, 150, 300, 150, 400]);
+      triggerRestTimerNotification(exercise.name, parsedRestSeconds);
     }
     return () => clearInterval(interval);
-  }, [isTimerActive, restTimerSeconds]);
+  }, [isTimerActive, restTimerSeconds, exercise.name, parsedRestSeconds]);
 
-  const handleStartTimer = () => {
-    if (restTimerSeconds <= 0) setRestTimerSeconds(parsedRestSeconds);
+  const handleStartTimer = (customSecs) => {
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+    const secsToUse = typeof customSecs === 'number' ? customSecs : (restTimerSeconds <= 0 ? parsedRestSeconds : restTimerSeconds);
+    setRestTimerSeconds(secsToUse);
     setIsTimerActive(true);
   };
 
@@ -113,10 +147,11 @@ export default function ExerciseRow({
     setIsTimerActive(false);
   };
 
-  const handleResetTimer = () => {
-    setRestTimerSeconds(parsedRestSeconds);
+  const handleResetTimer = (secondsToSet = parsedRestSeconds) => {
+    setRestTimerSeconds(secondsToSet);
     setIsTimerActive(false);
   };
+
 
   const ensureMeta = () => {
     if (!exerciseData.name || !exerciseData.muscleGroup) {
@@ -214,15 +249,51 @@ export default function ExerciseRow({
   };
 
   const handleSaveNotes = () => {
+    if (!exerciseNotesInput || !exerciseNotesInput.trim()) return;
+    ensureMeta();
+    const existingHistory = exerciseData.notesHistory || [];
+    const newNoteObj = {
+      id: `note_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+      date: new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }),
+      text: exerciseNotesInput.trim()
+    };
+    const updatedHistory = [newNoteObj, ...existingHistory];
+
     if (onUpdateExerciseMeta) {
-      onUpdateExerciseMeta({ notes: exerciseNotesInput });
+      onUpdateExerciseMeta({ 
+        notes: exerciseNotesInput.trim(),
+        notesHistory: updatedHistory
+      });
+      setExerciseNotesInput('');
       modal.showAlert({
-        title: "📝 Nota de Sensación Guardada",
-        message: "Tu comentario fue registrado en el historial de la sesión.",
+        title: "📝 Nota Guardada",
+        message: "Tu nota fue guardada en el historial de este ejercicio sin alterar tus series.",
         variant: "success"
       });
     }
   };
+
+  const handleDeleteNote = (noteId) => {
+    const existingHistory = exerciseData.notesHistory || [];
+    const updatedHistory = existingHistory.filter(n => n.id !== noteId);
+    if (onUpdateExerciseMeta) {
+      onUpdateExerciseMeta({
+        notesHistory: updatedHistory,
+        notes: updatedHistory.length > 0 ? updatedHistory[0].text : ''
+      });
+      modal.showAlert({
+        title: "🗑️ Nota Eliminada",
+        message: "La nota fue eliminada del historial.",
+        variant: "info"
+      });
+    }
+  };
+
+  const legacyNoteList = exerciseData.notes && (!exerciseData.notesHistory || exerciseData.notesHistory.length === 0)
+    ? [{ id: 'legacy', date: 'Sesión Actual', text: exerciseData.notes }]
+    : [];
+  const allNotesList = [...(exerciseData.notesHistory || []), ...legacyNoteList];
+
 
   const handleExecuteSwap = async (candidateName) => {
     if (!candidateName) return;
@@ -494,56 +565,87 @@ export default function ExerciseRow({
           {/* SUBPESTAÑA 1: SERIES & CARGAS */}
           {activeSubTab === 'logger' && (
             <div style={{ width: '100%' }}>
-              {/* TEMPORIZADOR DE DESCANSO CON ALARMA */}
+              {/* TEMPORIZADOR DE DESCANSO CON ALARMA Y SELECTOR */}
               <div style={{
                 background: isTimerActive ? 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)' : '#ffffff',
                 color: isTimerActive ? '#ffffff' : '#0f172a',
-                padding: '8px 12px',
+                padding: '10px 12px',
                 borderRadius: '14px',
                 marginBottom: '10px',
                 border: isTimerActive ? '1.5px solid #38bdf8' : '1.5px solid #cbd5e1',
                 display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
+                flexDirection: 'column',
                 gap: '8px',
                 width: '100%'
               }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <Clock size={16} color={isTimerActive ? '#38bdf8' : '#0066ff'} />
-                  <span style={{ fontSize: '12px', fontWeight: '900' }}>
-                    {isTimerActive ? `⏱️ ${restTimerSeconds}s Restantes` : `Descanso: ${restPrescribed}`}
-                  </span>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <Clock size={16} color={isTimerActive ? '#38bdf8' : '#0066ff'} />
+                    <span style={{ fontSize: '13px', fontWeight: '900' }}>
+                      {isTimerActive ? `⏱️ ${restTimerSeconds}s Restantes` : `Descanso: ${restTimerSeconds}s`}
+                    </span>
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    {isTimerActive ? (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => handleResetTimer(restTimerSeconds)}
+                          title="Reiniciar temporizador"
+                          style={{ background: 'rgba(255,255,255,0.2)', color: '#fff', border: 'none', borderRadius: '8px', padding: '5px 8px', fontSize: '11px', fontWeight: '800', cursor: 'pointer' }}
+                        >
+                          <RotateCcw size={12} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleStopTimer}
+                          title="Parar temporizador"
+                          style={{ background: '#ef4444', color: '#fff', border: 'none', borderRadius: '8px', padding: '5px 10px', fontSize: '11px', fontWeight: '900', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '3px' }}
+                        >
+                          <Square size={12} fill="#fff" /> Parar
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => handleStartTimer(restTimerSeconds)}
+                        style={{ background: '#0066ff', color: '#ffffff', border: 'none', borderRadius: '8px', padding: '6px 14px', fontSize: '12px', fontWeight: '900', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+                      >
+                        <Play size={12} fill="#fff" /> Iniciar
+                      </button>
+                    )}
+                  </div>
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  {isTimerActive ? (
-                    <>
-                      <button
-                        type="button"
-                        onClick={handleResetTimer}
-                        title="Reiniciar temporizador"
-                        style={{ background: 'rgba(255,255,255,0.2)', color: '#fff', border: 'none', borderRadius: '8px', padding: '5px 8px', fontSize: '11px', fontWeight: '800', cursor: 'pointer' }}
-                      >
-                        <RotateCcw size={12} />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleStopTimer}
-                        title="Parar temporizador"
-                        style={{ background: '#ef4444', color: '#fff', border: 'none', borderRadius: '8px', padding: '5px 10px', fontSize: '11px', fontWeight: '900', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '3px' }}
-                      >
-                        <Square size={12} fill="#fff" /> Parar
-                      </button>
-                    </>
-                  ) : (
+                {/* BOTONES DE SELECCIÓN RÁPIDA DE DESCANSO */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', width: '100%', pt: '4px' }}>
+                  <span style={{ fontSize: '10px', fontWeight: '800', color: isTimerActive ? '#94a3b8' : '#64748b' }}>Ajustar:</span>
+                  {[60, 90, 120, 180].map((secs) => (
                     <button
+                      key={secs}
                       type="button"
-                      onClick={handleStartTimer}
-                      style={{ background: '#0066ff', color: '#ffffff', border: 'none', borderRadius: '8px', padding: '5px 12px', fontSize: '12px', fontWeight: '900', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+                      onClick={() => {
+                        setRestTimerSeconds(secs);
+                        if (!isTimerActive) {
+                          handleStartTimer(secs);
+                        }
+                      }}
+                      style={{
+                        flex: 1,
+                        padding: '4px 6px',
+                        borderRadius: '8px',
+                        border: restTimerSeconds === secs ? '1.5px solid #0066ff' : (isTimerActive ? '1px solid #334155' : '1px solid #e2e8f0'),
+                        background: restTimerSeconds === secs ? (isTimerActive ? '#0066ff' : '#eff6ff') : (isTimerActive ? 'rgba(255,255,255,0.05)' : '#f8fafc'),
+                        color: restTimerSeconds === secs ? (isTimerActive ? '#ffffff' : '#0066ff') : (isTimerActive ? '#cbd5e1' : '#475569'),
+                        fontSize: '11px',
+                        fontWeight: '900',
+                        cursor: 'pointer'
+                      }}
                     >
-                      <Play size={12} fill="#fff" /> Iniciar
+                      {secs}s
                     </button>
-                  )}
+                  ))}
                 </div>
               </div>
 
@@ -809,41 +911,112 @@ export default function ExerciseRow({
                 )}
               </div>
 
-              {/* CAJA DE NOTAS DEL EJERCICIO */}
-              <div style={{ background: '#f8fafc', padding: '10px', borderRadius: '14px', border: '1.5px solid #e2e8f0', width: '100%' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
-                  <MessageSquare size={15} color="#7c3aed" />
-                  <label style={{ fontSize: '11px', color: '#4c1d95', fontWeight: '900' }}>
-                    📝 Notas & Sensaciones de la Sesión:
-                  </label>
+              {/* HISTORIAL Y REGISTRO DE NOTAS TÉCNICAS */}
+              <div style={{ background: '#f8fafc', padding: '12px', borderRadius: '14px', border: '1.5px solid #e2e8f0', width: '100%', marginTop: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <MessageSquare size={16} color="#7c3aed" />
+                    <span style={{ fontSize: '12px', color: '#4c1d95', fontWeight: '900' }}>
+                      📜 Historial de Notas & Sensaciones:
+                    </span>
+                  </div>
+                  <span style={{ fontSize: '10px', background: '#f3e8ff', color: '#7c3aed', padding: '2px 8px', borderRadius: '10px', fontWeight: '800' }}>
+                    {allNotesList.length} {allNotesList.length === 1 ? 'nota' : 'notas'}
+                  </span>
                 </div>
-                <textarea
-                  rows={2}
-                  placeholder="Registra cómo te sentiste (ej. Buena fuerza en rep 8, la serie 3 cerca del fallo...)"
-                  value={exerciseNotesInput}
-                  onChange={(e) => setExerciseNotesInput(e.target.value)}
-                  onBlur={handleSaveNotes}
-                  style={{
-                    width: '100%',
-                    padding: '8px',
-                    borderRadius: '10px',
-                    border: '1.5px solid #cbd5e1',
-                    fontSize: '12px',
-                    fontWeight: '600',
-                    background: '#ffffff',
-                    color: '#0f172a',
-                    resize: 'vertical'
-                  }}
-                />
-                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '4px' }}>
+
+                <div style={{ display: 'flex', gap: '6px', marginBottom: '10px' }}>
+                  <textarea
+                    rows={2}
+                    placeholder="Escribe una nota sobre este ejercicio (ej. Rep 8 cerca del fallo, ajustar asiento a 4...)"
+                    value={exerciseNotesInput}
+                    onChange={(e) => setExerciseNotesInput(e.target.value)}
+                    style={{
+                      flex: 1,
+                      padding: '8px',
+                      borderRadius: '10px',
+                      border: '1.5px solid #cbd5e1',
+                      fontSize: '12px',
+                      fontWeight: '600',
+                      background: '#ffffff',
+                      color: '#0f172a',
+                      resize: 'none'
+                    }}
+                  />
                   <button
                     type="button"
                     onClick={handleSaveNotes}
-                    style={{ background: '#7c3aed', color: '#ffffff', border: 'none', borderRadius: '8px', padding: '4px 10px', fontSize: '11px', fontWeight: '800', cursor: 'pointer' }}
+                    style={{
+                      background: '#7c3aed',
+                      color: '#ffffff',
+                      border: 'none',
+                      borderRadius: '10px',
+                      padding: '8px 12px',
+                      fontSize: '11px',
+                      fontWeight: '900',
+                      cursor: 'pointer',
+                      alignSelf: 'flex-end',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px'
+                    }}
                   >
-                    Guardar Comentario
+                    <Plus size={14} /> Guardar
                   </button>
                 </div>
+
+                {allNotesList.length > 0 ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '160px', overflowY: 'auto' }}>
+                    {allNotesList.map((item) => (
+                      <div 
+                        key={item.id}
+                        style={{
+                          background: '#ffffff',
+                          padding: '8px 10px',
+                          borderRadius: '10px',
+                          border: '1px solid #cbd5e1',
+                          display: 'flex',
+                          alignItems: 'flex-start',
+                          justifyContent: 'space-between',
+                          gap: '8px'
+                        }}
+                      >
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontSize: '10px', color: '#64748b', fontWeight: '700', marginBottom: '2px' }}>
+                            🕒 {item.date}
+                          </div>
+                          <div style={{ fontSize: '12px', color: '#1e293b', fontWeight: '600', whiteSpace: 'pre-wrap' }}>
+                            {item.text}
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteNote(item.id)}
+                          title="Borrar nota"
+                          style={{
+                            background: '#fef2f2',
+                            color: '#ef4444',
+                            border: '1px solid #fecaca',
+                            borderRadius: '6px',
+                            padding: '4px 6px',
+                            fontSize: '11px',
+                            fontWeight: '800',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '2px'
+                          }}
+                        >
+                          <Trash2 size={12} /> Borrar
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div style={{ fontSize: '11px', color: '#64748b', fontStyle: 'italic', textAlign: 'center', padding: '6px 0' }}>
+                    No hay notas guardadas para este ejercicio.
+                  </div>
+                )}
               </div>
             </div>
           )}
