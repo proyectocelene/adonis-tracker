@@ -5,7 +5,6 @@ import { entries, setMany, clear } from 'idb-keyval';
 import { scientificProtocol } from '../data/scientificProtocol';
 import ConsistencyHeatmap from './ConsistencyHeatmap';
 import { useAuth } from '../contexts/AuthContext';
-import { analyzeFullDatabaseWithAI, unifyDatabaseExercisesWithAI } from '../services/deepseek';
 import { UNIFIED_EXERCISE_LIBRARY, MUSCLE_GROUPS_LIST } from '../data/unifiedExerciseLibrary';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { Activity, TrendingUp, Award, Clock, ChevronDown, ChevronUp, Trash2, ShieldCheck, Zap, HeartPulse, Dumbbell, Calendar, Sparkles, Settings2, Download, Upload, AlertOctagon, Settings, X, ShieldAlert, Database, Cloud, Copy, Check, Cpu, Loader2, Sparkles as SparklesIcon, Layers, RefreshCw } from 'lucide-react';
@@ -18,18 +17,9 @@ export default function HistoryView() {
   const [currentSessions, setCurrentSessions, isSessionsLoading] = useLocalStorage('coachv2_active_workouts', {});
   const [customExercisesMap, setCustomExercisesMap, isCustomLoading] = useLocalStorage('coachv2_custom_day_exercises', {});
 
-  
-  const [storedApiKey1] = useLocalStorage('coachv2_deepseek_apikey', '');
-  const [storedApiKey2] = useLocalStorage('coachv2_deepseek_api_key', '');
-  const apiKey = (storedApiKey1 || storedApiKey2 || '').toString().replace(/["']/g, '').trim();
-
-  const isLoadingDb = isHistoryLoading || isSessionsLoading || isCustomLoading;
-
   // Explorador de Base de Datos y Unificación AI
   const [selectedDbFilter, setSelectedDbFilter] = useState('Todos');
   const [dbSearchTerm, setDbSearchTerm] = useState('');
-  const [isUnifyingDb, setIsUnifyingDb] = useState(false);
-  const [unificationResult, setUnificationResult] = useState(null);
 
   const [analysisMode, setAnalysisMode] = useState('exercise'); // 'exercise' or 'muscleGroup'
   const [selectedExId, setSelectedExId] = useState('d1_e1');
@@ -37,10 +27,6 @@ export default function HistoryView() {
   const [expandedSessionId, setExpandedSessionId] = useState(null);
   const [selectedWeekFilter, setSelectedWeekFilter] = useState('ALL');
   const [showConfigModal, setShowConfigModal] = useState(false);
-
-  // Estados de IA y Cloud
-  const [isAnalyzingDb, setIsAnalyzingDb] = useState(false);
-  const [dbAuditResult, setDbAuditResult] = useState(null);
 
   const fileInputRef = useRef(null);
 
@@ -305,58 +291,9 @@ export default function HistoryView() {
     });
   };
 
-  // AUDITORÍA AI INTEGRAL SOBRE TODA LA BASE DE DATOS
-  const handleAuditDatabaseAI = async () => {
-    if (!apiKey) {
-      modal.showAlert({
-        title: "🔑 Falta Clave API DeepSeek",
-        message: "Para realizar una auditoría completa con Inteligencia Artificial que cruce tus récords del gym con tus calorías, excesos de pizza y precios en alacena, agrega tu clave API de DeepSeek en el módulo de Nutrición > Configuración.",
-        variant: "warning"
-      });
-      return;
-    }
+  // AUDITORÍA AI INTEGRAL SOBRE TODA LA BASE DE DATOS (ELIMINADO)
 
-    const backup = {
-      appVersion: "COACH V2 - Protocolo Adonis",
-      totalSessions,
-      totalVolumeLifted,
-      workoutHistory: workoutHistory.slice(-10)
-    };
-
-    try {
-      setIsAnalyzingDb(true);
-      const res = await analyzeFullDatabaseWithAI({ apiKey, dbBackup: backup });
-      setDbAuditResult(res);
-      modal.showAlert({ title: "🧬 ¡Auditoría Integral AI Lista!", message: "El Sistema Científico Deportivo de NutriConsult ha procesado tus patrones a largo plazo.", variant: "success" });
-    } catch (err) {
-      modal.showAlert({ title: "Error al Consultar IA", message: err.message, variant: "danger" });
-    } finally {
-      setIsAnalyzingDb(false);
-    }
-  };
-
-  // UNIFICACIÓN INTELIGENTE AI DE LA BASE DE DATOS Y MÁQUINAS
-  const handleUnifyAndCleanDatabase = async () => {
-    try {
-      setIsUnifyingDb(true);
-      const result = await unifyDatabaseExercisesWithAI({
-        apiKey,
-        customExercises: customExercisesMap,
-        workoutHistory
-      });
-      setUnificationResult(result);
-      setUnificationResult(result);
-      modal.showAlert({
-        title: "⚡️ ¡Base de Datos Unificada con Éxito!",
-        message: "Todos los ejercicios y máquinas personalizados fueron analizados, clasificados y unificados bajo el estándar biomecánico Adonis. Tu Google Sheet ha sido actualizado con los nuevos códigos.",
-        variant: "success"
-      });
-    } catch (err) {
-      modal.showAlert({ title: "Error en Unificación", message: err.message, variant: "danger" });
-    } finally {
-      setIsUnifyingDb(false);
-    }
-  };
+  // UNIFICACIÓN INTELIGENTE AI DE LA BASE DE DATOS Y MÁQUINAS (ELIMINADO)
 
   // EXPORTAR BASE DE DATOS TOTAL (RUTINAS, HISTORIAL, ALACENA, MEDIDAS Y CONFIGURACIONES)
   const handleExportDatabase = async () => {
@@ -711,95 +648,7 @@ export default function HistoryView() {
             ))}
         </div>
 
-        <button
-          type="button"
-          onClick={handleUnifyAndCleanDatabase}
-          disabled={isUnifyingDb}
-          style={{ width: '100%', background: 'linear-gradient(135deg, #0066ff 0%, #2563eb 100%)', color: '#ffffff', padding: '15px', borderRadius: '20px', border: 'none', fontSize: '14px', fontWeight: '900', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', boxShadow: '0 6px 20px rgba(0, 102, 255, 0.3)', cursor: 'pointer' }}
-        >
-          {isUnifyingDb ? <Loader2 size={18} className="animate-spin" /> : <SparklesIcon size={18} />}
-          {isUnifyingDb ? 'Unificando Base de Datos con IA...' : '⚡️ Analizar y Unificar Base de Datos de Ejercicios con IA'}
-        </button>
-
-        {unificationResult && (
-          <div style={{ marginTop: '16px', background: '#eff6ff', padding: '16px', borderRadius: '18px', border: '1.5px solid #bfdbfe', textAlign: 'left' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-              <strong style={{ fontSize: '14px', color: '#1e3a8a', fontWeight: '900' }}>✅ {unificationResult.totalUnificados}</strong>
-              <button type="button" onClick={() => setUnificationResult(null)} style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}>
-                <X size={18} color="#64748b" />
-              </button>
-            </div>
-            <p style={{ fontSize: '12px', color: '#334155', margin: '0 0 12px 0', fontWeight: '600', lineHeight: '1.5' }}>
-              {unificationResult.resumenDeUnificacíon}
-            </p>
-            {unificationResult.mapeoUnificado?.map((m, idx) => (
-              <div key={idx} style={{ background: '#fff', padding: '10px 12px', borderRadius: '12px', border: '1px solid #dbeafe', marginBottom: '8px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                  <strong style={{ fontSize: '12px', color: '#0f172a', fontWeight: '800' }}>{m.ejercicioOriginal} ➔ <span style={{ color: '#0066ff' }}>{m.mapeoEquivalente}</span></strong>
-                  <code style={{ background: '#f1f5f9', color: '#334155', padding: '2px 6px', borderRadius: '6px', fontSize: '10px', fontWeight: '800' }}>{m.codigoOficial}</code>
-                </div>
-                <span style={{ fontSize: '11px', color: '#64748b' }}>{m.justificacion}</span>
-              </div>
-            ))}
-          </div>
-        )}
       </div>
-
-      {/* BOTÓN AUDITORÍA INTEGRAL DE IA DE DEEPSEEK */}
-      <div style={{ marginBottom: '20px' }}>
-        <button
-          type="button"
-          onClick={handleAuditDatabaseAI}
-          disabled={isAnalyzingDb}
-          className="btn btn-primary"
-          style={{ width: '100%', background: 'linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)', padding: '16px', borderRadius: '22px', fontSize: '15px', fontWeight: '900', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', boxShadow: '0 8px 25px rgba(124, 58, 237, 0.35)' }}
-        >
-          {isAnalyzingDb ? <Loader2 size={20} className="animate-spin" /> : <Cpu size={20} />}
-          {isAnalyzingDb ? 'Auditando Base de Datos con IA...' : '🧬 Auditoría Integral AI de Rutinas & Nutrición'}
-        </button>
-      </div>
-
-      {/* RESULTADO AUDITORÍA INTEGRAL AI */}
-      {dbAuditResult && (
-        <div className="card animate-fade" style={{ padding: '20px', marginBottom: '22px', background: 'linear-gradient(135deg, #f5f3ff 0%, #ffffff 100%)', border: '1.5px solid #d8b4fe', borderRadius: '26px' }}>
-          <div className="flex-between" style={{ marginBottom: '14px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <SparklesIcon size={24} color="#7c3aed" />
-              <strong style={{ fontSize: '17px', color: '#4c1d95', fontWeight: '900' }}>Veredicto NutriConsult AI</strong>
-            </div>
-            <button type="button" onClick={() => setDbAuditResult(null)} style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}>
-              <X size={22} color="#64748b" />
-            </button>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '14px', background: '#ffffff', padding: '14px', borderRadius: '18px', border: '1px solid #e9d5ff', marginBottom: '14px' }}>
-            <div style={{ width: '54px', height: '54px', borderRadius: '27px', background: '#7c3aed', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', fontWeight: '900', flexShrink: 0 }}>
-              {dbAuditResult.puntajeAdherencia?.split('/')[0] || '90'}
-            </div>
-            <div>
-              <span style={{ fontSize: '11px', textTransform: 'uppercase', color: '#6d28d9', fontWeight: '900' }}>Puntuación de Adherencia Clínica</span>
-              <strong style={{ display: 'block', fontSize: '16px', color: '#1e1b4b', fontWeight: '900' }}>{dbAuditResult.puntajeAdherencia}</strong>
-              <span style={{ fontSize: '12px', color: '#475569', fontWeight: '600' }}>{dbAuditResult.predicciónFisiologica}</span>
-            </div>
-          </div>
-
-          <div style={{ display: 'grid', gap: '12px', marginBottom: '14px' }}>
-            <strong style={{ fontSize: '13px', color: '#581c87', fontWeight: '900', textTransform: 'uppercase' }}>🔍 Hallazgos Clave Detectados:</strong>
-            {dbAuditResult.hallazgosClave?.map((h, idx) => (
-              <div key={idx} style={{ background: '#ffffff', padding: '12px 14px', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
-                <strong style={{ display: 'block', fontSize: '14px', color: '#0f172a', marginBottom: '4px' }}>{h.titulo}</strong>
-                <span style={{ fontSize: '13px', color: '#475569', lineHeight: '1.5' }}>{h.detalle}</span>
-              </div>
-            ))}
-          </div>
-
-          {dbAuditResult.ajustadorDeAlacena && (
-            <div style={{ background: '#fffbeb', border: '1px solid #fde047', padding: '12px', borderRadius: '16px', fontSize: '12px', color: '#78350f', fontWeight: '700' }}>
-              💡 <strong>Tip para Alacena:</strong> {dbAuditResult.ajustadorDeAlacena}
-            </div>
-          )}
-        </div>
-      )}
 
       {/* KPIs Clínicos Apple Liquid Glass */}
       <div className="grid-3" style={{ marginBottom: '18px' }}>

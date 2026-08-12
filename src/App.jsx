@@ -38,6 +38,7 @@ async function migrateLocalStorageToIndexedDB() {
 // Code Splitting por pestañas para velocidad de carga instantánea (~200KB por chunk)
 const WorkoutDay = lazy(() => import('./components/WorkoutDay'));
 const HistoryView = lazy(() => import('./components/HistoryView'));
+const BodyWeightView = lazy(() => import('./components/BodyWeightView'));
 
 function PageLoader() {
   return (
@@ -151,6 +152,7 @@ function AppContent() {
         <Routes>
           <Route path="/" element={<WorkoutDay />} />
           <Route path="/history" element={<HistoryView />} />
+          <Route path="/weight" element={<BodyWeightView />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>

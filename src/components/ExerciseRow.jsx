@@ -4,7 +4,6 @@ import {
   Plus, Minus, RotateCcw, Search, Video, Play, Square, Flame, MessageSquare, GripVertical, Trash2 
 } from 'lucide-react';
 import { useModal } from './common/UIComponents';
-import { unifyExerciseWithAI } from '../services/deepseek';
 import { useIndexedDB as useLocalStorage } from '../hooks/useIndexedDB';
 import { UNIFIED_EXERCISE_LIBRARY } from '../data/unifiedExerciseLibrary';
 
@@ -88,8 +87,6 @@ export default function ExerciseRow({
   const [activeSubTab, setActiveSubTab] = useState('logger');
   const [machineSetupInput, setMachineSetupInput] = useState(exerciseData.machineSetup || '');
   const [exerciseNotesInput, setExerciseNotesInput] = useState('');
-  const [isUnifying, setIsUnifying] = useState(false);
-  const [apiKey] = useLocalStorage('coachv2_deepseek_apikey', '');
 
   // Estado del Gesto "Dejar Presionado" (Long Press Reorder Mode)
   const [isReorderMode, setIsReorderMode] = useState(false);
@@ -298,36 +295,23 @@ export default function ExerciseRow({
   const handleExecuteSwap = async (candidateName) => {
     if (!candidateName) return;
     try {
-      setIsUnifying(true);
-      const unifiedRes = await unifyExerciseWithAI({
-        apiKey,
-        originalExerciseName: exercise.name,
-        candidateName,
-        muscleGroup: exercise.muscleGroup,
-        currentWeight: previousData[1]?.weight || 80
-      });
-
       if (onSwapExercise) {
         onSwapExercise(exercise.id, {
           name: candidateName,
-          unifiedFunctionCode: unifiedRes.codigoFuncionUnificada,
-          ratio: unifiedRes.ratioCargaRecomendada,
           originalName: exercise.name,
-          biomechanics: unifiedRes.justificacionCientifica || exercise.biomechanics
+          biomechanics: exercise.biomechanics
         });
       }
 
       modal.showAlert({
         title: "🔄 Ejercicio Sustituido",
-        message: `Se cambió a "${candidateName}". Peso predicho: ${unifiedRes.pesoPredicho || 'N/A'}.`,
+        message: `Se cambió a "${candidateName}".`,
         variant: "success"
       });
     } catch (err) {
       if (onSwapExercise) {
         onSwapExercise(exercise.id, { name: candidateName, originalName: exercise.name });
       }
-    } finally {
-      setIsUnifying(false);
     }
   };
 
@@ -1125,7 +1109,6 @@ export default function ExerciseRow({
                     <button
                       key={eq.id}
                       type="button"
-                      disabled={isUnifying}
                       onClick={() => handleExecuteSwap(eq.name)}
                       style={{
                         background: '#ffffff',

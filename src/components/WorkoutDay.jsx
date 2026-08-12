@@ -8,14 +8,7 @@ import MonthlyCalendar from './workout/MonthlyCalendar';
 import GlosarioModal from './common/GlosarioModal';
 import { useIndexedDB as useLocalStorage } from '../hooks/useIndexedDB';
 import { useWorkoutHistory } from '../hooks/useWorkoutHistory';
-import { analyzeWorkoutProgressWithAI } from '../services/deepseek';
-
-import { 
-  CheckCircle, Save, Flame, RefreshCcw, Plus, X, Dumbbell, ShieldCheck, 
-  BookOpen, Zap, ChevronDown, ChevronUp, Activity, Sparkles, Cloud, Check, 
-  Loader2, Cpu, Layers, Database, History, Trash2, Copy, Settings2, Calendar as CalendarIcon,
-  HelpCircle
-} from 'lucide-react';
+import { Target, Calendar as CalendarIcon, Clock, ArrowRight, Loader2, Dumbbell, Save, Activity, Trash2, Cpu, FileText, CheckCircle, RotateCcw, ChevronDown, ChevronUp, RefreshCw, Plus, X, Layers, Settings2, Cloud, FileSpreadsheet, Lock, Sparkles, BookOpen, Copy, HelpCircle } from 'lucide-react';
 import { useModal } from './common/UIComponents';
 
 export default function WorkoutDay() {
@@ -398,30 +391,77 @@ export default function WorkoutDay() {
     });
   };
 
-  const handleOptimizeWithAI = async () => {
-    if (!apiKey) {
-      modal.showAlert({
-        title: "🔑 Falta Clave API DeepSeek",
-        message: "Ingresa tu clave API de DeepSeek en el menú secundario de herramientas.",
-        variant: "warning"
-      });
-      return;
-    }
+  const handleOptimizeWithMath = () => {
+    setIsAnalyzingAI(true);
+    
+    // Simulate slight processing time for UI effect
+    setTimeout(() => {
+      let analysisText = `Análisis Biomecánico - ${currentDay.name}\n\n`;
+      let improvements = 0;
+      let totalExercises = 0;
 
-    try {
-      setIsAnalyzingAI(true);
-      const res = await analyzeWorkoutProgressWithAI({
-        apiKey,
-        workoutHistory,
-        currentDayName: currentDay.name,
-        muscleGroupStats: {}
+      currentDay.exercises.forEach(ex => {
+        const todayLogs = todayWorkoutData[ex.id] || {};
+        const prevLogs = previousExercisesData[ex.id] || {};
+        
+        let todayMaxWeight = 0;
+        let todayMaxReps = 0;
+        let todayEpley = 0;
+
+        Object.keys(todayLogs).forEach(set => {
+          if (!isNaN(parseInt(set)) && todayLogs[set].completed) {
+            const w = parseFloat(todayLogs[set].weight) || 0;
+            const r = parseInt(todayLogs[set].reps) || 0;
+            const epley = w * (1 + (r / 30));
+            if (w > todayMaxWeight) { todayMaxWeight = w; todayMaxReps = r; }
+            if (epley > todayEpley) todayEpley = epley;
+          }
+        });
+
+        if (todayMaxWeight > 0) {
+          totalExercises++;
+          let prevMaxWeight = 0;
+          let prevMaxReps = 0;
+          let prevEpley = 0;
+
+          Object.keys(prevLogs).forEach(set => {
+             if (!isNaN(parseInt(set)) && prevLogs[set].completed) {
+                const w = parseFloat(prevLogs[set].weight) || 0;
+                const r = parseInt(prevLogs[set].reps) || 0;
+                const epley = w * (1 + (r / 30));
+                if (w > prevMaxWeight) { prevMaxWeight = w; prevMaxReps = r; }
+                if (epley > prevEpley) prevEpley = epley;
+             }
+          });
+
+          if (prevMaxWeight > 0) {
+            if (todayEpley > prevEpley) {
+              improvements++;
+              if (todayMaxWeight > prevMaxWeight) {
+                analysisText += `✅ ${ex.name}: +${todayMaxWeight - prevMaxWeight} lbs. ¡Sobrecarga por tensión mecánica lograda!\n`;
+              } else if (todayMaxReps > prevMaxReps) {
+                analysisText += `✅ ${ex.name}: +${todayMaxReps - prevMaxReps} reps. ¡Progresión en volumen y resistencia muscular!\n`;
+              }
+            } else if (todayEpley === prevEpley) {
+               analysisText += `⚖️ ${ex.name}: Carga mantenida. Intenta empujar al fallo la próxima sesión o aplicar parciales elongadas.\n`;
+            } else {
+               analysisText += `⚠️ ${ex.name}: Ligero descenso de fuerza. Asegúrate de descansar bien el SNC y comer carbohidratos previos.\n`;
+            }
+          } else {
+            analysisText += `📌 ${ex.name}: Línea base establecida (${todayMaxWeight} lbs). Progreso rastreable a partir de la próxima semana.\n`;
+          }
+        }
       });
-      setAiAnalysisResult(res);
-    } catch (err) {
-      modal.showAlert({ title: "Error en IA", message: err.message, variant: "danger" });
-    } finally {
+
+      if (totalExercises === 0) {
+        analysisText = "No hay series completadas hoy para realizar análisis matemático.";
+      } else {
+        analysisText += `\n🎯 Resumen: Lograste sobrecarga progresiva real en ${improvements} de ${totalExercises} ejercicios evaluados.`;
+      }
+
+      setAiAnalysisResult({ resumenSobrecarga: analysisText });
       setIsAnalyzingAI(false);
-    }
+    }, 600);
   };
 
 
@@ -883,31 +923,18 @@ export default function WorkoutDay() {
                   {showSecondaryTools ? <ChevronUp size={18} color="#64748b" /> : <ChevronDown size={18} color="#64748b" />}
                 </button>
 
-                {showSecondaryTools && (
+                    {showSecondaryTools && (
                   <div className="animate-fade" style={{ marginTop: '14px', paddingTop: '14px', borderTop: '1px dashed #cbd5e1', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                       <button 
                         type="button"
-                        onClick={handleOptimizeWithAI}
+                        onClick={handleOptimizeWithMath}
                         disabled={isAnalyzingAI}
                         className="btn btn-primary"
-                        style={{ background: 'linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)', padding: '12px', borderRadius: '14px', fontSize: '12px', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                        style={{ width: '100%', background: 'linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)', padding: '12px', borderRadius: '14px', fontSize: '12px', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
                       >
                         {isAnalyzingAI ? <Loader2 size={16} className="animate-spin" /> : <Cpu size={16} />}
-                        {isAnalyzingAI ? 'Consultando...' : '🧠 Optimizar AI'}
+                        {isAnalyzingAI ? 'Calculando...' : '🧠 Optimizar (Epley Math)'}
                       </button>
-
-                      <button 
-                        type="button"
-                        onClick={handleTriggerSync}
-                        disabled={isSyncingSheets}
-                        className="btn btn-outline"
-                        style={{ background: '#ecfdf5', color: '#047857', border: '1.5px solid #6ee7b7', padding: '12px', borderRadius: '14px', fontSize: '12px', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
-                      >
-                        {isSyncingSheets ? <Loader2 size={16} className="animate-spin" /> : <Cloud size={16} color="#10b981" />}
-                        {isSyncingSheets ? 'Subiendo...' : '☁️ Guardar Nube'}
-                      </button>
-                    </div>
 
                     <button
                       type="button"
