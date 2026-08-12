@@ -13,6 +13,9 @@ import { useModal } from './common/UIComponents';
 
 export default function WorkoutDay() {
   const modal = useModal();
+  const todayStr = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(new Date().getDate()).padStart(2, '0')}`;
+  const [selectedDateKey, setSelectedDateKey] = useState(todayStr);
+  
   const [currentDayIndex, setCurrentDayIndex] = useState(() => {
     let day = new Date().getDay();
     if (day === 0) day = 7; 
@@ -128,7 +131,24 @@ export default function WorkoutDay() {
     return sessions[weekKey] ? (sessions[weekKey][dayId] || {}) : {};
   };
 
-  const todayWorkoutData = getDayDataForWeek(currentSessions, currentWeek, currentDay.id);
+  const isViewingHistory = selectedDateKey !== todayStr;
+  let historySession = null;
+  if (isViewingHistory && workoutHistory) {
+    historySession = workoutHistory.find(s => {
+      if (!s.timestamp && !s.date) return false;
+      const d = new Date(s.timestamp || s.date);
+      if (isNaN(d.getTime())) return false;
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      return key === selectedDateKey;
+    });
+  }
+
+  let todayWorkoutData = {};
+  if (historySession) {
+    todayWorkoutData = historySession.exercises || {};
+  } else if (!isViewingHistory) {
+    todayWorkoutData = getDayDataForWeek(currentSessions, currentWeek, currentDay.id);
+  }
 
   const getPreviousDataForDay = () => {
     if (currentWeek > 1) {
@@ -148,6 +168,7 @@ export default function WorkoutDay() {
 
 
   const updateSessionDataForCurrentDay = (updater) => {
+    if (historySession) return; // Read only
     setCurrentSessions(prev => {
       const weekKey = `week_${currentWeek}`;
       let existingWeekData = prev[weekKey] || {};
@@ -427,7 +448,7 @@ export default function WorkoutDay() {
           Object.keys(prevLogs).forEach(set => {
              if (!isNaN(parseInt(set)) && prevLogs[set].completed) {
                 const w = parseFloat(prevLogs[set].weight) || 0;
-                const r = parseInt(prevLogs[set].reps) || 0;
+                const r = parseFloat(prevLogs[set].reps) || 0;
                 const epley = w * (1 + (r / 30));
                 if (w > prevMaxWeight) { prevMaxWeight = w; prevMaxReps = r; }
                 if (epley > prevEpley) prevEpley = epley;
@@ -575,6 +596,7 @@ export default function WorkoutDay() {
         <div>
           <MonthlyCalendar
             workoutHistory={workoutHistory}
+            onSelectDate={(dateKey) => setSelectedDateKey(dateKey)}
             onSelectDayId={(dayId) => {
               const idx = scientificProtocol.findIndex(d => d.id === dayId);
               if (idx >= 0) {
@@ -639,6 +661,7 @@ export default function WorkoutDay() {
                   onClick={() => {
                     setCurrentDayIndex(idx);
                     setExpandedExerciseId(null);
+                    setSelectedDateKey(todayStr); // Reset to active today session when changing tabs
                   }}
                   style={{
                     flexShrink: 0,
@@ -681,6 +704,31 @@ export default function WorkoutDay() {
               {currentDay.focus}
             </p>
           </div>
+
+          {historySession && (
+            <div style={{ background: '#fffbeb', border: '1.5px solid #fde68a', padding: '12px', borderRadius: '16px', marginBottom: '16px', color: '#b45309' }}>
+              <strong style={{ display: 'block', fontSize: '13px' }}>Modo Historial - Solo Lectura</strong>
+              <span style={{ fontSize: '12px' }}>Viendo la rutina guardada del {selectedDateKey}. Las ediciones están deshabilitadas.</span>
+            </div>
+          )}
+          
+          {isViewingHistory && !historySession && (
+            <div style={{ background: '#fef2f2', border: '1.5px solid #fca5a5', padding: '12px', borderRadius: '16px', marginBottom: '16px', color: '#b91c1c' }}>
+              <strong style={{ display: 'block', fontSize: '13px' }}>Fecha sin registro</strong>
+              <span style={{ fontSize: '12px' }}>No hay entrenamiento guardado para el {selectedDateKey}.</span>
+            </div>
+          )}
+
+          {!isViewingHistory && (
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+              <button onClick={() => handleSaveSpecialDay('rest')} style={{ flex: 1, padding: '10px', background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: '12px', fontSize: '12px', fontWeight: '800', color: '#475569', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '4px' }}>
+                💤 Día de Descanso
+              </button>
+              <button onClick={() => handleSaveSpecialDay('miss')} style={{ flex: 1, padding: '10px', background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: '12px', fontSize: '12px', fontWeight: '800', color: '#dc2626', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '4px' }}>
+                ❌ Falta / Ausencia
+              </button>
+            </div>
+          )}
 
           {/* BARRITAS KPI EN VIVO */}
           {currentDay.type === 'workout' && (

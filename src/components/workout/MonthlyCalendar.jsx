@@ -161,7 +161,28 @@ export default function MonthlyCalendar({ workoutHistory = [], onSelectDate, onS
           }
 
           const hasTrained = !!cell.session;
+          const isRestDay = hasTrained && cell.session.isRestDay;
+          const isMissedDay = hasTrained && cell.session.isMissedDay;
+          const isNormalWorkout = hasTrained && !isRestDay && !isMissedDay;
           const isToday = cell.isToday;
+
+          let bg = isToday ? '#eff6ff' : '#f8fafc';
+          let border = isToday ? '2px solid #0066ff' : '1px solid #f1f5f9';
+          let colorNum = isToday ? '#0066ff' : '#334155';
+
+          if (isNormalWorkout) {
+             bg = 'linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)';
+             border = '1.5px solid #6ee7b7';
+             colorNum = '#065f46';
+          } else if (isRestDay) {
+             bg = 'linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)';
+             border = '1.5px solid #d1d5db';
+             colorNum = '#4b5563';
+          } else if (isMissedDay) {
+             bg = 'linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%)';
+             border = '1.5px solid #fca5a5';
+             colorNum = '#b91c1c';
+          }
 
           return (
             <div
@@ -174,12 +195,8 @@ export default function MonthlyCalendar({ workoutHistory = [], onSelectDate, onS
                 minHeight: '58px',
                 padding: '6px 2px',
                 borderRadius: '14px',
-                background: hasTrained 
-                  ? 'linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)' 
-                  : (isToday ? '#eff6ff' : '#f8fafc'),
-                border: isToday 
-                  ? '2px solid #0066ff' 
-                  : (hasTrained ? '1.5px solid #6ee7b7' : '1px solid #f1f5f9'),
+                background: bg,
+                border: border,
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
@@ -192,18 +209,22 @@ export default function MonthlyCalendar({ workoutHistory = [], onSelectDate, onS
               <span style={{ 
                 fontSize: '12px', 
                 fontWeight: isToday || hasTrained ? '900' : '700', 
-                color: hasTrained ? '#065f46' : (isToday ? '#0066ff' : '#334155') 
+                color: colorNum 
               }}>
                 {cell.dayNumber}
               </span>
 
-              {hasTrained ? (
+              {isNormalWorkout ? (
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1px' }}>
                   <CheckCircle2 size={12} color="#059669" />
                   <span style={{ fontSize: '9px', fontWeight: '800', color: '#047857' }}>
                     {cell.session.volume ? `${Math.round(cell.session.volume / 1000)}k` : '✓'}
                   </span>
                 </div>
+              ) : isRestDay ? (
+                <span style={{ fontSize: '14px', lineHeight: '1' }} title="Día de Descanso">💤</span>
+              ) : isMissedDay ? (
+                <span style={{ fontSize: '14px', lineHeight: '1' }} title="Falta">❌</span>
               ) : (
                 <span style={{ fontSize: '12px', lineHeight: '1' }} title={`Día ${cell.dayId.toUpperCase()}`}>
                   {cell.iconSymbol}
