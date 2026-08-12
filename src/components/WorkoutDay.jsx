@@ -8,7 +8,7 @@ import MonthlyCalendar from './workout/MonthlyCalendar';
 import GlosarioModal from './common/GlosarioModal';
 import { useIndexedDB as useLocalStorage } from '../hooks/useIndexedDB';
 import { useWorkoutHistory } from '../hooks/useWorkoutHistory';
-import { Target, Calendar as CalendarIcon, Clock, ArrowRight, Loader2, Dumbbell, Save, Activity, Trash2, Cpu, FileText, CheckCircle, RotateCcw, ChevronDown, ChevronUp, RefreshCw, Plus, X, Layers, Settings2, Cloud, FileSpreadsheet, Lock, Sparkles, BookOpen, Copy, HelpCircle } from 'lucide-react';
+import { Target, Calendar as CalendarIcon, Clock, ArrowRight, Loader2, Dumbbell, Save, Activity, Trash2, Cpu, FileText, CheckCircle, RotateCcw, ChevronDown, ChevronUp, RefreshCw, RefreshCcw, Plus, X, Layers, Settings2, Cloud, FileSpreadsheet, Lock, Sparkles, BookOpen, Copy, HelpCircle, Check, Flame, ShieldCheck, Zap, Database, History } from 'lucide-react';
 import { useModal } from './common/UIComponents';
 
 export default function WorkoutDay() {
