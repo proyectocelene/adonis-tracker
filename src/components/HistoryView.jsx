@@ -17,6 +17,8 @@ export default function HistoryView() {
   const [currentSessions, setCurrentSessions, isSessionsLoading] = useLocalStorage('coachv2_active_workouts', {});
   const [customExercisesMap, setCustomExercisesMap, isCustomLoading] = useLocalStorage('coachv2_custom_day_exercises', {});
 
+  const isLoadingDb = isHistoryLoading || isSessionsLoading || isCustomLoading;
+
   // Explorador de Base de Datos y Unificación AI
   const [selectedDbFilter, setSelectedDbFilter] = useState('Todos');
   const [dbSearchTerm, setDbSearchTerm] = useState('');
