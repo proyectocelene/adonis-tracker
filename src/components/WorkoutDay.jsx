@@ -1,11 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { scientificProtocol } from '../data/scientificProtocol';
 import { UNIFIED_EXERCISE_LIBRARY } from '../data/unifiedExerciseLibrary';
 import ExerciseRow from './ExerciseRow';
 import CardioLogger from './CardioLogger';
-import WeekHeader from './workout/WeekHeader';
+import TimelineSelector from './workout/TimelineSelector';
 import MonthlyCalendar from './workout/MonthlyCalendar';
 import GlosarioModal from './common/GlosarioModal';
+import RoutineManagerModal from './workout/RoutineManagerModal';
+import GymMembershipReminder from './common/GymMembershipReminder';
+import { getPreviousDataForExercise } from '../utils/exerciseMatcher';
 import { useIndexedDB as useLocalStorage } from '../hooks/useIndexedDB';
 import { useWorkoutHistory } from '../hooks/useWorkoutHistory';
 import { Target, Calendar as CalendarIcon, Clock, ArrowRight, Loader2, Dumbbell, Save, Activity, Trash2, Cpu, FileText, CheckCircle, RotateCcw, ChevronDown, ChevronUp, RefreshCw, RefreshCcw, Plus, X, Layers, Settings2, Cloud, FileSpreadsheet, Lock, Sparkles, BookOpen, Copy, HelpCircle, Check, Flame, ShieldCheck, Zap, Database, History } from 'lucide-react';
@@ -14,31 +17,34 @@ import { useModal } from './common/UIComponents';
 export default function WorkoutDay() {
   const modal = useModal();
   const todayStr = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(new Date().getDate()).padStart(2, '0')}`;
-  const [selectedDateKey, setSelectedDateKey] = useState(todayStr);
   
+  // 1. Estados y Hooks de Base de Datos / LocalStorage al inicio
+  const [customRoutine, setCustomRoutine] = useLocalStorage('coachv2_custom_routine', null);
+  const [mesocycleStartDate, setMesocycleStartDate] = useLocalStorage('coachv2_mesocycle_start', null);
+  const [customExercisesMap, setCustomExercisesMap] = useLocalStorage('coachv2_custom_day_exercises', {});
+  const [swappedExercisesMap, setSwappedExercisesMap] = useLocalStorage('coachv2_swapped_exercises', {});
+  const [exerciseOrderMap, setExerciseOrderMap] = useLocalStorage('coachv2_exercise_orders', {});
+  const [globalWarmupDone, setGlobalWarmupDone] = useLocalStorage('coachv2_global_warmup', {});
+  const [currentSessions, setCurrentSessions, isSessionsLoading] = useLocalStorage('coachv2_active_workouts', {});
+  const [bodyMetrics, , isMetricsLoading] = useLocalStorage('coachv2_body_metrics_history', []);
+  const [workoutHistory, setWorkoutHistory, isHistoryLoading, saveSession] = useWorkoutHistory();
+  const [apiKey] = useLocalStorage('coachv2_deepseek_apikey', '');
+  const [googleSheetsUrl, setGoogleSheetsUrl] = useLocalStorage('coachv2_google_sheets_url', 'https://script.google.com/macros/s/AKfycbxA-KbUcEgWUq4jvjdSBxLw3tGsgPxXsF2Y7mX5JsNIpE2qslN1v7xW3NqdJ3-4b-RCwg/exec');
+
+  const isLoadingDb = isHistoryLoading || isSessionsLoading || isMetricsLoading;
+
+  // 2. Estados locales de navegación y vistas
+  const [selectedDateKey, setSelectedDateKey] = useState(todayStr);
   const [currentDayIndex, setCurrentDayIndex] = useState(() => {
     let day = new Date().getDay();
     if (day === 0) day = 7; 
     return day - 1;
   });
-  
-  const baseDay = scientificProtocol[currentDayIndex];
-  const [currentWeek, setCurrentWeek] = useLocalStorage('coachv2_current_week', 1);
-  const [totalWeeks, setTotalWeeks] = useLocalStorage('coachv2_total_weeks', 8);
-  const [customExercisesMap, setCustomExercisesMap] = useLocalStorage('coachv2_custom_day_exercises', {});
-  const [swappedExercisesMap, setSwappedExercisesMap] = useLocalStorage('coachv2_swapped_exercises', {});
-  const [exerciseOrderMap, setExerciseOrderMap] = useLocalStorage('coachv2_exercise_orders', {});
-  const [globalWarmupDone, setGlobalWarmupDone] = useLocalStorage('coachv2_global_warmup', {});
 
-  // Modo de vista exclusivo: Calendario Mensual vs Rutina de hoy
   const [showMonthlyCalendar, setShowMonthlyCalendar] = useState(true);
   const [showGlosarioModal, setShowGlosarioModal] = useState(false);
-  
-  // API Keys y Google Sheets Settings
-  const [apiKey] = useLocalStorage('coachv2_deepseek_apikey', '');
-  const [googleSheetsUrl, setGoogleSheetsUrl] = useLocalStorage('coachv2_google_sheets_url', 'https://script.google.com/macros/s/AKfycbxA-KbUcEgWUq4jvjdSBxLw3tGsgPxXsF2Y7mX5JsNIpE2qslN1v7xW3NqdJ3-4b-RCwg/exec');
-  
   const [isAddingExercise, setIsAddingExercise] = useState(false);
+  const [newExScope, setNewExScope] = useState('today'); // 'today' | 'permanent'
   const [showRoutineBuilder, setShowRoutineBuilder] = useState(false);
   const [showSecondaryTools, setShowSecondaryTools] = useState(false);
 
@@ -49,33 +55,101 @@ export default function WorkoutDay() {
   const [newExRest, setNewExRest] = useState('90 s');
   const [newExBiomech, setNewExBiomech] = useState('');
   const [newExMuscleGroup, setNewExMuscleGroup] = useState('General');
-  const [newExTargetDay, setNewExTargetDay] = useState(baseDay.id);
 
   // Acordeón Exclusivo de Ejercicio
   const [expandedExerciseId, setExpandedExerciseId] = useState(null);
 
-  const userCustomForDay = customExercisesMap[baseDay.id] || [];
-  const rawExercises = [...(baseDay.exercises || []), ...userCustomForDay];
-
-  // Estados AI y Sincronización
+  // Estados AI
   const [isAnalyzingAI, setIsAnalyzingAI] = useState(false);
   const [aiAnalysisResult, setAiAnalysisResult] = useState(null);
 
-  // Nota: Como useIndexedDB devuelve [value, setValue, isLoading], podemos desestructurar:
-  const [workoutHistory, setWorkoutHistory, isHistoryLoading, saveSession] = useWorkoutHistory();
-  const [currentSessions, setCurrentSessions, isSessionsLoading] = useLocalStorage('coachv2_active_workouts', {});
-  const [bodyMetrics, , isMetricsLoading] = useLocalStorage('coachv2_body_metrics_history', []);
-  
-  const isLoadingDb = isHistoryLoading || isSessionsLoading || isMetricsLoading;
+  // 3. Variables derivadas en orden estricto de dependencias
+  const activeDays = (customRoutine && Array.isArray(customRoutine) && customRoutine.length > 0) ? customRoutine : scientificProtocol;
+  const baseDay = activeDays[currentDayIndex] || activeDays[0] || scientificProtocol[0];
+  const [newExTargetDay, setNewExTargetDay] = useState(baseDay.id);
 
-  if (isLoadingDb) {
-    return (
-      <div style={{ minHeight: '60vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '12px', color: '#0066ff' }}>
-        <Loader2 size={32} style={{ animation: 'spin 1s linear infinite' }} />
-        <span style={{ fontSize: '13px', fontWeight: '700', color: '#64748b' }}>Leyendo Base de Datos...</span>
-      </div>
-    );
+  // === CÁLCULO DE SEMANA AUTOMÁTICO ===
+  let currentWeek = 1;
+  if (mesocycleStartDate) {
+    const startDate = new Date(mesocycleStartDate);
+    startDate.setHours(0,0,0,0);
+    const startDay = startDate.getDay() || 7;
+    startDate.setDate(startDate.getDate() - startDay + 1); // Lunes de esa semana
+
+    const selectedDateObj = new Date(selectedDateKey + 'T12:00:00');
+    const diffTime = selectedDateObj.getTime() - startDate.getTime();
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    const calculatedWeek = Math.floor(diffDays / 7) + 1;
+    currentWeek = calculatedWeek > 0 ? calculatedWeek : 1;
+  } else if (!isHistoryLoading && workoutHistory && workoutHistory.length > 0) {
+    const earliest = workoutHistory.reduce((min, s) => {
+      const d = new Date(s.timestamp || s.date).getTime();
+      return d < min ? d : min;
+    }, Infinity);
+    if (earliest !== Infinity) {
+      setMesocycleStartDate(new Date(earliest).toISOString());
+    }
+  } else if (!isHistoryLoading && workoutHistory && workoutHistory.length === 0 && !mesocycleStartDate) {
+    setMesocycleStartDate(new Date().toISOString());
   }
+
+  // === SINCRONIZAR currentDayIndex CON FECHA ===
+  useEffect(() => {
+    const d = new Date(selectedDateKey + 'T12:00:00');
+    if (!isNaN(d.getTime())) {
+      let day = d.getDay();
+      if (day === 0) day = 7;
+      setCurrentDayIndex(day - 1);
+    }
+  }, [selectedDateKey]);
+
+  const isViewingHistory = selectedDateKey !== todayStr;
+  let historySession = null;
+  if (isViewingHistory && workoutHistory) {
+    historySession = workoutHistory.find(s => {
+      if (!s.timestamp && !s.date) return false;
+      const d = new Date(s.timestamp || s.date);
+      if (isNaN(d.getTime())) return false;
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      return key === selectedDateKey;
+    });
+  }
+
+  const getDayDataForWeek = (sessions, week, dayId) => {
+    if (!sessions) return {};
+    const weekKey = `week_${week}`;
+    if (!sessions[weekKey] && week === 1 && sessions[dayId]) {
+      return sessions[dayId] || {};
+    }
+    return sessions[weekKey] ? (sessions[weekKey][dayId] || {}) : {};
+  };
+
+  const userCustomForDay = customExercisesMap[baseDay.id] || [];
+  const baseDayExercises = baseDay.exercises || [];
+  
+  // Extraer cualquier ejercicio temporal agregado exclusivamente para la sesión de hoy
+  const temporaryTodayExercises = [];
+  const activeSessionWeek = currentSessions ? (currentSessions[`week_${currentWeek}`] || (currentWeek === 1 ? currentSessions : {})) : {};
+  const rawDayData = isViewingHistory ? (historySession?.exercises || {}) : (activeSessionWeek[baseDay.id] || {});
+  
+  Object.keys(rawDayData).forEach(exId => {
+    const d = rawDayData[exId];
+    if (d && (d.isTemporaryToday || exId.startsWith('temp_today_')) && !baseDayExercises.some(e => e.id === exId) && !userCustomForDay.some(e => e.id === exId)) {
+      temporaryTodayExercises.push({
+        id: exId,
+        name: d.name || 'Ejercicio Hoy',
+        muscleGroup: d.muscleGroup || 'General',
+        sets: d.customSetsCount || 3,
+        reps: d.reps || '10-12',
+        restTime: d.restTime || '90 s',
+        biomechanics: d.biomechanics || 'Control de técnica e IAP.',
+        isTemporaryToday: true,
+        isCustom: true
+      });
+    }
+  });
+
+  const rawExercises = [...baseDayExercises, ...userCustomForDay, ...temporaryTodayExercises];
 
   // Reordenamiento dinámico por día (para máquinas ocupadas)
   const customOrder = exerciseOrderMap[baseDay.id];
@@ -123,26 +197,6 @@ export default function WorkoutDay() {
     }));
   };
 
-  const getDayDataForWeek = (sessions, week, dayId) => {
-    const weekKey = `week_${week}`;
-    if (!sessions[weekKey] && week === 1 && sessions[dayId]) {
-      return sessions[dayId] || {};
-    }
-    return sessions[weekKey] ? (sessions[weekKey][dayId] || {}) : {};
-  };
-
-  const isViewingHistory = selectedDateKey !== todayStr;
-  let historySession = null;
-  if (isViewingHistory && workoutHistory) {
-    historySession = workoutHistory.find(s => {
-      if (!s.timestamp && !s.date) return false;
-      const d = new Date(s.timestamp || s.date);
-      if (isNaN(d.getTime())) return false;
-      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-      return key === selectedDateKey;
-    });
-  }
-
   let todayWorkoutData = {};
   if (historySession) {
     todayWorkoutData = historySession.exercises || {};
@@ -164,8 +218,6 @@ export default function WorkoutDay() {
 
   const previousExercisesData = getPreviousDataForDay();
   const previousSession = [...workoutHistory].reverse().find(s => s.dayId === currentDay.id);
-
-
 
   const updateSessionDataForCurrentDay = (updater) => {
     if (historySession) return; // Read only
@@ -260,20 +312,24 @@ export default function WorkoutDay() {
 
   const handleSwapExercise = (exerciseId, newExerciseData) => {
     setSwappedExercisesMap(prev => {
-      const daySwaps = prev[baseDay.id] || {};
+      const daySwaps = { ...(prev[baseDay.id] || {}) };
+      if (!newExerciseData) {
+        delete daySwaps[exerciseId];
+      } else {
+        daySwaps[exerciseId] = newExerciseData;
+      }
       return {
         ...prev,
-        [baseDay.id]: {
-          ...daySwaps,
-          [exerciseId]: newExerciseData
-        }
+        [baseDay.id]: daySwaps
       };
     });
-    modal.showAlert({
-      title: "🔄 Ejercicio Sustituido",
-      message: `El ejercicio fue actualizado por "${newExerciseData.name}".`,
-      variant: "success"
-    });
+    if (newExerciseData) {
+      modal.showAlert({
+        title: "🔄 Ejercicio Sustituido",
+        message: `El ejercicio fue actualizado por "${newExerciseData.name}".`,
+        variant: "success"
+      });
+    }
   };
 
   const handlePickFromLibrary = (libId) => {
@@ -293,33 +349,65 @@ export default function WorkoutDay() {
     e.preventDefault();
     if (!newExName.trim()) return;
 
-    const targetDayId = newExTargetDay || baseDay.id;
-    const newEx = {
-      id: `custom_${Date.now()}`,
-      name: newExName.trim(),
-      muscleGroup: newExMuscleGroup,
-      sets: parseInt(newExSets) || 3,
-      reps: newExReps.trim() || '10-12',
-      restTime: newExRest.trim() || '90 s',
-      biomechanics: newExBiomech.trim() || 'Control de técnica e IAP.',
-      isCustom: true
-    };
-
-    setCustomExercisesMap(prev => {
-      const dayCustoms = prev[targetDayId] || [];
-      return {
-        ...prev,
-        [targetDayId]: [...dayCustoms, newEx]
+    if (newExScope === 'today') {
+      const newExId = `temp_today_${Date.now()}`;
+      const setsCount = parseInt(newExSets) || 3;
+      updateSessionDataForCurrentDay(dayData => {
+        const initialSets = {};
+        for (let s = 1; s <= setsCount; s++) {
+          initialSets[s] = { weight: '', reps: newExReps.split('-')[0] || '10', rpe: '8', completed: false, unit: 'lbs' };
+        }
+        return {
+          ...dayData,
+          [newExId]: {
+            name: newExName.trim(),
+            muscleGroup: newExMuscleGroup,
+            customSetsCount: setsCount,
+            reps: newExReps.trim() || '10-12',
+            restTime: newExRest.trim() || '90 s',
+            biomechanics: newExBiomech.trim() || 'Control de técnica e IAP.',
+            isTemporaryToday: true,
+            isCustom: true,
+            ...initialSets
+          }
+        };
+      });
+      setNewExName('');
+      setIsAddingExercise(false);
+      modal.showAlert({
+        title: "📌 Ejercicio Añadido a Hoy",
+        message: `"${newExName.trim()}" fue agregado exclusivamente a la sesión de hoy.`,
+        variant: "success"
+      });
+    } else {
+      const targetDayId = newExTargetDay || baseDay.id;
+      const newEx = {
+        id: `custom_${Date.now()}`,
+        name: newExName.trim(),
+        muscleGroup: newExMuscleGroup,
+        sets: parseInt(newExSets) || 3,
+        reps: newExReps.trim() || '10-12',
+        restTime: newExRest.trim() || '90 s',
+        biomechanics: newExBiomech.trim() || 'Control de técnica e IAP.',
+        isCustom: true
       };
-    });
 
-    setNewExName('');
-    setIsAddingExercise(false);
-    modal.showAlert({
-      title: "💪 Ejercicio Guardado",
-      message: `"${newEx.name}" fue agregado a la rutina.`,
-      variant: "success"
-    });
+      setCustomExercisesMap(prev => {
+        const dayCustoms = prev[targetDayId] || [];
+        return {
+          ...prev,
+          [targetDayId]: [...dayCustoms, newEx]
+        };
+      });
+
+      setNewExName('');
+      setIsAddingExercise(false);
+      modal.showAlert({
+        title: "🔄 Ejercicio Guardado en Rutina",
+        message: `"${newEx.name}" fue agregado a la rutina fija de ${baseDay.name}.`,
+        variant: "success"
+      });
+    }
   };
 
   const calculateVolumeAndSets = () => {
@@ -353,6 +441,36 @@ export default function WorkoutDay() {
 
   const { volume, completedSets, cardioCompleted } = calculateVolumeAndSets();
 
+  // Guardado Automático en Segundo Plano
+  useEffect(() => {
+    if (historySession || completedSets === 0 || isViewingHistory) return;
+
+    const autoSaveTimer = setTimeout(async () => {
+      // Create predictable ID based on date
+      const sessionId = `ses_${todayStr}_${currentDay.id}`;
+      
+      const sessionLog = {
+        id: sessionId,
+        weekNumber: currentWeek,
+        weekName: `Semana ${currentWeek}`,
+        timestamp: new Date().toISOString(),
+        dateString: new Date().toLocaleDateString('es-ES', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }),
+        dayId: currentDay.id,
+        dayName: currentDay.name,
+        focus: currentDay.focus,
+        volume,
+        completedSets,
+        cardioCompleted,
+        exercises: todayWorkoutData
+      };
+
+      await saveSession(sessionLog);
+      console.log('✅ Auto-guardado en la nube:', sessionLog.id);
+    }, 2000); // Debounce de 2 segundos para evitar spam a Firebase
+
+    return () => clearTimeout(autoSaveTimer);
+  }, [todayWorkoutData, volume, completedSets, cardioCompleted, historySession, isViewingHistory, currentWeek, currentDay, todayStr, saveSession]);
+
   const handleFinishWorkout = () => {
     modal.showConfirm({
       title: `🏁 ¿Archivar Sesión en Bitácora?`,
@@ -361,8 +479,9 @@ export default function WorkoutDay() {
       cancelText: "Continuar Entrenando",
       variant: "success",
       onConfirm: async () => {
+        const sessionId = `ses_${todayStr}_${currentDay.id}`;
         const newSessionLog = {
-          id: `ses_${Date.now()}`,
+          id: sessionId,
           weekNumber: currentWeek,
           weekName: `Semana ${currentWeek}`,
           timestamp: new Date().toISOString(),
@@ -408,6 +527,48 @@ export default function WorkoutDay() {
       variant: "warning",
       onConfirm: () => {
         updateSessionDataForCurrentDay(() => ({}));
+      }
+    });
+  };
+
+  const handleResetToOfficialRoutine = () => {
+    modal.showConfirm({
+      title: "↺ Restablecer a Rutina Oficial",
+      message: `¿Deseas restablecer ${baseDay.name} a la plantilla oficial limpia del Protocolo Adonis?\n\nSe eliminarán los swaps y ejercicios personalizados añadidos a este día. Tu historial previo de entrenamientos no se borrará.`,
+      confirmText: "Restablecer a Oficial",
+      cancelText: "Cancelar",
+      variant: "warning",
+      onConfirm: () => {
+        setCustomExercisesMap(prev => ({ ...prev, [baseDay.id]: [] }));
+        setSwappedExercisesMap(prev => ({ ...prev, [baseDay.id]: {} }));
+        setExerciseOrderMap(prev => ({ ...prev, [baseDay.id]: [] }));
+        setCustomRoutine(null);
+        modal.showAlert({
+          title: "✅ Rutina Restablecida",
+          message: `${baseDay.name} ahora muestra exactamente los ejercicios del Protocolo Adonis Definitivo.`,
+          variant: "success"
+        });
+      }
+    });
+  };
+
+  const handleResetAllDaysToOfficial = () => {
+    modal.showConfirm({
+      title: "✨ Activar Protocolo Adonis Oficial en Toda la Semana",
+      message: "Se limpiarán todas las sustituciones y ejercicios añadidos en los 7 días para activar la lista oficial limpia del Protocolo Adonis Definitivo.\n\nTu historial de marcas y bitácoras anteriores permanecerá 100% a salvo e intacto.",
+      confirmText: "✨ Sí, Activar en Todos los Días",
+      cancelText: "Cancelar",
+      variant: "warning",
+      onConfirm: () => {
+        setCustomExercisesMap({});
+        setSwappedExercisesMap({});
+        setExerciseOrderMap({});
+        setCustomRoutine(null);
+        modal.showAlert({
+          title: "🎉 Protocolo Adonis Definitivo Activado",
+          message: "Todos los días de la semana ahora muestran la plantilla oficial limpia.",
+          variant: "success"
+        });
       }
     });
   };
@@ -539,6 +700,15 @@ export default function WorkoutDay() {
   const warmupKey = `${currentWeek}_${currentDay.id}`;
   const isWarmupDone = !!(globalWarmupDone[warmupKey] || (currentWeek === 1 && globalWarmupDone[currentDay.id]));
 
+  if (isLoadingDb) {
+    return (
+      <div style={{ minHeight: '60vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '12px', color: '#0066ff' }}>
+        <Loader2 size={32} style={{ animation: 'spin 1s linear infinite' }} />
+        <span style={{ fontSize: '13px', fontWeight: '700', color: '#64748b' }}>Leyendo Base de Datos...</span>
+      </div>
+    );
+  }
+
   return (
     <div className="container" style={{ paddingBottom: '90px' }}>
       {/* BARRA SUPERIOR DE SELECTOR DE MODO (MUTUAMENTE EXCLUSIVO) */}
@@ -631,78 +801,73 @@ export default function WorkoutDay() {
       ) : (
         /* MODO 2: VISTA DE RUTINA DEL DÍA DE ENTRENAMIENTO (ENFOQUE TOTAL) */
         <div>
-          {/* MESOCICLO & SELECTOR DE SEMANA */}
-          <WeekHeader
-            currentWeek={currentWeek}
-            setCurrentWeek={setCurrentWeek}
-            totalWeeks={totalWeeks}
-            setTotalWeeks={setTotalWeeks}
-            setExpandedExerciseId={setExpandedExerciseId}
-            handleClonePreviousWeek={handleClonePreviousWeek}
-            modal={modal}
-          />
+          {!isViewingHistory && <GymMembershipReminder compact={true} />}
 
-          {/* PESTAÑAS HORIZONTALES PARA CAMBIAR DE DÍA */}
-          <div style={{
-            display: 'flex',
-            gap: '8px',
-            overflowX: 'auto',
-            paddingBottom: '8px',
-            marginBottom: '14px',
-            scrollbarWidth: 'none'
-          }}>
-            {scientificProtocol.map((day, idx) => {
-              const isActive = idx === currentDayIndex;
-              const shortTitle = day.name.split(':')[0].replace('Día ', 'D');
-              return (
-                <button
-                  key={day.id}
-                  type="button"
-                  onClick={() => {
-                    setCurrentDayIndex(idx);
-                    setExpandedExerciseId(null);
-                    setSelectedDateKey(todayStr); // Reset to active today session when changing tabs
-                  }}
-                  style={{
-                    flexShrink: 0,
-                    padding: '10px 16px',
-                    borderRadius: '20px',
-                    fontSize: '13px',
-                    fontWeight: '800',
-                    border: isActive ? 'none' : '1.5px solid #e2e8f0',
-                    background: isActive ? '#0066ff' : '#ffffff',
-                    color: isActive ? '#ffffff' : '#64748b',
-                    boxShadow: isActive ? '0 4px 14px rgba(0, 102, 255, 0.3)' : 'none',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease'
-                  }}
-                >
-                  {shortTitle}
-                </button>
-              );
-            })}
-          </div>
+          <TimelineSelector
+            selectedDateKey={selectedDateKey}
+            setSelectedDateKey={setSelectedDateKey}
+            currentWeek={isViewingHistory && historySession ? historySession.weekNumber : currentWeek}
+            onResetMesocycle={() => {
+              modal.showConfirm({
+                title: "⚠️ ¿Reiniciar Mesociclo?",
+                message: "Esto establecerá HOY como el inicio de la Semana 1. Todo tu historial pasado seguirá guardado, pero el conteo de semanas se reiniciará.",
+                confirmText: "Sí, Reiniciar",
+                variant: "danger",
+                onConfirm: () => {
+                  setMesocycleStartDate(new Date().toISOString());
+                  setSelectedDateKey(todayStr);
+                }
+              });
+            }}
+            onClonePreviousWeek={
+              (!isViewingHistory && currentWeek > 1) ? handleClonePreviousWeek : null
+            }
+            isHistoryLoading={isHistoryLoading}
+          />
 
           {/* ENFOQUE FISIOLÓGICO */}
           <div className="card card-highlight" style={{ padding: '16px', marginBottom: '14px' }}>
             <div className="flex-between">
               <div>
                 <span style={{ fontSize: '11px', color: '#0066ff', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                  Día {currentDay.dayNumber} de 7 • {currentDay.name.split(':')[0]}
+                  Día {currentDay.dayNumber} de 7 • {(historySession ? historySession.dayName : currentDay.name).split(':')[0]}
                 </span>
                 <h2 style={{ margin: '2px 0 0 0', fontSize: '18px', fontWeight: '900', color: '#0f172a' }}>
-                  {currentDay.name.includes(':') ? currentDay.name.split(':')[1] : currentDay.name}
+                  {(historySession ? historySession.dayName : currentDay.name).includes(':') ? (historySession ? historySession.dayName : currentDay.name).split(':')[1] : (historySession ? historySession.dayName : currentDay.name)}
                 </h2>
               </div>
-              {previousSession?.dateString && (
+              {previousSession?.dateString && !isViewingHistory && (
                 <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: '700', background: '#f1f5f9', padding: '4px 8px', borderRadius: '10px' }}>
                   Último: {previousSession.dateString.split(',')[0]}
                 </span>
               )}
             </div>
             <p style={{ fontSize: '13px', marginTop: '8px', color: '#475569', fontWeight: '500', lineHeight: '1.5', margin: '8px 0 0 0' }}>
-              {currentDay.focus}
+              {historySession ? historySession.focus : currentDay.focus}
             </p>
+            {!isViewingHistory && (
+              <div style={{ marginTop: '10px', display: 'flex', justifyContent: 'flex-end', gap: '8px', flexWrap: 'wrap' }}>
+                <button
+                  type="button"
+                  onClick={handleResetToOfficialRoutine}
+                  style={{
+                    background: '#eff6ff',
+                    color: '#1d4ed8',
+                    border: '1px solid #bfdbfe',
+                    padding: '5px 10px',
+                    borderRadius: '10px',
+                    fontSize: '11px',
+                    fontWeight: '800',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}
+                >
+                  <RefreshCw size={12} /> ↺ Restablecer Día a Oficial
+                </button>
+              </div>
+            )}
           </div>
 
           {historySession && (
@@ -845,7 +1010,7 @@ export default function WorkoutDay() {
                     key={exercise.id} 
                     exercise={exercise} 
                     exerciseData={todayWorkoutData[exercise.id]}
-                    previousData={previousExercisesData[exercise.id] || {}}
+                    previousData={getPreviousDataForExercise(exercise, currentDay.id, currentWeek, workoutHistory, currentSessions)}
                     onUpdateSet={(setNum, setData) => handleUpdateSet(exercise.id, setNum, setData)}
                     onUpdateExerciseMeta={(meta) => handleUpdateExerciseMeta(exercise.id, meta)}
                     onSwapExercise={handleSwapExercise}
@@ -873,6 +1038,52 @@ export default function WorkoutDay() {
                   </div>
 
                   <form onSubmit={handleAddCustomExercise}>
+                    {/* SELECTOR DE ÁMBITO (HOY VS PERMANENTE) */}
+                    <div style={{ display: 'flex', gap: '8px', marginBottom: '12px', background: '#f8fafc', padding: '4px', borderRadius: '12px', border: '1.5px solid #e2e8f0' }}>
+                      <button
+                        type="button"
+                        onClick={() => setNewExScope('today')}
+                        style={{
+                          flex: 1,
+                          padding: '8px 10px',
+                          borderRadius: '10px',
+                          border: 'none',
+                          background: newExScope === 'today' ? '#0066ff' : 'transparent',
+                          color: newExScope === 'today' ? '#ffffff' : '#64748b',
+                          fontSize: '11px',
+                          fontWeight: '900',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '4px'
+                        }}
+                      >
+                        📌 Solo para HOY
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setNewExScope('permanent')}
+                        style={{
+                          flex: 1,
+                          padding: '8px 10px',
+                          borderRadius: '10px',
+                          border: 'none',
+                          background: newExScope === 'permanent' ? '#7c3aed' : 'transparent',
+                          color: newExScope === 'permanent' ? '#ffffff' : '#64748b',
+                          fontSize: '11px',
+                          fontWeight: '900',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '4px'
+                        }}
+                      >
+                        🔄 Permanente en Rutina
+                      </button>
+                    </div>
+
                     <div style={{ background: '#f5f3ff', border: '1px solid #a78bfa', padding: '10px', borderRadius: '12px', marginBottom: '12px' }}>
                       <label className="input-label" style={{ display: 'block', marginBottom: '4px', color: '#5b21b6', fontWeight: '800', fontSize: '11px' }}>
                         ⚡️ Elegir de Catálogo de Máquinas Unificado:
@@ -907,21 +1118,23 @@ export default function WorkoutDay() {
                         type="number" 
                         placeholder="Series (ej. 3)" 
                         value={newExSets} 
-                        onChange={e => setNewExSets(e.target.value)}
+                        onChange={e => setNewExSets(e.target.value)} 
                         style={{ padding: '10px', width: '100%', borderRadius: '12px', border: '1.5px solid #cbd5e1', fontWeight: '700', fontSize: '13px' }} 
                       />
                       <input 
                         type="text" 
                         placeholder="Reps (ej. 10-12)" 
                         value={newExReps} 
-                        onChange={e => setNewExReps(e.target.value)}
+                        onChange={e => setNewExReps(e.target.value)} 
                         style={{ padding: '10px', width: '100%', borderRadius: '12px', border: '1.5px solid #cbd5e1', fontWeight: '700', fontSize: '13px' }} 
                       />
                     </div>
 
                     <div className="grid-2" style={{ gap: '10px' }}>
                       <button type="button" className="btn btn-outline" onClick={() => setIsAddingExercise(false)}>Cancelar</button>
-                      <button type="submit" className="btn btn-primary">Guardar</button>
+                      <button type="submit" className="btn btn-primary">
+                        {newExScope === 'today' ? '📌 Añadir a Hoy' : '🔄 Guardar en Rutina'}
+                      </button>
                     </div>
                   </form>
                 </div>
@@ -1005,7 +1218,23 @@ export default function WorkoutDay() {
                       onClick={() => setShowRoutineBuilder(true)}
                       style={{ width: '100%', background: '#1e293b', color: '#ffffff', border: 'none', padding: '12px', borderRadius: '14px', fontSize: '12px', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer' }}
                     >
-                      <Layers size={16} color="#38bdf8" /> 🛠️ Gestor Maestro de Rutinas
+                      <Layers size={16} color="#38bdf8" /> 🛠️ Gestor Maestro de Rutinas (Actualizar / Pegar)
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handleResetToOfficialRoutine}
+                      style={{ width: '100%', background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe', padding: '12px', borderRadius: '14px', fontSize: '12px', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer' }}
+                    >
+                      <RefreshCw size={16} /> ↺ Restablecer {baseDay.name.split(':')[0]} a Rutina Oficial
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handleResetAllDaysToOfficial}
+                      style={{ width: '100%', background: '#ecfdf5', color: '#047857', border: '1.5px solid #6ee7b7', padding: '12px', borderRadius: '14px', fontSize: '12px', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer' }}
+                    >
+                      <Sparkles size={16} color="#059669" /> ✨ Activar Protocolo Adonis Oficial en Toda la Semana
                     </button>
                   </div>
                 )}
@@ -1039,55 +1268,19 @@ export default function WorkoutDay() {
         </div>
       )}
 
-
       {/* MODAL GESTOR DE RUTINA */}
-      {showRoutineBuilder && (
-        <div className="modal-backdrop animate-fade" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.85)', backdropFilter: 'blur(8px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '12px' }}>
-          <div className="modal-content" style={{ width: '100%', maxWidth: '600px', maxHeight: '88vh', background: '#ffffff', borderRadius: '24px', padding: '20px', overflowY: 'auto' }}>
-            <div className="flex-between" style={{ borderBottom: '2px solid #e2e8f0', paddingBottom: '12px', marginBottom: '16px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Database size={22} color="#0066ff" />
-                <strong style={{ fontSize: '16px', color: '#0f172a', fontWeight: '900' }}>Gestor Maestro de Rutinas</strong>
-              </div>
-              <button type="button" onClick={() => setShowRoutineBuilder(false)} style={{ background: '#f1f5f9', border: 'none', padding: '6px', borderRadius: '12px', cursor: 'pointer' }}>
-                <X size={20} color="#475569" />
-              </button>
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {scientificProtocol.map(dayObj => {
-                const dayCustoms = (customExercisesMap || {})[dayObj.id] || [];
-                const allEx = [...(dayObj.exercises || []), ...dayCustoms];
-                return (
-                  <div key={dayObj.id} style={{ border: '1.5px solid #e2e8f0', borderRadius: '16px', padding: '12px', background: dayObj.id === currentDay.id ? '#eff6ff' : '#ffffff' }}>
-                    <div className="flex-between" style={{ marginBottom: '6px' }}>
-                      <strong style={{ fontSize: '13px', color: '#1e293b', fontWeight: '900' }}>
-                        {dayObj.name}
-                      </strong>
-                      <span style={{ fontSize: '11px', color: '#64748b', fontWeight: '700' }}>{allEx.length} ejercicios</span>
-                    </div>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
-                      {allEx.map(ex => (
-                        <span key={ex.id} style={{ background: '#f1f5f9', color: '#334155', padding: '4px 8px', borderRadius: '10px', fontSize: '11px', fontWeight: '700' }}>
-                          {ex.name}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            <button
-              type="button"
-              onClick={() => setShowRoutineBuilder(false)}
-              style={{ width: '100%', background: '#0f172a', color: '#ffffff', border: 'none', padding: '14px', borderRadius: '16px', fontSize: '14px', fontWeight: '900', marginTop: '20px', cursor: 'pointer' }}
-            >
-              Cerrar Gestor
-            </button>
-          </div>
-        </div>
-      )}
+      <RoutineManagerModal
+        isOpen={showRoutineBuilder}
+        onClose={() => setShowRoutineBuilder(false)}
+        activeRoutine={activeDays}
+        customExercisesMap={customExercisesMap}
+        onSaveRoutine={async (newRoutine) => {
+          setCustomRoutine(newRoutine);
+        }}
+        onResetToBaseProtocol={async () => {
+          setCustomRoutine(null);
+        }}
+      />
     </div>
   );
 }

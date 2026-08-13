@@ -6,64 +6,7 @@ import {
 import { useModal } from './common/UIComponents';
 import { useIndexedDB as useLocalStorage } from '../hooks/useIndexedDB';
 import { UNIFIED_EXERCISE_LIBRARY } from '../data/unifiedExerciseLibrary';
-
-const triggerRestTimerNotification = (exerciseName, durationSeconds) => {
-  // 1. Solicitar permiso si no ha sido decidido
-  if ('Notification' in window && Notification.permission === 'default') {
-    Notification.requestPermission();
-  }
-
-  // 2. Vibración Fuerte y Repetida (Vibrar mucho y fuerte)
-  if (navigator.vibrate) {
-    navigator.vibrate([600, 200, 600, 200, 1000, 200, 1000, 200, 1200]);
-  }
-
-  // 3. Tono Sintetizado Potente (Bypass de silencio mediante Web Audio API)
-  try {
-    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-    if (AudioContextClass) {
-      const ctx = new AudioContextClass();
-      [0, 0.25, 0.5, 0.75, 1.0].forEach((delay) => {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(987.77, ctx.currentTime + delay);
-        osc.frequency.exponentialRampToValueAtTime(1318.51, ctx.currentTime + delay + 0.18);
-        gain.gain.setValueAtTime(1.0, ctx.currentTime + delay);
-        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + delay + 0.22);
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start(ctx.currentTime + delay);
-        osc.stop(ctx.currentTime + delay + 0.24);
-      });
-    }
-  } catch (e) {
-    console.warn("Audio Context error:", e);
-  }
-
-  // 4. Notificación de Sistema (PWA / Sistema Operativo)
-  if ('Notification' in window && Notification.permission === 'granted') {
-    const title = '⏱️ ¡TIEMPO DE DESCANSO CONCLUIDO!';
-    const options = {
-      body: `Tu descanso de ${durationSeconds}s para "${exerciseName}" ha concluido. ¡A dar la siguiente serie!`,
-      icon: './pwa-192x192.png',
-      badge: './pwa-192x192.png',
-      tag: `timer-${Date.now()}`,
-      renotify: true,
-      requireInteraction: true,
-      vibrate: [600, 200, 600, 200, 1000]
-    };
-    try {
-      new Notification(title, options);
-    } catch (e) {
-      if (navigator.serviceWorker && navigator.serviceWorker.ready) {
-        navigator.serviceWorker.ready.then(reg => {
-          reg.showNotification(title, options);
-        });
-      }
-    }
-  }
-};
+import { useGlobalTimer } from '../contexts/GlobalTimerContext';
 
 export default function ExerciseRow({
   exercise,
@@ -114,40 +57,7 @@ export default function ExerciseRow({
   const targetReps = exercise.reps || '10-12';
   const restPrescribed = exercise.restTime || '90 s';
   const parsedRestSeconds = parseInt(restPrescribed) || 90;
-
-  const [restTimerSeconds, setRestTimerSeconds] = useState(parsedRestSeconds);
-  const [isTimerActive, setIsTimerActive] = useState(false);
-
-  useEffect(() => {
-    let interval = null;
-    if (isTimerActive && restTimerSeconds > 0) {
-      interval = setInterval(() => {
-        setRestTimerSeconds(prev => prev - 1);
-      }, 1000);
-    } else if (restTimerSeconds === 0 && isTimerActive) {
-      setIsTimerActive(false);
-      triggerRestTimerNotification(exercise.name, parsedRestSeconds);
-    }
-    return () => clearInterval(interval);
-  }, [isTimerActive, restTimerSeconds, exercise.name, parsedRestSeconds]);
-
-  const handleStartTimer = (customSecs) => {
-    if ('Notification' in window && Notification.permission === 'default') {
-      Notification.requestPermission();
-    }
-    const secsToUse = typeof customSecs === 'number' ? customSecs : (restTimerSeconds <= 0 ? parsedRestSeconds : restTimerSeconds);
-    setRestTimerSeconds(secsToUse);
-    setIsTimerActive(true);
-  };
-
-  const handleStopTimer = () => {
-    setIsTimerActive(false);
-  };
-
-  const handleResetTimer = (secondsToSet = parsedRestSeconds) => {
-    setRestTimerSeconds(secondsToSet);
-    setIsTimerActive(false);
-  };
+  const { restTimerSeconds, isTimerActive, startTimer, stopTimer, setTimerDuration, enterPiP } = useGlobalTimer();
 
 
   const ensureMeta = () => {
@@ -197,9 +107,9 @@ export default function ExerciseRow({
       reps: currentSet.reps || previousData[setIndex]?.reps || targetReps.split('-')[0] || '10'
     });
 
-    if (newCompleted && !isTimerActive) {
-      handleResetTimer();
-      handleStartTimer();
+    if (newCompleted) {
+      stopTimer();
+      startTimer(parsedRestSeconds, exercise.name);
     }
   };
 
@@ -412,10 +322,15 @@ export default function ExerciseRow({
             )}
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
             <span style={{ fontSize: '11px', background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe', padding: '2px 8px', borderRadius: '10px', fontWeight: '800' }}>
               {exercise.muscleGroup || 'General'}
             </span>
+            {exercise.loadFamily && (
+              <span style={{ fontSize: '10px', background: '#f5f3ff', color: '#7c3aed', border: '1px solid #ddd6fe', padding: '2px 6px', borderRadius: '8px', fontWeight: '800' }}>
+                🏛️ {exercise.loadFamily.replace('Familia ', '')}
+              </span>
+            )}
             <span style={{ fontSize: '11px', background: '#f1f5f9', color: '#334155', border: '1px solid #cbd5e1', padding: '2px 8px', borderRadius: '10px', fontWeight: '800' }}>
               {completedSetsCount}/{totalSets} Series
             </span>
@@ -575,7 +490,7 @@ export default function ExerciseRow({
                       <>
                         <button
                           type="button"
-                          onClick={() => handleResetTimer(restTimerSeconds)}
+                          onClick={() => { stopTimer(); setTimerDuration(parsedRestSeconds); }}
                           title="Reiniciar temporizador"
                           style={{ background: 'rgba(255,255,255,0.2)', color: '#fff', border: 'none', borderRadius: '8px', padding: '5px 8px', fontSize: '11px', fontWeight: '800', cursor: 'pointer' }}
                         >
@@ -583,7 +498,7 @@ export default function ExerciseRow({
                         </button>
                         <button
                           type="button"
-                          onClick={handleStopTimer}
+                          onClick={stopTimer}
                           title="Parar temporizador"
                           style={{ background: '#ef4444', color: '#fff', border: 'none', borderRadius: '8px', padding: '5px 10px', fontSize: '11px', fontWeight: '900', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '3px' }}
                         >
@@ -593,7 +508,7 @@ export default function ExerciseRow({
                     ) : (
                       <button
                         type="button"
-                        onClick={() => handleStartTimer(restTimerSeconds)}
+                        onClick={() => startTimer(parsedRestSeconds, exercise.name)}
                         style={{ background: '#0066ff', color: '#ffffff', border: 'none', borderRadius: '8px', padding: '6px 14px', fontSize: '12px', fontWeight: '900', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
                       >
                         <Play size={12} fill="#fff" /> Iniciar
@@ -610,10 +525,8 @@ export default function ExerciseRow({
                       key={secs}
                       type="button"
                       onClick={() => {
-                        setRestTimerSeconds(secs);
-                        if (!isTimerActive) {
-                          handleStartTimer(secs);
-                        }
+                        setTimerDuration(secs);
+                        startTimer(secs, exercise.name);
                       }}
                       style={{
                         flex: 1,
@@ -1099,11 +1012,30 @@ export default function ExerciseRow({
           {/* SUBPESTAÑA 3: SUSTITUIR EJERCICIO */}
           {activeSubTab === 'swap' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%' }}>
+              {exercise.originalName && (
+                <div style={{ background: '#fef3c7', border: '1.5px solid #f59e0b', borderRadius: '12px', padding: '10px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <span style={{ fontSize: '11px', color: '#92400e', fontWeight: '800', display: 'block' }}>🔄 Ejercicio Sustituido</span>
+                    <strong style={{ fontSize: '12px', color: '#78350f' }}>Original: {exercise.originalName}</strong>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (onSwapExercise) onSwapExercise(exercise.id, null);
+                      modal.showAlert({ title: "↺ Ejercicio Restaurado", message: `Se restableció a "${exercise.originalName}".`, variant: "info" });
+                    }}
+                    style={{ background: '#d97706', color: '#ffffff', border: 'none', borderRadius: '8px', padding: '6px 10px', fontSize: '11px', fontWeight: '800', cursor: 'pointer' }}
+                  >
+                    ↺ Restaurar
+                  </button>
+                </div>
+              )}
+
               <span style={{ fontSize: '11px', color: '#334155', fontWeight: '800' }}>
                 Sustitutos equivalentes de la base de datos oficial:
               </span>
 
-              {exercise.equivalents && exercise.equivalents.length > 0 && (
+              {exercise.equivalents && exercise.equivalents.length > 0 ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', width: '100%' }}>
                   {exercise.equivalents.map(eq => (
                     <button
@@ -1130,6 +1062,10 @@ export default function ExerciseRow({
                       <span className="badge badge-green" style={{ fontSize: '10px', flexShrink: 0, fontWeight: '900' }}>Sustituir</span>
                     </button>
                   ))}
+                </div>
+              ) : (
+                <div style={{ fontSize: '11px', color: '#64748b', fontStyle: 'italic', padding: '4px 0' }}>
+                  No hay sustitutos automáticos preconfigurados para este ejercicio. Puedes elegir una máquina del catálogo a continuación:
                 </div>
               )}
 

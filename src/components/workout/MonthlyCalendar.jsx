@@ -1,8 +1,18 @@
 import React, { useState } from 'react';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Trophy, Flame, Dumbbell, CheckCircle2 } from 'lucide-react';
+import { 
+  ChevronLeft, ChevronRight, Calendar as CalendarIcon, Trophy, 
+  Flame, Dumbbell, CheckCircle2, CreditCard, AlertCircle, Check 
+} from 'lucide-react';
+import { useIndexedDB as useLocalStorage } from '../../hooks/useIndexedDB';
 
 export default function MonthlyCalendar({ workoutHistory = [], onSelectDate, onSelectDayId }) {
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [membershipSettings] = useLocalStorage('coachv2_gym_membership_settings', {
+    paymentDay: 28,
+    gymName: 'Gimnasio',
+    amount: '',
+    paidMonths: []
+  });
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -66,6 +76,11 @@ export default function MonthlyCalendar({ workoutHistory = [], onSelectDate, onS
     }
   }
 
+  // Estado del pago de membresía para el mes actual visible en el calendario
+  const currentMonthKey = `${year}-${String(month + 1).padStart(2, '0')}`;
+  const paymentDay = membershipSettings.paymentDay || 28;
+  const isMonthPaid = (membershipSettings.paidMonths || []).includes(currentMonthKey);
+
   const calendarCells = [];
   for (let i = 0; i < paddingDays; i++) {
     calendarCells.push({ isPadding: true, key: `pad_${i}` });
@@ -75,6 +90,7 @@ export default function MonthlyCalendar({ workoutHistory = [], onSelectDate, onS
     const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
     const session = historyByDateMap[dateKey];
     const isToday = dateKey === todayStr;
+    const isPaymentDay = day === paymentDay;
 
     const dayOfWeekIndex = new Date(year, month, day).getDay();
     let protocolDayIndex = dayOfWeekIndex === 0 ? 6 : dayOfWeekIndex - 1;
@@ -86,6 +102,7 @@ export default function MonthlyCalendar({ workoutHistory = [], onSelectDate, onS
       dateKey,
       session,
       isToday,
+      isPaymentDay,
       dayId,
       iconSymbol: dayIconsMap[dayId] || '🏋️',
       key: `day_${day}`
@@ -122,7 +139,7 @@ export default function MonthlyCalendar({ workoutHistory = [], onSelectDate, onS
       </div>
 
       {/* TARJETAS DE MÉTRICAS MENSUALES */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '14px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '12px' }}>
         <div style={{ background: 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)', padding: '10px 12px', borderRadius: '16px', border: '1px solid #bfdbfe' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px' }}>
             <Trophy size={14} color="#1d4ed8" />
@@ -144,6 +161,46 @@ export default function MonthlyCalendar({ workoutHistory = [], onSelectDate, onS
         </div>
       </div>
 
+      {/* TARJETA INFORMATIVA DE PAGO DE MEMBRESÍA EN ESTE MES */}
+      <div 
+        style={{
+          background: isMonthPaid ? '#ecfdf5' : '#fffbeb',
+          border: isMonthPaid ? '1.5px solid #a7f3d0' : '1.5px solid #fde68a',
+          padding: '10px 14px',
+          borderRadius: '16px',
+          marginBottom: '14px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '8px'
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <CreditCard size={18} color={isMonthPaid ? '#059669' : '#d97706'} />
+          <div>
+            <strong style={{ fontSize: '12px', color: isMonthPaid ? '#047857' : '#92400e', display: 'block' }}>
+              💳 Día de Pago de Membresía: {paymentDay} de {monthNames[month]}
+            </strong>
+            <span style={{ fontSize: '11px', color: isMonthPaid ? '#059669' : '#b45309', fontWeight: '600' }}>
+              {isMonthPaid ? `✅ Membresía de ${monthNames[month]} pagada` : `Recordatorio activo en el calendario`}
+            </span>
+          </div>
+        </div>
+
+        <span 
+          style={{
+            fontSize: '10px',
+            fontWeight: '900',
+            background: isMonthPaid ? '#059669' : '#d97706',
+            color: '#ffffff',
+            padding: '3px 8px',
+            borderRadius: '8px'
+          }}
+        >
+          {isMonthPaid ? 'PAGADO' : `DÍA ${paymentDay}`}
+        </span>
+      </div>
+
       {/* DÍAS DE LA SEMANA */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px', textAlign: 'center', marginBottom: '8px' }}>
         {daysOfWeek.map((d, i) => (
@@ -153,11 +210,11 @@ export default function MonthlyCalendar({ workoutHistory = [], onSelectDate, onS
         ))}
       </div>
 
-      {/* CUADRÍCULA DEL CALENDARIO CON ICONOS CLAROS */}
+      {/* CUADRÍCULA DEL CALENDARIO CON ICONOS CLAROS Y RECORDATORIO DE PAGO */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '6px' }}>
         {calendarCells.map(cell => {
           if (cell.isPadding) {
-            return <div key={cell.key} style={{ minHeight: '52px' }} />;
+            return <div key={cell.key} style={{ minHeight: '58px' }} />;
           }
 
           const hasTrained = !!cell.session;
@@ -165,22 +222,30 @@ export default function MonthlyCalendar({ workoutHistory = [], onSelectDate, onS
           const isMissedDay = hasTrained && cell.session.isMissedDay;
           const isNormalWorkout = hasTrained && !isRestDay && !isMissedDay;
           const isToday = cell.isToday;
+          const isPaymentDay = cell.isPaymentDay;
 
           let bg = isToday ? '#eff6ff' : '#f8fafc';
           let border = isToday ? '2px solid #0066ff' : '1px solid #f1f5f9';
           let colorNum = isToday ? '#0066ff' : '#334155';
 
+          if (isPaymentDay) {
+            border = isMonthPaid ? '2px solid #10b981' : '2px solid #f59e0b';
+            if (!isToday && !hasTrained) {
+              bg = isMonthPaid ? '#f0fdf4' : '#fffbeb';
+            }
+          }
+
           if (isNormalWorkout) {
              bg = 'linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)';
-             border = '1.5px solid #6ee7b7';
+             border = isPaymentDay ? '2.5px solid #f59e0b' : '1.5px solid #6ee7b7';
              colorNum = '#065f46';
           } else if (isRestDay) {
              bg = 'linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)';
-             border = '1.5px solid #d1d5db';
+             border = isPaymentDay ? '2.5px solid #f59e0b' : '1.5px solid #d1d5db';
              colorNum = '#4b5563';
           } else if (isMissedDay) {
              bg = 'linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%)';
-             border = '1.5px solid #fca5a5';
+             border = isPaymentDay ? '2.5px solid #f59e0b' : '1.5px solid #fca5a5';
              colorNum = '#b91c1c';
           }
 
@@ -192,8 +257,8 @@ export default function MonthlyCalendar({ workoutHistory = [], onSelectDate, onS
                 if (onSelectDate) onSelectDate(cell.dateKey);
               }}
               style={{
-                minHeight: '58px',
-                padding: '6px 2px',
+                minHeight: '62px',
+                padding: '4px 2px',
                 borderRadius: '14px',
                 background: bg,
                 border: border,
@@ -203,12 +268,37 @@ export default function MonthlyCalendar({ workoutHistory = [], onSelectDate, onS
                 justifyContent: 'space-between',
                 cursor: 'pointer',
                 transition: 'all 0.2s ease',
-                boxShadow: isToday ? '0 4px 12px rgba(0, 102, 255, 0.2)' : 'none'
+                position: 'relative',
+                boxShadow: isToday ? '0 4px 12px rgba(0, 102, 255, 0.2)' : (isPaymentDay ? '0 4px 10px rgba(245, 158, 11, 0.2)' : 'none')
               }}
             >
+              {/* Insignia de Pago de Membresía */}
+              {isPaymentDay && (
+                <div 
+                  title={`Día de Pago de Membresía (${paymentDay} de ${monthNames[month]})`}
+                  style={{
+                    position: 'absolute',
+                    top: '-6px',
+                    right: '-4px',
+                    background: isMonthPaid ? '#059669' : '#d97706',
+                    color: '#ffffff',
+                    fontSize: '8px',
+                    fontWeight: '900',
+                    padding: '1px 4px',
+                    borderRadius: '6px',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.15)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '1px'
+                  }}
+                >
+                  💳{isMonthPaid ? '✓' : ''}
+                </div>
+              )}
+
               <span style={{ 
                 fontSize: '12px', 
-                fontWeight: isToday || hasTrained ? '900' : '700', 
+                fontWeight: isToday || hasTrained || isPaymentDay ? '900' : '700', 
                 color: colorNum 
               }}>
                 {cell.dayNumber}
@@ -228,6 +318,12 @@ export default function MonthlyCalendar({ workoutHistory = [], onSelectDate, onS
               ) : (
                 <span style={{ fontSize: '12px', lineHeight: '1' }} title={`Día ${cell.dayId.toUpperCase()}`}>
                   {cell.iconSymbol}
+                </span>
+              )}
+
+              {isPaymentDay && (
+                <span style={{ fontSize: '8px', fontWeight: '900', color: isMonthPaid ? '#059669' : '#b45309' }}>
+                  {isMonthPaid ? 'PAGADO' : 'PAGO'}
                 </span>
               )}
             </div>

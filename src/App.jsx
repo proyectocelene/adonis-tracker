@@ -7,6 +7,7 @@ import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { Loader2 } from 'lucide-react';
 import { setMany } from 'idb-keyval';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { GlobalTimerProvider } from './contexts/GlobalTimerContext';
 import LoginScreen from './components/LoginScreen';
 
 async function migrateLocalStorageToIndexedDB() {
@@ -128,6 +129,27 @@ function AppContent() {
     }
     
     runCentralizedMigration();
+
+    // 4. Activar Protocolo Adonis Definitivo (limpiar residuos locales antiguos de swaps y reordenamientos)
+    const PROTOCOL_V2_FLAG = `coachv2_protocol_adonis_2026_08_13_clean_${currentUser?.uid || 'guest'}`;
+    if (localStorage.getItem(PROTOCOL_V2_FLAG) !== 'true') {
+      import('idb-keyval').then(async ({ set }) => {
+        await set('coachv2_custom_day_exercises', {});
+        await set('coachv2_swapped_exercises', {});
+        await set('coachv2_exercise_orders', {});
+        await set('coachv2_custom_routine', null);
+
+        if (currentUser) {
+          const { doc, setDoc } = await import('firebase/firestore');
+          const { db } = await import('./services/firebase');
+          await setDoc(doc(db, 'users', currentUser.uid, 'store', 'coachv2_custom_day_exercises'), { value: {} }, { merge: true });
+          await setDoc(doc(db, 'users', currentUser.uid, 'store', 'coachv2_swapped_exercises'), { value: {} }, { merge: true });
+          await setDoc(doc(db, 'users', currentUser.uid, 'store', 'coachv2_exercise_orders'), { value: {} }, { merge: true });
+          await setDoc(doc(db, 'users', currentUser.uid, 'store', 'coachv2_custom_routine'), { value: null }, { merge: true });
+        }
+        localStorage.setItem(PROTOCOL_V2_FLAG, 'true');
+      }).catch(() => {});
+    }
   }, [currentUser]);
 
   if (isMigrating) {
@@ -165,9 +187,11 @@ function App() {
   return (
     <ErrorBoundary>
       <AuthProvider>
-        <ModalProvider>
-          <AppContent />
-        </ModalProvider>
+        <GlobalTimerProvider>
+          <ModalProvider>
+            <AppContent />
+          </ModalProvider>
+        </GlobalTimerProvider>
       </AuthProvider>
     </ErrorBoundary>
   );

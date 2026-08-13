@@ -22,3 +22,5 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+RESPALDOS PRUEBA JSON/
+*.backup.json
