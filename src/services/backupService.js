@@ -1,5 +1,5 @@
 import { db } from './firebase';
-import { collection, getDocs, doc, getDoc, setDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, getDoc, setDoc, deleteDoc } from 'firebase/firestore';
 import { entries, setMany } from 'idb-keyval';
 import { scientificProtocol } from '../data/scientificProtocol';
 import { UNIFIED_EXERCISE_LIBRARY } from '../data/unifiedExerciseLibrary';
@@ -248,6 +248,20 @@ export async function restoreFullDatabase(currentUser, jsonData, onProgress) {
 
   let totalSessionsRestored = 0;
   let totalKeysRestored = 0;
+
+  // 0. LIMPIAR BASE DE DATOS ACTUAL (WIPE)
+  if (onProgress) onProgress("Borrando base de datos actual para un inicio limpio...");
+  const historyColRef = collection(db, 'users', currentUser.uid, 'history');
+  const historySnap = await getDocs(historyColRef);
+  for (const document of historySnap.docs) {
+    await deleteDoc(doc(db, 'users', currentUser.uid, 'history', document.id));
+  }
+  
+  const storeColRef = collection(db, 'users', currentUser.uid, 'store');
+  const storeSnap = await getDocs(storeColRef);
+  for (const document of storeSnap.docs) {
+    await deleteDoc(doc(db, 'users', currentUser.uid, 'store', document.id));
+  }
 
   // 1. Restaurar Historial de Entrenamientos en Firebase Firestore
   const sessionsToRestore = [];

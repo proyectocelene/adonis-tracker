@@ -1,3 +1,4 @@
+@import "tailwindcss";
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
 :root {
@@ -160,31 +161,6 @@ p {
 .badge-danger { background-color: var(--accent-danger-light); color: var(--accent-danger); }
 .badge-neutral { background-color: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
 
-/* INPUTS ACCESIBLES APPLE (16px PARA NUNCA HAGAN ZOOM AUTOMÁTICO EN MÓVIL) */
-input, select, textarea {
-  background: #ffffff;
-  border: 1.5px solid #cbd5e1;
-  color: var(--text-main);
-  border-radius: var(--radius-sm);
-  padding: 9px 12px;
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  font-size: 16px; 
-  font-weight: 600;
-  transition: all 0.25s ease;
-  width: 100%;
-  max-width: 100%;
-}
-
-input[type="number"] {
-  text-align: center;
-}
-
-input:focus, select:focus, textarea:focus {
-  outline: none;
-  border-color: var(--accent-blue);
-  background: #ffffff;
-  box-shadow: 0 0 0 3px rgba(0, 102, 255, 0.15);
-}
 
 /* SUB-CHIPS Y ACCESOS RÁPIDOS */
 .sub-chip-toggle {

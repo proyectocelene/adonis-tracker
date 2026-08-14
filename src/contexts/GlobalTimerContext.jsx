@@ -10,16 +10,49 @@ export function GlobalTimerProvider({ children }) {
   const [restTimerSeconds, setRestTimerSeconds] = useState(0);
   const [isTimerActive, setIsTimerActive] = useState(false);
   
-  const timerRef = useRef(null);
+  const timerIntervalRef = useRef(null);
   const canvasRef = useRef(null);
   const videoRef = useRef(null);
   const animationRef = useRef(null);
-  const secondsLeftRef = useRef(0);
+  const endTimeRef = useRef(0);
   const totalSecondsRef = useRef(0);
   const isTimerActiveRef = useRef(false);
   const currentExerciseNameRef = useRef('');
+  const audioKeepAliveRef = useRef(null);
 
-  // Notificación de sistema (migrada desde ExerciseRow)
+  // Iniciar audio silencioso para evitar que el navegador suspenda el video PiP en segundo plano
+  const startAudioKeepAlive = () => {
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (AudioCtx) {
+        if (!audioKeepAliveRef.current || audioKeepAliveRef.current.state === 'closed') {
+          const ctx = new AudioCtx();
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          gain.gain.value = 0.00001; // Inaudible pero mantiene el hilo multimedia activo
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start();
+          audioKeepAliveRef.current = ctx;
+        } else if (audioKeepAliveRef.current.state === 'suspended') {
+          audioKeepAliveRef.current.resume();
+        }
+      }
+    } catch (e) {
+      console.warn("Audio keepalive error:", e);
+    }
+  };
+
+  const stopAudioKeepAlive = () => {
+    try {
+      if (audioKeepAliveRef.current && audioKeepAliveRef.current.state !== 'closed') {
+        audioKeepAliveRef.current.close().catch(() => {});
+        audioKeepAliveRef.current = null;
+      }
+    } catch (e) {}
+  };
+
+  // Notificación de sistema
   const triggerNotification = useCallback((exerciseName, durationSeconds) => {
     if ('Notification' in window && Notification.permission === 'default') {
       Notification.requestPermission();
@@ -71,22 +104,151 @@ export function GlobalTimerProvider({ children }) {
     }
   }, []);
 
+  // Función para dibujar en el Canvas con máximo aprovechamiento de espacio y nombre completo
+  const drawCanvas = useCallback(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const width = canvas.width;
+    const height = canvas.height;
+
+    const active = isTimerActiveRef.current;
+    let secondsLeft = 0;
+    if (active && endTimeRef.current > 0) {
+      secondsLeft = Math.max(0, Math.ceil((endTimeRef.current - Date.now()) / 1000));
+    }
+    const total = totalSecondsRef.current || 1;
+    const isFinished = active && secondsLeft === 0;
+
+    const centerX = width / 2;
+    const centerY = height / 2;
+
+    // 1. Fondo Minimalista Oscuro
+    ctx.fillStyle = '#090d16';
+    ctx.fillRect(0, 0, width, height);
+
+    // 2. Anillo de Fondo
+    const radius = 175;
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 14;
+    ctx.stroke();
+
+    // 3. Anillo de Progreso de Alta Visibilidad
+    if (active && secondsLeft > 0) {
+      const progress = secondsLeft / total;
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, radius, -Math.PI / 2, (-Math.PI / 2) + (2 * Math.PI * progress));
+      
+      const neonGradient = ctx.createLinearGradient(centerX - radius, centerY - radius, centerX + radius, centerY + radius);
+      neonGradient.addColorStop(0, '#00f2fe');
+      neonGradient.addColorStop(1, '#38bdf8');
+      
+      ctx.strokeStyle = neonGradient;
+      ctx.lineWidth = 14;
+      ctx.lineCap = 'round';
+      ctx.shadowColor = '#00f2fe';
+      ctx.shadowBlur = 10;
+      ctx.stroke();
+      ctx.shadowBlur = 0; // reset
+    } else if (isFinished) {
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+      ctx.strokeStyle = '#10b981';
+      ctx.lineWidth = 14;
+      ctx.shadowColor = '#10b981';
+      ctx.shadowBlur = 14;
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+    }
+
+    // 4. Etiqueta Superior
+    ctx.fillStyle = isFinished ? '#34d399' : '#38bdf8';
+    ctx.font = '900 16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(isFinished ? '✓ ¡LISTO!' : 'DESCANSO', centerX, centerY - 95);
+
+    // 5. Contador Digital Gigante Central
+    const m = Math.floor(secondsLeft / 60);
+    const s = secondsLeft % 60;
+    const timeStr = `${m}:${s.toString().padStart(2, '0')}`;
+
+    ctx.fillStyle = isFinished ? '#10b981' : '#ffffff';
+    ctx.font = '900 90px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(timeStr, centerX, centerY - 15);
+
+    // 6. Nombre Completo del Ejercicio con Ajuste de Líneas
+    if (currentExerciseNameRef.current) {
+      const rawName = currentExerciseNameRef.current;
+      ctx.fillStyle = isFinished ? '#34d399' : '#f8fafc';
+      ctx.font = '800 17px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      // Ajuste automático en 1 o 2 líneas
+      const maxWidth = 310;
+      const words = rawName.split(' ');
+      let line = '';
+      const lines = [];
+
+      for (let n = 0; n < words.length; n++) {
+        const testLine = line + words[n] + ' ';
+        const metrics = ctx.measureText(testLine);
+        if (metrics.width > maxWidth && n > 0) {
+          lines.push(line.trim());
+          line = words[n] + ' ';
+        } else {
+          line = testLine;
+        }
+      }
+      lines.push(line.trim());
+
+      const displayLines = lines.slice(0, 2);
+      const startY = displayLines.length === 1 ? centerY + 65 : centerY + 56;
+      displayLines.forEach((l, idx) => {
+        ctx.fillText(l, centerX, startY + (idx * 22));
+      });
+    } else {
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '700 15px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(isFinished ? '¡A dar la siguiente serie!' : 'Respira y prepárate', centerX, centerY + 65);
+    }
+
+    // Actualizar MediaSession si está soportado
+    if ('mediaSession' in navigator) {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: isFinished ? '¡Tiempo Listo!' : `Descanso: ${timeStr}`,
+        artist: currentExerciseNameRef.current || 'Temporizador',
+        album: 'Descanso'
+      });
+      navigator.mediaSession.playbackState = active && secondsLeft > 0 ? 'playing' : 'paused';
+    }
+  }, []);
+
   // Inicializar Canvas y Video para PiP
   useEffect(() => {
     const canvas = document.createElement('canvas');
-    canvas.width = 300;
-    canvas.height = 300;
+    canvas.width = 400;
+    canvas.height = 400;
     canvasRef.current = canvas;
 
     const video = document.createElement('video');
     if (canvas.captureStream) {
       try {
-        video.srcObject = canvas.captureStream(10); // 10 fps es suficiente
+        video.srcObject = canvas.captureStream(20);
       } catch (e) {}
     }
     video.muted = true;
     video.playsInline = true;
-    // Ocultar video completamente pero debe estar en el DOM para que algunos navegadores móviles permitan PiP
+    video.setAttribute('playsinline', '');
+    video.setAttribute('webkit-playsinline', '');
+    
     video.style.position = 'fixed';
     video.style.bottom = '0';
     video.style.right = '0';
@@ -99,147 +261,105 @@ export function GlobalTimerProvider({ children }) {
       document.body.appendChild(video);
     }
     
-    video.play().catch(e => {
-      if (e?.name !== 'AbortError') {
-        console.warn('PiP video autoplay prevented:', e?.message || e);
+    const handleVideoPause = () => {
+      if (isTimerActiveRef.current) {
+        video.play().catch(() => {});
       }
-    });
+    };
+    video.addEventListener('pause', handleVideoPause);
+
     videoRef.current = video;
 
+    const handleVisibilityChange = () => {
+      if (isTimerActiveRef.current) {
+        const remaining = Math.max(0, Math.ceil((endTimeRef.current - Date.now()) / 1000));
+        setRestTimerSeconds(remaining);
+        drawCanvas();
+        if (video) video.play().catch(() => {});
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleVisibilityChange);
+
     return () => {
+      video.removeEventListener('pause', handleVideoPause);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleVisibilityChange);
       if (video && video.parentNode) {
         video.parentNode.removeChild(video);
       }
       if (animationRef.current) cancelAnimationFrame(animationRef.current);
     };
-  }, []);
+  }, [drawCanvas]);
 
-  // Función para dibujar en el Canvas que luego se emite en el PiP
-  const drawCanvas = useCallback(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    const width = canvas.width;
-    const height = canvas.height;
-
-    // Fondo
-    ctx.fillStyle = '#0f172a'; // dark background slate-900
-    ctx.fillRect(0, 0, width, height);
-
-    const secondsLeft = secondsLeftRef.current;
-    const total = totalSecondsRef.current || 1;
-    const active = isTimerActiveRef.current;
-
-    // Círculo de progreso
-    const centerX = width / 2;
-    const centerY = height / 2;
-    const radius = 120;
-
-    ctx.beginPath();
-    ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
-    ctx.strokeStyle = '#334155'; // background track
-    ctx.lineWidth = 15;
-    ctx.stroke();
-
-    if (active && secondsLeft > 0) {
-      const progress = secondsLeft / total;
-      ctx.beginPath();
-      // Empezar desde arriba (-90 grados)
-      ctx.arc(centerX, centerY, radius, -Math.PI / 2, (-Math.PI / 2) + (2 * Math.PI * progress));
-      ctx.strokeStyle = '#38bdf8'; // sky-400
-      ctx.lineWidth = 15;
-      ctx.lineCap = 'round';
-      ctx.stroke();
-    }
-
-    // Texto de tiempo
-    ctx.fillStyle = active && secondsLeft > 0 ? '#ffffff' : (secondsLeft === 0 ? '#22c55e' : '#94a3b8');
-    ctx.font = 'bold 70px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    
-    const m = Math.floor(secondsLeft / 60);
-    const s = secondsLeft % 60;
-    const timeStr = `${m}:${s.toString().padStart(2, '0')}`;
-    ctx.fillText(timeStr, centerX, centerY);
-    
-    // Texto de estado
-    ctx.fillStyle = '#94a3b8';
-    ctx.font = '20px sans-serif';
-    ctx.fillText(active && secondsLeft > 0 ? 'DESCANSO' : 'LISTO', centerX, centerY + 60);
-
-    if (active) {
-      animationRef.current = requestAnimationFrame(drawCanvas);
-    }
-  }, []);
-
-  // Tick del temporizador
+  // Tick del temporizador basado en timestamps absolutos
   useEffect(() => {
-    if (isTimerActive && restTimerSeconds > 0) {
-      timerRef.current = setInterval(() => {
-        setRestTimerSeconds(prev => {
-          const next = prev - 1;
-          secondsLeftRef.current = next;
-          if (next <= 0) {
-            clearInterval(timerRef.current);
-            setIsTimerActive(false);
-            isTimerActiveRef.current = false;
-            // Dibujar última vez el estado 0
-            drawCanvas();
-            triggerNotification(currentExerciseNameRef.current, totalSecondsRef.current);
-            return 0;
-          }
-          return next;
-        });
-      }, 1000);
-    } else if (isTimerActive && restTimerSeconds === 0) {
-      setIsTimerActive(false);
-      isTimerActiveRef.current = false;
-      drawCanvas();
-      triggerNotification(currentExerciseNameRef.current, totalSecondsRef.current);
+    if (isTimerActive) {
+      const tick = () => {
+        const now = Date.now();
+        const remaining = Math.max(0, Math.ceil((endTimeRef.current - now) / 1000));
+        setRestTimerSeconds(remaining);
+        drawCanvas();
+
+        if (remaining <= 0) {
+          setIsTimerActive(false);
+          isTimerActiveRef.current = false;
+          clearInterval(timerIntervalRef.current);
+          stopAudioKeepAlive();
+          drawCanvas();
+          triggerNotification(currentExerciseNameRef.current, totalSecondsRef.current);
+        }
+      };
+
+      timerIntervalRef.current = setInterval(tick, 200);
+      tick();
+    } else {
+      if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
+      stopAudioKeepAlive();
     }
 
     return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
+      if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
     };
   }, [isTimerActive, drawCanvas, triggerNotification]);
 
   const enterPiP = async () => {
     const video = videoRef.current;
-    if (video && document.pictureInPictureElement !== video) {
+    if (video) {
       try {
-        await video.play();
-        if (video.requestPictureInPicture) {
-          await video.requestPictureInPicture();
+        await video.play().catch(() => {});
+        if (document.pictureInPictureElement !== video && video.requestPictureInPicture) {
+          await video.requestPictureInPicture().catch(() => {});
         }
       } catch (err) {
-        console.warn("PiP falló o no está soportado en este dispositivo/navegador.", err);
+        // Silencioso si el navegador requiere interacción directa del usuario
       }
     }
   };
 
   const exitPiP = async () => {
     if (document.pictureInPictureElement) {
-       try {
-         await document.exitPictureInPicture();
-       } catch (err) {
-         console.warn("Error exiting PiP", err);
-       }
+      try {
+        await document.exitPictureInPicture();
+      } catch (err) {}
     }
-  }
+  };
 
   const startTimer = useCallback((seconds, exerciseName = '') => {
     if ('Notification' in window && Notification.permission === 'default') {
       Notification.requestPermission();
     }
     
-    setRestTimerSeconds(seconds);
-    setIsTimerActive(true);
-    
-    secondsLeftRef.current = seconds;
+    startAudioKeepAlive();
+
+    const targetEnd = Date.now() + (seconds * 1000);
+    endTimeRef.current = targetEnd;
     totalSecondsRef.current = seconds;
     isTimerActiveRef.current = true;
     currentExerciseNameRef.current = exerciseName;
+    
+    setRestTimerSeconds(seconds);
+    setIsTimerActive(true);
     
     drawCanvas();
     enterPiP();
@@ -248,15 +368,19 @@ export function GlobalTimerProvider({ children }) {
   const stopTimer = useCallback(() => {
     setIsTimerActive(false);
     isTimerActiveRef.current = false;
-    if (timerRef.current) clearInterval(timerRef.current);
+    endTimeRef.current = 0;
+    setRestTimerSeconds(0);
+    stopAudioKeepAlive();
     drawCanvas();
     exitPiP();
   }, [drawCanvas]);
 
   const setTimerDuration = useCallback((seconds) => {
-    setRestTimerSeconds(seconds);
-    secondsLeftRef.current = seconds;
+    if (isTimerActiveRef.current) {
+      endTimeRef.current = Date.now() + (seconds * 1000);
+    }
     totalSecondsRef.current = seconds;
+    setRestTimerSeconds(seconds);
     drawCanvas();
   }, [drawCanvas]);
 
@@ -273,23 +397,24 @@ export function GlobalTimerProvider({ children }) {
       
       {/* Botón Flotante en la UI de la App (además del PiP) */}
       {isTimerActive && (
-        <div style={{
-          position: 'fixed',
-          bottom: '80px', // Por encima de la navegación inferior
-          right: '20px',
-          background: '#0f172a',
-          color: '#38bdf8',
-          padding: '12px 18px',
-          borderRadius: '24px',
-          boxShadow: '0 8px 24px rgba(15, 23, 42, 0.4)',
-          border: '1.5px solid #38bdf8',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '12px',
-          zIndex: 1000,
-          cursor: 'pointer'
-        }}
-        onClick={enterPiP}
+        <div 
+          style={{
+            position: 'fixed',
+            bottom: '80px',
+            right: '20px',
+            background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
+            color: '#38bdf8',
+            padding: '12px 18px',
+            borderRadius: '24px',
+            boxShadow: '0 8px 24px rgba(15, 23, 42, 0.4)',
+            border: '1.5px solid #38bdf8',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            zIndex: 1000,
+            cursor: 'pointer'
+          }}
+          onClick={enterPiP}
         >
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             <span style={{ fontSize: '10px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: '800' }}>Descanso</span>

@@ -12,8 +12,9 @@ import { getPreviousDataForExercise } from '../utils/exerciseMatcher';
 import { useIndexedDB as useLocalStorage } from '../hooks/useIndexedDB';
 import { useWorkoutHistory } from '../hooks/useWorkoutHistory';
 import { Target, Calendar as CalendarIcon, Clock, ArrowRight, Loader2, Dumbbell, Save, Activity, Trash2, Cpu, FileText, CheckCircle, RotateCcw, ChevronDown, ChevronUp, RefreshCw, RefreshCcw, Plus, X, Layers, Settings2, Cloud, FileSpreadsheet, Lock, Sparkles, BookOpen, Copy, HelpCircle, Check, Flame, ShieldCheck, Zap, Database, History } from 'lucide-react';
+import AIAnalysisModal from './workout/AIAnalysisModal';
+import SecondaryTools from './workout/SecondaryTools';
 import { useModal } from './common/UIComponents';
-
 export default function WorkoutDay() {
   const modal = useModal();
   const todayStr = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(new Date().getDate()).padStart(2, '0')}`;
@@ -27,7 +28,7 @@ export default function WorkoutDay() {
   const [globalWarmupDone, setGlobalWarmupDone] = useLocalStorage('coachv2_global_warmup', {});
   const [currentSessions, setCurrentSessions, isSessionsLoading] = useLocalStorage('coachv2_active_workouts', {});
   const [bodyMetrics, , isMetricsLoading] = useLocalStorage('coachv2_body_metrics_history', []);
-  const [workoutHistory, setWorkoutHistory, isHistoryLoading, saveSession] = useWorkoutHistory();
+  const [workoutHistory, setWorkoutHistory, isHistoryLoading, saveSession, deleteSession] = useWorkoutHistory();
   const [apiKey] = useLocalStorage('coachv2_deepseek_apikey', '');
   const [googleSheetsUrl, setGoogleSheetsUrl] = useLocalStorage('coachv2_google_sheets_url', 'https://script.google.com/macros/s/AKfycbxA-KbUcEgWUq4jvjdSBxLw3tGsgPxXsF2Y7mX5JsNIpE2qslN1v7xW3NqdJ3-4b-RCwg/exec');
 
@@ -63,9 +64,44 @@ export default function WorkoutDay() {
   const [isAnalyzingAI, setIsAnalyzingAI] = useState(false);
   const [aiAnalysisResult, setAiAnalysisResult] = useState(null);
 
+  const isViewingHistory = selectedDateKey !== todayStr;
+  let historySession = null;
+  if (workoutHistory && workoutHistory.length > 0) {
+    historySession = workoutHistory.find(s => {
+      if (!s) return false;
+      
+      // 1. Prioridad: Matching exacto por la fecha guardada (s.date suele ser YYYY-MM-DD en Local Time)
+      if (s.date === selectedDateKey) return true;
+      
+      // 2. Fallback: Parsear el timestamp a Local Time (ignorando startsWith que falla por diferencias UTC)
+      if (s.timestamp) {
+        const d = new Date(s.timestamp);
+        if (!isNaN(d.getTime())) {
+          const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+          if (key === selectedDateKey) return true;
+        }
+      }
+      
+      // 3. Fallback final: id que contenga _YYYY-MM-DD
+      if (s.id && s.id.includes(`_${selectedDateKey}`)) return true;
+      
+      return false;
+    });
+  }
+
   // 3. Variables derivadas en orden estricto de dependencias
   const activeDays = (customRoutine && Array.isArray(customRoutine) && customRoutine.length > 0) ? customRoutine : scientificProtocol;
-  const baseDay = activeDays[currentDayIndex] || activeDays[0] || scientificProtocol[0];
+  
+  // Si existe una sesión guardada para esta fecha, usar su dayId correspondiente (ej. d3 Jalón)
+  let effectiveDayIndex = currentDayIndex;
+  if (historySession && historySession.dayId) {
+    const histIndex = activeDays.findIndex(d => d.id === historySession.dayId);
+    if (histIndex !== -1) {
+      effectiveDayIndex = histIndex;
+    }
+  }
+
+  const baseDay = activeDays[effectiveDayIndex] || activeDays[0] || scientificProtocol[0];
   const [newExTargetDay, setNewExTargetDay] = useState(baseDay.id);
 
   // === CÁLCULO DE SEMANA AUTOMÁTICO ===
@@ -93,27 +129,22 @@ export default function WorkoutDay() {
     setMesocycleStartDate(new Date().toISOString());
   }
 
-  // === SINCRONIZAR currentDayIndex CON FECHA ===
+  // === SINCRONIZAR currentDayIndex CON FECHA O HISTORIAL ===
   useEffect(() => {
+    if (historySession && historySession.dayId) {
+      const histIndex = activeDays.findIndex(d => d.id === historySession.dayId);
+      if (histIndex !== -1) {
+        setCurrentDayIndex(histIndex);
+        return;
+      }
+    }
     const d = new Date(selectedDateKey + 'T12:00:00');
     if (!isNaN(d.getTime())) {
       let day = d.getDay();
       if (day === 0) day = 7;
       setCurrentDayIndex(day - 1);
     }
-  }, [selectedDateKey]);
-
-  const isViewingHistory = selectedDateKey !== todayStr;
-  let historySession = null;
-  if (isViewingHistory && workoutHistory) {
-    historySession = workoutHistory.find(s => {
-      if (!s.timestamp && !s.date) return false;
-      const d = new Date(s.timestamp || s.date);
-      if (isNaN(d.getTime())) return false;
-      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-      return key === selectedDateKey;
-    });
-  }
+  }, [selectedDateKey, historySession?.dayId]);
 
   const getDayDataForWeek = (sessions, week, dayId) => {
     if (!sessions) return {};
@@ -198,9 +229,9 @@ export default function WorkoutDay() {
   };
 
   let todayWorkoutData = {};
-  if (historySession) {
-    todayWorkoutData = historySession.exercises || {};
-  } else if (!isViewingHistory) {
+  if (historySession && historySession.exercises && Object.keys(historySession.exercises).length > 0) {
+    todayWorkoutData = historySession.exercises;
+  } else {
     todayWorkoutData = getDayDataForWeek(currentSessions, currentWeek, currentDay.id);
   }
 
@@ -220,7 +251,42 @@ export default function WorkoutDay() {
   const previousSession = [...workoutHistory].reverse().find(s => s.dayId === currentDay.id);
 
   const updateSessionDataForCurrentDay = (updater) => {
-    if (historySession) return; // Read only
+    // Si estamos modificando una sesión que ya existe en el historial oficial para esta fecha:
+    if (historySession) {
+      const currentExercises = historySession.exercises || {};
+      const newExercises = updater(currentExercises);
+
+      let recalculatedVol = 0;
+      let recSets = 0;
+      Object.values(newExercises).forEach(exLogs => {
+        if (exLogs && typeof exLogs === 'object') {
+          Object.keys(exLogs).forEach(k => {
+            if (!isNaN(parseInt(k))) {
+              const s = exLogs[k];
+              if (s && s.completed) {
+                recSets++;
+                let w = parseFloat(s.weight) || 0;
+                if (s.unit === 'kg') w *= 2.20462;
+                const r = parseFloat(s.reps) || 0;
+                recalculatedVol += (w * r);
+              }
+            }
+          });
+        }
+      });
+
+      const updated = {
+        ...historySession,
+        exercises: newExercises,
+        volume: Math.round(recalculatedVol),
+        completedSets: recSets,
+        isCompleted: recSets > 0 || recalculatedVol > 0
+      };
+
+      saveSession(updated);
+      return;
+    }
+
     setCurrentSessions(prev => {
       const weekKey = `week_${currentWeek}`;
       let existingWeekData = prev[weekKey] || {};
@@ -441,77 +507,70 @@ export default function WorkoutDay() {
 
   const { volume, completedSets, cardioCompleted } = calculateVolumeAndSets();
 
-  // Guardado Automático en Segundo Plano
-  useEffect(() => {
-    if (historySession || completedSets === 0 || isViewingHistory) return;
+  // Función para reiniciar o limpiar el borrador del día actual
+  const handleClearCurrentDraft = () => {
+    modal.showConfirm({
+      title: "🗑️ ¿Limpiar Registro de este Día?",
+      message: "¿Deseas borrar las casillas marcadas de esta fecha y empezar en limpio? (Tu historial pasado seguirá intacto).",
+      confirmText: "Sí, Limpiar a 0",
+      cancelText: "Cancelar",
+      variant: "warning",
+      onConfirm: async () => {
+        const sessionKey = `${selectedDateKey}_${currentDay.id}`;
+        setCurrentSessions(prev => {
+          const next = { ...(prev || {}) };
+          delete next[sessionKey];
+          return next;
+        });
 
-    const autoSaveTimer = setTimeout(async () => {
-      // Create predictable ID based on date
-      const sessionId = `ses_${todayStr}_${currentDay.id}`;
-      
-      const sessionLog = {
-        id: sessionId,
-        weekNumber: currentWeek,
-        weekName: `Semana ${currentWeek}`,
-        timestamp: new Date().toISOString(),
-        dateString: new Date().toLocaleDateString('es-ES', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }),
-        dayId: currentDay.id,
-        dayName: currentDay.name,
-        focus: currentDay.focus,
-        volume,
-        completedSets,
-        cardioCompleted,
-        exercises: todayWorkoutData
-      };
+        // Si había una sesión archivada en Firebase para esta fecha exacta, eliminarla también
+        const sessionId = `ses_${selectedDateKey}_${currentDay.id}`;
+        if (deleteSession) await deleteSession(sessionId);
 
-      await saveSession(sessionLog);
-      console.log('✅ Auto-guardado en la nube:', sessionLog.id);
-    }, 2000); // Debounce de 2 segundos para evitar spam a Firebase
-
-    return () => clearTimeout(autoSaveTimer);
-  }, [todayWorkoutData, volume, completedSets, cardioCompleted, historySession, isViewingHistory, currentWeek, currentDay, todayStr, saveSession]);
+        modal.showAlert({
+          title: "🧹 Día Limpiado",
+          message: "Los registros de este día han sido reiniciados a 0.",
+          variant: "info"
+        });
+      }
+    });
+  };
 
   const handleFinishWorkout = () => {
     modal.showConfirm({
       title: `🏁 ¿Archivar Sesión en Bitácora?`,
-      message: `Resumen de tu entrenamiento de hoy:\n\n💪 Series completadas: ${completedSets}\n🔥 Volumen Total Levantado: ${volume.toLocaleString()} lbs-reps\n\n¿Archivar datos oficiales?`,
+      message: `Resumen de tu entrenamiento del ${selectedDateKey}:\n\n💪 Series completadas: ${completedSets}\n🔥 Volumen Total Levantado: ${volume.toLocaleString()} lbs-reps\n\n¿Archivar datos oficiales?`,
       confirmText: "💾 Sí, Archivar Ahora",
       cancelText: "Continuar Entrenando",
       variant: "success",
       onConfirm: async () => {
-        const sessionId = `ses_${todayStr}_${currentDay.id}`;
-        const newSessionLog = {
+        const sessionId = historySession?.id || `ses_${selectedDateKey}_${currentDay.id}`;
+        const sessionDate = new Date(`${selectedDateKey}T12:00:00`);
+        const sessionLog = {
           id: sessionId,
           weekNumber: currentWeek,
           weekName: `Semana ${currentWeek}`,
-          timestamp: new Date().toISOString(),
-          dateString: new Date().toLocaleDateString('es-ES', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }),
+          date: selectedDateKey,
+          timestamp: sessionDate.toISOString(),
+          dateString: sessionDate.toLocaleDateString('es-ES', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }),
           dayId: currentDay.id,
           dayName: currentDay.name,
           focus: currentDay.focus,
           volume,
           completedSets,
           cardioCompleted,
-          exercises: todayWorkoutData
+          exercises: todayWorkoutData,
+          isCompleted: true,
+          isRestDay: false,
+          isMissedDay: false
         };
 
-        // Update local state immediately for fast feedback
-        const existingIndex = workoutHistory.findIndex(s => (s.weekNumber || 1) === currentWeek && s.dayId === currentDay.id);
-        let updatedHistory;
-        if (existingIndex >= 0) {
-          newSessionLog.id = workoutHistory[existingIndex].id || newSessionLog.id;
-          updatedHistory = [...workoutHistory];
-          updatedHistory[existingIndex] = newSessionLog;
-        } else {
-          updatedHistory = [...workoutHistory, newSessionLog];
-        }
-        
-        // Save to Firebase Collection directly using the new method
-        await saveSession(newSessionLog);
+        // Guardar en Firebase Collection y sincronizar
+        await saveSession(sessionLog);
 
         modal.showAlert({
           title: "🎉 ¡Entrenamiento Archivado!",
-          message: `Sesión de la Semana ${currentWeek} registrada correctamente.`,
+          message: `Sesión de ${selectedDateKey} (${currentDay.name}) guardada con éxito (${volume.toLocaleString()} lbs-reps).`,
           variant: "success"
         });
       }
@@ -710,52 +769,28 @@ export default function WorkoutDay() {
   }
 
   return (
-    <div className="container" style={{ paddingBottom: '90px' }}>
+    <div className="container pb-[90px]">
       {/* BARRA SUPERIOR DE SELECTOR DE MODO (MUTUAMENTE EXCLUSIVO) */}
-      <div style={{ display: 'flex', background: '#e2e8f0', padding: '4px', borderRadius: '18px', marginBottom: '14px' }}>
+      <div className="bg-slate-100 p-1 rounded-xl flex gap-1 mb-3.5 w-full">
         <button
           type="button"
           onClick={() => setShowMonthlyCalendar(true)}
-          style={{
-            flex: 1,
-            padding: '10px',
-            border: 'none',
-            borderRadius: '14px',
-            background: showMonthlyCalendar ? '#ffffff' : 'transparent',
-            color: showMonthlyCalendar ? '#0066ff' : '#64748b',
-            fontWeight: '900',
-            fontSize: '13px',
-            cursor: 'pointer',
-            boxShadow: showMonthlyCalendar ? '0 2px 8px rgba(0,0,0,0.08)' : 'none',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '6px',
-            transition: 'all 0.2s ease'
-          }}
+          className={`flex-1 py-2.5 px-3 border-none font-bold text-[13px] cursor-pointer flex items-center justify-center gap-1.5 transition-all ${
+            showMonthlyCalendar 
+              ? 'rounded-lg bg-white text-blue-600 shadow-sm' 
+              : 'bg-transparent text-slate-500 hover:text-slate-700'
+          }`}
         >
           <CalendarIcon size={16} /> Calendario Mensual
         </button>
         <button
           type="button"
           onClick={() => setShowMonthlyCalendar(false)}
-          style={{
-            flex: 1,
-            padding: '10px',
-            border: 'none',
-            borderRadius: '14px',
-            background: !showMonthlyCalendar ? '#0066ff' : 'transparent',
-            color: !showMonthlyCalendar ? '#ffffff' : '#64748b',
-            fontWeight: '900',
-            fontSize: '13px',
-            cursor: 'pointer',
-            boxShadow: !showMonthlyCalendar ? '0 4px 12px rgba(0, 102, 255, 0.3)' : 'none',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '6px',
-            transition: 'all 0.2s ease'
-          }}
+          className={`flex-1 py-2.5 px-3 border-none font-bold text-[13px] cursor-pointer flex items-center justify-center gap-1.5 transition-all ${
+            !showMonthlyCalendar 
+              ? 'rounded-lg bg-white text-blue-600 shadow-sm' 
+              : 'bg-transparent text-slate-500 hover:text-slate-700'
+          }`}
         >
           <Dumbbell size={16} /> Rutina del Día
         </button>
@@ -766,34 +801,27 @@ export default function WorkoutDay() {
         <div>
           <MonthlyCalendar
             workoutHistory={workoutHistory}
-            onSelectDate={(dateKey) => setSelectedDateKey(dateKey)}
+            onSelectDate={(dateKey) => {
+              setSelectedDateKey(dateKey);
+              setShowMonthlyCalendar(false);
+            }}
             onSelectDayId={(dayId) => {
               const idx = scientificProtocol.findIndex(d => d.id === dayId);
               if (idx >= 0) {
                 setCurrentDayIndex(idx);
-                setShowMonthlyCalendar(false); // Cambia limpiamente a la rutina del día seleccionado
+                setShowMonthlyCalendar(false);
               }
             }}
+            onSaveSession={saveSession}
+            onDeleteSession={deleteSession}
+            currentSessions={currentSessions}
+            setCurrentSessions={setCurrentSessions}
           />
 
           <button
             type="button"
             onClick={() => setShowGlosarioModal(true)}
-            style={{
-              width: '100%',
-              background: '#eff6ff',
-              color: '#0066ff',
-              border: '1.5px solid #bfdbfe',
-              padding: '14px',
-              borderRadius: '18px',
-              fontSize: '13px',
-              fontWeight: '900',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '8px'
-            }}
+            className="w-full bg-blue-50 text-blue-600 border-[1.5px] border-blue-200 p-3.5 rounded-2xl text-[13px] font-black cursor-pointer flex items-center justify-center gap-2 hover:bg-blue-100 transition-colors"
           >
             <BookOpen size={18} /> Ver Glosario & Guía Explicativa
           </button>
@@ -830,10 +858,12 @@ export default function WorkoutDay() {
             <div className="flex-between">
               <div>
                 <span style={{ fontSize: '11px', color: '#0066ff', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                  Día {currentDay.dayNumber} de 7 • {(historySession ? historySession.dayName : currentDay.name).split(':')[0]}
+                  Día {currentDay.dayNumber || (currentDayIndex + 1)} de 7 • {(((historySession && historySession.dayName) || currentDay.name || '').split(':')[0]) || 'Rutina'}
                 </span>
                 <h2 style={{ margin: '2px 0 0 0', fontSize: '18px', fontWeight: '900', color: '#0f172a' }}>
-                  {(historySession ? historySession.dayName : currentDay.name).includes(':') ? (historySession ? historySession.dayName : currentDay.name).split(':')[1] : (historySession ? historySession.dayName : currentDay.name)}
+                  {((historySession && historySession.dayName) || currentDay.name || '').includes(':') 
+                    ? ((historySession && historySession.dayName) || currentDay.name || '').split(':')[1] 
+                    : ((historySession && historySession.dayName) || currentDay.name || '')}
                 </h2>
               </div>
               {previousSession?.dateString && !isViewingHistory && (
@@ -843,7 +873,7 @@ export default function WorkoutDay() {
               )}
             </div>
             <p style={{ fontSize: '13px', marginTop: '8px', color: '#475569', fontWeight: '500', lineHeight: '1.5', margin: '8px 0 0 0' }}>
-              {historySession ? historySession.focus : currentDay.focus}
+              {historySession?.focus || currentDay.focus || 'Enfoque biomecánico e hipertrofia.'}
             </p>
             {!isViewingHistory && (
               <div style={{ marginTop: '10px', display: 'flex', justifyContent: 'flex-end', gap: '8px', flexWrap: 'wrap' }}>
@@ -871,9 +901,18 @@ export default function WorkoutDay() {
           </div>
 
           {historySession && (
-            <div style={{ background: '#fffbeb', border: '1.5px solid #fde68a', padding: '12px', borderRadius: '16px', marginBottom: '16px', color: '#b45309' }}>
-              <strong style={{ display: 'block', fontSize: '13px' }}>Modo Historial - Solo Lectura</strong>
-              <span style={{ fontSize: '12px' }}>Viendo la rutina guardada del {selectedDateKey}. Las ediciones están deshabilitadas.</span>
+            <div style={{ background: '#ecfdf5', border: '1.5px solid #a7f3d0', padding: '12px 14px', borderRadius: '16px', marginBottom: '16px', color: '#065f46', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <CheckCircle size={18} color="#059669" />
+                <div>
+                  <strong style={{ display: 'block', fontSize: '13px', color: '#047857' }}>
+                    💾 Sesión Guardada del {selectedDateKey} ({historySession.dayName || baseDay.name})
+                  </strong>
+                  <span style={{ fontSize: '12px', color: '#059669' }}>
+                    {historySession.completedSets || completedSets} series registradas • {historySession.volume || volume} lbs-reps. Puedes editar tus pesos o series en cualquier momento.
+                  </span>
+                </div>
+              </div>
             </div>
           )}
           
@@ -943,11 +982,12 @@ export default function WorkoutDay() {
               {currentDay.type === 'workout' && (
                 <div 
                   onClick={() => {
-                    setGlobalWarmupDone(prev => {
-                      const newVal = !isWarmupDone;
-                      if (newVal) modal.showAlert({ title: "🔥 Calentamiento Listo", message: "Articulaciones lubricadas. ¡Inicia tu primera serie!", variant: "success" });
-                      return { ...prev, [warmupKey]: newVal, ...(currentWeek === 1 ? { [currentDay.id]: newVal } : {}) };
-                    });
+                    const newVal = !isWarmupDone;
+                    setGlobalWarmupDone(prev => ({
+                      ...prev,
+                      [warmupKey]: newVal,
+                      ...(currentWeek === 1 ? { [currentDay.id]: newVal } : {})
+                    }));
                   }}
                   style={{
                     background: isWarmupDone ? '#ecfdf5' : '#fffbeb',
@@ -1149,8 +1189,8 @@ export default function WorkoutDay() {
                 </button>
               )}
 
-              {/* BOTÓN PRINCIPAL DE GUARDAR ENTRENAMIENTO */}
-              <div style={{ marginTop: '12px', marginBottom: '20px' }}>
+              {/* BOTÓN PRINCIPAL DE GUARDAR ENTRENAMIENTO Y LIMPIAR */}
+              <div style={{ marginTop: '12px', marginBottom: '20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 <button 
                   type="button" 
                   className="btn btn-primary" 
@@ -1159,86 +1199,31 @@ export default function WorkoutDay() {
                 >
                   <Save size={22} /> Guardar Sesión en Bitácora
                 </button>
+
+                {completedSets > 0 && !isViewingHistory && (
+                  <button 
+                    type="button" 
+                    onClick={handleClearCurrentDraft}
+                    style={{ width: '100%', padding: '10px', fontSize: '12px', borderRadius: '14px', fontWeight: '800', background: '#fee2e2', color: '#dc2626', border: '1px solid #fecaca', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                  >
+                    <Trash2 size={14} /> Descartar / Limpiar Casillas Marcadas de Hoy
+                  </button>
+                )}
               </div>
 
               {/* MENÚ SECUNDARIO DE HERRAMIENTAS */}
-              <div className="card" style={{ padding: '14px', marginBottom: '20px', background: '#f8fafc', border: '1.5px solid #e2e8f0' }}>
-                <button
-                  type="button"
-                  onClick={() => setShowSecondaryTools(!showSecondaryTools)}
-                  style={{
-                    width: '100%',
-                    background: 'transparent',
-                    border: 'none',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    cursor: 'pointer',
-                    padding: '4px 0'
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <Settings2 size={18} color="#64748b" />
-                    <span style={{ fontSize: '13px', fontWeight: '800', color: '#334155' }}>🛠️ Herramientas Secundarias & Ajustes</span>
-                  </div>
-                  {showSecondaryTools ? <ChevronUp size={18} color="#64748b" /> : <ChevronDown size={18} color="#64748b" />}
-                </button>
-
-                    {showSecondaryTools && (
-                  <div className="animate-fade" style={{ marginTop: '14px', paddingTop: '14px', borderTop: '1px dashed #cbd5e1', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                      <button 
-                        type="button"
-                        onClick={handleOptimizeWithMath}
-                        disabled={isAnalyzingAI}
-                        className="btn btn-primary"
-                        style={{ width: '100%', background: 'linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)', padding: '12px', borderRadius: '14px', fontSize: '12px', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
-                      >
-                        {isAnalyzingAI ? <Loader2 size={16} className="animate-spin" /> : <Cpu size={16} />}
-                        {isAnalyzingAI ? 'Calculando...' : '🧠 Optimizar (Epley Math)'}
-                      </button>
-
-                    <button
-                      type="button"
-                      onClick={() => setShowGlosarioModal(true)}
-                      style={{ width: '100%', background: '#eff6ff', color: '#0066ff', border: '1px solid #bfdbfe', padding: '12px', borderRadius: '14px', fontSize: '12px', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer' }}
-                    >
-                      <BookOpen size={16} /> 📖 Ver Glosario & Guía Técnica
-                    </button>
-
-                    <button 
-                      type="button"
-                      onClick={handleCopyRoutineForCoach}
-                      style={{ width: '100%', background: '#ffffff', color: '#334155', border: '1px solid #cbd5e1', padding: '12px', borderRadius: '14px', fontSize: '12px', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer' }}
-                    >
-                      <Copy size={16} /> 📋 Copiar Rutina en Texto
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => setShowRoutineBuilder(true)}
-                      style={{ width: '100%', background: '#1e293b', color: '#ffffff', border: 'none', padding: '12px', borderRadius: '14px', fontSize: '12px', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer' }}
-                    >
-                      <Layers size={16} color="#38bdf8" /> 🛠️ Gestor Maestro de Rutinas (Actualizar / Pegar)
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={handleResetToOfficialRoutine}
-                      style={{ width: '100%', background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe', padding: '12px', borderRadius: '14px', fontSize: '12px', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer' }}
-                    >
-                      <RefreshCw size={16} /> ↺ Restablecer {baseDay.name.split(':')[0]} a Rutina Oficial
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={handleResetAllDaysToOfficial}
-                      style={{ width: '100%', background: '#ecfdf5', color: '#047857', border: '1.5px solid #6ee7b7', padding: '12px', borderRadius: '14px', fontSize: '12px', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer' }}
-                    >
-                      <Sparkles size={16} color="#059669" /> ✨ Activar Protocolo Adonis Oficial en Toda la Semana
-                    </button>
-                  </div>
-                )}
-              </div>
+              <SecondaryTools
+                showSecondaryTools={showSecondaryTools}
+                setShowSecondaryTools={setShowSecondaryTools}
+                handleOptimizeWithMath={handleOptimizeWithMath}
+                isAnalyzingAI={isAnalyzingAI}
+                setShowGlosarioModal={setShowGlosarioModal}
+                handleCopyRoutineForCoach={handleCopyRoutineForCoach}
+                setShowRoutineBuilder={setShowRoutineBuilder}
+                handleResetToOfficialRoutine={handleResetToOfficialRoutine}
+                handleResetAllDaysToOfficial={handleResetAllDaysToOfficial}
+                baseDayName={baseDay.name.split(':')[0]}
+              />
             </div>
           )}
         </div>
@@ -1251,22 +1236,10 @@ export default function WorkoutDay() {
       />
 
       {/* REPORTES Y MODALES SECUNDARIOS */}
-      {aiAnalysisResult && (
-        <div className="card animate-fade" style={{ padding: '16px', marginBottom: '16px', background: '#f3e8ff', border: '1.5px solid #d8b4fe', borderRadius: '20px' }}>
-          <div className="flex-between" style={{ marginBottom: '10px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Sparkles size={20} color="#7c3aed" />
-              <strong style={{ fontSize: '15px', color: '#4c1d95', fontWeight: '900' }}>Reporte de Sobrecarga AI</strong>
-            </div>
-            <button type="button" onClick={() => setAiAnalysisResult(null)} style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}>
-              <X size={18} color="#64748b" />
-            </button>
-          </div>
-          <p style={{ fontSize: '13px', color: '#581c87', margin: 0, lineHeight: '1.5', fontWeight: '600' }}>
-            {aiAnalysisResult.resumenSobrecarga}
-          </p>
-        </div>
-      )}
+      <AIAnalysisModal
+        aiAnalysisResult={aiAnalysisResult}
+        setAiAnalysisResult={setAiAnalysisResult}
+      />
 
       {/* MODAL GESTOR DE RUTINA */}
       <RoutineManagerModal
