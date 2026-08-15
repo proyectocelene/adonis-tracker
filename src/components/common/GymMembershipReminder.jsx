@@ -6,7 +6,7 @@ import { useModal } from './UIComponents';
 export default function GymMembershipReminder({ compact = false }) {
   const modal = useModal();
   const [membershipSettings, setMembershipSettings] = useLocalStorage('coachv2_gym_membership_settings', {
-    paymentDay: 28,
+    paymentDay: 21,
     gymName: 'Gimnasio',
     amount: '',
     currency: '$',
@@ -14,8 +14,13 @@ export default function GymMembershipReminder({ compact = false }) {
     paidMonths: [] // Array de "YYYY-MM"
   });
 
+  // Si tiene el valor predeterminado anterior (28), actualizar a 21 (21 de agosto)
+  const paymentDay = (membershipSettings.paymentDay === 28 || !membershipSettings.paymentDay) 
+    ? 21 
+    : membershipSettings.paymentDay;
+
   const [showConfigModal, setShowConfigModal] = useState(false);
-  const [tempDay, setTempDay] = useState(membershipSettings.paymentDay || 28);
+  const [tempDay, setTempDay] = useState(paymentDay);
   const [tempGymName, setTempGymName] = useState(membershipSettings.gymName || 'Gimnasio');
   const [tempAmount, setTempAmount] = useState(membershipSettings.amount || '');
 
@@ -27,8 +32,6 @@ export default function GymMembershipReminder({ compact = false }) {
   const currentMonthKey = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`;
   
   // Calcular próximo día de pago
-  const paymentDay = membershipSettings.paymentDay || 28;
-  
   let targetPaymentDate = new Date(currentYear, currentMonth, paymentDay);
   let isOverdue = false;
 
@@ -323,7 +326,7 @@ export default function GymMembershipReminder({ compact = false }) {
                   required
                 />
                 <span style={{ fontSize: '11px', color: '#64748b', marginTop: '4px', display: 'block' }}>
-                  Configurado actualmente para el día {membershipSettings.paymentDay || 28} de cada mes.
+                  Configurado actualmente para el día {paymentDay} de cada mes.
                 </span>
               </div>
 

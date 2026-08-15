@@ -25,8 +25,37 @@ export class ErrorBoundary extends React.Component {
     }
   };
 
+  handleRetry = () => {
+    this.setState({ hasError: false, error: null });
+  };
+
   render() {
     if (this.state.hasError) {
+      if (this.props.fallback) {
+        if (typeof this.props.fallback === 'function') {
+          return this.props.fallback(this.state.error, this.handleRetry);
+        }
+        return this.props.fallback;
+      }
+
+      if (this.props.inline) {
+        return (
+          <div className="card" style={{ padding: '16px', borderRadius: '16px', background: '#fef2f2', border: '1.5px solid #fecaca', textAlign: 'center', margin: '8px 0' }}>
+            <AlertTriangle size={20} color="#dc2626" style={{ margin: '0 auto 6px auto' }} />
+            <span style={{ fontSize: '12px', color: '#991b1b', fontWeight: '800', display: 'block' }}>
+              Error al renderizar esta sección
+            </span>
+            <button
+              type="button"
+              onClick={this.handleRetry}
+              style={{ marginTop: '8px', padding: '6px 12px', borderRadius: '8px', border: '1px solid #f87171', background: '#ffffff', color: '#dc2626', fontSize: '11px', fontWeight: '800', cursor: 'pointer' }}
+            >
+              Reintentar
+            </button>
+          </div>
+        );
+      }
+
       return (
         <div style={{
           minHeight: '100vh',

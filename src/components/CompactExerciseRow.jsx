@@ -62,7 +62,9 @@ export default function CompactExerciseRow({
 
   const inputFixedStyle = {
     height: '32px',
+    minHeight: '32px',
     maxHeight: '32px',
+    lineHeight: '32px',
     borderRadius: '6px',
     padding: '0 4px',
     fontSize: '13px',
@@ -71,21 +73,25 @@ export default function CompactExerciseRow({
     border: '1px solid #cbd5e1',
     background: '#f8fafc',
     width: '100%',
-    boxSizing: 'border-box'
+    boxSizing: 'border-box',
+    outline: 'none'
   };
 
   const selectFixedStyle = {
     height: '32px',
+    minHeight: '32px',
     maxHeight: '32px',
+    lineHeight: '32px',
     borderRadius: '6px',
-    padding: '0 2px',
+    padding: '0 4px',
     fontSize: '11px',
     fontWeight: '600',
     textAlign: 'center',
     border: '1px solid #cbd5e1',
     background: '#f8fafc',
     width: '100%',
-    boxSizing: 'border-box'
+    boxSizing: 'border-box',
+    outline: 'none'
   };
 
   return (

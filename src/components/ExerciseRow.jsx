@@ -1,14 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { 
-  ChevronDown, ChevronUp, ArrowUp, ArrowDown, GripVertical, Target 
-} from 'lucide-react';
 import { useModal } from './common/UIComponents';
 import { useGlobalTimer } from '../contexts/GlobalTimerContext';
+import ExerciseHeader from './exercise/ExerciseHeader';
 import RestTimer from './exercise/RestTimer';
 import SetLogger from './exercise/SetLogger';
-import SwapExercise from './exercise/SwapExercise';
-import ExerciseBiomechanics from './exercise/ExerciseBiomechanics';
 import ExerciseNotes from './exercise/ExerciseNotes';
+import ExerciseBiomechanics from './exercise/ExerciseBiomechanics';
+import ExerciseSwap from './exercise/ExerciseSwap';
+import { calculateSmartWarmup, getLoadRecommendation } from '../hooks/useWorkoutCalculations';
 
 export default function ExerciseRow({
   exercise,
@@ -33,6 +32,7 @@ export default function ExerciseRow({
   const [machineSetupInput, setMachineSetupInput] = useState(exerciseData.machineSetup || '');
   const [exerciseNotesInput, setExerciseNotesInput] = useState('');
 
+  // Estado del Gesto "Dejar Presionado" (Long Press Reorder Mode)
   const [isReorderMode, setIsReorderMode] = useState(false);
   const longPressTimerRef = useRef(null);
 
@@ -41,7 +41,7 @@ export default function ExerciseRow({
     longPressTimerRef.current = setTimeout(() => {
       setIsReorderMode(true);
       if (navigator.vibrate) navigator.vibrate(60);
-    }, 400);
+    }, 400); // 400ms para activar como launcher móvil
   };
 
   const cancelLongPress = () => {
@@ -59,6 +59,8 @@ export default function ExerciseRow({
   const restPrescribed = exercise.restTime || '90 s';
   const parsedRestSeconds = parseInt(restPrescribed) || 90;
   const { startTimer, stopTimer } = useGlobalTimer();
+  
+  const effectiveRestSeconds = exerciseData.customRestSeconds ? parseInt(exerciseData.customRestSeconds) : parsedRestSeconds;
 
   const ensureMeta = () => {
     if (!exerciseData.name || !exerciseData.muscleGroup) {
@@ -66,7 +68,8 @@ export default function ExerciseRow({
         onUpdateExerciseMeta({
           name: exercise.name,
           muscleGroup: exercise.muscleGroup || 'General',
-          customSetsCount: totalSets
+          customSetsCount: totalSets,
+          customRestSeconds: effectiveRestSeconds
         });
       }
     }
@@ -109,7 +112,7 @@ export default function ExerciseRow({
 
     if (newCompleted) {
       stopTimer();
-      startTimer(parsedRestSeconds, exercise.name);
+      startTimer(effectiveRestSeconds, exercise.name);
     }
   };
 
@@ -126,19 +129,32 @@ export default function ExerciseRow({
       completed: false,
       unit: lastSet.unit || exercise.defaultUnit || 'lbs'
     };
-    if (onUpdateSet) onUpdateSet(nextSetNumber, clonedSet);
-    modal.showAlert({ title: `➕ Serie #${nextSetNumber} Añadida`, message: `Se añadió la serie #${nextSetNumber}.`, variant: 'info' });
+    if (onUpdateSet) {
+      onUpdateSet(nextSetNumber, clonedSet);
+    }
+    modal.showAlert({
+      title: `➕ Serie #${nextSetNumber} Añadida`,
+      message: `Se añadió la serie #${nextSetNumber} al ejercicio.`,
+      variant: 'info'
+    });
   };
 
   const handleRemoveSet = () => {
     if (totalSets <= 1) return;
-    if (onUpdateExerciseMeta) onUpdateExerciseMeta({ customSetsCount: totalSets - 1 });
+    const newTotal = totalSets - 1;
+    if (onUpdateExerciseMeta) {
+      onUpdateExerciseMeta({ customSetsCount: newTotal });
+    }
   };
 
   const handleSaveMachineSetup = () => {
     if (onUpdateExerciseMeta) {
       onUpdateExerciseMeta({ machineSetup: machineSetupInput });
-      modal.showAlert({ title: "✅ Calibración Guardada", message: `Ajustes mecánicos guardados.`, variant: "success" });
+      modal.showAlert({
+        title: "✅ Calibración Guardada",
+        message: `Los ajustes mecánicos ("${machineSetupInput || 'Sin anotación'}") se guardaron para sesiones futuras.`,
+        variant: "success"
+      });
     }
   };
 
@@ -151,12 +167,19 @@ export default function ExerciseRow({
       date: new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }),
       text: exerciseNotesInput.trim()
     };
+    const updatedHistory = [newNoteObj, ...existingHistory];
+
     if (onUpdateExerciseMeta) {
       onUpdateExerciseMeta({ 
         notes: exerciseNotesInput.trim(),
-        notesHistory: [newNoteObj, ...existingHistory]
+        notesHistory: updatedHistory
       });
       setExerciseNotesInput('');
+      modal.showAlert({
+        title: "📝 Nota Guardada",
+        message: "Tu nota fue guardada en el historial de este ejercicio sin alterar tus series.",
+        variant: "success"
+      });
     }
   };
 
@@ -168,19 +191,12 @@ export default function ExerciseRow({
         notesHistory: updatedHistory,
         notes: updatedHistory.length > 0 ? updatedHistory[0].text : ''
       });
-    }
-  };
-
-  const handleExecuteSwap = async (candidateName) => {
-    if (!candidateName) return;
-    if (onSwapExercise) {
-      onSwapExercise(exercise.id, {
-        name: candidateName,
-        originalName: exercise.name,
-        biomechanics: exercise.biomechanics
+      modal.showAlert({
+        title: "🗑️ Nota Eliminada",
+        message: "La nota fue eliminada del historial.",
+        variant: "info"
       });
     }
-    modal.showAlert({ title: "🔄 Ejercicio Sustituido", message: `Se cambió a "${candidateName}".`, variant: "success" });
   };
 
   const legacyNoteList = exerciseData.notes && (!exerciseData.notesHistory || exerciseData.notesHistory.length === 0)
@@ -188,156 +204,205 @@ export default function ExerciseRow({
     : [];
   const allNotesList = [...(exerciseData.notesHistory || []), ...legacyNoteList];
 
+  const handleExecuteSwap = async (candidateName) => {
+    if (!candidateName) return;
+    try {
+      if (onSwapExercise) {
+        onSwapExercise(exercise.id, {
+          name: candidateName,
+          originalName: exercise.name,
+          biomechanics: exercise.biomechanics
+        });
+      }
+
+      modal.showAlert({
+        title: "🔄 Ejercicio Sustituido",
+        message: `Se cambió a "${candidateName}".`,
+        variant: "success"
+      });
+    } catch (err) {
+      if (onSwapExercise) {
+        onSwapExercise(exercise.id, { name: candidateName, originalName: exercise.name });
+      }
+    }
+  };
+
   const completedSetsCount = (() => {
     let c = 0;
-    for (let s = 1; s <= totalSets; s++) { if (exerciseData[s]?.completed) c++; }
+    for (let s = 1; s <= totalSets; s++) {
+      if (exerciseData[s]?.completed) c++;
+    }
     return c;
   })();
 
   const isFullyCompleted = completedSetsCount === totalSets && totalSets > 0;
+
+  const googleImagesUrl = `https://www.google.com/search?tbm=isch&q=${encodeURIComponent(exercise.name + " ejecucion tecnica biomecanica")}`;
+  const youtubeTutorialUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(exercise.name + " como hacer tecnica correcta")}`;
+
   const warmupSetVal = exerciseData[0] || {};
   const isWarmupSetDone = !!warmupSetVal.completed;
-  const suggestedWarmupWeight = Math.round((parseFloat(previousData[1]?.weight || 60) * 0.5) / 5) * 5 || 30;
+  const suggestedWarmupWeight = calculateSmartWarmup(previousData, exerciseData, 60);
+  const loadRecommendation = getLoadRecommendation(targetReps, previousData);
 
   return (
     <div 
-      className={`mb-3 rounded-2xl bg-white border border-slate-200 shadow-sm overflow-hidden transition-all duration-200 ${
-        isReorderMode ? 'border-indigo-500 ring-2 ring-indigo-500/30' : ''
-      }`}
+      className="card animate-fade"
+      style={{
+        padding: '0px',
+        marginBottom: '14px',
+        borderRadius: '24px',
+        background: isFullyCompleted 
+          ? 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)' 
+          : 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
+        border: isReorderMode 
+          ? '2.5px solid #6366f1' 
+          : (isFullyCompleted ? '2.5px solid #10b981' : '2px solid #cbd5e1'),
+        boxShadow: isReorderMode 
+          ? '0 10px 30px rgba(99, 102, 241, 0.3)' 
+          : (isFullyCompleted ? '0 8px 24px rgba(16, 185, 129, 0.18)' : '0 8px 24px rgba(15, 23, 42, 0.08)'),
+        transition: 'all 0.25s ease'
+      }}
     >
-      {/* 1. CABECERA DEL EJERCICIO */}
-      <div 
-        onTouchStart={startLongPress} onTouchEnd={cancelLongPress} onTouchMove={cancelLongPress}
-        onMouseDown={startLongPress} onMouseUp={cancelLongPress} onMouseLeave={cancelLongPress}
-        className="p-3 flex items-center justify-between gap-2.5 bg-white border-b border-slate-100 select-none"
-      >
-        <button
-          type="button"
-          onClick={() => { setIsReorderMode(!isReorderMode); if (navigator.vibrate) navigator.vibrate(40); }}
-          className={`shrink-0 p-1.5 rounded-lg border-none cursor-pointer flex items-center justify-center ${
-            isReorderMode ? 'bg-indigo-500 text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'
-          }`}
-        >
-          <GripVertical size={18} />
-        </button>
+      {/* 1. CABECERA STICKY EN EL CELULAR: TITULO COMPLETO 100% ANCHO + GESTO DEJAR PRESIONADO */}
+      <ExerciseHeader
+        exercise={exercise}
+        isExpanded={isExpanded}
+        onToggleExpand={onToggleExpand}
+        isFullyCompleted={isFullyCompleted}
+        totalSets={totalSets}
+        targetReps={targetReps}
+        completedSetsCount={completedSetsCount}
+        isReorderMode={isReorderMode}
+        setIsReorderMode={setIsReorderMode}
+        startLongPress={startLongPress}
+        cancelLongPress={cancelLongPress}
+        onMoveUp={onMoveUp}
+        onMoveDown={onMoveDown}
+        isFirst={isFirst}
+        isLast={isLast}
+      />
 
-        <div className="flex-1 min-w-0 cursor-pointer" onClick={onToggleExpand}>
-          <div className="flex items-center gap-1.5 flex-wrap mb-1">
-            <strong className="text-base text-slate-800 font-bold leading-tight">
-              {exercise.name}
-            </strong>
-          </div>
-
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-[11px] bg-slate-100 text-slate-600 py-0.5 px-2 rounded-md font-medium">
-              {exercise.muscleGroup || 'General'}
-            </span>
-            {exercise.loadFamily && (
-              <span className="text-[11px] bg-slate-100 text-slate-600 py-0.5 px-2 rounded-md font-medium">
-                {exercise.loadFamily.replace('Familia ', '')}
-              </span>
-            )}
-            <span className="text-[11px] border border-slate-200 text-slate-700 py-0.5 px-2 rounded-md font-semibold">
-              {totalSets}x{targetReps}
-            </span>
-            <span className={`text-[11px] py-0.5 px-2 rounded-md font-semibold ${isFullyCompleted ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-50 text-blue-600'}`}>
-              {completedSetsCount}/{totalSets} {isFullyCompleted ? '✓' : ''}
-            </span>
-          </div>
-        </div>
-
-        <button
-          type="button"
-          onClick={onToggleExpand}
-          className={`w-9 h-9 shrink-0 rounded-full border-none flex items-center justify-center cursor-pointer transition-colors ${
-            isExpanded ? 'bg-blue-50 text-blue-600' : 'bg-slate-50 text-slate-400 hover:bg-slate-100'
-          }`}
-        >
-          {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-        </button>
-      </div>
-
-      {/* BARRA FLOTANTE DE REORDENAMIENTO */}
-      {isReorderMode && (
-        <div className="bg-indigo-500 text-white p-2.5 flex items-center justify-between gap-2 animate-fade">
-          <span className="text-xs font-black">🔀 Reordenar:</span>
-          <div className="flex gap-1.5">
-            <button
-              disabled={isFirst} onClick={() => { onMoveUp(); if (navigator.vibrate) navigator.vibrate(30); }}
-              className={`border-none rounded-lg py-1.5 px-3 text-xs font-black cursor-pointer flex items-center gap-1 ${isFirst ? 'bg-white/30 text-slate-300' : 'bg-white text-indigo-700'}`}
-            >
-              <ArrowUp size={14} /> Arriba
-            </button>
-            <button
-              disabled={isLast} onClick={() => { onMoveDown(); if (navigator.vibrate) navigator.vibrate(30); }}
-              className={`border-none rounded-lg py-1.5 px-3 text-xs font-black cursor-pointer flex items-center gap-1 ${isLast ? 'bg-white/30 text-slate-300' : 'bg-white text-indigo-700'}`}
-            >
-              <ArrowDown size={14} /> Abajo
-            </button>
-            <button
-              onClick={() => setIsReorderMode(false)}
-              className="bg-green-500 text-white border-none rounded-lg py-1.5 px-3 text-xs font-black cursor-pointer"
-            >
-              ✓ Listo
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* 2. CONTENIDO EXPANDIDO */}
+      {/* 2. CONTENIDO EXPANDIDO A 100% FULL-WIDTH SIN MARGENES MALGASTADOS */}
       {isExpanded && (
-        <div className="p-3.5 w-full animate-fade">
-          {/* NAVEGACIÓN DE PESTAÑAS */}
-          <div className="flex border-b border-slate-200 mb-4 w-full">
+        <div className="animate-fade" style={{ padding: '14px', width: '100%' }}>
+          {/* NAVEGACIÓN DE MINI-PESTAÑAS INTERNAS A TODO EL ANCHO */}
+          <div style={{ display: 'flex', background: '#e2e8f0', padding: '4px', borderRadius: '16px', marginBottom: '12px', gap: '4px', width: '100%' }}>
             <button
+              type="button"
               onClick={() => setActiveSubTab('logger')}
-              className={`flex-1 pb-2 text-sm font-semibold border-b-2 transition-colors ${activeSubTab === 'logger' ? 'border-blue-600 text-blue-700' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+              style={{
+                flex: 1,
+                padding: '8px',
+                border: 'none',
+                borderRadius: '12px',
+                background: activeSubTab === 'logger' ? 'linear-gradient(135deg, #0066ff 0%, #0052cc 100%)' : 'transparent',
+                color: activeSubTab === 'logger' ? '#ffffff' : '#64748b',
+                fontWeight: '900',
+                fontSize: '12px',
+                cursor: 'pointer',
+                boxShadow: activeSubTab === 'logger' ? '0 4px 10px rgba(0, 102, 255, 0.3)' : 'none'
+              }}
             >
-              Series
+              📊 Series & Cargas
             </button>
             <button
+              type="button"
               onClick={() => setActiveSubTab('technique')}
-              className={`flex-1 pb-2 text-sm font-semibold border-b-2 transition-colors ${activeSubTab === 'technique' ? 'border-blue-600 text-blue-700' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+              style={{
+                flex: 1,
+                padding: '8px',
+                border: 'none',
+                borderRadius: '12px',
+                background: activeSubTab === 'technique' ? 'linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)' : 'transparent',
+                color: activeSubTab === 'technique' ? '#ffffff' : '#64748b',
+                fontWeight: '900',
+                fontSize: '12px',
+                cursor: 'pointer',
+                boxShadow: activeSubTab === 'technique' ? '0 4px 10px rgba(124, 58, 237, 0.3)' : 'none'
+              }}
             >
-              Bioméc.
+              💡 Biomecánica
             </button>
             <button
+              type="button"
               onClick={() => setActiveSubTab('swap')}
-              className={`flex-1 pb-2 text-sm font-semibold border-b-2 transition-colors ${activeSubTab === 'swap' ? 'border-blue-600 text-blue-700' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+              style={{
+                flex: 1,
+                padding: '8px',
+                border: 'none',
+                borderRadius: '12px',
+                background: activeSubTab === 'swap' ? 'linear-gradient(135deg, #059669 0%, #047857 100%)' : 'transparent',
+                color: activeSubTab === 'swap' ? '#ffffff' : '#64748b',
+                fontWeight: '900',
+                fontSize: '12px',
+                cursor: 'pointer',
+                boxShadow: activeSubTab === 'swap' ? '0 4px 10px rgba(5, 150, 105, 0.3)' : 'none'
+              }}
             >
-              Sustituir
+              🔄 Sustituir
             </button>
           </div>
 
+          {/* SUBPESTAÑA 1: SERIES & CARGAS */}
           {activeSubTab === 'logger' && (
-            <div className="w-full">
-              <RestTimer exerciseName={exercise.name} parsedRestSeconds={parsedRestSeconds} />
-              
-              <SetLogger 
-                exerciseData={exerciseData} previousData={previousData} exercise={exercise} 
-                totalSets={totalSets} targetReps={targetReps} suggestedWarmupWeight={suggestedWarmupWeight} 
-                warmupSetVal={warmupSetVal} isWarmupSetDone={isWarmupSetDone} handleSetChange={handleSetChange} 
-                toggleSetComplete={toggleSetComplete} handleAddSet={handleAddSet} handleRemoveSet={handleRemoveSet} 
+            <div style={{ width: '100%' }}>
+              {/* TEMPORIZADOR DE DESCANSO CON ALARMA Y SELECTOR */}
+              <RestTimer
+                exercise={exercise}
+                effectiveRestSeconds={effectiveRestSeconds}
+                totalSets={totalSets}
+                onUpdateExerciseMeta={onUpdateExerciseMeta}
               />
-              
-              <ExerciseNotes 
-                exerciseNotesInput={exerciseNotesInput} setExerciseNotesInput={setExerciseNotesInput} 
-                handleSaveNotes={handleSaveNotes} allNotesList={allNotesList} handleDeleteNote={handleDeleteNote} 
+
+              {/* TABLA DE SERIES DE TRABAJO */}
+              <SetLogger
+                exercise={exercise}
+                exerciseData={exerciseData}
+                previousData={previousData}
+                totalSets={totalSets}
+                suggestedWarmupWeight={suggestedWarmupWeight}
+                isWarmupSetDone={isWarmupSetDone}
+                loadRecommendation={loadRecommendation}
+                handleSetChange={handleSetChange}
+                toggleSetComplete={toggleSetComplete}
+                handleAddSet={handleAddSet}
+                handleRemoveSet={handleRemoveSet}
+              />
+
+              {/* HISTORIAL Y REGISTRO DE NOTAS TÉCNICAS */}
+              <ExerciseNotes
+                allNotesList={allNotesList}
+                exerciseNotesInput={exerciseNotesInput}
+                setExerciseNotesInput={setExerciseNotesInput}
+                handleSaveNotes={handleSaveNotes}
+                handleDeleteNote={handleDeleteNote}
               />
             </div>
           )}
 
+          {/* SUBPESTAÑA 2: BIOMECÁNICA & PRESCRIPCIÓN ÓPTIMA */}
           {activeSubTab === 'technique' && (
-            <ExerciseBiomechanics 
-              exercise={exercise} totalSets={totalSets} targetReps={targetReps} restPrescribed={restPrescribed} 
-              machineSetupInput={machineSetupInput} setMachineSetupInput={setMachineSetupInput} 
-              handleSaveMachineSetup={handleSaveMachineSetup} 
+            <ExerciseBiomechanics
+              exercise={exercise}
+              totalSets={totalSets}
+              targetReps={targetReps}
+              restPrescribed={restPrescribed}
+              googleImagesUrl={googleImagesUrl}
+              youtubeTutorialUrl={youtubeTutorialUrl}
+              machineSetupInput={machineSetupInput}
+              setMachineSetupInput={setMachineSetupInput}
+              handleSaveMachineSetup={handleSaveMachineSetup}
             />
           )}
 
+          {/* SUBPESTAÑA 3: SUSTITUIR EJERCICIO */}
           {activeSubTab === 'swap' && (
-            <SwapExercise 
-              exercise={exercise} onSwapExercise={onSwapExercise} handleExecuteSwap={handleExecuteSwap} modal={modal} 
+            <ExerciseSwap
+              exercise={exercise}
+              onSwapExercise={onSwapExercise}
+              handleExecuteSwap={handleExecuteSwap}
+              modal={modal}
             />
           )}
         </div>

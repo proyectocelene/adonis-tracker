@@ -1,61 +1,88 @@
 import React from 'react';
 import { MessageSquare, Plus, Trash2 } from 'lucide-react';
-import { ErrorBoundary } from '../common/ErrorBoundary';
 
-function ExerciseNotesContent({
+export default function ExerciseNotes({
+  allNotesList = [],
   exerciseNotesInput,
   setExerciseNotesInput,
   handleSaveNotes,
-  allNotesList,
   handleDeleteNote
 }) {
   return (
-    <div className="mt-4 w-full">
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-1.5">
-          <MessageSquare size={16} className="text-slate-500" />
-          <span className="text-sm text-slate-700 font-semibold">
-            Notas del Ejercicio
+    <div style={{ background: '#f8fafc', padding: '12px', borderRadius: '14px', border: '1.5px solid #e2e8f0', width: '100%', marginTop: '8px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <MessageSquare size={16} color="#7c3aed" />
+          <span style={{ fontSize: '12px', color: '#4c1d95', fontWeight: '900' }}>
+            📜 Historial de Notas & Sensaciones:
           </span>
         </div>
-        {allNotesList.length > 0 && (
-          <span className="text-xs text-slate-500">
-            {allNotesList.length} {allNotesList.length === 1 ? 'nota' : 'notas'}
-          </span>
-        )}
+        <span style={{ fontSize: '10px', background: '#f3e8ff', color: '#7c3aed', padding: '2px 8px', borderRadius: '10px', fontWeight: '800' }}>
+          {allNotesList.length} {allNotesList.length === 1 ? 'nota' : 'notas'}
+        </span>
       </div>
 
-      <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl mb-4">
+      <div style={{ display: 'flex', gap: '6px', marginBottom: '10px' }}>
         <textarea
           rows={2}
-          placeholder="Añade observaciones sobre técnica, peso..."
+          placeholder="Escribe una nota sobre este ejercicio (ej. Rep 8 cerca del fallo, ajustar asiento a 4...)"
           value={exerciseNotesInput}
           onChange={(e) => setExerciseNotesInput(e.target.value)}
-          className="w-full p-2.5 rounded-lg border border-slate-200 text-sm bg-white text-slate-800 resize-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 outline-none transition-colors"
+          style={{
+            flex: 1,
+            padding: '8px',
+            borderRadius: '10px',
+            border: '1.5px solid #cbd5e1',
+            fontSize: '12px',
+            fontWeight: '600',
+            background: '#ffffff',
+            color: '#0f172a',
+            resize: 'none'
+          }}
         />
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '6px' }}>
-          <button
-            type="button"
-            onClick={handleSaveNotes}
-            className="bg-slate-900 text-white text-xs font-medium px-3 py-1.5 rounded-lg hover:bg-slate-800 transition-colors"
-          >
-            Guardar
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={handleSaveNotes}
+          style={{
+            background: '#7c3aed',
+            color: '#ffffff',
+            border: 'none',
+            borderRadius: '10px',
+            padding: '8px 12px',
+            fontSize: '11px',
+            fontWeight: '900',
+            cursor: 'pointer',
+            alignSelf: 'flex-end',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px'
+          }}
+        >
+          <Plus size={14} /> Guardar
+        </button>
       </div>
 
-      {allNotesList.length > 0 && (
-        <div className="flex flex-col gap-2 max-h-40 overflow-y-auto">
+      {allNotesList.length > 0 ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '160px', overflowY: 'auto' }}>
           {allNotesList.map((item) => (
             <div 
               key={item.id}
-              className="bg-slate-50 p-2.5 rounded-lg border border-slate-200 flex items-start justify-between gap-2"
+              style={{
+                background: '#ffffff',
+                padding: '8px 10px',
+                borderRadius: '10px',
+                border: '1px solid #cbd5e1',
+                display: 'flex',
+                alignItems: 'flex-start',
+                justifyContent: 'space-between',
+                gap: '8px'
+              }}
             >
-              <div className="flex-1">
-                <div className="text-[11px] text-slate-400 font-medium mb-1">
-                  {item.date}
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: '10px', color: '#64748b', fontWeight: '700', marginBottom: '2px' }}>
+                  🕒 {item.date}
                 </div>
-                <div className="text-sm text-slate-700 whitespace-pre-wrap">
+                <div style={{ fontSize: '12px', color: '#1e293b', fontWeight: '600', whiteSpace: 'pre-wrap' }}>
                   {item.text}
                 </div>
               </div>
@@ -63,22 +90,30 @@ function ExerciseNotesContent({
                 type="button"
                 onClick={() => handleDeleteNote(item.id)}
                 title="Borrar nota"
-                className="text-slate-400 hover:text-red-500 bg-transparent border-none p-1 cursor-pointer transition-colors"
+                style={{
+                  background: '#fef2f2',
+                  color: '#ef4444',
+                  border: '1px solid #fecaca',
+                  borderRadius: '6px',
+                  padding: '4px 6px',
+                  fontSize: '11px',
+                  fontWeight: '800',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '2px'
+                }}
               >
-                <Trash2 size={14} />
+                <Trash2 size={12} /> Borrar
               </button>
             </div>
           ))}
         </div>
+      ) : (
+        <div style={{ fontSize: '11px', color: '#64748b', fontStyle: 'italic', textAlign: 'center', padding: '6px 0' }}>
+          No hay notas guardadas para este ejercicio.
+        </div>
       )}
     </div>
-  );
-}
-
-export default function ExerciseNotes(props) {
-  return (
-    <ErrorBoundary>
-      <ExerciseNotesContent {...props} />
-    </ErrorBoundary>
   );
 }
