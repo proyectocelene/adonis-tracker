@@ -1,70 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { 
-  ChevronDown, ChevronUp, ArrowUp, ArrowDown, Check, Clock, Info, 
-  Plus, Minus, RotateCcw, Search, Video, Play, Square, Flame, MessageSquare, GripVertical, Trash2 
-} from 'lucide-react';
 import { useModal } from './common/UIComponents';
-import { unifyExerciseWithAI } from '../services/deepseek';
-import { useLocalStorage } from '../hooks/useLocalStorage';
+import ExerciseHeader from './exercise/ExerciseHeader';
+import RestTimer from './exercise/RestTimer';
+import SetLogger from './exercise/SetLogger';
+import ExerciseNotes from './exercise/ExerciseNotes';
+import ExerciseBiomechanics from './exercise/ExerciseBiomechanics';
+import ExerciseSwap from './exercise/ExerciseSwap';
+import { calculateSmartWarmup, getLoadRecommendation } from '../hooks/useWorkoutCalculations';
 import { UNIFIED_EXERCISE_LIBRARY } from '../data/unifiedExerciseLibrary';
-
-const triggerRestTimerNotification = (exerciseName, durationSeconds) => {
-  // 1. Solicitar permiso si no ha sido decidido
-  if ('Notification' in window && Notification.permission === 'default') {
-    Notification.requestPermission();
-  }
-
-  // 2. Vibración Fuerte y Repetida (Vibrar mucho y fuerte)
-  if (navigator.vibrate) {
-    navigator.vibrate([600, 200, 600, 200, 1000, 200, 1000, 200, 1200]);
-  }
-
-  // 3. Tono Sintetizado Potente (Bypass de silencio mediante Web Audio API)
-  try {
-    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-    if (AudioContextClass) {
-      const ctx = new AudioContextClass();
-      [0, 0.25, 0.5, 0.75, 1.0].forEach((delay) => {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(987.77, ctx.currentTime + delay);
-        osc.frequency.exponentialRampToValueAtTime(1318.51, ctx.currentTime + delay + 0.18);
-        gain.gain.setValueAtTime(1.0, ctx.currentTime + delay);
-        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + delay + 0.22);
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start(ctx.currentTime + delay);
-        osc.stop(ctx.currentTime + delay + 0.24);
-      });
-    }
-  } catch (e) {
-    console.warn("Audio Context error:", e);
-  }
-
-  // 4. Notificación de Sistema (PWA / Sistema Operativo)
-  if ('Notification' in window && Notification.permission === 'granted') {
-    const title = '⏱️ ¡TIEMPO DE DESCANSO CONCLUIDO!';
-    const options = {
-      body: `Tu descanso de ${durationSeconds}s para "${exerciseName}" ha concluido. ¡A dar la siguiente serie!`,
-      icon: './pwa-192x192.png',
-      badge: './pwa-192x192.png',
-      tag: `timer-${Date.now()}`,
-      renotify: true,
-      requireInteraction: true,
-      vibrate: [600, 200, 600, 200, 1000]
-    };
-    try {
-      new Notification(title, options);
-    } catch (e) {
-      if (navigator.serviceWorker && navigator.serviceWorker.ready) {
-        navigator.serviceWorker.ready.then(reg => {
-          reg.showNotification(title, options);
-        });
-      }
-    }
-  }
-};
 
 export default function ExerciseRow({
   exercise,
@@ -77,10 +20,13 @@ export default function ExerciseRow({
   onMoveDown,
   isFirst,
   isLast,
+  isDeferred = false,
+  onDeferExercise,
   initiallyExpanded = false,
   isExpanded: controlledExpanded,
   onToggleExpand
 }) {
+
   const modal = useModal();
   const [internalExpanded, setInternalExpanded] = useState(initiallyExpanded);
   const isExpanded = controlledExpanded !== undefined ? controlledExpanded : internalExpanded;
@@ -88,8 +34,6 @@ export default function ExerciseRow({
   const [activeSubTab, setActiveSubTab] = useState('logger');
   const [machineSetupInput, setMachineSetupInput] = useState(exerciseData.machineSetup || '');
   const [exerciseNotesInput, setExerciseNotesInput] = useState('');
-  const [isUnifying, setIsUnifying] = useState(false);
-  const [apiKey] = useLocalStorage('coachv2_deepseek_apikey', '');
 
   // Estado del Gesto "Dejar Presionado" (Long Press Reorder Mode)
   const [isReorderMode, setIsReorderMode] = useState(false);
@@ -117,41 +61,8 @@ export default function ExerciseRow({
   const targetReps = exercise.reps || '10-12';
   const restPrescribed = exercise.restTime || '90 s';
   const parsedRestSeconds = parseInt(restPrescribed) || 90;
-
-  const [restTimerSeconds, setRestTimerSeconds] = useState(parsedRestSeconds);
-  const [isTimerActive, setIsTimerActive] = useState(false);
-
-  useEffect(() => {
-    let interval = null;
-    if (isTimerActive && restTimerSeconds > 0) {
-      interval = setInterval(() => {
-        setRestTimerSeconds(prev => prev - 1);
-      }, 1000);
-    } else if (restTimerSeconds === 0 && isTimerActive) {
-      setIsTimerActive(false);
-      triggerRestTimerNotification(exercise.name, parsedRestSeconds);
-    }
-    return () => clearInterval(interval);
-  }, [isTimerActive, restTimerSeconds, exercise.name, parsedRestSeconds]);
-
-  const handleStartTimer = (customSecs) => {
-    if ('Notification' in window && Notification.permission === 'default') {
-      Notification.requestPermission();
-    }
-    const secsToUse = typeof customSecs === 'number' ? customSecs : (restTimerSeconds <= 0 ? parsedRestSeconds : restTimerSeconds);
-    setRestTimerSeconds(secsToUse);
-    setIsTimerActive(true);
-  };
-
-  const handleStopTimer = () => {
-    setIsTimerActive(false);
-  };
-
-  const handleResetTimer = (secondsToSet = parsedRestSeconds) => {
-    setRestTimerSeconds(secondsToSet);
-    setIsTimerActive(false);
-  };
-
+  
+  const effectiveRestSeconds = exerciseData.customRestSeconds ? parseInt(exerciseData.customRestSeconds) : parsedRestSeconds;
 
   const ensureMeta = () => {
     if (!exerciseData.name || !exerciseData.muscleGroup) {
@@ -159,7 +70,8 @@ export default function ExerciseRow({
         onUpdateExerciseMeta({
           name: exercise.name,
           muscleGroup: exercise.muscleGroup || 'General',
-          customSetsCount: totalSets
+          customSetsCount: totalSets,
+          customRestSeconds: effectiveRestSeconds
         });
       }
     }
@@ -167,12 +79,17 @@ export default function ExerciseRow({
 
   const handleSetChange = (setIndex, field, value) => {
     ensureMeta();
+    const isUnilateral = !!exerciseData.isUnilateral || !!exercise.isUnilateral;
     const currentSet = exerciseData[setIndex] || { 
-      weight: previousData[setIndex]?.weight || '', 
-      reps: previousData[setIndex]?.reps || '', 
-      rpe: previousData[setIndex]?.rpe || '8', 
+      weight: '', 
+      reps: '', 
+      repsL: '',
+      repsR: '',
+      weightL: '',
+      weightR: '',
+      rpe: '8', 
       completed: false,
-      unit: previousData[setIndex]?.unit || exercise.defaultUnit || 'lbs'
+      unit: exercise.defaultUnit || 'lbs'
     };
 
     onUpdateSet(setIndex, {
@@ -183,9 +100,14 @@ export default function ExerciseRow({
 
   const toggleSetComplete = (setIndex) => {
     ensureMeta();
+    const isUnilateral = !!exerciseData.isUnilateral || !!exercise.isUnilateral;
     const currentSet = exerciseData[setIndex] || { 
       weight: previousData[setIndex]?.weight || '', 
       reps: previousData[setIndex]?.reps || '', 
+      repsL: previousData[setIndex]?.repsL || '',
+      repsR: previousData[setIndex]?.repsR || '',
+      weightL: previousData[setIndex]?.weightL || '',
+      weightR: previousData[setIndex]?.weightR || '',
       rpe: previousData[setIndex]?.rpe || '8', 
       completed: false,
       unit: previousData[setIndex]?.unit || exercise.defaultUnit || 'lbs'
@@ -193,18 +115,39 @@ export default function ExerciseRow({
 
     const newCompleted = !currentSet.completed;
 
+    let finalReps = currentSet.reps || previousData[setIndex]?.reps || targetReps.split('-')[0] || '10';
+    if (isUnilateral && (currentSet.repsL || currentSet.repsR)) {
+      finalReps = Math.max(parseFloat(currentSet.repsL) || 0, parseFloat(currentSet.repsR) || 0) || finalReps;
+    }
+    const finalWeight = currentSet.weight || previousData[setIndex]?.weight || '';
+
     onUpdateSet(setIndex, {
       ...currentSet,
       completed: newCompleted,
-      weight: currentSet.weight || previousData[setIndex]?.weight || '',
-      reps: currentSet.reps || previousData[setIndex]?.reps || targetReps.split('-')[0] || '10'
+      weight: finalWeight,
+      reps: String(finalReps)
     });
 
-    if (newCompleted && !isTimerActive) {
-      handleResetTimer();
-      handleStartTimer();
+    // AUTOCOMPLETADO INTELIGENTE:
+    // Al completar la serie N (para N >= 1), si la serie N+1 está vacía, prellenarla con la misma carga y repeticiones.
+    if (newCompleted && setIndex >= 1 && setIndex < totalSets) {
+      const nextIndex = setIndex + 1;
+      const nextSet = exerciseData[nextIndex];
+      const isNextEmpty = !nextSet || (!nextSet.weight && !nextSet.reps && !nextSet.completed);
+      if (isNextEmpty && onUpdateSet) {
+        onUpdateSet(nextIndex, {
+          weight: finalWeight,
+          reps: String(finalReps),
+          repsL: currentSet.repsL || '',
+          repsR: currentSet.repsR || '',
+          rpe: currentSet.rpe || '8',
+          completed: false,
+          unit: currentSet.unit || exercise.defaultUnit || 'lbs'
+        });
+      }
     }
   };
+
 
   const handleAddSet = () => {
     const nextSetNumber = totalSets + 1;
@@ -222,11 +165,6 @@ export default function ExerciseRow({
     if (onUpdateSet) {
       onUpdateSet(nextSetNumber, clonedSet);
     }
-    modal.showAlert({
-      title: `➕ Serie #${nextSetNumber} Añadida`,
-      message: `Se añadió la serie #${nextSetNumber} al ejercicio.`,
-      variant: 'info'
-    });
   };
 
   const handleRemoveSet = () => {
@@ -240,11 +178,6 @@ export default function ExerciseRow({
   const handleSaveMachineSetup = () => {
     if (onUpdateExerciseMeta) {
       onUpdateExerciseMeta({ machineSetup: machineSetupInput });
-      modal.showAlert({
-        title: "✅ Calibración Guardada",
-        message: `Los ajustes mecánicos ("${machineSetupInput || 'Sin anotación'}") se guardaron para sesiones futuras.`,
-        variant: "success"
-      });
     }
   };
 
@@ -265,11 +198,6 @@ export default function ExerciseRow({
         notesHistory: updatedHistory
       });
       setExerciseNotesInput('');
-      modal.showAlert({
-        title: "📝 Nota Guardada",
-        message: "Tu nota fue guardada en el historial de este ejercicio sin alterar tus series.",
-        variant: "success"
-      });
     }
   };
 
@@ -281,11 +209,6 @@ export default function ExerciseRow({
         notesHistory: updatedHistory,
         notes: updatedHistory.length > 0 ? updatedHistory[0].text : ''
       });
-      modal.showAlert({
-        title: "🗑️ Nota Eliminada",
-        message: "La nota fue eliminada del historial.",
-        variant: "info"
-      });
     }
   };
 
@@ -294,40 +217,39 @@ export default function ExerciseRow({
     : [];
   const allNotesList = [...(exerciseData.notesHistory || []), ...legacyNoteList];
 
+  const handleExecuteSwap = async (candidate) => {
+    if (!candidate) return;
+    const candidateObj = typeof candidate === 'object' ? candidate : { name: candidate };
+    
+    // Buscar la metadata completa del sustituto en equivalentes o en la biblioteca oficial
+    let fullCandidate = { ...candidateObj };
+    const matchEq = (exercise.equivalents || []).find(eq => eq.name === fullCandidate.name || eq.id === fullCandidate.id);
+    if (matchEq) {
+      fullCandidate = { ...matchEq, ...fullCandidate };
+    } else {
+      const matchLib = UNIFIED_EXERCISE_LIBRARY.find(x => x.name === fullCandidate.name || x.id === fullCandidate.id);
+      if (matchLib) {
+        fullCandidate = { ...matchLib, ...fullCandidate };
+      }
+    }
 
-  const handleExecuteSwap = async (candidateName) => {
-    if (!candidateName) return;
     try {
-      setIsUnifying(true);
-      const unifiedRes = await unifyExerciseWithAI({
-        apiKey,
-        originalExerciseName: exercise.name,
-        candidateName,
-        muscleGroup: exercise.muscleGroup,
-        currentWeight: previousData[1]?.weight || 80
-      });
-
       if (onSwapExercise) {
         onSwapExercise(exercise.id, {
-          name: candidateName,
-          unifiedFunctionCode: unifiedRes.codigoFuncionUnificada,
-          ratio: unifiedRes.ratioCargaRecomendada,
-          originalName: exercise.name,
-          biomechanics: unifiedRes.justificacionCientifica || exercise.biomechanics
+          name: fullCandidate.name,
+          originalName: exercise.originalName || exercise.name,
+          biomechanics: fullCandidate.biomechanics || '',
+          mindMuscle: fullCandidate.mindMuscle || null,
+          warmup: fullCandidate.warmup || '',
+          muscleGroup: fullCandidate.muscleGroup || exercise.muscleGroup,
+          searchQuery: fullCandidate.searchQuery || `${fullCandidate.name} tecnica biomecanica`,
+          loadFamily: fullCandidate.loadFamily || exercise.loadFamily
         });
       }
-
-      modal.showAlert({
-        title: "🔄 Ejercicio Sustituido",
-        message: `Se cambió a "${candidateName}". Peso predicho: ${unifiedRes.pesoPredicho || 'N/A'}.`,
-        variant: "success"
-      });
     } catch (err) {
       if (onSwapExercise) {
-        onSwapExercise(exercise.id, { name: candidateName, originalName: exercise.name });
+        onSwapExercise(exercise.id, { name: fullCandidate.name, originalName: exercise.name });
       }
-    } finally {
-      setIsUnifying(false);
     }
   };
 
@@ -346,7 +268,8 @@ export default function ExerciseRow({
 
   const warmupSetVal = exerciseData[0] || {};
   const isWarmupSetDone = !!warmupSetVal.completed;
-  const suggestedWarmupWeight = Math.round((parseFloat(previousData[1]?.weight || 60) * 0.5) / 5) * 5 || 30;
+  const suggestedWarmupWeight = calculateSmartWarmup(previousData, exerciseData, 60);
+  const loadRecommendation = getLoadRecommendation(targetReps, previousData);
 
   return (
     <div 
@@ -368,138 +291,26 @@ export default function ExerciseRow({
       }}
     >
       {/* 1. CABECERA STICKY EN EL CELULAR: TITULO COMPLETO 100% ANCHO + GESTO DEJAR PRESIONADO */}
-      <div 
-        onTouchStart={startLongPress}
-        onTouchEnd={cancelLongPress}
-        onTouchMove={cancelLongPress}
-        onMouseDown={startLongPress}
-        onMouseUp={cancelLongPress}
-        onMouseLeave={cancelLongPress}
-        style={{ 
-          position: 'sticky', 
-          top: '0px', 
-          zIndex: 50, 
-          background: isFullyCompleted ? '#f0fdf4' : '#ffffff', 
-          padding: '12px 14px', 
-          borderRadius: isExpanded ? '22px 22px 0 0' : '22px', 
-          borderBottom: isExpanded ? '2px solid #cbd5e1' : 'none',
-          boxShadow: '0 4px 12px rgba(15, 23, 42, 0.08)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: '10px',
-          userSelect: 'none'
-        }}
-      >
-        {/* ICONO DE AGARRE O BOTÓN DE REORDENAR AL DEJAR PRESIONADO */}
-        <button
-          type="button"
-          onClick={() => {
-            setIsReorderMode(!isReorderMode);
-            if (navigator.vibrate) navigator.vibrate(40);
-          }}
-          title="Mantén presionado para reordenar"
-          style={{
-            background: isReorderMode ? '#6366f1' : '#f1f5f9',
-            color: isReorderMode ? '#ffffff' : '#64748b',
-            border: 'none',
-            borderRadius: '10px',
-            padding: '6px 4px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'pointer',
-            flexShrink: 0
-          }}
-        >
-          <GripVertical size={20} />
-        </button>
+      <ExerciseHeader
+        exercise={exercise}
+        isExpanded={isExpanded}
+        onToggleExpand={onToggleExpand}
+        isFullyCompleted={isFullyCompleted}
+        totalSets={totalSets}
+        targetReps={targetReps}
+        completedSetsCount={completedSetsCount}
+        isReorderMode={isReorderMode}
+        setIsReorderMode={setIsReorderMode}
+        startLongPress={startLongPress}
+        cancelLongPress={cancelLongPress}
+        onMoveUp={onMoveUp}
+        onMoveDown={onMoveDown}
+        isFirst={isFirst}
+        isLast={isLast}
+        isDeferred={isDeferred}
+        onDeferExercise={onDeferExercise}
+      />
 
-        {/* NOMBRE DEL EJERCICIO A TODO EL ANCHO */}
-        <div style={{ flex: 1, minWidth: 0, cursor: 'pointer' }} onClick={onToggleExpand}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap', marginBottom: '2px' }}>
-            <strong style={{ fontSize: '15px', color: '#0f172a', fontWeight: '900', lineHeight: '1.3' }}>
-              {exercise.name}
-            </strong>
-            {isFullyCompleted && (
-              <span style={{ fontSize: '10px', background: '#10b981', color: '#ffffff', padding: '2px 8px', borderRadius: '8px', fontWeight: '900' }}>
-                ✓ Completo
-              </span>
-            )}
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ fontSize: '11px', background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe', padding: '2px 8px', borderRadius: '10px', fontWeight: '800' }}>
-              {exercise.muscleGroup || 'General'}
-            </span>
-            <span style={{ fontSize: '11px', background: '#f1f5f9', color: '#334155', border: '1px solid #cbd5e1', padding: '2px 8px', borderRadius: '10px', fontWeight: '800' }}>
-              {completedSetsCount}/{totalSets} Series
-            </span>
-          </div>
-        </div>
-
-        {/* CHEVRON COMPACTO PARA EXPANDIR */}
-        <button
-          type="button"
-          onClick={onToggleExpand}
-          style={{
-            width: '36px',
-            height: '36px',
-            borderRadius: '12px',
-            border: 'none',
-            background: isExpanded ? '#0066ff' : '#f1f5f9',
-            color: isExpanded ? '#ffffff' : '#64748b',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'pointer',
-            flexShrink: 0,
-            transition: 'all 0.2s'
-          }}
-        >
-          {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-        </button>
-      </div>
-
-      {/* BARRA FLOTANTE DE REORDENAMIENTO (APARECE AL DEJAR PRESIONADO O TOCAR EL ICONO DE AGARRE) */}
-      {isReorderMode && (
-        <div className="animate-fade" style={{ background: '#6366f1', color: '#ffffff', padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
-          <span style={{ fontSize: '12px', fontWeight: '900' }}>
-            🔀 Reordenar Ejercicio:
-          </span>
-          <div style={{ display: 'flex', gap: '6px' }}>
-            <button
-              type="button"
-              disabled={isFirst}
-              onClick={() => {
-                onMoveUp();
-                if (navigator.vibrate) navigator.vibrate(30);
-              }}
-              style={{ background: isFirst ? 'rgba(255,255,255,0.3)' : '#ffffff', color: isFirst ? '#94a3b8' : '#4338ca', border: 'none', borderRadius: '8px', padding: '6px 12px', fontSize: '12px', fontWeight: '900', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
-            >
-              <ArrowUp size={14} /> Mover Arriba
-            </button>
-            <button
-              type="button"
-              disabled={isLast}
-              onClick={() => {
-                onMoveDown();
-                if (navigator.vibrate) navigator.vibrate(30);
-              }}
-              style={{ background: isLast ? 'rgba(255,255,255,0.3)' : '#ffffff', color: isLast ? '#94a3b8' : '#4338ca', border: 'none', borderRadius: '8px', padding: '6px 12px', fontSize: '12px', fontWeight: '900', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
-            >
-              <ArrowDown size={14} /> Mover Abajo
-            </button>
-            <button
-              type="button"
-              onClick={() => setIsReorderMode(false)}
-              style={{ background: '#10b981', color: '#ffffff', border: 'none', borderRadius: '8px', padding: '6px 12px', fontSize: '12px', fontWeight: '900', cursor: 'pointer' }}
-            >
-              ✓ Listo
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* 2. CONTENIDO EXPANDIDO A 100% FULL-WIDTH SIN MARGENES MALGASTADOS */}
       {isExpanded && (
@@ -540,7 +351,7 @@ export default function ExerciseRow({
                 boxShadow: activeSubTab === 'technique' ? '0 4px 10px rgba(124, 58, 237, 0.3)' : 'none'
               }}
             >
-              💡 Biomecánica
+              💡 Info
             </button>
             <button
               type="button"
@@ -562,617 +373,55 @@ export default function ExerciseRow({
             </button>
           </div>
 
-          {/* SUBPESTAÑA 1: SERIES & CARGAS */}
+          {/* SUBPESTAÑA 1: SERIES & CARGAS (OPTIMIZADA) */}
           {activeSubTab === 'logger' && (
             <div style={{ width: '100%' }}>
-              {/* TEMPORIZADOR DE DESCANSO CON ALARMA Y SELECTOR */}
-              <div style={{
-                background: isTimerActive ? 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)' : '#ffffff',
-                color: isTimerActive ? '#ffffff' : '#0f172a',
-                padding: '10px 12px',
-                borderRadius: '14px',
-                marginBottom: '10px',
-                border: isTimerActive ? '1.5px solid #38bdf8' : '1.5px solid #cbd5e1',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '8px',
-                width: '100%'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <Clock size={16} color={isTimerActive ? '#38bdf8' : '#0066ff'} />
-                    <span style={{ fontSize: '13px', fontWeight: '900' }}>
-                      {isTimerActive ? `⏱️ ${restTimerSeconds}s Restantes` : `Descanso: ${restTimerSeconds}s`}
-                    </span>
-                  </div>
-
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    {isTimerActive ? (
-                      <>
-                        <button
-                          type="button"
-                          onClick={() => handleResetTimer(restTimerSeconds)}
-                          title="Reiniciar temporizador"
-                          style={{ background: 'rgba(255,255,255,0.2)', color: '#fff', border: 'none', borderRadius: '8px', padding: '5px 8px', fontSize: '11px', fontWeight: '800', cursor: 'pointer' }}
-                        >
-                          <RotateCcw size={12} />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={handleStopTimer}
-                          title="Parar temporizador"
-                          style={{ background: '#ef4444', color: '#fff', border: 'none', borderRadius: '8px', padding: '5px 10px', fontSize: '11px', fontWeight: '900', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '3px' }}
-                        >
-                          <Square size={12} fill="#fff" /> Parar
-                        </button>
-                      </>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => handleStartTimer(restTimerSeconds)}
-                        style={{ background: '#0066ff', color: '#ffffff', border: 'none', borderRadius: '8px', padding: '6px 14px', fontSize: '12px', fontWeight: '900', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
-                      >
-                        <Play size={12} fill="#fff" /> Iniciar
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                {/* BOTONES DE SELECCIÓN RÁPIDA DE DESCANSO */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', width: '100%', pt: '4px' }}>
-                  <span style={{ fontSize: '10px', fontWeight: '800', color: isTimerActive ? '#94a3b8' : '#64748b' }}>Ajustar:</span>
-                  {[60, 90, 120, 180].map((secs) => (
-                    <button
-                      key={secs}
-                      type="button"
-                      onClick={() => {
-                        setRestTimerSeconds(secs);
-                        if (!isTimerActive) {
-                          handleStartTimer(secs);
-                        }
-                      }}
-                      style={{
-                        flex: 1,
-                        padding: '4px 6px',
-                        borderRadius: '8px',
-                        border: restTimerSeconds === secs ? '1.5px solid #0066ff' : (isTimerActive ? '1px solid #334155' : '1px solid #e2e8f0'),
-                        background: restTimerSeconds === secs ? (isTimerActive ? '#0066ff' : '#eff6ff') : (isTimerActive ? 'rgba(255,255,255,0.05)' : '#f8fafc'),
-                        color: restTimerSeconds === secs ? (isTimerActive ? '#ffffff' : '#0066ff') : (isTimerActive ? '#cbd5e1' : '#475569'),
-                        fontSize: '11px',
-                        fontWeight: '900',
-                        cursor: 'pointer'
-                      }}
-                    >
-                      {secs}s
-                    </button>
-                  ))}
-                </div>
-              </div>
-
               {/* TABLA DE SERIES DE TRABAJO */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '12px', width: '100%' }}>
-                
-                {/* SERIE S0 (CALENTAMIENTO / APROXIMACIÓN) */}
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  gap: '4px',
-                  background: isWarmupSetDone ? '#fef3c7' : '#fffbeb',
-                  padding: '8px',
-                  borderRadius: '14px',
-                  border: isWarmupSetDone ? '2px solid #f59e0b' : '1.5px dashed #f59e0b',
-                  width: '100%'
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '2px', width: '32px', flexShrink: 0 }}>
-                    <Flame size={13} color="#d97706" />
-                    <span style={{ fontSize: '12px', fontWeight: '900', color: '#b45309' }}>S0</span>
-                  </div>
-
-                  <div style={{ display: 'flex', flexDirection: 'column', width: '65px', textAlign: 'center', flexShrink: 0 }}>
-                    <span style={{ fontSize: '8px', color: '#b45309', textTransform: 'uppercase', fontWeight: '800' }}>Calentamiento</span>
-                    <strong style={{ fontSize: '11px', color: '#78350f', fontWeight: '800' }}>
-                      ~{suggestedWarmupWeight}lbs
-                    </strong>
-                  </div>
-
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
-                    <input
-                      type="number"
-                      placeholder="Peso"
-                      value={warmupSetVal.weight ?? ''}
-                      onChange={(e) => handleSetChange(0, 'weight', e.target.value)}
-                      style={{
-                        width: '56px',
-                        padding: '6px 4px',
-                        borderRadius: '8px',
-                        border: '1.5px solid #f59e0b',
-                        fontSize: '13px',
-                        fontWeight: '900',
-                        textAlign: 'center',
-                        background: '#ffffff',
-                        color: '#78350f'
-                      }}
-                    />
-                    <span style={{ fontSize: '10px', color: '#b45309', fontWeight: '800' }}>lbs</span>
-                  </div>
-
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
-                    <input
-                      type="number"
-                      placeholder="Reps"
-                      value={warmupSetVal.reps ?? ''}
-                      onChange={(e) => handleSetChange(0, 'reps', e.target.value)}
-                      style={{
-                        width: '46px',
-                        padding: '6px 4px',
-                        borderRadius: '8px',
-                        border: '1.5px solid #f59e0b',
-                        fontSize: '13px',
-                        fontWeight: '900',
-                        textAlign: 'center',
-                        background: '#ffffff',
-                        color: '#78350f'
-                      }}
-                    />
-                    <span style={{ fontSize: '10px', color: '#b45309', fontWeight: '800' }}>r</span>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => toggleSetComplete(0)}
-                    style={{
-                      width: '34px',
-                      height: '34px',
-                      borderRadius: '10px',
-                      border: 'none',
-                      background: isWarmupSetDone ? '#f59e0b' : '#cbd5e1',
-                      color: '#ffffff',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      cursor: 'pointer',
-                      flexShrink: 0
-                    }}
-                  >
-                    <Check size={18} strokeWidth={3.5} />
-                  </button>
-                </div>
-
-                {/* SERIES EFECTIVAS (S1, S2, S3...) */}
-                {Array.from({ length: totalSets }).map((_, sIdx) => {
-                  const setNum = sIdx + 1;
-                  const setVal = exerciseData[setNum] || {};
-                  const prevVal = previousData[setNum] || {};
-                  const isDone = !!setVal.completed;
-
-                  return (
-                    <div
-                      key={setNum}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        gap: '4px',
-                        background: isDone ? '#dcfce7' : '#ffffff',
-                        padding: '8px',
-                        borderRadius: '14px',
-                        border: isDone ? '2px solid #22c55e' : '1.5px solid #cbd5e1',
-                        width: '100%'
-                      }}
-                    >
-                      <span style={{ fontSize: '13px', fontWeight: '900', color: isDone ? '#15803d' : '#0f172a', width: '32px', flexShrink: 0 }}>
-                        S{setNum}
-                      </span>
-
-                      <div style={{ display: 'flex', flexDirection: 'column', width: '65px', textAlign: 'center', flexShrink: 0 }}>
-                        <span style={{ fontSize: '8px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: '800' }}>Previo</span>
-                        <strong style={{ fontSize: '11px', color: '#475569', fontWeight: '800' }}>
-                          {prevVal.weight ? `${prevVal.weight}${prevVal.unit || 'lbs'}` : `—`}
-                        </strong>
-                      </div>
-
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
-                        <input
-                          type="number"
-                          placeholder="Peso"
-                          value={setVal.weight ?? ''}
-                          onChange={(e) => handleSetChange(setNum, 'weight', e.target.value)}
-                          style={{
-                            width: '56px',
-                            padding: '6px 4px',
-                            borderRadius: '8px',
-                            border: '1.5px solid #94a3b8',
-                            fontSize: '13px',
-                            fontWeight: '900',
-                            textAlign: 'center',
-                            background: '#ffffff',
-                            color: '#0f172a'
-                          }}
-                        />
-                        <span style={{ fontSize: '10px', color: '#475569', fontWeight: '800' }}>lbs</span>
-                      </div>
-
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
-                        <input
-                          type="number"
-                          placeholder="Reps"
-                          value={setVal.reps ?? ''}
-                          onChange={(e) => handleSetChange(setNum, 'reps', e.target.value)}
-                          style={{
-                            width: '46px',
-                            padding: '6px 4px',
-                            borderRadius: '8px',
-                            border: '1.5px solid #94a3b8',
-                            fontSize: '13px',
-                            fontWeight: '900',
-                            textAlign: 'center',
-                            background: '#ffffff',
-                            color: '#0f172a'
-                          }}
-                        />
-                        <span style={{ fontSize: '10px', color: '#475569', fontWeight: '800' }}>r</span>
-                      </div>
-
-                      <select
-                        value={setVal.rpe || '8'}
-                        onChange={(e) => handleSetChange(setNum, 'rpe', e.target.value)}
-                        style={{
-                          width: '64px',
-                          flexShrink: 0,
-                          padding: '6px 2px',
-                          borderRadius: '8px',
-                          border: setVal.rpe === '8' ? '1.5px solid #3b82f6' : '1.5px solid #cbd5e1',
-                          fontSize: '11px',
-                          fontWeight: '900',
-                          textAlign: 'center',
-                          background: setVal.rpe === '8' ? '#eff6ff' : '#ffffff',
-                          color: setVal.rpe === '8' ? '#1d4ed8' : '#0f172a',
-                          outline: 'none',
-                          cursor: 'pointer'
-                        }}
-                      >
-                        <option value="6">RPE 6</option>
-                        <option value="7">RPE 7</option>
-                        <option value="8">RPE 8</option>
-                        <option value="8.5">RPE 8.5</option>
-                        <option value="9">RPE 9</option>
-                        <option value="9.5">RPE 9.5</option>
-                        <option value="10">RPE 10</option>
-                      </select>
-
-                      <button
-                        type="button"
-                        onClick={() => toggleSetComplete(setNum)}
-                        style={{
-                          width: '34px',
-                          height: '34px',
-                          borderRadius: '10px',
-                          border: 'none',
-                          background: isDone ? '#10b981' : '#cbd5e1',
-                          color: '#ffffff',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          cursor: 'pointer',
-                          flexShrink: 0
-                        }}
-                      >
-                        <Check size={18} strokeWidth={3.5} />
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* CONTROLES DE SERIES */}
-              <div style={{ display: 'flex', gap: '8px', marginBottom: '12px', width: '100%' }}>
-                <button
-                  type="button"
-                  onClick={handleAddSet}
-                  style={{
-                    flex: 1,
-                    background: '#eff6ff',
-                    color: '#0066ff',
-                    border: '1.5px solid #bfdbfe',
-                    padding: '9px',
-                    borderRadius: '12px',
-                    fontSize: '12px',
-                    fontWeight: '900',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '4px'
-                  }}
-                >
-                  <Plus size={14} /> + Agregar Serie Extra
-                </button>
-                {totalSets > 1 && (
-                  <button
-                    type="button"
-                    onClick={handleRemoveSet}
-                    style={{
-                      background: '#fef2f2',
-                      color: '#ef4444',
-                      border: '1.5px solid #fecaca',
-                      padding: '9px 12px',
-                      borderRadius: '12px',
-                      fontSize: '12px',
-                      fontWeight: '900',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '4px'
-                    }}
-                  >
-                    <Minus size={14} /> Quitar
-                  </button>
-                )}
-              </div>
-
-              {/* HISTORIAL Y REGISTRO DE NOTAS TÉCNICAS */}
-              <div style={{ background: '#f8fafc', padding: '12px', borderRadius: '14px', border: '1.5px solid #e2e8f0', width: '100%', marginTop: '8px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <MessageSquare size={16} color="#7c3aed" />
-                    <span style={{ fontSize: '12px', color: '#4c1d95', fontWeight: '900' }}>
-                      📜 Historial de Notas & Sensaciones:
-                    </span>
-                  </div>
-                  <span style={{ fontSize: '10px', background: '#f3e8ff', color: '#7c3aed', padding: '2px 8px', borderRadius: '10px', fontWeight: '800' }}>
-                    {allNotesList.length} {allNotesList.length === 1 ? 'nota' : 'notas'}
-                  </span>
-                </div>
-
-                <div style={{ display: 'flex', gap: '6px', marginBottom: '10px' }}>
-                  <textarea
-                    rows={2}
-                    placeholder="Escribe una nota sobre este ejercicio (ej. Rep 8 cerca del fallo, ajustar asiento a 4...)"
-                    value={exerciseNotesInput}
-                    onChange={(e) => setExerciseNotesInput(e.target.value)}
-                    style={{
-                      flex: 1,
-                      padding: '8px',
-                      borderRadius: '10px',
-                      border: '1.5px solid #cbd5e1',
-                      fontSize: '12px',
-                      fontWeight: '600',
-                      background: '#ffffff',
-                      color: '#0f172a',
-                      resize: 'none'
-                    }}
-                  />
-                  <button
-                    type="button"
-                    onClick={handleSaveNotes}
-                    style={{
-                      background: '#7c3aed',
-                      color: '#ffffff',
-                      border: 'none',
-                      borderRadius: '10px',
-                      padding: '8px 12px',
-                      fontSize: '11px',
-                      fontWeight: '900',
-                      cursor: 'pointer',
-                      alignSelf: 'flex-end',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '4px'
-                    }}
-                  >
-                    <Plus size={14} /> Guardar
-                  </button>
-                </div>
-
-                {allNotesList.length > 0 ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '160px', overflowY: 'auto' }}>
-                    {allNotesList.map((item) => (
-                      <div 
-                        key={item.id}
-                        style={{
-                          background: '#ffffff',
-                          padding: '8px 10px',
-                          borderRadius: '10px',
-                          border: '1px solid #cbd5e1',
-                          display: 'flex',
-                          alignItems: 'flex-start',
-                          justifyContent: 'space-between',
-                          gap: '8px'
-                        }}
-                      >
-                        <div style={{ flex: 1 }}>
-                          <div style={{ fontSize: '10px', color: '#64748b', fontWeight: '700', marginBottom: '2px' }}>
-                            🕒 {item.date}
-                          </div>
-                          <div style={{ fontSize: '12px', color: '#1e293b', fontWeight: '600', whiteSpace: 'pre-wrap' }}>
-                            {item.text}
-                          </div>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteNote(item.id)}
-                          title="Borrar nota"
-                          style={{
-                            background: '#fef2f2',
-                            color: '#ef4444',
-                            border: '1px solid #fecaca',
-                            borderRadius: '6px',
-                            padding: '4px 6px',
-                            fontSize: '11px',
-                            fontWeight: '800',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '2px'
-                          }}
-                        >
-                          <Trash2 size={12} /> Borrar
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div style={{ fontSize: '11px', color: '#64748b', fontStyle: 'italic', textAlign: 'center', padding: '6px 0' }}>
-                    No hay notas guardadas para este ejercicio.
-                  </div>
-                )}
-              </div>
+              <SetLogger
+                exercise={exercise}
+                exerciseData={exerciseData}
+                previousData={previousData}
+                totalSets={totalSets}
+                suggestedWarmupWeight={suggestedWarmupWeight}
+                isWarmupSetDone={isWarmupSetDone}
+                loadRecommendation={loadRecommendation}
+                handleSetChange={handleSetChange}
+                toggleSetComplete={toggleSetComplete}
+                handleAddSet={handleAddSet}
+                handleRemoveSet={handleRemoveSet}
+                onUpdateExerciseMeta={onUpdateExerciseMeta}
+              />
             </div>
           )}
 
-          {/* SUBPESTAÑA 2: BIOMECÁNICA & BUSCADORES */}
+          {/* SUBPESTAÑA 2: INFO, BIOMECÁNICA & NOTAS */}
           {activeSubTab === 'technique' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', width: '100%' }}>
-                <a
-                  href={googleImagesUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    background: '#f8fafc',
-                    color: '#1e293b',
-                    border: '1.5px solid #cbd5e1',
-                    padding: '8px 10px',
-                    borderRadius: '12px',
-                    fontSize: '11px',
-                    fontWeight: '800',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '6px',
-                    textDecoration: 'none'
-                  }}
-                >
-                  <Search size={14} color="#0066ff" /> Buscar en Google Imágenes
-                </a>
-                <a
-                  href={youtubeTutorialUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    background: '#fef2f2',
-                    color: '#991b1b',
-                    border: '1.5px solid #fecaca',
-                    padding: '8px 10px',
-                    borderRadius: '12px',
-                    fontSize: '11px',
-                    fontWeight: '800',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '6px',
-                    textDecoration: 'none'
-                  }}
-                >
-                  <Video size={14} color="#dc2626" /> Tutorial en YouTube
-                </a>
-              </div>
-
-              {exercise.warmup && (
-                <div style={{ background: '#fffbeb', border: '1.5px solid #f59e0b', padding: '10px 12px', borderRadius: '14px', fontSize: '12px', color: '#78350f', fontWeight: '600', width: '100%' }}>
-                  <strong style={{ color: '#b45309', display: 'block', marginBottom: '2px', fontWeight: '900' }}>
-                    Guía de Calentamiento:
-                  </strong>
-                  {exercise.warmup}
-                </div>
-              )}
-
-              <div style={{ background: '#f8fafc', padding: '10px 12px', borderRadius: '14px', border: '1.5px solid #e2e8f0', width: '100%' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
-                  <Info size={14} color="#7c3aed" />
-                  <strong style={{ fontSize: '12px', color: '#4c1d95', fontWeight: '900' }}>Biomecánica & IAP:</strong>
-                </div>
-                <p style={{ margin: 0, fontSize: '12px', color: '#334155', lineHeight: '1.5', fontWeight: '600' }}>
-                  {exercise.biomechanics || 'Control de la fase excéntrica con respiración rítmica anti-hernia.'}
-                </p>
-              </div>
-
-              <div style={{ background: '#ffffff', padding: '10px', borderRadius: '14px', border: '1.5px solid #cbd5e1', width: '100%' }}>
-                <label className="input-label" style={{ display: 'block', marginBottom: '4px', fontSize: '11px', color: '#0f172a', fontWeight: '900' }}>
-                  ⚙️ Calibración de Máquina:
-                </label>
-                <div style={{ display: 'flex', gap: '6px' }}>
-                  <input
-                    type="text"
-                    placeholder="Ej. Asiento en hoyo 4, polea baja..."
-                    value={machineSetupInput}
-                    onChange={(e) => setMachineSetupInput(e.target.value)}
-                    style={{ flex: 1, padding: '8px 10px', borderRadius: '10px', border: '1.5px solid #cbd5e1', fontSize: '12px', fontWeight: '700' }}
-                  />
-                  <button
-                    type="button"
-                    onClick={handleSaveMachineSetup}
-                    style={{ background: '#7c3aed', color: '#ffffff', border: 'none', borderRadius: '10px', padding: '8px 14px', fontSize: '12px', fontWeight: '900', cursor: 'pointer' }}
-                  >
-                    Guardar
-                  </button>
-                </div>
-              </div>
-            </div>
+            <ExerciseBiomechanics
+              exercise={exercise}
+              totalSets={totalSets}
+              targetReps={targetReps}
+              restPrescribed={restPrescribed}
+              googleImagesUrl={googleImagesUrl}
+              youtubeTutorialUrl={youtubeTutorialUrl}
+              machineSetupInput={machineSetupInput}
+              setMachineSetupInput={setMachineSetupInput}
+              handleSaveMachineSetup={handleSaveMachineSetup}
+              allNotesList={allNotesList}
+              exerciseNotesInput={exerciseNotesInput}
+              setExerciseNotesInput={setExerciseNotesInput}
+              handleSaveNotes={handleSaveNotes}
+              handleDeleteNote={handleDeleteNote}
+            />
           )}
 
           {/* SUBPESTAÑA 3: SUSTITUIR EJERCICIO */}
           {activeSubTab === 'swap' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%' }}>
-              <span style={{ fontSize: '11px', color: '#334155', fontWeight: '800' }}>
-                Sustitutos equivalentes de la base de datos oficial:
-              </span>
-
-              {exercise.equivalents && exercise.equivalents.length > 0 && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', width: '100%' }}>
-                  {exercise.equivalents.map(eq => (
-                    <button
-                      key={eq.id}
-                      type="button"
-                      disabled={isUnifying}
-                      onClick={() => handleExecuteSwap(eq.name)}
-                      style={{
-                        background: '#ffffff',
-                        border: '1.5px solid #10b981',
-                        borderRadius: '12px',
-                        padding: '8px 10px',
-                        textAlign: 'left',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        width: '100%'
-                      }}
-                    >
-                      <div>
-                        <strong style={{ display: 'block', fontSize: '12px', color: '#065f46', fontWeight: '900' }}>{eq.name}</strong>
-                        <span style={{ fontSize: '10px', color: '#475569' }}>{eq.desc}</span>
-                      </div>
-                      <span className="badge badge-green" style={{ fontSize: '10px', flexShrink: 0, fontWeight: '900' }}>Sustituir</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              <div style={{ background: '#f8fafc', padding: '10px', borderRadius: '14px', border: '1.5px solid #e2e8f0', width: '100%' }}>
-                <label className="input-label" style={{ display: 'block', marginBottom: '4px', fontSize: '11px', color: '#0f172a', fontWeight: '900' }}>
-                  O elige cualquier máquina del catálogo unificado:
-                </label>
-                <select
-                  defaultValue=""
-                  onChange={(e) => {
-                    if (e.target.value) {
-                      const item = UNIFIED_EXERCISE_LIBRARY.find(x => x.id === e.target.value);
-                      if (item) handleExecuteSwap(item.name);
-                    }
-                  }}
-                  style={{ width: '100%', padding: '8px 10px', borderRadius: '10px', border: '1.5px solid #cbd5e1', fontSize: '12px', fontWeight: '800', background: '#ffffff' }}
-                >
-                  <option value="">👆 Seleccionar máquina oficial...</option>
-                  {UNIFIED_EXERCISE_LIBRARY.map(item => (
-                    <option key={item.id} value={item.id}>
-                      [{item.muscleGroup}] • {item.name} ({item.equipment})
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
+            <ExerciseSwap
+              exercise={exercise}
+              onSwapExercise={onSwapExercise}
+              handleExecuteSwap={handleExecuteSwap}
+              modal={modal}
+            />
           )}
         </div>
       )}

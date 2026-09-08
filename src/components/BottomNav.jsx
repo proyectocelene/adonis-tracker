@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { Calendar, Activity } from 'lucide-react';
+import { Calendar, Activity, Scale } from 'lucide-react';
 
 export default function BottomNav() {
   return (
@@ -17,7 +17,14 @@ export default function BottomNav() {
         className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
       >
         <Activity size={22} />
-        <span>Historial</span>
+        <span>Laboratorio</span>
+      </NavLink>
+      <NavLink 
+        to="/weight" 
+        className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+      >
+        <Scale size={22} />
+        <span>Peso</span>
       </NavLink>
     </nav>
   );

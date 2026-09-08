@@ -1,14 +1,45 @@
-import React, { useEffect, lazy, Suspense } from 'react';
+import React, { useEffect, useState, lazy, Suspense } from 'react';
 import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import BottomNav from './components/BottomNav';
 import { ModalProvider, PwaInstallBanner } from './components/common/UIComponents';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
-import { autoSyncWithOfflineBuffer } from './services/deepseek';
+
 import { Loader2 } from 'lucide-react';
+import { setMany } from 'idb-keyval';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { GlobalTimerProvider } from './contexts/GlobalTimerContext';
+import LoginScreen from './components/LoginScreen';
+
+async function migrateLocalStorageToIndexedDB() {
+  const hasMigrated = localStorage.getItem('coachv2_migrated_to_idb');
+  if (hasMigrated === 'true') return;
+
+  const entriesToMigrate = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key && key.startsWith('coachv2_') && key !== 'coachv2_migrated_to_idb') {
+      try {
+        const valueStr = localStorage.getItem(key);
+        if (valueStr === 'undefined') continue;
+        entriesToMigrate.push([key, JSON.parse(valueStr)]);
+      } catch (e) {
+        entriesToMigrate.push([key, localStorage.getItem(key)]);
+      }
+    }
+  }
+  
+  if (entriesToMigrate.length > 0) {
+    try {
+      await setMany(entriesToMigrate);
+    } catch (e) {}
+  }
+  localStorage.setItem('coachv2_migrated_to_idb', 'true');
+}
 
 // Code Splitting por pestañas para velocidad de carga instantánea (~200KB por chunk)
 const WorkoutDay = lazy(() => import('./components/WorkoutDay'));
 const HistoryView = lazy(() => import('./components/HistoryView'));
+const BodyWeightView = lazy(() => import('./components/BodyWeightView'));
 
 function PageLoader() {
   return (
@@ -27,45 +58,158 @@ function PageLoader() {
   );
 }
 
-function App() {
+function AppContent() {
+  const { currentUser } = useAuth();
+  const [isMigrating, setIsMigrating] = useState(true);
+
   // Motor de Sincronización Automática Resiliente & Rescate Offline
   useEffect(() => {
-    autoSyncWithOfflineBuffer();
+    async function runCentralizedMigration() {
+      if (!currentUser) {
+        setIsMigrating(false);
+        return;
+      }
+      const migrationFlag = `coachv2_migrated_to_firebase_${currentUser.uid}`;
+      if (localStorage.getItem(migrationFlag) === 'true') {
+        setIsMigrating(false);
+        return;
+      }
 
-    const handleOnline = () => {
-      console.log('⚡️ Conexión restaurada. Sincronizando en segundo plano...');
-      autoSyncWithOfflineBuffer();
-    };
+      setIsMigrating(true);
+      try {
+        // 1. Asegurar que los datos locales pasaron a IndexedDB
+        await migrateLocalStorageToIndexedDB();
 
-    window.addEventListener('online', handleOnline);
+        // 2. Extraer de IndexedDB e Inyectar en Firebase (solo las llaves vitales)
+        const { get } = await import('idb-keyval');
+        const { doc, setDoc } = await import('firebase/firestore');
+        const { db } = await import('./services/firebase');
 
-    const interval = setInterval(() => {
-      autoSyncWithOfflineBuffer();
-    }, 30 * 1000);
+        const keysToMigrate = [
+          'coachv2_active_workouts', 
+          'coachv2_custom_day_exercises',
+          'coachv2_swapped_exercises'
+        ];
 
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      clearInterval(interval);
-    };
-  }, []);
+        // Migrar primero el historial (como documentos individuales en subcolección)
+        const localHistory = await get('coachv2_history');
+        if (localHistory && Array.isArray(localHistory)) {
+          for (const session of localHistory) {
+            if (session && session.id) {
+              const sessionRef = doc(db, 'users', currentUser.uid, 'history', session.id);
+              await setDoc(sessionRef, session, { merge: true });
+            }
+          }
+        }
+
+        // Luego migrar el resto (como documentos simples)
+        for (const key of keysToMigrate) {
+          const localVal = await get(key);
+          if (localVal !== undefined) {
+             const docRef = doc(db, 'users', currentUser.uid, 'store', key);
+             await setDoc(docRef, { value: localVal }, { merge: true });
+          }
+        }
+
+        // 3. Limpiar TODO el localStorage antiguo obsoleto (excepto Auth de Firebase que no usa 'coachv2_')
+        for (let i = localStorage.length - 1; i >= 0; i--) {
+          const k = localStorage.key(i);
+          if (k && k.startsWith('coachv2_') && k !== migrationFlag) {
+             localStorage.removeItem(k);
+          }
+        }
+        
+        localStorage.setItem(migrationFlag, 'true');
+        console.log('✅ Migración Maestra a Firebase completada y Memoria Limpiada.');
+      } catch (err) {
+        console.error("Error en migración maestra:", err);
+      } finally {
+        setIsMigrating(false);
+      }
+    }
+    
+    runCentralizedMigration();
+
+    // 4. Activar Protocolo Adonis Definitivo (limpiar residuos locales antiguos de swaps y reordenamientos)
+    const PROTOCOL_V3_FLAG = `coachv2_protocol_adonis_2026_09_07_clean_${currentUser?.uid || 'guest'}`;
+    if (localStorage.getItem(PROTOCOL_V3_FLAG) !== 'true') {
+      import('idb-keyval').then(async ({ set }) => {
+        await set('coachv2_custom_day_exercises', {});
+        await set('coachv2_swapped_exercises', {});
+        await set('coachv2_exercise_orders', {});
+        await set('coachv2_custom_routine', null);
+
+        if (currentUser) {
+          const { doc, setDoc } = await import('firebase/firestore');
+          const { db } = await import('./services/firebase');
+          await setDoc(doc(db, 'users', currentUser.uid, 'store', 'coachv2_custom_day_exercises'), { value: {} }, { merge: true });
+          await setDoc(doc(db, 'users', currentUser.uid, 'store', 'coachv2_swapped_exercises'), { value: {} }, { merge: true });
+          await setDoc(doc(db, 'users', currentUser.uid, 'store', 'coachv2_exercise_orders'), { value: {} }, { merge: true });
+          await setDoc(doc(db, 'users', currentUser.uid, 'store', 'coachv2_custom_routine'), { value: null }, { merge: true });
+        }
+        localStorage.setItem(PROTOCOL_V3_FLAG, 'true');
+      }).catch(() => {});
+    }
+
+    // 5. Purgado definitivo de residuos de borradores obsoletos en coachv2_active_workouts y coachv2_global_warmup
+    const PURGE_ACTIVE_V7 = `coachv2_purge_active_v7_${currentUser?.uid || 'guest'}`;
+    if (localStorage.getItem(PURGE_ACTIVE_V7) !== 'true') {
+      import('idb-keyval').then(async ({ set }) => {
+        await set('coachv2_active_workouts', {});
+        await set('coachv2_global_warmup', {});
+        if (currentUser) {
+          const { doc, setDoc } = await import('firebase/firestore');
+          const { db } = await import('./services/firebase');
+          await setDoc(doc(db, 'users', currentUser.uid, 'store', 'coachv2_active_workouts'), { value: {} });
+          await setDoc(doc(db, 'users', currentUser.uid, 'store', 'coachv2_global_warmup'), { value: {} });
+        }
+        localStorage.setItem(PURGE_ACTIVE_V7, 'true');
+        console.log("🧹 [Adonis] coachv2_active_workouts y coachv2_global_warmup purgados al 100% en IndexedDB y Firestore.");
+      }).catch(err => console.error("Error purgando coachv2_active_workouts:", err));
+    }
+  }, [currentUser]);
+
+  if (isMigrating) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '12px', color: '#0066ff' }}>
+        <Loader2 size={32} style={{ animation: 'spin 1s linear infinite' }} />
+        <span style={{ fontSize: '13px', fontWeight: '700', color: '#64748b' }}>Migrando a la Nube Segura...</span>
+      </div>
+    );
+  }
+
+  if (!currentUser) {
+    return <LoginScreen />;
+  }
 
   return (
+    <Router>
+      <div style={{ maxWidth: '640px', margin: '0 auto', padding: '0 4px' }}>
+        <PwaInstallBanner />
+      </div>
+      <Suspense fallback={<PageLoader />}>
+        <Routes>
+          <Route path="/" element={<WorkoutDay />} />
+          <Route path="/history" element={<HistoryView />} />
+          <Route path="/weight" element={<BodyWeightView />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Suspense>
+      <BottomNav />
+    </Router>
+  );
+}
+
+function App() {
+  return (
     <ErrorBoundary>
-      <ModalProvider>
-        <Router>
-          <div style={{ maxWidth: '640px', margin: '0 auto', padding: '0 4px' }}>
-            <PwaInstallBanner />
-          </div>
-          <Suspense fallback={<PageLoader />}>
-            <Routes>
-              <Route path="/" element={<WorkoutDay />} />
-              <Route path="/history" element={<HistoryView />} />
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </Suspense>
-          <BottomNav />
-        </Router>
-      </ModalProvider>
+      <AuthProvider>
+        <GlobalTimerProvider>
+          <ModalProvider>
+            <AppContent />
+          </ModalProvider>
+        </GlobalTimerProvider>
+      </AuthProvider>
     </ErrorBoundary>
   );
 }

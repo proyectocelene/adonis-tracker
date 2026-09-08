@@ -18,13 +18,25 @@ export default function CardioLogger({
 
   const [activeSubTab, setActiveSubTab] = useState('logger'); // 'logger' | 'science'
   const [machine, setMachine] = useState(exerciseData.machine || 'Bicicleta Estática (Bajo Impacto)');
-  const [duration, setDuration] = useState(exerciseData.duration || '35');
+  const [duration, setDuration] = useState(exerciseData.duration !== undefined ? String(exerciseData.duration) : '35');
   const [speed, setSpeed] = useState(exerciseData.speed || 'Resistencia Nivel 5');
   const [incline, setIncline] = useState(exerciseData.incline || 'Sin impacto');
-  const [heartRate, setHeartRate] = useState(exerciseData.heartRate || '125');
+  const [heartRate, setHeartRate] = useState(exerciseData.heartRate !== undefined ? String(exerciseData.heartRate) : '125');
   const [machineSetup, setMachineSetup] = useState(exerciseData.machineSetup || '');
   const [cardioNotesInput, setCardioNotesInput] = useState(exerciseData.notes || '');
-  const [completed, setCompleted] = useState(exerciseData.completed || false);
+  const [completed, setCompleted] = useState(!!exerciseData.completed);
+
+  // Sincronizar estado local cuando cambie exerciseData (ej. cambio de fecha o reseteo a 0)
+  useEffect(() => {
+    setMachine(exerciseData.machine || 'Bicicleta Estática (Bajo Impacto)');
+    setDuration(exerciseData.duration !== undefined ? String(exerciseData.duration) : '35');
+    setSpeed(exerciseData.speed || 'Resistencia Nivel 5');
+    setIncline(exerciseData.incline || 'Sin impacto');
+    setHeartRate(exerciseData.heartRate !== undefined ? String(exerciseData.heartRate) : '125');
+    setMachineSetup(exerciseData.machineSetup || '');
+    setCardioNotesInput(exerciseData.notes || '');
+    setCompleted(!!exerciseData.completed);
+  }, [exerciseData]);
 
   const cardioMachines = [
     { value: 'Bicicleta Estática (Bajo Impacto)', label: '🚴‍♂️ Bicicleta Estática Ergómetro (Recomendado 30-40 min)' },
@@ -32,22 +44,26 @@ export default function CardioLogger({
     { value: 'Elíptica de Bajo Impacto', label: '🚶‍♀️ Elíptica de Bajo Impacto Articular' }
   ];
 
-  useEffect(() => {
-    onUpdateCardio({
-      machine,
-      duration: parseFloat(duration) || 0,
-      speed,
-      incline,
-      heartRate: parseInt(heartRate) || 0,
-      machineSetup,
-      notes: cardioNotesInput,
-      completed
-    });
-  }, [machine, duration, speed, incline, heartRate, machineSetup, cardioNotesInput, completed]);
+  const notifyChange = (updated = {}) => {
+    if (onUpdateCardio) {
+      onUpdateCardio({
+        machine: updated.machine !== undefined ? updated.machine : machine,
+        duration: parseFloat(updated.duration !== undefined ? updated.duration : duration) || 0,
+        speed: updated.speed !== undefined ? updated.speed : speed,
+        incline: updated.incline !== undefined ? updated.incline : incline,
+        heartRate: parseInt(updated.heartRate !== undefined ? updated.heartRate : heartRate) || 0,
+        machineSetup: updated.machineSetup !== undefined ? updated.machineSetup : machineSetup,
+        notes: updated.notes !== undefined ? updated.notes : cardioNotesInput,
+        completed: updated.completed !== undefined ? updated.completed : completed
+      });
+    }
+  };
 
   const toggleCompleted = (e) => {
     e.stopPropagation();
-    setCompleted(!completed);
+    const newCompleted = !completed;
+    setCompleted(newCompleted);
+    notifyChange({ completed: newCompleted });
   };
 
   const handleHeaderClick = () => {
@@ -204,7 +220,10 @@ export default function CardioLogger({
                   icon={Bike}
                   options={cardioMachines}
                   value={machine}
-                  onChange={(newVal) => setMachine(newVal)}
+                  onChange={(newVal) => {
+                    setMachine(newVal);
+                    notifyChange({ machine: newVal });
+                  }}
                 />
               </div>
 
@@ -217,7 +236,10 @@ export default function CardioLogger({
                   <input 
                     type="number" 
                     value={duration} 
-                    onChange={(e) => setDuration(e.target.value)}
+                    onChange={(e) => {
+                      setDuration(e.target.value);
+                      notifyChange({ duration: e.target.value });
+                    }}
                     style={{ width: '100%', textAlign: 'center', fontWeight: '900', padding: '8px 4px', borderRadius: '10px', border: '1.5px solid #0284c7', fontSize: '13px', background: '#ffffff' }} 
                   />
                 </div>
@@ -230,7 +252,10 @@ export default function CardioLogger({
                     type="text" 
                     placeholder="Nivel 5" 
                     value={speed} 
-                    onChange={(e) => setSpeed(e.target.value)}
+                    onChange={(e) => {
+                      setSpeed(e.target.value);
+                      notifyChange({ speed: e.target.value });
+                    }}
                     style={{ width: '100%', textAlign: 'center', fontWeight: '800', padding: '8px 4px', borderRadius: '10px', border: '1.5px solid #cbd5e1', fontSize: '12px', background: '#ffffff' }} 
                   />
                 </div>
@@ -243,7 +268,10 @@ export default function CardioLogger({
                     type="number" 
                     placeholder="125" 
                     value={heartRate} 
-                    onChange={(e) => setHeartRate(e.target.value)}
+                    onChange={(e) => {
+                      setHeartRate(e.target.value);
+                      notifyChange({ heartRate: e.target.value });
+                    }}
                     style={{ width: '100%', textAlign: 'center', fontWeight: '900', color: '#ef4444', padding: '8px 4px', borderRadius: '10px', border: '1.5px solid #cbd5e1', fontSize: '13px', background: '#ffffff' }} 
                   />
                 </div>
@@ -258,7 +286,10 @@ export default function CardioLogger({
                   type="text"
                   placeholder="Ej. Asiento altura #6, resistencia nivel 4..."
                   value={machineSetup}
-                  onChange={(e) => setMachineSetup(e.target.value)}
+                  onChange={(e) => {
+                    setMachineSetup(e.target.value);
+                    notifyChange({ machineSetup: e.target.value });
+                  }}
                   style={{ width: '100%', fontSize: '12px', padding: '8px', border: '1.5px solid #cbd5e1', background: '#ffffff', borderRadius: '10px', fontWeight: '600' }}
                 />
               </div>
@@ -275,7 +306,10 @@ export default function CardioLogger({
                   rows={2}
                   placeholder="Registra cómo te sentiste en el cardio (ej. Pulsos estables en 125 BPM, buena sudoración sin fatiga en piernas...)"
                   value={cardioNotesInput}
-                  onChange={(e) => setCardioNotesInput(e.target.value)}
+                  onChange={(e) => {
+                    setCardioNotesInput(e.target.value);
+                    notifyChange({ notes: e.target.value });
+                  }}
                   style={{
                     width: '100%',
                     padding: '8px',
