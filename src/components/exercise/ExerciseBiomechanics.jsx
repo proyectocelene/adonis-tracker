@@ -1,6 +1,7 @@
-import React from 'react';
-import { Search, Video, Info, Zap, Sparkles, Brain, Clock } from 'lucide-react';
+import React, { useState } from 'react';
+import { Search, Video, Info, Zap, Sparkles, Brain, Clock, TrendingUp } from 'lucide-react';
 import ExerciseNotes from './ExerciseNotes';
+import ExerciseStrengthProgressModal from './ExerciseStrengthProgressModal';
 
 // Generador de claves atencionales (Internal & External Focus) basado en ciencia motora (Wulf & Schoenfeld)
 function getMindMuscleCues(exercise) {
@@ -115,13 +116,42 @@ export default function ExerciseBiomechanics({
   exerciseNotesInput = '',
   setExerciseNotesInput,
   handleSaveNotes,
-  handleDeleteNote
+  handleDeleteNote,
+  workoutHistory = [],
+  todayWorkoutData = {},
+  machineConfig = null
 }) {
+  const [showProgressModal, setShowProgressModal] = useState(false);
   const mindMuscle = getMindMuscleCues(exercise);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', width: '100%' }}>
       
+      {/* 0. BOTÓN PROMINENTE DE ANALÍTICA DE FUERZA Y PROYECCIONES */}
+      <button
+        type="button"
+        onClick={() => setShowProgressModal(true)}
+        style={{
+          width: '100%',
+          padding: '13px 16px',
+          borderRadius: '16px',
+          background: 'linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)',
+          color: '#ffffff',
+          border: 'none',
+          fontWeight: '900',
+          fontSize: '13px',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '8px',
+          boxShadow: '0 4px 14px rgba(124, 58, 237, 0.25)',
+          transition: 'all 0.2s ease'
+        }}
+      >
+        <TrendingUp size={18} /> 📈 Progreso de Fuerza, Tendencias & Proyecciones
+      </button>
+
       {/* 1. TARJETA DE PRESCRIPCIÓN & OBJETIVO CIENTÍFICO ÓPTIMO */}
       <div style={{
         background: 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)',
@@ -302,6 +332,16 @@ export default function ExerciseBiomechanics({
         setExerciseNotesInput={setExerciseNotesInput}
         handleSaveNotes={handleSaveNotes}
         handleDeleteNote={handleDeleteNote}
+      />
+
+      {/* POPUP INTELIGENTE DE PROGRESO DE FUERZA, TENDENCIAS Y PREVISIONES */}
+      <ExerciseStrengthProgressModal
+        isOpen={showProgressModal}
+        onClose={() => setShowProgressModal(false)}
+        exercise={exercise}
+        workoutHistory={workoutHistory}
+        todayWorkoutData={todayWorkoutData}
+        machineConfig={machineConfig}
       />
     </div>
   );

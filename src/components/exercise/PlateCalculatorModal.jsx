@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Check, Layers, Disc } from 'lucide-react';
+import { X, Check, Layers, Disc, Settings2 } from 'lucide-react';
 
 export default function PlateCalculatorModal({
   isOpen,
@@ -7,7 +7,9 @@ export default function PlateCalculatorModal({
   initialWeight = 0,
   exerciseName = '',
   machineConfig = null,
-  onApplyWeight
+  onApplyWeight,
+  onSaveMachineConfig,
+  onOpenMachineConfig
 }) {
   if (!isOpen) return null;
 
@@ -66,6 +68,10 @@ export default function PlateCalculatorModal({
   const plateCalc = calculatePlatesPerSide(targetWeight, baseWeight);
 
   // === MODO TORRE DE PLACAS SKEUOMÓRFICA ===
+  const defaultStackPreset = machineConfig?.stackPreset || (lowerName.includes('extension') ? 'two_tens_then_twenty' : 'linear');
+  const [stackPreset, setStackPreset] = useState(defaultStackPreset);
+  const [saveAsCalibration, setSaveAsCalibration] = useState(true);
+
   const configFirst = machineConfig?.firstPlate !== undefined ? machineConfig.firstPlate : (unit === 'kg' ? 5 : 10);
   const configStep = machineConfig?.plateStep !== undefined ? machineConfig.plateStep : (unit === 'kg' ? 5 : 10);
   const [topPlateWeight, setTopPlateWeight] = useState(configFirst);
@@ -76,15 +82,14 @@ export default function PlateCalculatorModal({
 
   // Cálculo exacto para cada placa n (1 a 20) según machineConfig o preset
   const getPlateWeight = (plateNum) => {
-    if (machineConfig?.availableWeights && machineConfig.availableWeights.length >= plateNum) {
-      return machineConfig.availableWeights[plateNum - 1];
-    }
-    if (machineConfig?.stackPreset === 'two_tens_then_twenty') {
+    if (stackPreset === 'two_tens_then_twenty') {
       const w = [10, 20, 40, 60, 80, 100, 120, 140, 160, 180, 200, 220, 240, 260, 280, 300, 320, 340, 360, 380];
       return w[plateNum - 1] || (380 + ((plateNum - 20) * 20));
     }
-    if (plateNum === 1) return topPlateWeight;
-    return topPlateWeight + ((plateNum - 1) * stackIncrement);
+    const fp = parseFloat(topPlateWeight) || (unit === 'kg' ? 5 : 10);
+    const inc = parseFloat(stackIncrement) || (unit === 'kg' ? 5 : 10);
+    if (plateNum === 1) return fp;
+    return Math.round((fp + ((plateNum - 1) * inc)) * 10) / 10;
   };
 
   const [selectedPlateIndex, setSelectedPlateIndex] = useState(() => {
@@ -124,6 +129,25 @@ export default function PlateCalculatorModal({
   };
 
   const handleApply = (weightToApply) => {
+    if (saveAsCalibration && onSaveMachineConfig) {
+      let calculatedAvailableWeights = [];
+      if (activeTab === 'stack') {
+        calculatedAvailableWeights = Array.from({ length: totalStackPlates }, (_, i) => getPlateWeight(i + 1));
+      }
+      const updatedConfig = {
+        ...(machineConfig || {}),
+        type: activeTab,
+        stackPreset,
+        firstPlate: parseFloat(topPlateWeight) || (unit === 'kg' ? 5 : 10),
+        plateStep: stackPreset === 'two_tens_then_twenty' ? 20 : (parseFloat(stackIncrement) || (unit === 'kg' ? 5 : 10)),
+        microWeight: parseFloat(addOnWeight) || 0,
+        baseWeight: parseFloat(baseWeight) || 0,
+        availableWeights: calculatedAvailableWeights,
+        unit,
+        updatedAt: new Date().toISOString()
+      };
+      onSaveMachineConfig(updatedConfig);
+    }
     if (onApplyWeight) {
       onApplyWeight(String(weightToApply));
     }
@@ -170,11 +194,48 @@ export default function PlateCalculatorModal({
           borderTopRightRadius: '24px'
         }}>
           <div>
-            <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '900', color: '#0f172a', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              🏋️ Calculadora de Carga
-            </h3>
-            <p style={{ margin: '2px 0 0 0', fontSize: '12px', color: '#64748b', fontWeight: '600' }}>
-              {exerciseName || 'Ajuste de peso rápido'}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '900', color: '#0f172a', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                🏋️ Calculadora de Carga
+              </h3>
+              {onOpenMachineConfig && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onClose();
+                    onOpenMachineConfig();
+                  }}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    background: '#eff6ff',
+                    border: '1px solid #bfdbfe',
+                    color: '#0066ff',
+                    padding: '3px 8px',
+                    borderRadius: '8px',
+                    fontSize: '10px',
+                    fontWeight: '900',
+                    cursor: 'pointer'
+                  }}
+                  title="Calibrar máquina, piso y estación"
+                >
+                  <Settings2 size={11} /> Calibrar
+                </button>
+              )}
+            </div>
+            <p style={{ margin: '2px 0 0 0', fontSize: '11px', color: '#64748b', fontWeight: '600' }}>
+              {exerciseName || 'Ajuste de peso'}
+              {machineConfig?.floor && (
+                <span style={{ color: '#7c3aed', fontWeight: '800', marginLeft: '6px' }}>
+                  • {machineConfig.floor}
+                </span>
+              )}
+              {machineConfig?.station && (
+                <span style={{ color: '#0284c7', fontWeight: '700', marginLeft: '4px' }}>
+                  ({machineConfig.station})
+                </span>
+              )}
             </p>
           </div>
 
@@ -327,7 +388,7 @@ export default function PlateCalculatorModal({
                   <span style={{ fontSize: '11px', fontWeight: '800', color: '#64748b' }}>PESO BASE (BARRA / TRINEO)</span>
                   <span style={{ fontSize: '12px', fontWeight: '900', color: '#0f172a' }}>{baseWeight} {unit}</span>
                 </div>
-                <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginBottom: '6px' }}>
                   {(unit === 'kg' ? [
                     { label: 'Prensa (45 kg)', val: 45 },
                     { label: 'Hack (35 kg)', val: 35 },
@@ -360,6 +421,29 @@ export default function PlateCalculatorModal({
                       {b.label}
                     </button>
                   ))}
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ fontSize: '10.5px', color: '#64748b', fontWeight: '700' }}>✏️ O peso base manual:</span>
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    step="any"
+                    placeholder="Ej. 105"
+                    value={baseWeight}
+                    onChange={(e) => setBaseWeight(parseFloat(e.target.value) || 0)}
+                    style={{
+                      width: '70px',
+                      padding: '4px 8px',
+                      borderRadius: '8px',
+                      border: '1.5px solid #0066ff',
+                      fontSize: '12px',
+                      fontWeight: '900',
+                      textAlign: 'center',
+                      background: '#ffffff',
+                      color: '#0f172a'
+                    }}
+                  />
+                  <span style={{ fontSize: '11px', fontWeight: '800', color: '#64748b' }}>{unit}</span>
                 </div>
               </div>
 
@@ -417,6 +501,37 @@ export default function PlateCalculatorModal({
                 )}
               </div>
 
+              {/* CHECKBOX GUARDAR CALIBRACIÓN DISCOS */}
+              <div 
+                onClick={() => setSaveAsCalibration(!saveAsCalibration)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  background: saveAsCalibration ? '#eff6ff' : '#f8fafc',
+                  border: `1.5px solid ${saveAsCalibration ? '#bfdbfe' : '#e2e8f0'}`,
+                  borderRadius: '12px',
+                  padding: '8px 12px',
+                  cursor: 'pointer',
+                  userSelect: 'none'
+                }}
+              >
+                <input 
+                  type="checkbox"
+                  checked={saveAsCalibration}
+                  onChange={(e) => setSaveAsCalibration(e.target.checked)}
+                  style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: '#0066ff' }}
+                />
+                <div>
+                  <div style={{ fontSize: '11px', fontWeight: '900', color: saveAsCalibration ? '#1e40af' : '#334155' }}>
+                    💾 Recordar peso base ({baseWeight} {unit}) para esta máquina
+                  </div>
+                  <div style={{ fontSize: '9.5px', color: '#64748b' }}>
+                    Sincroniza el peso inicial del trineo/barra para próximas series y sesiones.
+                  </div>
+                </div>
+              </div>
+
               {/* BOTÓN APLICAR */}
               <button
                 type="button"
@@ -444,6 +559,56 @@ export default function PlateCalculatorModal({
             <>
               {/* MODO TORRE DE PLACAS SKEUOMÓRFICA */}
 
+              {/* TIPO DE PROGRESIÓN DE LA TORRE */}
+              <div style={{ background: '#f8fafc', padding: '10px 12px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                  <span style={{ fontSize: '11px', fontWeight: '800', color: '#475569' }}>
+                    TIPO DE TORRE DE PLACAS
+                  </span>
+                  <span style={{ fontSize: '11px', fontWeight: '900', color: '#7c3aed' }}>
+                    {stackPreset === 'two_tens_then_twenty' ? '2 de 10 lb, luego +20' : 'Incremento Constante'}
+                  </span>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '6px' }}>
+                  <button
+                    type="button"
+                    onClick={() => setStackPreset('two_tens_then_twenty')}
+                    style={{
+                      padding: '7px 6px',
+                      borderRadius: '8px',
+                      border: stackPreset === 'two_tens_then_twenty' ? '2px solid #7c3aed' : '1px solid #cbd5e1',
+                      background: stackPreset === 'two_tens_then_twenty' ? '#f5f3ff' : '#ffffff',
+                      color: stackPreset === 'two_tens_then_twenty' ? '#7c3aed' : '#475569',
+                      fontSize: '10.5px',
+                      fontWeight: '800',
+                      cursor: 'pointer',
+                      textAlign: 'center'
+                    }}
+                  >
+                    ⚡ 2 de 10 lb, luego +20
+                    <span style={{ display: 'block', fontSize: '8.5px', color: '#64748b' }}>(10, 20, 40, 60...)</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setStackPreset('linear')}
+                    style={{
+                      padding: '7px 6px',
+                      borderRadius: '8px',
+                      border: stackPreset === 'linear' ? '2px solid #7c3aed' : '1px solid #cbd5e1',
+                      background: stackPreset === 'linear' ? '#f5f3ff' : '#ffffff',
+                      color: stackPreset === 'linear' ? '#7c3aed' : '#475569',
+                      fontSize: '10.5px',
+                      fontWeight: '800',
+                      cursor: 'pointer',
+                      textAlign: 'center'
+                    }}
+                  >
+                    📏 Incremento Fijo / Manual
+                    <span style={{ display: 'block', fontSize: '8.5px', color: '#64748b' }}>(Personalizable)</span>
+                  </button>
+                </div>
+              </div>
+
               {/* 1. PLACA #1 (CABEZAL / PRIMERA PESA) */}
               <div style={{ background: '#f8fafc', padding: '10px 12px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
@@ -454,8 +619,8 @@ export default function PlateCalculatorModal({
                     {topPlateWeight} {unit}
                   </span>
                 </div>
-                <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
-                  {(unit === 'kg' ? [2.5, 5, 7.5, 10, 12.5] : [7.5, 10, 12.5, 15, 20]).map(val => (
+                <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginBottom: '6px' }}>
+                  {(unit === 'kg' ? [2.5, 5, 7.5, 10, 12.5] : [5, 7.5, 10, 12.5, 15, 20]).map(val => (
                     <button
                       key={val}
                       type="button"
@@ -476,41 +641,89 @@ export default function PlateCalculatorModal({
                     </button>
                   ))}
                 </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ fontSize: '10.5px', color: '#64748b', fontWeight: '700' }}>✏️ O cabezal manual:</span>
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    step="any"
+                    placeholder="Ej. 15"
+                    value={topPlateWeight}
+                    onChange={(e) => setTopPlateWeight(parseFloat(e.target.value) || 0)}
+                    style={{
+                      width: '70px',
+                      padding: '4px 8px',
+                      borderRadius: '8px',
+                      border: '1.5px solid #7c3aed',
+                      fontSize: '12px',
+                      fontWeight: '900',
+                      textAlign: 'center',
+                      background: '#ffffff',
+                      color: '#4c1d95'
+                    }}
+                  />
+                  <span style={{ fontSize: '11px', fontWeight: '800', color: '#64748b' }}>{unit}</span>
+                </div>
               </div>
 
               {/* 2. INCREMENTO POR PLACA (#2 EN ADELANTE) */}
-              <div style={{ background: '#f8fafc', padding: '10px 12px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                  <span style={{ fontSize: '11px', fontWeight: '800', color: '#475569' }}>
-                    INCREMENTO PLACAS (#2 EN ADELANTE)
-                  </span>
-                  <span style={{ fontSize: '12px', fontWeight: '900', color: '#7c3aed' }}>
-                    +{stackIncrement} {unit}/placa
-                  </span>
-                </div>
-                <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
-                  {(unit === 'kg' ? [2.5, 5, 7.5, 10] : [5, 10, 12.5, 15, 20]).map(inc => (
-                    <button
-                      key={inc}
-                      type="button"
-                      onClick={() => setStackIncrement(inc)}
+              {stackPreset === 'linear' && (
+                <div style={{ background: '#f8fafc', padding: '10px 12px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                    <span style={{ fontSize: '11px', fontWeight: '800', color: '#475569' }}>
+                      INCREMENTO PLACAS (#2 EN ADELANTE)
+                    </span>
+                    <span style={{ fontSize: '12px', fontWeight: '900', color: '#7c3aed' }}>
+                      +{stackIncrement} {unit}/placa
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginBottom: '6px' }}>
+                    {(unit === 'kg' ? [2.5, 5, 7.5, 10] : [5, 7.5, 10, 12.5, 15, 20]).map(inc => (
+                      <button
+                        key={inc}
+                        type="button"
+                        onClick={() => setStackIncrement(inc)}
+                        style={{
+                          flex: '1 1 auto',
+                          padding: '4px 6px',
+                          borderRadius: '6px',
+                          fontSize: '11px',
+                          fontWeight: '800',
+                          border: stackIncrement === inc ? '1.5px solid #7c3aed' : '1px solid #cbd5e1',
+                          background: stackIncrement === inc ? '#f5f3ff' : '#ffffff',
+                          color: stackIncrement === inc ? '#7c3aed' : '#64748b',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        +{inc} {unit}
+                      </button>
+                    ))}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ fontSize: '10.5px', color: '#64748b', fontWeight: '700' }}>✏️ O salto manual:</span>
+                    <input
+                      type="number"
+                      inputMode="decimal"
+                      step="any"
+                      placeholder="Ej. 12.5"
+                      value={stackIncrement}
+                      onChange={(e) => setStackIncrement(parseFloat(e.target.value) || 0)}
                       style={{
-                        flex: '1 1 auto',
-                        padding: '4px 6px',
-                        borderRadius: '6px',
-                        fontSize: '11px',
-                        fontWeight: '800',
-                        border: stackIncrement === inc ? '1.5px solid #7c3aed' : '1px solid #cbd5e1',
-                        background: stackIncrement === inc ? '#f5f3ff' : '#ffffff',
-                        color: stackIncrement === inc ? '#7c3aed' : '#64748b',
-                        cursor: 'pointer'
+                        width: '70px',
+                        padding: '4px 8px',
+                        borderRadius: '8px',
+                        border: '1.5px solid #7c3aed',
+                        fontSize: '12px',
+                        fontWeight: '900',
+                        textAlign: 'center',
+                        background: '#ffffff',
+                        color: '#4c1d95'
                       }}
-                    >
-                      +{inc} {unit}
-                    </button>
-                  ))}
+                    />
+                    <span style={{ fontSize: '11px', fontWeight: '800', color: '#64748b' }}>{unit}/placa</span>
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* 3. PESAS AUXILIARES / ADD-ONS (+2.5, +5, +7.5, +10 LBS) */}
               <div style={{ background: '#f8fafc', padding: '10px 12px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
@@ -522,7 +735,7 @@ export default function PlateCalculatorModal({
                     {addOnWeight > 0 ? `+${addOnWeight} ${unit}` : 'Ninguna'}
                   </span>
                 </div>
-                <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginBottom: '6px' }}>
                   {(unit === 'kg' ? [0, 1.25, 2.5, 3.75, 5] : [0, 2.5, 5, 7.5, 10]).map(extra => (
                     <button
                       key={extra}
@@ -544,12 +757,35 @@ export default function PlateCalculatorModal({
                     </button>
                   ))}
                 </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ fontSize: '10.5px', color: '#64748b', fontWeight: '700' }}>✏️ O valor manual:</span>
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    step="any"
+                    placeholder="0"
+                    value={addOnWeight}
+                    onChange={(e) => setAddOnWeight(parseFloat(e.target.value) || 0)}
+                    style={{
+                      width: '70px',
+                      padding: '4px 8px',
+                      borderRadius: '8px',
+                      border: '1.5px solid #16a34a',
+                      fontSize: '12px',
+                      fontWeight: '900',
+                      textAlign: 'center',
+                      background: '#ffffff',
+                      color: '#15803d'
+                    }}
+                  />
+                  <span style={{ fontSize: '11px', fontWeight: '800', color: '#64748b' }}>{unit}</span>
+                </div>
               </div>
 
               {machineConfig && (
                 <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '10px', padding: '6px 10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2px' }}>
                   <span style={{ fontSize: '11px', color: '#1e40af', fontWeight: '800' }}>
-                    ⚙️ {machineConfig.stackPreset === 'two_tens_then_twenty' ? 'Torre Calibrada: 2 de 10 lb, luego +20 lb' : `Torre Calibrada (+${machineConfig.plateStep || 10} ${unit})`}
+                    ⚙️ {stackPreset === 'two_tens_then_twenty' ? 'Torre: 2 de 10 lb, luego +20 lb' : `Torre (+${stackIncrement} ${unit}/placa)`}
                   </span>
                   {machineConfig.station && (
                     <span style={{ fontSize: '10px', color: '#3b82f6', fontWeight: '700' }}>{machineConfig.station}</span>
@@ -629,6 +865,37 @@ export default function PlateCalculatorModal({
                     ≈ {convertedToLbs} lbs equivalentes
                   </div>
                 )}
+              </div>
+
+              {/* CHECKBOX GUARDAR CALIBRACIÓN TORRE */}
+              <div 
+                onClick={() => setSaveAsCalibration(!saveAsCalibration)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  background: saveAsCalibration ? '#f5f3ff' : '#f8fafc',
+                  border: `1.5px solid ${saveAsCalibration ? '#c4b5fd' : '#e2e8f0'}`,
+                  borderRadius: '12px',
+                  padding: '8px 12px',
+                  cursor: 'pointer',
+                  userSelect: 'none'
+                }}
+              >
+                <input 
+                  type="checkbox"
+                  checked={saveAsCalibration}
+                  onChange={(e) => setSaveAsCalibration(e.target.checked)}
+                  style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: '#7c3aed' }}
+                />
+                <div>
+                  <div style={{ fontSize: '11px', fontWeight: '900', color: saveAsCalibration ? '#5b21b6' : '#334155' }}>
+                    💾 Recordar como calibración oficial de esta máquina
+                  </div>
+                  <div style={{ fontSize: '9.5px', color: '#64748b' }}>
+                    Guarda el cabezal ({topPlateWeight} {unit}) y saltos ({stackPreset === 'two_tens_then_twenty' ? '2 de 10 lb, luego +20' : `+${stackIncrement} ${unit}`}) para próximas series y sesiones.
+                  </div>
+                </div>
               </div>
 
               {/* BOTONES APLICAR */}

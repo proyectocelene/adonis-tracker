@@ -10,7 +10,9 @@ export default function WeightChartSection({
   chartData = [],
   stats,
   selectedTimeframe,
-  setSelectedTimeframe
+  setSelectedTimeframe,
+  targetWeight,
+  preferredUnit = 'kg'
 }) {
   // Tooltip personalizado para Recharts
   const CustomTooltip = ({ active, payload }) => {
@@ -92,6 +94,11 @@ export default function WeightChartSection({
             <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#9333ea' }}>
               <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#9333ea' }}></span> Tendencia (Media Móvil)
             </span>
+            {targetWeight > 0 && (
+              <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#10b981' }}>
+                <span style={{ width: '8px', height: '2px', background: '#10b981' }}></span> Meta Adonis ({targetWeight} {preferredUnit})
+              </span>
+            )}
           </div>
         </div>
 
@@ -108,12 +115,35 @@ export default function WeightChartSection({
                     tickLine={false}
                   />
                   <YAxis 
-                    domain={['dataMin - 1', 'dataMax + 1']} 
+                    domain={[
+                      dataMin => {
+                        if (targetWeight > 0 && targetWeight < dataMin && (dataMin - targetWeight) <= 15) {
+                          return Math.floor(targetWeight - 1);
+                        }
+                        return Math.floor(dataMin - 1);
+                      },
+                      'dataMax + 1'
+                    ]} 
                     tick={{ fontSize: 10, fill: '#64748b', fontWeight: 600 }}
                     axisLine={false}
                     tickLine={false}
                   />
                   <Tooltip content={<CustomTooltip />} />
+                  {targetWeight > 0 && (
+                    <ReferenceLine 
+                      y={targetWeight} 
+                      stroke="#10b981" 
+                      strokeDasharray="4 4" 
+                      strokeWidth={2}
+                      label={{
+                        value: `🎯 Meta: ${targetWeight} ${preferredUnit}`,
+                        position: 'insideBottomRight',
+                        fill: '#059669',
+                        fontSize: 10,
+                        fontWeight: 800
+                      }}
+                    />
+                  )}
                   {stats?.average > 0 && (
                     <ReferenceLine y={stats.average} stroke="#cbd5e1" strokeDasharray="3 3" />
                   )}

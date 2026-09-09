@@ -33,8 +33,7 @@ He completado mi sesión de entrenamiento con el Protocolo Adonis y aquí tienes
 • Enfoque Biomecánico: ${focus}
 • Duración Real: ${totalDuration}
 • Volumen Total Levantado: ${volume.toLocaleString()} lbs-reps
-• Series Efectivas Completadas: ${completedSets} series
-• Gasto Calórico Total: ${totalKcal} kcal (Fuerza: ${calories?.strengthKcal || 0} kcal, EPOC: ${calories?.epocKcal || 0} kcal${calories?.cardioKcal ? `, Cardio: ${calories.cardioKcal} kcal` : ''}${calories?.isBlended ? ' [Ajustado con Smartwatch]' : ''})
+• Gasto Calórico Total: ${totalKcal} kcal (Fuerza/Trabajo Mecánico: ${calories?.strengthKcal || 0} kcal, EPOC: ${calories?.epocKcal || 0} kcal${calories?.cardioKcal ? `, Cardio: ${calories.cardioKcal} kcal` : ''}${calories?.isHeartRateCalibrated ? ` [Calibrado por FC: Promedio ${calories.watchHrAvg} BPM, Máx ${calories.watchHrMax || '--'} BPM, Karvonen %HRR: ${calories.hrrPct || '--'}%]` : (calories?.isBlended ? ' [Ajustado con Smartwatch]' : '')})
 • Calentamiento & Movilidad: ${isWarmupDone ? '✅ Completado (5-10 min previos)' : '⚠️ No registrado / Omitido'}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

@@ -296,6 +296,9 @@ export function analyzeExercisePerformance(previousData = {}, targetRepsStr = "1
   const minW = weights.length > 0 ? Math.min(...weights) : 0;
   const spread = maxW - minW;
 
+  // Filtrar series pesadas de trabajo efectivo (al menos el 80% del peso máximo registrado)
+  const heavySets = sets.filter(s => s.weight >= (maxW * 0.80) && s.weight > 0);
+
   // Función de redondeo estricto a incrementos físicamente alcanzables
   const anchorWeight = roundToAttainableWeight(
     heavySets.length > 0

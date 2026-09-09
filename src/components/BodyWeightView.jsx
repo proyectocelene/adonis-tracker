@@ -11,6 +11,7 @@ import WeightHistoryList from './bodyweight/WeightHistoryList';
 import BodyCompositionCard from './bodyweight/BodyCompositionCard';
 import BodyCompositionModal from './gamification/BodyCompositionModal';
 import { normalizeBodyComposition } from '../utils/gamificationCalculations';
+import { useWorkoutHistory } from '../hooks/useWorkoutHistory';
 
 export default function BodyWeightView() {
   const [bodyMetrics, setBodyMetrics] = useLocalStorage('coachv2_body_metrics_history', []);
@@ -51,7 +52,7 @@ export default function BodyWeightView() {
     goalType: 'recomposition'
   });
 
-  const [workoutHistory] = useLocalStorage('coachv2_workout_history', []);
+  const [workoutHistory] = useWorkoutHistory();
 
   // Form State
   const now = new Date();
@@ -438,6 +439,7 @@ export default function BodyWeightView() {
         bodyComposition={bodyComposition}
         physiqueGoal={physiqueGoal}
         workoutHistory={workoutHistory}
+        bodyMetrics={bodyMetrics}
         preferredUnit={preferredUnit}
         onOpenScaleModal={() => setShowScaleModal(true)}
       />
@@ -448,6 +450,8 @@ export default function BodyWeightView() {
         stats={stats}
         selectedTimeframe={selectedTimeframe}
         setSelectedTimeframe={setSelectedTimeframe}
+        targetWeight={preferredUnit === 'lbs' ? Math.round((physiqueGoal?.targetWeightKg || 70.0) * 2.20462 * 10) / 10 : (physiqueGoal?.targetWeightKg || 70.0)}
+        preferredUnit={preferredUnit}
       />
 
       {/* 5. FORMULARIO MODAL DE NUEVO PESAJE / EDICIÓN */}

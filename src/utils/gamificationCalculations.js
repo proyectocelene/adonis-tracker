@@ -185,8 +185,8 @@ export function calculateTruePhysiqueProjection(compData = {}, goalSettings = {}
     muscleToGainKg = Math.max(muscleToGainKg, parseFloat(goalSettings.muscleGainTargetKg));
   }
 
-  // Factor de adherencia semanal al gimnasio (3 a 5 días)
-  const adherenceFactor = Math.max(0.6, Math.min(1.2, (weeklyWorkouts || 3) / 4.5));
+  // Factor de adherencia semanal al gimnasio (3 a 5 días, base 4 días de split Adonis)
+  const adherenceFactor = Math.max(0.7, Math.min(1.2, (weeklyWorkouts || 4) / 4.5));
 
   // 1. Fase 1: Pérdida de grasa a ritmo seguro y clínicamente sostenible (0.50 kg/semana = ~500 kcal déficit/día)
   const weeklyFatLossRateKg = Math.round((0.50 * adherenceFactor) * 100) / 100;

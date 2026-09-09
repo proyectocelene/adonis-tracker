@@ -25,6 +25,8 @@ export default function ExerciseRow({
   isSkipped = false,
   skipReason = '',
   onSkipExercise,
+  workoutHistory = [],
+  todayWorkoutData = {},
   initiallyExpanded = false,
   isExpanded: controlledExpanded,
   onToggleExpand
@@ -130,9 +132,8 @@ export default function ExerciseRow({
     }
   };
 
-  const handleSetChange = (setIndex, field, value) => {
+  const handleSetChange = (setIndex, fieldOrObj, value) => {
     ensureMeta();
-    const isUnilateral = !!exerciseData.isUnilateral || !!exercise.isUnilateral;
     const currentSet = exerciseData[setIndex] || { 
       weight: '', 
       reps: '', 
@@ -145,10 +146,17 @@ export default function ExerciseRow({
       unit: exercise.defaultUnit || 'lbs'
     };
 
-    onUpdateSet(setIndex, {
-      ...currentSet,
-      [field]: value
-    });
+    if (typeof fieldOrObj === 'object') {
+      onUpdateSet(setIndex, {
+        ...currentSet,
+        ...fieldOrObj
+      });
+    } else {
+      onUpdateSet(setIndex, {
+        ...currentSet,
+        [fieldOrObj]: value
+      });
+    }
   };
 
   const toggleSetComplete = (setIndex) => {
@@ -507,6 +515,9 @@ export default function ExerciseRow({
               setExerciseNotesInput={setExerciseNotesInput}
               handleSaveNotes={handleSaveNotes}
               handleDeleteNote={handleDeleteNote}
+              workoutHistory={workoutHistory}
+              todayWorkoutData={todayWorkoutData}
+              machineConfig={exerciseData.machineConfig}
             />
           )}
 

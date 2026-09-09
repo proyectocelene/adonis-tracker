@@ -136,43 +136,127 @@ export function calculateSetCalories(weightLbs, reps, patternKey, userWeightKg =
 
 /**
  * Calcula las calorías gastadas en la sesión de cardio Zona 2
+ * Implementa las Ecuaciones Metabólicas del American College of Sports Medicine (ACSM):
+ * 1. Caminadora con inclinación: VO2 = 3.5 + 0.1*S + 1.8*S*Grade
+ * 2. Cicloergómetro: VO2 = 7.0 + (11.012 * Watts) / peso
+ * 3. Elíptica de tren inferior (sólo piernas, sin brazos)
+ * 4. Calibración y Consenso con la sesión de cardio del reloj inteligente
  */
 export function calculateCardioCalories(cardioData = {}, userWeightKg = 78.55) {
   if (!cardioData || (!cardioData.completed && !cardioData.duration && !cardioData.machine)) {
     return { cardioKcal: 0, durationMinutes: 0 };
   }
 
-  const durationMinutes = parseFloat(cardioData.duration !== undefined ? cardioData.duration : 35) || 0;
+  const durationMinutes = parseFloat(cardioData.duration !== undefined ? cardioData.duration : 30) || 0;
   if (durationMinutes <= 0) {
     return { cardioKcal: 0, durationMinutes: 0 };
   }
 
-  const machineName = (cardioData.machine || '').toLowerCase();
+  const rawMachine = (cardioData.machine || '').toLowerCase();
+  const machineType = cardioData.machineType || 
+    (rawMachine.includes('caminadora') ? 'treadmill' :
+     rawMachine.includes('elíptica') || rawMachine.includes('eliptica') ? 'elliptical' : 'bike');
 
-  // Determinación de METs según máquina y configuración
-  let met = 6.5; // Bicicleta estática moderada por defecto (Zona 2)
-  if (machineName.includes('caminadora')) {
-    // Caminadora inclinada (10-12% incl / 4.5 km/h) eleva significativamente el costo metabólico
-    met = 7.5;
-  } else if (machineName.includes('elíptica') || machineName.includes('eliptica')) {
-    met = 6.5;
-  } else if (machineName.includes('bicicleta') || machineName.includes('ergómetro')) {
-    met = 6.5;
+  let acsmKcal = 0;
+  let met = 6.5;
+  let distanceKm = parseFloat(cardioData.distanceKm || cardioData.distance) || 0;
+  let elevationMeters = 0;
+
+  if (machineType === 'treadmill') {
+    const speedKmh = parseFloat(cardioData.speedKmh || cardioData.speed || 4.5) || 4.5;
+    const inclinePct = parseFloat(cardioData.inclinePct !== undefined ? cardioData.inclinePct : (cardioData.incline || 10)) || 10;
+    const speedMPerMin = (speedKmh * 1000) / 60;
+    const gradeDecimal = Math.max(0, inclinePct / 100);
+    
+    // ACSM Walking Equation (Incline Treadmill)
+    // VO2 = 3.5 + (0.1 * S) + (1.8 * S * G)
+    const vo2 = 3.5 + (0.1 * speedMPerMin) + (1.8 * speedMPerMin * gradeDecimal);
+    met = vo2 / 3.5;
+    // Gasto por minuto: (VO2 * kg / 1000) * 4.95 kcal (RER 0.82-0.85 Zona 2)
+    acsmKcal = ((vo2 * userWeightKg) / 1000) * 4.95 * durationMinutes;
+    
+    if (distanceKm <= 0) {
+      distanceKm = Math.round((speedKmh * (durationMinutes / 60)) * 100) / 100;
+    }
+    elevationMeters = Math.round(distanceKm * 1000 * gradeDecimal);
+  } else if (machineType === 'bike') {
+    const resistance = parseFloat(cardioData.resistanceLevel || 6) || 6;
+    const rpm = parseFloat(cardioData.cadenceRpm || 72) || 72;
+    const avgSpeedKmh = parseFloat(cardioData.avgSpeedKmh || cardioData.speed || 22) || 22;
+    
+    // Potencia mecánica en Watts estimada o directa
+    const watts = parseFloat(cardioData.watts) || Math.max(50, Math.min(260, (resistance * 14) + ((rpm - 50) * 1.5)));
+    // ACSM Leg Ergometry: VO2 = 7.0 + (11.012 * Watts) / weightKg
+    const vo2 = 7.0 + ((11.012 * watts) / userWeightKg);
+    met = vo2 / 3.5;
+    acsmKcal = ((met * 3.5 * userWeightKg) / 200) * durationMinutes;
+    
+    if (distanceKm <= 0) {
+      distanceKm = Math.round((avgSpeedKmh * (durationMinutes / 60)) * 100) / 100;
+    }
+  } else if (machineType === 'elliptical') {
+    const resistance = parseFloat(cardioData.resistanceLevel || 5) || 5;
+    const spm = parseFloat(cardioData.stridesPerMin || 60) || 60;
+    // Elíptica de tren inferior (manos fijas / sin balanceo de brazos, descuento del 16%)
+    const baseMet = 5.2 + (resistance * 0.22) + ((spm - 50) * 0.03);
+    met = Math.max(4.5, Math.min(8.5, baseMet));
+    acsmKcal = ((met * 3.5 * userWeightKg) / 200) * durationMinutes;
+    
+    if (distanceKm <= 0) {
+      distanceKm = Math.round(((spm * 2 * 0.5 * durationMinutes) / 1000) * 100) / 100;
+    }
   }
 
-  // Ajuste por frecuencia cardíaca si está registrada
-  const hr = parseInt(cardioData.heartRate, 10);
-  if (!isNaN(hr) && hr >= 115 && hr <= 140) {
-    // Zona 2 óptima confirmada
-    met = Math.min(8.0, met * 1.05);
+  // Sesión específica de cardio del Smartwatch
+  const watchKcalRaw = parseFloat(cardioData.watchCalories || cardioData.watch?.watchCalories);
+  const hrAvg = parseInt(cardioData.heartRate || cardioData.watch?.avgHeartRate, 10);
+  let watchKcal = !isNaN(watchKcalRaw) && watchKcalRaw > 0 ? watchKcalRaw : null;
+  
+  if (!watchKcal && !isNaN(hrAvg) && hrAvg > 80) {
+    // Ecuación de Keytel aeróbica continua
+    const age = 28;
+    const keytelMin = ((-55.0969 + (0.6309 * hrAvg) + (0.1988 * userWeightKg) + (0.2017 * age)) / 4.184);
+    watchKcal = Math.max(0, keytelMin * durationMinutes);
   }
 
-  const cardioKcal = Math.round(((met * 3.5 * userWeightKg) / 200) * durationMinutes);
+  // Calorías reportadas por la consola de la máquina
+  const machineKcal = parseFloat(cardioData.machineCalories || cardioData.machineKcal) || null;
+
+  // Consenso Científico (50% Física ACSM + 50% Pulso Cardíaco del Reloj)
+  let consensusKcal = acsmKcal;
+  if (watchKcal && acsmKcal) {
+    consensusKcal = (acsmKcal * 0.50) + (watchKcal * 0.50);
+  } else if (watchKcal) {
+    consensusKcal = watchKcal;
+  }
+
+  // Modo de calibración elegido por el usuario
+  const mode = cardioData.calibrationMode || 'consensus';
+  let finalKcal = consensusKcal;
+  if (mode === 'acsm') finalKcal = acsmKcal;
+  else if (mode === 'watch' && watchKcal) finalKcal = watchKcal;
+  else if (mode === 'machine' && machineKcal) finalKcal = machineKcal;
+
+  // Diagnóstico de Zona 2 (FATmax)
+  let zone2Status = 'unknown';
+  if (!isNaN(hrAvg) && hrAvg > 0) {
+    if (hrAvg >= 118 && hrAvg <= 138) zone2Status = 'optimal';
+    else if (hrAvg > 138) zone2Status = 'high';
+    else zone2Status = 'low';
+  }
 
   return {
-    cardioKcal,
+    cardioKcal: Math.round(finalKcal),
     durationMinutes,
-    met
+    acsmKcal: Math.round(acsmKcal),
+    watchKcal: watchKcal ? Math.round(watchKcal) : null,
+    machineKcal: machineKcal ? Math.round(machineKcal) : null,
+    consensusKcal: Math.round(consensusKcal),
+    met: Math.round(met * 10) / 10,
+    distanceKm: Math.round(distanceKm * 100) / 100,
+    elevationMeters,
+    zone2Status,
+    machineType
   };
 }
 
@@ -261,26 +345,85 @@ export function calculateWorkoutCalories(
     }
   }
 
-  const strengthSubtotal = Math.round(strengthMechanicalKcal + strengthActiveKcal + strengthRestKcal);
+  // EPOC base (Excess Post-Exercise Oxygen Consumption)
+  let epocFactor = 0.12;
+  let cardiacKcal = 0;
+  let isHeartRateCalibrated = false;
+  let hrrPct = null;
 
-  // EPOC (Excess Post-Exercise Oxygen Consumption): ~12% en entrenamiento de hipertrofia
-  const epocKcal = strengthSubtotal > 0 ? Math.round(strengthSubtotal * 0.12) : 0;
+  // Integración avanzada con Sensores Cardíacos de Smartwatch (Apple Watch, Garmin, Polar)
+  let validWatchKcal = null;
+  let watchHrAvg = null;
+  let watchHrMax = null;
+  let watchHrRest = null;
 
+  if (smartwatchKcal) {
+    if (typeof smartwatchKcal === 'object') {
+      validWatchKcal = parseFloat(smartwatchKcal.watchKcal) || null;
+      watchHrAvg = parseFloat(smartwatchKcal.hrAvg) || null;
+      watchHrMax = parseFloat(smartwatchKcal.hrMax) || null;
+      watchHrRest = parseFloat(smartwatchKcal.hrRest) || null;
+    } else {
+      const parsed = parseFloat(smartwatchKcal);
+      if (!isNaN(parsed) && parsed > 0) validWatchKcal = Math.round(parsed);
+    }
+  }
+
+  // Si hay FC Promedio registrada, aplicar el Modelo Fisiológico Keytel Modificado para Fuerza
+  if (watchHrAvg && watchHrAvg >= 60 && watchHrAvg <= 220) {
+    isHeartRateCalibrated = true;
+    const effectiveAge = 26;
+    const durMins = finalDurationMinutes || 45;
+
+    // Ecuación de Keytel et al. (2005) para gasto bruto por FC
+    const hrGrossPerMin = (-55.0969 + (0.6309 * watchHrAvg) + (0.1988 * userWeightKg) + (0.2017 * effectiveAge)) / 4.184;
+    const grossCardiac = Math.max(0, hrGrossPerMin * durMins);
+
+    // Factor de atenuación por resistencia (0.82) para descontar la taquicardia por reflejo presor/Valsalva
+    cardiacKcal = Math.round(grossCardiac * 0.82);
+
+    // Modulación de EPOC por FC Máxima
+    if (watchHrMax) {
+      if (watchHrMax >= 165) epocFactor = 0.16;
+      else if (watchHrMax >= 150) epocFactor = 0.13;
+      else epocFactor = 0.10;
+    }
+
+    // Cálculo de %HRR (Karvonen)
+    if (watchHrRest && watchHrMax && watchHrMax > watchHrRest) {
+      hrrPct = Math.round(((watchHrAvg - watchHrRest) / (watchHrMax - watchHrRest)) * 100);
+    }
+  }
+
+  let strengthSubtotal = Math.round(strengthMechanicalKcal + strengthActiveKcal + strengthRestKcal);
+
+  // Si tenemos calibración por FC, triangulamos el gasto mecánico con la respuesta hemodinámica
+  if (isHeartRateCalibrated && cardiacKcal > 0) {
+    // 55% costo hemodinámico/cardíaco corregido + 45% trabajo mecánico y recuperación neuromuscular
+    strengthSubtotal = Math.round((cardiacKcal * 0.55) + (strengthSubtotal * 0.45));
+  }
+
+  const epocKcal = strengthSubtotal > 0 ? Math.round(strengthSubtotal * epocFactor) : 0;
   const totalKcal = strengthSubtotal + cardioKcal + epocKcal;
 
-  // Integración opcional con datos del reloj inteligente (Apple Watch, Garmin, Galaxy Watch)
-  const parsedWatch = parseFloat(smartwatchKcal);
-  const validWatchKcal = !isNaN(parsedWatch) && parsedWatch > 0 ? Math.round(parsedWatch) : null;
-  const blendedKcal = validWatchKcal ? Math.round((totalKcal + validWatchKcal) / 2) : totalKcal;
+  // Si el usuario además ingresó las calorías nativas de su reloj, calculamos el promedio ponderado
+  const blendedKcal = validWatchKcal ? Math.round((totalKcal * 0.6) + (validWatchKcal * 0.4)) : totalKcal;
 
   return {
     strengthKcal: strengthSubtotal,
     cardioKcal,
     epocKcal,
     totalKcal,
+    cardiacKcal,
+    isHeartRateCalibrated,
+    hrrPct,
+    watchHrAvg,
+    watchHrMax,
+    watchHrRest,
     smartwatchKcal: validWatchKcal,
     blendedKcal,
     displayKcal: validWatchKcal ? blendedKcal : totalKcal,
+    isBlended: !!validWatchKcal || isHeartRateCalibrated,
     completedSetsCount,
     durationMinutes: finalDurationMinutes,
     breakdown: {

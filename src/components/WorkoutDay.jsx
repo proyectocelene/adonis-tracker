@@ -60,6 +60,7 @@ export default function WorkoutDay() {
   const [newExScope, setNewExScope] = useState('today'); // 'today' | 'permanent'
   const [showRoutineBuilder, setShowRoutineBuilder] = useState(false);
   const [showSecondaryTools, setShowSecondaryTools] = useState(false);
+  const [showStrengthWatchModal, setShowStrengthWatchModal] = useState(false);
 
   // Formulario nuevo ejercicio
   const [newExName, setNewExName] = useState('');
@@ -366,11 +367,15 @@ export default function WorkoutDay() {
   const handleUpdateSet = (exerciseId, setNumber, setData) => {
     updateSessionDataForCurrentDay(dayData => {
       const exData = dayData[exerciseId] || {};
+      const currentSet = exData[setNumber] || {};
       return {
         ...dayData,
         [exerciseId]: {
           ...exData,
-          [setNumber]: setData
+          [setNumber]: {
+            ...currentSet,
+            ...setData
+          }
         }
       };
     });
@@ -473,13 +478,17 @@ export default function WorkoutDay() {
     });
   };
 
-  const handleSetSmartwatchKcal = (kcalValue) => {
+  const handleSetSmartwatchKcal = (data) => {
     setSmartwatchKcalMap(prev => {
       const next = { ...(prev || {}) };
-      if (kcalValue === null || kcalValue === undefined || isNaN(kcalValue) || kcalValue <= 0) {
+      if (!data) {
         delete next[selectedDateKey];
+      } else if (typeof data === 'object') {
+        next[selectedDateKey] = data;
+      } else if (!isNaN(data) && Number(data) > 0) {
+        next[selectedDateKey] = Math.round(Number(data));
       } else {
-        next[selectedDateKey] = Math.round(Number(kcalValue));
+        delete next[selectedDateKey];
       }
       return next;
     });
@@ -1341,6 +1350,9 @@ export default function WorkoutDay() {
                 handleDeferExercise={handleDeferExercise}
                 skippedExercisesMap={skippedExercisesMap[baseDay.id] || {}}
                 handleSkipExercise={handleSkipExercise}
+                userWeightKg={latestWeight}
+                userSmartwatchKcal={smartwatchKcalMap?.[selectedDateKey] || null}
+                onOpenStrengthWatchModal={() => setShowStrengthWatchModal(true)}
               />
 
               <AddCustomExerciseModal
@@ -1381,6 +1393,8 @@ export default function WorkoutDay() {
                 onExportTCX={handleExportTCX}
                 userSmartwatchKcal={smartwatchKcalMap?.[selectedDateKey] || null}
                 onSetSmartwatchKcal={handleSetSmartwatchKcal}
+                isWatchModalOpen={showStrengthWatchModal}
+                setIsWatchModalOpen={setShowStrengthWatchModal}
               />
 
             </div>

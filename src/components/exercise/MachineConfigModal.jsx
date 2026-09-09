@@ -7,7 +7,8 @@ export default function MachineConfigModal({
   exerciseName = '',
   exerciseId = '',
   currentConfig = null,
-  onSaveConfig
+  onSaveConfig,
+  onOpenCalculator
 }) {
   if (!isOpen) return null;
 
@@ -333,47 +334,139 @@ export default function MachineConfigModal({
                     textAlign: 'center'
                   }}
                 >
-                  📏 Incremento Fijo
-                  <span style={{ display: 'block', fontSize: '9px', color: '#64748b', fontWeight: '600' }}>(Constante por placa)</span>
+                  📏 Incremento Fijo / Manual
+                  <span style={{ display: 'block', fontSize: '9px', color: '#64748b', fontWeight: '600' }}>(Personalizable por placa)</span>
                 </button>
               </div>
             </div>
 
-            {stackPreset === 'linear' && (
-              <div>
-                <label style={{ display: 'block', fontSize: '11px', fontWeight: '800', color: '#1e293b', marginBottom: '4px' }}>
-                  Salto de peso por placa en esta torre:
+            {/* CABEZAL INICIAL (PLACA #1) */}
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                <label style={{ fontSize: '11px', fontWeight: '800', color: '#1e293b' }}>
+                  Placa #1 (Cabezal inicial / Peso mínimo):
                 </label>
-                <div style={{ display: 'flex', gap: '6px' }}>
-                {[5, 10, 12.5, 15].map(step => (
+                <span style={{ fontSize: '11px', fontWeight: '900', color: '#0066ff' }}>
+                  {firstPlate} lbs/kg
+                </span>
+              </div>
+              <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginBottom: '6px' }}>
+                {[5, 7.5, 10, 12.5, 15, 20].map(fp => (
                   <button
-                    key={step}
+                    key={fp}
                     type="button"
-                    onClick={() => setPlateStep(step)}
+                    onClick={() => setFirstPlate(fp)}
                     style={{
-                      flex: 1,
-                      padding: '6px 2px',
+                      flex: '1 1 auto',
+                      padding: '5px 8px',
                       borderRadius: '8px',
-                      border: plateStep === step ? '2px solid #0066ff' : '1px solid #cbd5e1',
-                      background: plateStep === step ? '#eff6ff' : '#ffffff',
-                      color: plateStep === step ? '#0066ff' : '#334155',
-                      fontWeight: '900',
-                      fontSize: '11px',
+                      border: firstPlate === fp ? '2px solid #0066ff' : '1px solid #cbd5e1',
+                      background: firstPlate === fp ? '#eff6ff' : '#ffffff',
+                      color: firstPlate === fp ? '#0066ff' : '#334155',
+                      fontWeight: '800',
+                      fontSize: '10.5px',
                       cursor: 'pointer'
                     }}
                   >
-                    +{step} lbs
+                    {fp}
                   </button>
                 ))}
               </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ fontSize: '10.5px', color: '#64748b', fontWeight: '700' }}>✏️ O cabezal manual:</span>
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  step="any"
+                  placeholder="Ej. 15"
+                  value={firstPlate}
+                  onChange={(e) => setFirstPlate(parseFloat(e.target.value) || 0)}
+                  style={{
+                    width: '75px',
+                    padding: '4px 8px',
+                    borderRadius: '8px',
+                    border: '1.5px solid #0066ff',
+                    fontSize: '12px',
+                    fontWeight: '900',
+                    textAlign: 'center',
+                    background: '#ffffff',
+                    color: '#0f172a'
+                  }}
+                />
+                <span style={{ fontSize: '11px', fontWeight: '800', color: '#475569' }}>lbs / kg</span>
+              </div>
             </div>
-          )}
 
+            {/* SALTOS DE PESO POR PLACA */}
+            {stackPreset === 'linear' && (
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                  <label style={{ fontSize: '11px', fontWeight: '800', color: '#1e293b' }}>
+                    Salto de peso por placa en esta torre:
+                  </label>
+                  <span style={{ fontSize: '11px', fontWeight: '900', color: '#0066ff' }}>
+                    +{plateStep} lbs/kg
+                  </span>
+                </div>
+                <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginBottom: '6px' }}>
+                  {[5, 7.5, 10, 12.5, 15, 20].map(step => (
+                    <button
+                      key={step}
+                      type="button"
+                      onClick={() => setPlateStep(step)}
+                      style={{
+                        flex: '1 1 auto',
+                        padding: '5px 8px',
+                        borderRadius: '8px',
+                        border: plateStep === step ? '2px solid #0066ff' : '1px solid #cbd5e1',
+                        background: plateStep === step ? '#eff6ff' : '#ffffff',
+                        color: plateStep === step ? '#0066ff' : '#334155',
+                        fontWeight: '800',
+                        fontSize: '10.5px',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      +{step}
+                    </button>
+                  ))}
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ fontSize: '10.5px', color: '#64748b', fontWeight: '700' }}>✏️ O salto manual:</span>
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    step="any"
+                    placeholder="Ej. 12.5"
+                    value={plateStep}
+                    onChange={(e) => setPlateStep(parseFloat(e.target.value) || 0)}
+                    style={{
+                      width: '75px',
+                      padding: '4px 8px',
+                      borderRadius: '8px',
+                      border: '1.5px solid #0066ff',
+                      fontSize: '12px',
+                      fontWeight: '900',
+                      textAlign: 'center',
+                      background: '#ffffff',
+                      color: '#0f172a'
+                    }}
+                  />
+                  <span style={{ fontSize: '11px', fontWeight: '800', color: '#475569' }}>lbs / kg por placa</span>
+                </div>
+              </div>
+            )}
+
+            {/* MICRO-CARGAS EXTRA */}
             <div>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: '800', color: '#1e293b', marginBottom: '4px' }}>
-                Micro-cargas o pesitas selectoras extra:
-              </label>
-              <div style={{ display: 'flex', gap: '6px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                <label style={{ fontSize: '11px', fontWeight: '800', color: '#1e293b' }}>
+                  Micro-cargas o pesitas selectoras extra:
+                </label>
+                <span style={{ fontSize: '11px', fontWeight: '900', color: '#10b981' }}>
+                  {microWeight > 0 ? `+${microWeight}` : 'Ninguna'}
+                </span>
+              </div>
+              <div style={{ display: 'flex', gap: '6px', marginBottom: '6px' }}>
                 {[
                   { val: 0, label: 'Ninguna' },
                   { val: 2.5, label: '+2.5 lbs' },
@@ -399,6 +492,29 @@ export default function MachineConfigModal({
                   </button>
                 ))}
               </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ fontSize: '10.5px', color: '#64748b', fontWeight: '700' }}>✏️ O valor manual:</span>
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  step="any"
+                  placeholder="0"
+                  value={microWeight}
+                  onChange={(e) => setMicroWeight(parseFloat(e.target.value) || 0)}
+                  style={{
+                    width: '75px',
+                    padding: '4px 8px',
+                    borderRadius: '8px',
+                    border: '1.5px solid #10b981',
+                    fontSize: '12px',
+                    fontWeight: '900',
+                    textAlign: 'center',
+                    background: '#ffffff',
+                    color: '#065f46'
+                  }}
+                />
+                <span style={{ fontSize: '11px', fontWeight: '800', color: '#475569' }}>lbs / kg</span>
+              </div>
             </div>
           </div>
         )}
@@ -406,30 +522,58 @@ export default function MachineConfigModal({
         {type === 'plates' && (
           <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '12px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
             <div>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: '800', color: '#1e293b', marginBottom: '4px' }}>
-                Peso base del trineo / máquina vacía:
-              </label>
-              <div style={{ display: 'flex', gap: '6px' }}>
-                {[0, 45, 75, 100, 118].map(bw => (
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                <label style={{ fontSize: '11px', fontWeight: '800', color: '#1e293b' }}>
+                  Peso base del trineo / máquina vacía:
+                </label>
+                <span style={{ fontSize: '11px', fontWeight: '900', color: '#0066ff' }}>
+                  {baseWeight} lbs/kg
+                </span>
+              </div>
+              <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginBottom: '6px' }}>
+                {[0, 20, 45, 75, 100, 118].map(bw => (
                   <button
                     key={bw}
                     type="button"
                     onClick={() => setBaseWeight(bw)}
                     style={{
-                      flex: 1,
-                      padding: '6px 2px',
+                      flex: '1 1 auto',
+                      padding: '5px 8px',
                       borderRadius: '8px',
                       border: baseWeight === bw ? '2px solid #0066ff' : '1px solid #cbd5e1',
                       background: baseWeight === bw ? '#eff6ff' : '#ffffff',
                       color: baseWeight === bw ? '#0066ff' : '#334155',
-                      fontWeight: '900',
-                      fontSize: '11px',
+                      fontWeight: '800',
+                      fontSize: '10.5px',
                       cursor: 'pointer'
                     }}
                   >
-                    {bw} lbs
+                    {bw}
                   </button>
                 ))}
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ fontSize: '10.5px', color: '#64748b', fontWeight: '700' }}>✏️ O peso base manual:</span>
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  step="any"
+                  placeholder="Ej. 105"
+                  value={baseWeight}
+                  onChange={(e) => setBaseWeight(parseFloat(e.target.value) || 0)}
+                  style={{
+                    width: '75px',
+                    padding: '4px 8px',
+                    borderRadius: '8px',
+                    border: '1.5px solid #0066ff',
+                    fontSize: '12px',
+                    fontWeight: '900',
+                    textAlign: 'center',
+                    background: '#ffffff',
+                    color: '#0f172a'
+                  }}
+                />
+                <span style={{ fontSize: '11px', fontWeight: '800', color: '#475569' }}>lbs / kg</span>
               </div>
             </div>
 
@@ -504,52 +648,81 @@ export default function MachineConfigModal({
         )}
 
         {/* ACCIONES */}
-        <div style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
-          {currentConfig && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '6px' }}>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            {currentConfig && (
+              <button
+                type="button"
+                onClick={handleReset}
+                style={{
+                  background: '#f1f5f9',
+                  color: '#64748b',
+                  border: '1px solid #cbd5e1',
+                  borderRadius: '12px',
+                  padding: '11px 14px',
+                  fontSize: '11.5px',
+                  fontWeight: '900',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px'
+                }}
+                title="Restablecer a valores por defecto"
+              >
+                <RotateCcw size={14} /> Reset
+              </button>
+            )}
+
             <button
               type="button"
-              onClick={handleReset}
+              onClick={handleSave}
               style={{
-                background: '#f1f5f9',
-                color: '#64748b',
-                border: '1px solid #cbd5e1',
+                flex: 1,
+                background: 'linear-gradient(135deg, #0066ff 0%, #0052cc 100%)',
+                color: '#ffffff',
+                border: 'none',
                 borderRadius: '12px',
-                padding: '11px 14px',
-                fontSize: '11.5px',
+                padding: '11px',
+                fontSize: '13px',
                 fontWeight: '900',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '4px'
+                justifyContent: 'center',
+                gap: '6px',
+                boxShadow: '0 4px 12px rgba(0, 102, 255, 0.25)'
               }}
-              title="Restablecer a valores por defecto"
             >
-              <RotateCcw size={14} /> Reset
+              <Check size={16} strokeWidth={3} /> Guardar Calibración
+            </button>
+          </div>
+
+          {onOpenCalculator && (
+            <button
+              type="button"
+              onClick={() => {
+                handleSave();
+                onOpenCalculator();
+              }}
+              style={{
+                width: '100%',
+                background: '#f5f3ff',
+                color: '#7c3aed',
+                border: '1.5px solid #c4b5fd',
+                borderRadius: '12px',
+                padding: '10px 12px',
+                fontSize: '12px',
+                fontWeight: '900',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '6px'
+              }}
+            >
+              🏋️ Guardar & Abrir Calculadora de Carga
             </button>
           )}
-
-          <button
-            type="button"
-            onClick={handleSave}
-            style={{
-              flex: 1,
-              background: 'linear-gradient(135deg, #0066ff 0%, #0052cc 100%)',
-              color: '#ffffff',
-              border: 'none',
-              borderRadius: '12px',
-              padding: '11px',
-              fontSize: '13px',
-              fontWeight: '900',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '6px',
-              boxShadow: '0 4px 12px rgba(0, 102, 255, 0.25)'
-            }}
-          >
-            <Check size={16} strokeWidth={3} /> Guardar Calibración
-          </button>
         </div>
       </div>
     </div>

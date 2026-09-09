@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Save, Trash2, Settings2, ChevronUp, ChevronDown, 
   Loader2, Cpu, BookOpen, Copy, Layers, RefreshCw, Sparkles, Flame, Share2, Download,
@@ -27,10 +27,40 @@ export default function WorkoutFooterControls({
   calories = null,
   onExportTCX = null,
   userSmartwatchKcal = null,
-  onSetSmartwatchKcal = null
+  onSetSmartwatchKcal = null,
+  isWatchModalOpen = undefined,
+  setIsWatchModalOpen = null
 }) {
-  const [showWatchModal, setShowWatchModal] = useState(false);
-  const [watchInput, setWatchInput] = useState(userSmartwatchKcal ? String(userSmartwatchKcal) : '');
+  const [internalWatchModal, setInternalWatchModal] = useState(false);
+  const showWatchModal = isWatchModalOpen !== undefined ? isWatchModalOpen : internalWatchModal;
+  const setShowWatchModal = setIsWatchModalOpen || setInternalWatchModal;
+
+  const [watchInput, setWatchInput] = useState(() => {
+    if (typeof userSmartwatchKcal === 'object') return userSmartwatchKcal?.watchKcal ? String(userSmartwatchKcal.watchKcal) : '';
+    return userSmartwatchKcal ? String(userSmartwatchKcal) : '';
+  });
+  const [watchHrAvgInput, setWatchHrAvgInput] = useState(() => {
+    return typeof userSmartwatchKcal === 'object' && userSmartwatchKcal?.hrAvg ? String(userSmartwatchKcal.hrAvg) : '';
+  });
+  const [watchHrMaxInput, setWatchHrMaxInput] = useState(() => {
+    return typeof userSmartwatchKcal === 'object' && userSmartwatchKcal?.hrMax ? String(userSmartwatchKcal.hrMax) : '';
+  });
+  const [watchHrRestInput, setWatchHrRestInput] = useState(() => {
+    return typeof userSmartwatchKcal === 'object' && userSmartwatchKcal?.hrRest ? String(userSmartwatchKcal.hrRest) : '';
+  });
+
+  useEffect(() => {
+    if (showWatchModal) {
+      if (typeof userSmartwatchKcal === 'object') {
+        setWatchInput(userSmartwatchKcal?.watchKcal ? String(userSmartwatchKcal.watchKcal) : '');
+        setWatchHrAvgInput(userSmartwatchKcal?.hrAvg ? String(userSmartwatchKcal.hrAvg) : '');
+        setWatchHrMaxInput(userSmartwatchKcal?.hrMax ? String(userSmartwatchKcal.hrMax) : '');
+        setWatchHrRestInput(userSmartwatchKcal?.hrRest ? String(userSmartwatchKcal.hrRest) : '');
+      } else {
+        setWatchInput(userSmartwatchKcal ? String(userSmartwatchKcal) : '');
+      }
+    }
+  }, [showWatchModal, userSmartwatchKcal]);
   const hasAnyDraftData = completedSets > 0 || Object.values(todayWorkoutData || {}).some(ex => {
     if (!ex) return false;
     return Object.keys(ex).some(k => !isNaN(parseInt(k)) && (ex[k]?.weight || ex[k]?.reps || ex[k]?.completed));
@@ -72,7 +102,14 @@ export default function WorkoutFooterControls({
               <button
                 type="button"
                 onClick={() => {
-                  setWatchInput(userSmartwatchKcal ? String(userSmartwatchKcal) : '');
+                  if (typeof userSmartwatchKcal === 'object') {
+                    setWatchInput(userSmartwatchKcal?.watchKcal ? String(userSmartwatchKcal.watchKcal) : '');
+                    setWatchHrAvgInput(userSmartwatchKcal?.hrAvg ? String(userSmartwatchKcal.hrAvg) : '');
+                    setWatchHrMaxInput(userSmartwatchKcal?.hrMax ? String(userSmartwatchKcal.hrMax) : '');
+                    setWatchHrRestInput(userSmartwatchKcal?.hrRest ? String(userSmartwatchKcal.hrRest) : '');
+                  } else {
+                    setWatchInput(userSmartwatchKcal ? String(userSmartwatchKcal) : '');
+                  }
                   setShowWatchModal(true);
                 }}
                 style={{
@@ -89,7 +126,7 @@ export default function WorkoutFooterControls({
                   gap: '4px'
                 }}
               >
-                <Watch size={13} /> {userSmartwatchKcal ? `${userSmartwatchKcal} kcal` : 'Calibrar'}
+                <Watch size={13} /> {calories.isHeartRateCalibrated ? `❤️ ${calories.watchHrAvg} bpm` : (userSmartwatchKcal ? '⌚ Calibrado' : 'Calibrar Reloj')}
               </button>
               <span className="badge" style={{ background: '#ea580c', color: '#ffffff', fontSize: '13px', fontWeight: '900', padding: '4px 10px', borderRadius: '12px' }}>
                 🔥 {calories.displayKcal || calories.totalKcal} kcal
@@ -352,38 +389,117 @@ export default function WorkoutFooterControls({
             </div>
 
             <p style={{ fontSize: '12px', color: '#475569', lineHeight: '1.4', marginBottom: '14px' }}>
-              Ingresa las <strong>calorías activas</strong> registradas en tu reloj para esta sesión. Adonis integrará el valor en un modelo ponderado que balancea la biomecánica y tus sensores cardíacos.
+              Calibra con tus sensores cardíacos reales (Apple Watch, Garmin, Galaxy, Polar). Adonis aplicará la <strong>Ecuación de Keytel modificada para pesas</strong> con <strong>Reserva Cardíaca (%HRR de Karvonen)</strong> y trabajo mecánico.
             </p>
 
-            <div style={{ marginBottom: '16px' }}>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: '800', color: '#1e293b', marginBottom: '6px' }}>
-                Calorías Activas del Reloj (kcal):
-              </label>
-              <input
-                type="number"
-                value={watchInput}
-                onChange={e => setWatchInput(e.target.value)}
-                placeholder="Ej. 180"
-                style={{
-                  width: '100%',
-                  padding: '12px 14px',
-                  borderRadius: '14px',
-                  border: '1.5px solid #cbd5e1',
-                  fontSize: '16px',
-                  fontWeight: '800',
-                  boxSizing: 'border-box'
-                }}
-              />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '12px' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '11px', fontWeight: '800', color: '#1e293b', marginBottom: '4px' }}>
+                  ❤️ FC Promedio (BPM):
+                </label>
+                <input
+                  type="number"
+                  value={watchHrAvgInput}
+                  onChange={e => setWatchHrAvgInput(e.target.value)}
+                  placeholder="Ej. 125"
+                  style={{
+                    width: '100%',
+                    padding: '10px',
+                    borderRadius: '12px',
+                    border: '1.5px solid #cbd5e1',
+                    fontSize: '14px',
+                    fontWeight: '800',
+                    boxSizing: 'border-box'
+                  }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '11px', fontWeight: '800', color: '#1e293b', marginBottom: '4px' }}>
+                  ⚡ FC Máxima (BPM):
+                </label>
+                <input
+                  type="number"
+                  value={watchHrMaxInput}
+                  onChange={e => setWatchHrMaxInput(e.target.value)}
+                  placeholder="Ej. 165"
+                  style={{
+                    width: '100%',
+                    padding: '10px',
+                    borderRadius: '12px',
+                    border: '1.5px solid #cbd5e1',
+                    fontSize: '14px',
+                    fontWeight: '800',
+                    boxSizing: 'border-box'
+                  }}
+                />
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '14px' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '11px', fontWeight: '800', color: '#1e293b', marginBottom: '4px' }}>
+                  💤 FC Reposo / Mín (BPM):
+                </label>
+                <input
+                  type="number"
+                  value={watchHrRestInput}
+                  onChange={e => setWatchHrRestInput(e.target.value)}
+                  placeholder="Ej. 60"
+                  style={{
+                    width: '100%',
+                    padding: '10px',
+                    borderRadius: '12px',
+                    border: '1.5px solid #cbd5e1',
+                    fontSize: '14px',
+                    fontWeight: '800',
+                    boxSizing: 'border-box'
+                  }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '11px', fontWeight: '800', color: '#1e293b', marginBottom: '4px' }}>
+                  ⌚ Kcal del Reloj (Opcional):
+                </label>
+                <input
+                  type="number"
+                  value={watchInput}
+                  onChange={e => setWatchInput(e.target.value)}
+                  placeholder="Ej. 320"
+                  style={{
+                    width: '100%',
+                    padding: '10px',
+                    borderRadius: '12px',
+                    border: '1.5px solid #cbd5e1',
+                    fontSize: '14px',
+                    fontWeight: '800',
+                    boxSizing: 'border-box'
+                  }}
+                />
+              </div>
             </div>
 
             {calories && (
-              <div style={{ background: '#f8fafc', padding: '10px 12px', borderRadius: '12px', fontSize: '11px', color: '#475569', marginBottom: '16px', border: '1px solid #e2e8f0' }}>
-                <div>• Estimación Biomecánica Adonis: <strong>{calories.totalKcal} kcal</strong></div>
-                {watchInput && !isNaN(parseFloat(watchInput)) && parseFloat(watchInput) > 0 && (
-                  <div style={{ marginTop: '4px', color: '#0066ff' }}>
-                    • Promedio Integrado (50/50): <strong>{Math.round((calories.totalKcal + parseFloat(watchInput)) / 2)} kcal</strong>
+              <div style={{ background: '#f8fafc', padding: '10px 12px', borderRadius: '14px', fontSize: '11px', color: '#475569', marginBottom: '16px', border: '1px solid #e2e8f0' }}>
+                <div style={{ fontWeight: '800', color: '#1e293b', marginBottom: '4px' }}>
+                  🧪 Desglose del Algoritmo Híbrido:
+                </div>
+                <div>• Trabajo Mecánico Puro (Músculo): <strong>{calories.breakdown?.mechanicalKcal + calories.breakdown?.activeKcal || calories.strengthKcal} kcal</strong></div>
+                {calories.cardiacKcal > 0 && (
+                  <div style={{ color: '#dc2626' }}>
+                    • Costo Hemodinámico (Keytel Atenuado): <strong>{calories.cardiacKcal} kcal</strong>
                   </div>
                 )}
+                {calories.hrrPct && (
+                  <div style={{ color: '#7c3aed' }}>
+                    • Intensidad Reserva Cardíaca (%HRR Karvonen): <strong>{calories.hrrPct}%</strong>
+                  </div>
+                )}
+                <div>• Deuda de Oxígeno (EPOC): <strong>+{calories.epocKcal} kcal</strong></div>
+                <div style={{ marginTop: '4px', paddingTop: '4px', borderTop: '1px dashed #cbd5e1', color: '#ea580c', fontWeight: '900', fontSize: '12px' }}>
+                  🔥 Gasto Fisiológico Total: {calories.displayKcal || calories.totalKcal} kcal
+                </div>
               </div>
             )}
 
@@ -391,9 +507,22 @@ export default function WorkoutFooterControls({
               <button
                 type="button"
                 onClick={() => {
-                  const val = parseFloat(watchInput);
+                  const hrAvg = parseFloat(watchHrAvgInput);
+                  const hrMax = parseFloat(watchHrMaxInput);
+                  const hrRest = parseFloat(watchHrRestInput);
+                  const wKcal = parseFloat(watchInput);
+
                   if (onSetSmartwatchKcal) {
-                    onSetSmartwatchKcal(!isNaN(val) && val > 0 ? val : null);
+                    if ((!isNaN(hrAvg) && hrAvg > 0) || (!isNaN(wKcal) && wKcal > 0)) {
+                      onSetSmartwatchKcal({
+                        hrAvg: !isNaN(hrAvg) && hrAvg > 0 ? hrAvg : null,
+                        hrMax: !isNaN(hrMax) && hrMax > 0 ? hrMax : null,
+                        hrRest: !isNaN(hrRest) && hrRest > 0 ? hrRest : null,
+                        watchKcal: !isNaN(wKcal) && wKcal > 0 ? wKcal : null
+                      });
+                    } else {
+                      onSetSmartwatchKcal(null);
+                    }
                   }
                   setShowWatchModal(false);
                 }}
@@ -401,15 +530,16 @@ export default function WorkoutFooterControls({
                   width: '100%',
                   padding: '12px',
                   borderRadius: '14px',
-                  background: '#ea580c',
+                  background: 'linear-gradient(135deg, #ea580c 0%, #c2410c 100%)',
                   color: '#ffffff',
                   border: 'none',
                   fontWeight: '900',
                   fontSize: '13px',
-                  cursor: 'pointer'
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 12px rgba(234, 88, 12, 0.25)'
                 }}
               >
-                💾 Guardar Sincronización
+                💾 Guardar Calibración Fisiológica
               </button>
 
               {userSmartwatchKcal && (
@@ -418,6 +548,9 @@ export default function WorkoutFooterControls({
                   onClick={() => {
                     if (onSetSmartwatchKcal) onSetSmartwatchKcal(null);
                     setWatchInput('');
+                    setWatchHrAvgInput('');
+                    setWatchHrMaxInput('');
+                    setWatchHrRestInput('');
                     setShowWatchModal(false);
                   }}
                   style={{
@@ -432,7 +565,7 @@ export default function WorkoutFooterControls({
                     cursor: 'pointer'
                   }}
                 >
-                  Restablecer a Cálculo Biomecánico
+                  Restablecer a Cálculo Biomecánico Estándar
                 </button>
               )}
             </div>

@@ -163,13 +163,12 @@ export default function SetLogger({
     return 'barra';
   };
 
-  const handleSanitizedChange = (setIndex, field, value) => {
-    if (field === 'weight' || field === 'reps' || field === 'repsL' || field === 'repsR' || field === 'weightL' || field === 'weightR') {
-      const cleanValue = value === '' ? '' : String(Number(value));
-      handleSetChange(setIndex, field, isNaN(Number(value)) ? value : cleanValue);
-    } else {
-      handleSetChange(setIndex, field, value);
+  const handleSanitizedChange = (setIndex, fieldOrObj, value) => {
+    if (typeof fieldOrObj === 'object') {
+      handleSetChange(setIndex, fieldOrObj);
+      return;
     }
+    handleSetChange(setIndex, fieldOrObj, value);
   };
 
   const handleSaveFeedback = (feedbackData) => {
@@ -389,11 +388,16 @@ export default function SetLogger({
                 {/* INPUT PESO CON CALCULADORA */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
                   <input
-                    type="number"
+                    type="text"
                     inputMode="decimal"
                     placeholder={wSet.defaultWeight ? String(wSet.defaultWeight) : "Peso"}
                     value={wVal.weight ?? ''}
-                    onChange={(e) => handleSanitizedChange(wSet.id, 'weight', e.target.value)}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(',', '.');
+                      if (val === '' || /^[0-9]*\.?[0-9]*$/.test(val)) {
+                        handleSanitizedChange(wSet.id, 'weight', val);
+                      }
+                    }}
                     style={{
                       width: '50px',
                       padding: '5px 2px',
@@ -420,11 +424,16 @@ export default function SetLogger({
                 {/* INPUT REPS */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
                   <input
-                    type="number"
+                    type="text"
                     inputMode="numeric"
                     placeholder={wSet.defaultReps ? String(wSet.defaultReps) : "Reps"}
                     value={wVal.reps ?? ''}
-                    onChange={(e) => handleSanitizedChange(wSet.id, 'reps', e.target.value)}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === '' || /^[0-9]+$/.test(val)) {
+                        handleSanitizedChange(wSet.id, 'reps', val);
+                      }
+                    }}
                     style={{
                       width: '42px',
                       padding: '5px 2px',
@@ -645,25 +654,30 @@ export default function SetLogger({
                 )}
               </div>
 
-              {/* LÍNEA DE ENTRADA DE DATOS (NUNCA DESBORDA) */}
+              {/* LÍNEA DE ENTRADA DE DATOS (ROBUSTA Y SIN DESBORDAMIENTOS) */}
               <div style={{
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 gap: '4px',
-                width: '100%'
+                width: '100%',
+                flexWrap: 'nowrap'
               }}>
                 {/* PESO CON CALCULADORA */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '2px', flexShrink: 0 }}>
                   <input
-                    type="number"
+                    type="text"
                     inputMode="decimal"
-                    pattern="[0-9]*[.,]?[0-9]*"
                     placeholder="Peso"
                     value={setVal.weight ?? ''}
-                    onChange={(e) => handleSanitizedChange(setNum, 'weight', e.target.value)}
+                    onChange={(e) => {
+                      const raw = e.target.value.replace(',', '.');
+                      if (raw === '' || /^[0-9]*\.?[0-9]*$/.test(raw)) {
+                        handleSanitizedChange(setNum, 'weight', raw);
+                      }
+                    }}
                     style={{
-                      width: '52px',
+                      width: isUnilateral ? '48px' : '52px',
                       padding: '6px 2px',
                       borderRadius: '8px',
                       border: isWeightJumpAlert ? '2px solid #f59e0b' : '1.5px solid #94a3b8',
@@ -689,26 +703,33 @@ export default function SetLogger({
                   >
                     🏋️
                   </button>
-                  <span style={{ fontSize: '10px', color: '#64748b', fontWeight: '800' }}>lbs</span>
+                  <span style={{ fontSize: isUnilateral ? '9.5px' : '10px', color: isUnilateral ? '#7c3aed' : '#64748b', fontWeight: '800', whiteSpace: 'nowrap' }}>
+                    {isUnilateral ? `${exercise.defaultUnit || 'lbs'}/ld` : (exercise.defaultUnit || 'lbs')}
+                  </span>
                 </div>
 
                 {/* REPETICIONES: MODO BILATERAL O POR LADO */}
                 {isUnilateral ? (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '3px', flexShrink: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', background: '#f5f3ff', borderRadius: '8px', border: '1.5px solid #c4b5fd', padding: '1px 3px' }}>
                       <span style={{ fontSize: '9.5px', color: '#7c3aed', fontWeight: '900', marginRight: '1px' }}>I:</span>
                       <input
-                        type="number"
+                        type="text"
                         inputMode="numeric"
                         pattern="[0-9]*"
                         placeholder="Izq"
                         value={setVal.repsL !== undefined ? setVal.repsL : ''}
                         onChange={(e) => {
                           const val = e.target.value;
-                          handleSanitizedChange(setNum, 'repsL', val);
-                          const rR = setVal.repsR !== undefined && setVal.repsR !== '' ? Number(setVal.repsR) : Number(val);
-                          const rL = val !== '' ? Number(val) : 0;
-                          handleSanitizedChange(setNum, 'reps', String(Math.round((rL + rR) / 2)));
+                          if (val === '' || /^[0-9]+$/.test(val)) {
+                            const rL = val !== '' ? Number(val) : '';
+                            const rR = setVal.repsR !== undefined && setVal.repsR !== '' ? Number(setVal.repsR) : rL;
+                            const avgR = rL !== '' && rR !== '' ? String(Math.round((Number(rL) + Number(rR)) / 2)) : (rL !== '' ? String(rL) : '');
+                            handleSanitizedChange(setNum, {
+                              repsL: val,
+                              reps: avgR
+                            });
+                          }
                         }}
                         style={{
                           width: '28px',
@@ -718,24 +739,30 @@ export default function SetLogger({
                           fontWeight: '900',
                           textAlign: 'center',
                           background: 'transparent',
-                          color: '#4c1d95'
+                          color: '#4c1d95',
+                          outline: 'none'
                         }}
                       />
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', background: '#ecfdf5', borderRadius: '8px', border: '1.5px solid #a7f3d0', padding: '1px 3px' }}>
                       <span style={{ fontSize: '9.5px', color: '#059669', fontWeight: '900', marginRight: '1px' }}>D:</span>
                       <input
-                        type="number"
+                        type="text"
                         inputMode="numeric"
                         pattern="[0-9]*"
                         placeholder="Der"
                         value={setVal.repsR !== undefined ? setVal.repsR : ''}
                         onChange={(e) => {
                           const val = e.target.value;
-                          handleSanitizedChange(setNum, 'repsR', val);
-                          const rL = setVal.repsL !== undefined && setVal.repsL !== '' ? Number(setVal.repsL) : Number(val);
-                          const rR = val !== '' ? Number(val) : 0;
-                          handleSanitizedChange(setNum, 'reps', String(Math.round((rL + rR) / 2)));
+                          if (val === '' || /^[0-9]+$/.test(val)) {
+                            const rR = val !== '' ? Number(val) : '';
+                            const rL = setVal.repsL !== undefined && setVal.repsL !== '' ? Number(setVal.repsL) : rR;
+                            const avgR = rL !== '' && rR !== '' ? String(Math.round((Number(rL) + Number(rR)) / 2)) : (rR !== '' ? String(rR) : '');
+                            handleSanitizedChange(setNum, {
+                              repsR: val,
+                              reps: avgR
+                            });
+                          }
                         }}
                         style={{
                           width: '28px',
@@ -745,20 +772,26 @@ export default function SetLogger({
                           fontWeight: '900',
                           textAlign: 'center',
                           background: 'transparent',
-                          color: '#065f46'
+                          color: '#065f46',
+                          outline: 'none'
                         }}
                       />
                     </div>
                   </div>
                 ) : (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '2px', flexShrink: 0 }}>
                     <input
-                      type="number"
+                      type="text"
                       inputMode="numeric"
                       pattern="[0-9]*"
                       placeholder="Reps"
                       value={setVal.reps ?? ''}
-                      onChange={(e) => handleSanitizedChange(setNum, 'reps', e.target.value)}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val === '' || /^[0-9]+$/.test(val)) {
+                          handleSanitizedChange(setNum, 'reps', val);
+                        }
+                      }}
                       style={{
                         width: '46px',
                         padding: '6px 2px',
@@ -918,6 +951,11 @@ export default function SetLogger({
         initialExerciseType={getApparatusType(exercise.name || '')}
         exerciseName={exercise.name}
         machineConfig={machineConfig}
+        onSaveMachineConfig={handleSaveMachineConfig}
+        onOpenMachineConfig={() => {
+          setPlateModal({ isOpen: false, setNum: null, currentWeight: 0 });
+          setIsMachineConfigOpen(true);
+        }}
         onApplyWeight={(appliedWeight) => {
           if (plateModal.setNum !== null) {
             handleSanitizedChange(plateModal.setNum, 'weight', appliedWeight);
@@ -945,6 +983,10 @@ export default function SetLogger({
         exerciseId={exercise.id}
         currentConfig={machineConfig}
         onSaveConfig={handleSaveMachineConfig}
+        onOpenCalculator={() => {
+          setIsMachineConfigOpen(false);
+          setPlateModal({ isOpen: true, setNum: 1, currentWeight: machineConfig?.firstPlate || 0 });
+        }}
       />
 
       {/* MODAL DE SENSACIONES Y RETROALIMENTACIÓN MEDIBLE */}
