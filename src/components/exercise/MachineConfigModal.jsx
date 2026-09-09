@@ -22,6 +22,8 @@ export default function MachineConfigModal({
   const [station, setStation] = useState(currentConfig?.station || '');
   
   // Placas / Torre
+  const defaultStackPreset = currentConfig?.stackPreset || (lowerName.includes('extension') ? 'two_tens_then_twenty' : 'linear');
+  const [stackPreset, setStackPreset] = useState(defaultStackPreset);
   const [plateStep, setPlateStep] = useState(currentConfig?.plateStep !== undefined ? currentConfig.plateStep : 10);
   const [firstPlate, setFirstPlate] = useState(currentConfig?.firstPlate !== undefined ? currentConfig.firstPlate : 10);
   const [microWeight, setMicroWeight] = useState(currentConfig?.microWeight !== undefined ? currentConfig.microWeight : 0);
@@ -50,14 +52,28 @@ export default function MachineConfigModal({
   const fullStationName = [floor, station].filter(Boolean).join(' • ');
 
   const handleSave = () => {
+    // Generar lista física de pesos disponibles en la máquina
+    let calculatedAvailableWeights = [];
+    if (type === 'stack') {
+      if (stackPreset === 'two_tens_then_twenty') {
+        calculatedAvailableWeights = [10, 20, 40, 60, 80, 100, 120, 140, 160, 180, 200, 220, 240, 260, 280, 300];
+      } else {
+        const fp = parseFloat(firstPlate) || 10;
+        const st = parseFloat(plateStep) || 10;
+        calculatedAvailableWeights = Array.from({ length: 20 }, (_, i) => fp + (i * st));
+      }
+    }
+
     const configData = {
       type,
       floor: floor.trim(),
       station: (fullStationName || station).trim(),
       // Stack
-      plateStep: parseFloat(plateStep) || 10,
+      stackPreset,
+      plateStep: stackPreset === 'two_tens_then_twenty' ? 20 : (parseFloat(plateStep) || 10),
       firstPlate: parseFloat(firstPlate) || 10,
       microWeight: parseFloat(microWeight) || 0,
+      availableWeights: calculatedAvailableWeights,
       // Plates
       baseWeight: parseFloat(baseWeight) || 0,
       availablePlates,
@@ -67,7 +83,7 @@ export default function MachineConfigModal({
       // General
       minIncrement: type === 'plates' 
         ? minPlateIncrement 
-        : (type === 'stack' ? (microWeight > 0 ? microWeight : parseFloat(plateStep) || 10) : parseFloat(dumbbellStep) || 5),
+        : (type === 'stack' ? (microWeight > 0 ? microWeight : (stackPreset === 'two_tens_then_twenty' ? 10 : parseFloat(plateStep) || 10)) : parseFloat(dumbbellStep) || 5),
       updatedAt: new Date().toISOString()
     };
 
@@ -281,9 +297,54 @@ export default function MachineConfigModal({
           <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '12px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
             <div>
               <label style={{ display: 'block', fontSize: '11px', fontWeight: '800', color: '#1e293b', marginBottom: '4px' }}>
-                Salto de peso por placa en esta torre:
+                Progresión de la Torre de Placas:
               </label>
-              <div style={{ display: 'flex', gap: '6px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '6px', marginBottom: '6px' }}>
+                <button
+                  type="button"
+                  onClick={() => setStackPreset('two_tens_then_twenty')}
+                  style={{
+                    padding: '8px 6px',
+                    borderRadius: '10px',
+                    border: stackPreset === 'two_tens_then_twenty' ? '2px solid #0066ff' : '1px solid #cbd5e1',
+                    background: stackPreset === 'two_tens_then_twenty' ? '#eff6ff' : '#ffffff',
+                    color: stackPreset === 'two_tens_then_twenty' ? '#0066ff' : '#334155',
+                    fontSize: '10.5px',
+                    fontWeight: '900',
+                    cursor: 'pointer',
+                    textAlign: 'center'
+                  }}
+                >
+                  ⚡ 2 de 10 lb, luego +20 lb
+                  <span style={{ display: 'block', fontSize: '9px', color: '#64748b', fontWeight: '600' }}>(10, 20, 40, 60... lbs)</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setStackPreset('linear')}
+                  style={{
+                    padding: '8px 6px',
+                    borderRadius: '10px',
+                    border: stackPreset === 'linear' ? '2px solid #0066ff' : '1px solid #cbd5e1',
+                    background: stackPreset === 'linear' ? '#eff6ff' : '#ffffff',
+                    color: stackPreset === 'linear' ? '#0066ff' : '#334155',
+                    fontSize: '10.5px',
+                    fontWeight: '900',
+                    cursor: 'pointer',
+                    textAlign: 'center'
+                  }}
+                >
+                  📏 Incremento Fijo
+                  <span style={{ display: 'block', fontSize: '9px', color: '#64748b', fontWeight: '600' }}>(Constante por placa)</span>
+                </button>
+              </div>
+            </div>
+
+            {stackPreset === 'linear' && (
+              <div>
+                <label style={{ display: 'block', fontSize: '11px', fontWeight: '800', color: '#1e293b', marginBottom: '4px' }}>
+                  Salto de peso por placa en esta torre:
+                </label>
+                <div style={{ display: 'flex', gap: '6px' }}>
                 {[5, 10, 12.5, 15].map(step => (
                   <button
                     key={step}
@@ -306,6 +367,7 @@ export default function MachineConfigModal({
                 ))}
               </div>
             </div>
+          )}
 
             <div>
               <label style={{ display: 'block', fontSize: '11px', fontWeight: '800', color: '#1e293b', marginBottom: '4px' }}>

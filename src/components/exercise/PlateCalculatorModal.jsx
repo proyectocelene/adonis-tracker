@@ -6,34 +6,41 @@ export default function PlateCalculatorModal({
   onClose,
   initialWeight = 0,
   exerciseName = '',
+  machineConfig = null,
   onApplyWeight
 }) {
   if (!isOpen) return null;
 
   const numericInitial = parseFloat(initialWeight) || 0;
   
-  // Detectar automáticamente el tipo de ejercicio
+  // Detectar automáticamente el tipo de ejercicio considerando machineConfig
   const lowerName = (exerciseName || '').toLowerCase();
   const isLegPress = lowerName.includes('prensa') || lowerName.includes('leg press');
   const isHack = lowerName.includes('hack') || lowerName.includes('v-squat');
   const isSmith = lowerName.includes('smith') || lowerName.includes('multipower');
 
-  // Modo inicial: 'plates' (discos por lado) o 'stack' (torre de placas)
-  const defaultMode = (isLegPress || isHack || isSmith || lowerName.includes('barra') || lowerName.includes('rumano') || lowerName.includes('deadlift')) ? 'plates' : 'stack';
+  // Modo inicial: respetando machineConfig.type si existe
+  const defaultMode = machineConfig?.type 
+    ? (machineConfig.type === 'plates' ? 'plates' : 'stack')
+    : ((isLegPress || isHack || isSmith || lowerName.includes('barra') || lowerName.includes('rumano') || lowerName.includes('deadlift')) ? 'plates' : 'stack');
   const [activeTab, setActiveTab] = useState(defaultMode);
 
   // Selector de Unidad: 'lbs' o 'kg'
   const [unit, setUnit] = useState('lbs');
 
   // === MODO DISCOS POR LADO ===
-  const defaultBaseWeight = unit === 'kg'
-    ? (isLegPress ? 45 : (isHack ? 35 : (isSmith ? 10 : (lowerName.includes('barra') ? 20 : 0))))
-    : (isLegPress ? 100 : (isHack ? 75 : (isSmith ? 20 : (lowerName.includes('barra') ? 45 : 0))));
+  const defaultBaseWeight = machineConfig?.baseWeight !== undefined
+    ? machineConfig.baseWeight
+    : (unit === 'kg'
+        ? (isLegPress ? 45 : (isHack ? 35 : (isSmith ? 10 : (lowerName.includes('barra') ? 20 : 0))))
+        : (isLegPress ? 100 : (isHack ? 75 : (isSmith ? 20 : (lowerName.includes('barra') ? 45 : 0)))));
 
   const [baseWeight, setBaseWeight] = useState(defaultBaseWeight);
   const [targetWeight, setTargetWeight] = useState(numericInitial > 0 ? numericInitial : (defaultBaseWeight + (unit === 'kg' ? 40 : 90)));
 
-  const AVAILABLE_PLATES_LBS = [45, 35, 25, 10, 5, 2.5];
+  const AVAILABLE_PLATES_LBS = (machineConfig?.availablePlates && machineConfig.availablePlates.length > 0)
+    ? machineConfig.availablePlates
+    : [45, 35, 25, 10, 5, 2.5];
   const AVAILABLE_PLATES_KG = [25, 20, 15, 10, 5, 2.5, 1.25];
   const availablePlates = unit === 'kg' ? AVAILABLE_PLATES_KG : AVAILABLE_PLATES_LBS;
 
@@ -59,27 +66,43 @@ export default function PlateCalculatorModal({
   const plateCalc = calculatePlatesPerSide(targetWeight, baseWeight);
 
   // === MODO TORRE DE PLACAS SKEUOMÓRFICA ===
-  // 1. Placa #1 (Cabezal / Pesa inicial) que suele diferir de las siguientes
-  const [topPlateWeight, setTopPlateWeight] = useState(unit === 'kg' ? 5 : 10);
-  // 2. Incremento por placa de la #2 en adelante
-  const [stackIncrement, setStackIncrement] = useState(unit === 'kg' ? 5 : 10);
-  // 3. Pesa auxiliar / pin extra (0, 2.5, 5, 7.5, 10 lbs / kg)
-  const [addOnWeight, setAddOnWeight] = useState(0);
-
-  const [selectedPlateIndex, setSelectedPlateIndex] = useState(() => {
-    if (numericInitial > 0) {
-      return Math.max(1, Math.min(20, Math.round(numericInitial / 10)));
-    }
-    return 6;
-  });
+  const configFirst = machineConfig?.firstPlate !== undefined ? machineConfig.firstPlate : (unit === 'kg' ? 5 : 10);
+  const configStep = machineConfig?.plateStep !== undefined ? machineConfig.plateStep : (unit === 'kg' ? 5 : 10);
+  const [topPlateWeight, setTopPlateWeight] = useState(configFirst);
+  const [stackIncrement, setStackIncrement] = useState(configStep);
+  const [addOnWeight, setAddOnWeight] = useState(machineConfig?.microWeight || 0);
 
   const totalStackPlates = 20;
 
-  // Cálculo para cada placa n (1 a 20)
+  // Cálculo exacto para cada placa n (1 a 20) según machineConfig o preset
   const getPlateWeight = (plateNum) => {
+    if (machineConfig?.availableWeights && machineConfig.availableWeights.length >= plateNum) {
+      return machineConfig.availableWeights[plateNum - 1];
+    }
+    if (machineConfig?.stackPreset === 'two_tens_then_twenty') {
+      const w = [10, 20, 40, 60, 80, 100, 120, 140, 160, 180, 200, 220, 240, 260, 280, 300, 320, 340, 360, 380];
+      return w[plateNum - 1] || (380 + ((plateNum - 20) * 20));
+    }
     if (plateNum === 1) return topPlateWeight;
     return topPlateWeight + ((plateNum - 1) * stackIncrement);
   };
+
+  const [selectedPlateIndex, setSelectedPlateIndex] = useState(() => {
+    if (numericInitial > 0) {
+      let closestIdx = 1;
+      let minDiff = Infinity;
+      for (let i = 1; i <= totalStackPlates; i++) {
+        const pw = getPlateWeight(i);
+        const diff = Math.abs(pw - numericInitial);
+        if (diff < minDiff) {
+          minDiff = diff;
+          closestIdx = i;
+        }
+      }
+      return closestIdx;
+    }
+    return 6;
+  });
 
   const currentStackWeight = getPlateWeight(selectedPlateIndex) + addOnWeight;
   const convertedToLbs = unit === 'kg' ? Math.round(currentStackWeight * 2.20462) : currentStackWeight;
@@ -522,6 +545,17 @@ export default function PlateCalculatorModal({
                   ))}
                 </div>
               </div>
+
+              {machineConfig && (
+                <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '10px', padding: '6px 10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2px' }}>
+                  <span style={{ fontSize: '11px', color: '#1e40af', fontWeight: '800' }}>
+                    ⚙️ {machineConfig.stackPreset === 'two_tens_then_twenty' ? 'Torre Calibrada: 2 de 10 lb, luego +20 lb' : `Torre Calibrada (+${machineConfig.plateStep || 10} ${unit})`}
+                  </span>
+                  {machineConfig.station && (
+                    <span style={{ fontSize: '10px', color: '#3b82f6', fontWeight: '700' }}>{machineConfig.station}</span>
+                  )}
+                </div>
+              )}
 
               {/* 4. VISUALIZADOR SKEUOMÓRFICO DE LA TORRE DE PLACAS */}
               <div style={{

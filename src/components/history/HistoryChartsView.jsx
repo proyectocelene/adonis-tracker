@@ -4,6 +4,7 @@ import {
 } from 'recharts';
 import { Dumbbell, Info, Flame } from 'lucide-react';
 import ConsistencyHeatmap from '../ConsistencyHeatmap';
+import ExerciseConsistencyAudit from './ExerciseConsistencyAudit';
 import { LiquidDropdown } from '../common/UIComponents';
 import { ErrorBoundary } from '../common/ErrorBoundary';
 import { calculateWorkoutCalories } from '../../utils/calorieCalculations';
@@ -66,6 +67,9 @@ export default function HistoryChartsView({
 
       {/* Heatmap de Consistencia */}
       <ConsistencyHeatmap workoutHistory={workoutHistory} />
+
+      {/* Auditoría de Consistencia & Adherencia por Ejercicio */}
+      <ExerciseConsistencyAudit workoutHistory={workoutHistory} />
 
       {/* Curva Evolutiva por Ejercicio o Grupo Muscular */}
       <div className="card card-highlight" style={{ padding: '18px', marginBottom: '22px', borderRadius: '26px' }}>

@@ -19,7 +19,9 @@ export default function WorkoutExerciseList({
   handleSwapExercise,
   handleMoveExercise,
   deferredExIds = [],
-  handleDeferExercise
+  handleDeferExercise,
+  skippedExercisesMap = {},
+  handleSkipExercise
 }) {
   return (
     <>
@@ -46,6 +48,9 @@ export default function WorkoutExerciseList({
           );
         }
 
+        const isSkipped = !!skippedExercisesMap[exercise.id];
+        const skipReason = skippedExercisesMap[exercise.id]?.reason || '';
+
         return (
           <ExerciseRow 
             key={exercise.id} 
@@ -63,6 +68,9 @@ export default function WorkoutExerciseList({
             onToggleExpand={handleToggle}
             isDeferred={deferredExIds.includes(exercise.id)}
             onDeferExercise={handleDeferExercise ? () => handleDeferExercise(exercise.id) : undefined}
+            isSkipped={isSkipped}
+            skipReason={skipReason}
+            onSkipExercise={handleSkipExercise}
           />
         );
       })}

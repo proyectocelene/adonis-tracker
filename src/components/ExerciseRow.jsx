@@ -22,6 +22,9 @@ export default function ExerciseRow({
   isLast,
   isDeferred = false,
   onDeferExercise,
+  isSkipped = false,
+  skipReason = '',
+  onSkipExercise,
   initiallyExpanded = false,
   isExpanded: controlledExpanded,
   onToggleExpand
@@ -30,6 +33,56 @@ export default function ExerciseRow({
   const modal = useModal();
   const [internalExpanded, setInternalExpanded] = useState(initiallyExpanded);
   const isExpanded = controlledExpanded !== undefined ? controlledExpanded : internalExpanded;
+
+  if (isSkipped) {
+    return (
+      <div style={{
+        background: '#f8fafc',
+        border: '1.5px dashed #cbd5e1',
+        borderRadius: '20px',
+        padding: '12px 16px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: '10px',
+        width: '100%',
+        boxSizing: 'border-box',
+        marginBottom: '10px',
+        opacity: 0.85
+      }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span style={{ fontSize: '10.5px', background: '#fee2e2', color: '#dc2626', padding: '1px 6px', borderRadius: '6px', fontWeight: '900' }}>
+              ⏭️ Omitido
+            </span>
+            <strong style={{ fontSize: '13px', color: '#475569', textDecoration: 'line-through' }}>
+              {exercise.name}
+            </strong>
+          </div>
+          <span style={{ fontSize: '10px', color: '#d97706', fontWeight: '700' }}>
+            Motivo: {skipReason || 'Máquina no disponible o descompuesta'}
+          </span>
+        </div>
+        <button
+          type="button"
+          onClick={() => onSkipExercise && onSkipExercise(exercise.id, null)}
+          style={{
+            background: '#ffffff',
+            border: '1.5px solid #cbd5e1',
+            borderRadius: '10px',
+            padding: '6px 12px',
+            fontSize: '11px',
+            fontWeight: '800',
+            color: '#0f172a',
+            cursor: 'pointer',
+            flexShrink: 0
+          }}
+        >
+          ↺ Deshacer
+        </button>
+      </div>
+    );
+  }
 
   const [activeSubTab, setActiveSubTab] = useState('logger');
   const [machineSetupInput, setMachineSetupInput] = useState(exerciseData.machineSetup || '');
@@ -242,15 +295,38 @@ export default function ExerciseRow({
           mindMuscle: fullCandidate.mindMuscle || null,
           warmup: fullCandidate.warmup || '',
           muscleGroup: fullCandidate.muscleGroup || exercise.muscleGroup,
+          equipment: fullCandidate.equipment || exercise.equipment,
+          sets: fullCandidate.defaultSets || exercise.sets || 3,
+          reps: fullCandidate.defaultReps || exercise.reps || '10-12',
+          restTime: fullCandidate.defaultRest || exercise.restTime || '90 s',
           searchQuery: fullCandidate.searchQuery || `${fullCandidate.name} tecnica biomecanica`,
-          loadFamily: fullCandidate.loadFamily || exercise.loadFamily
+          loadFamily: fullCandidate.loadFamily || exercise.loadFamily,
+          equivalents: fullCandidate.equivalents || exercise.equivalents || []
         });
       }
+      setActiveSubTab('logger');
     } catch (err) {
+      console.error('Error swapping exercise:', err);
       if (onSwapExercise) {
         onSwapExercise(exercise.id, { name: fullCandidate.name, originalName: exercise.name });
       }
+      setActiveSubTab('logger');
     }
+  };
+
+  const handlePromptSkip = () => {
+    modal.showConfirm({
+      title: "¿Omitir este ejercicio hoy?",
+      message: `Puedes omitir "${exercise.name}" si todas las máquinas están descompuestas, ocupadas o por molestia articular.\n\nNo penalizará tu consistencia ni racha del heatmap.\n\n¿Marcar como omitido por hoy?`,
+      confirmText: "Sí, Omitir",
+      cancelText: "Volver",
+      variant: "warning",
+      onConfirm: () => {
+        if (onSkipExercise) {
+          onSkipExercise(exercise.id, 'Máquina no disponible o descompuesta');
+        }
+      }
+    });
   };
 
   const completedSetsCount = (() => {
@@ -370,6 +446,26 @@ export default function ExerciseRow({
               }}
             >
               🔄 Sustituir
+            </button>
+            <button
+              type="button"
+              onClick={handlePromptSkip}
+              style={{
+                padding: '8px 10px',
+                border: 'none',
+                borderRadius: '12px',
+                background: '#f8fafc',
+                color: '#64748b',
+                fontWeight: '900',
+                fontSize: '11px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '2px'
+              }}
+              title="Marcar si no hiciste el ejercicio o la máquina está ocupada/descompuesta"
+            >
+              ⏭️ Omitir
             </button>
           </div>
 

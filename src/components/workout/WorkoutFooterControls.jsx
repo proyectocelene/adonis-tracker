@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   Save, Trash2, Settings2, ChevronUp, ChevronDown, 
-  Loader2, Cpu, BookOpen, Copy, Layers, RefreshCw, Sparkles, Flame, Share2, Download
+  Loader2, Cpu, BookOpen, Copy, Layers, RefreshCw, Sparkles, Flame, Share2, Download,
+  Bot, Watch, Check, X
 } from 'lucide-react';
 
 export default function WorkoutFooterControls({
@@ -18,13 +19,18 @@ export default function WorkoutFooterControls({
   setShowGlosarioModal,
   handleCopyRoutineForCoach,
   handleCopyWorkoutCard,
+  handleCopySessionForAI,
   setShowRoutineBuilder,
   handleResetToOfficialRoutine,
   handleResetAllDaysToOfficial,
   baseDay = {},
   calories = null,
-  onExportTCX = null
+  onExportTCX = null,
+  userSmartwatchKcal = null,
+  onSetSmartwatchKcal = null
 }) {
+  const [showWatchModal, setShowWatchModal] = useState(false);
+  const [watchInput, setWatchInput] = useState(userSmartwatchKcal ? String(userSmartwatchKcal) : '');
   const hasAnyDraftData = completedSets > 0 || Object.values(todayWorkoutData || {}).some(ex => {
     if (!ex) return false;
     return Object.keys(ex).some(k => !isNaN(parseInt(k)) && (ex[k]?.weight || ex[k]?.reps || ex[k]?.completed));
@@ -57,9 +63,36 @@ export default function WorkoutFooterControls({
                 </span>
               </div>
             </div>
-            <div style={{ textAlign: 'right' }}>
+            <div style={{ textAlign: 'right', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              {calories.isBlended && (
+                <span className="badge" style={{ background: '#7c3aed', color: '#ffffff', fontSize: '10px', fontWeight: '800', padding: '2px 6px', borderRadius: '8px' }}>
+                  ⌚ Integrado
+                </span>
+              )}
+              <button
+                type="button"
+                onClick={() => {
+                  setWatchInput(userSmartwatchKcal ? String(userSmartwatchKcal) : '');
+                  setShowWatchModal(true);
+                }}
+                style={{
+                  background: userSmartwatchKcal ? '#ffedd5' : '#ffffff',
+                  border: '1.5px solid #fdba74',
+                  borderRadius: '10px',
+                  padding: '4px 8px',
+                  fontSize: '11px',
+                  fontWeight: '800',
+                  color: '#c2410c',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px'
+                }}
+              >
+                <Watch size={13} /> {userSmartwatchKcal ? `${userSmartwatchKcal} kcal` : 'Calibrar'}
+              </button>
               <span className="badge" style={{ background: '#ea580c', color: '#ffffff', fontSize: '13px', fontWeight: '900', padding: '4px 10px', borderRadius: '12px' }}>
-                🔥 {calories.totalKcal} kcal
+                🔥 {calories.displayKcal || calories.totalKcal} kcal
               </span>
             </div>
           </div>
@@ -154,6 +187,32 @@ export default function WorkoutFooterControls({
           </button>
         )}
 
+        {completedSets > 0 && handleCopySessionForAI && (
+          <button 
+            type="button" 
+            onClick={handleCopySessionForAI}
+            style={{
+              width: '100%',
+              padding: '13px',
+              fontSize: '13px',
+              borderRadius: '16px',
+              fontWeight: '900',
+              background: 'linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%)',
+              color: '#6d28d9',
+              border: '1.5px solid #c4b5fd',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              boxShadow: '0 4px 12px rgba(109, 40, 217, 0.12)',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            <Bot size={18} color="#7c3aed" /> 🤖 Copiar Prompt para IA (ChatGPT / Gemini / Claude)
+          </button>
+        )}
+
         {hasAnyDraftData && (
           <button 
             type="button" 
@@ -244,6 +303,142 @@ export default function WorkoutFooterControls({
           </div>
         )}
       </div>
+
+      {/* MODAL DE CALIBRACIÓN DE SMARTWATCH */}
+      {showWatchModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(15, 23, 42, 0.75)',
+          backdropFilter: 'blur(4px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999,
+          padding: '16px'
+        }}>
+          <div className="card animate-fade" style={{
+            maxWidth: '380px',
+            width: '100%',
+            background: '#ffffff',
+            borderRadius: '24px',
+            padding: '20px',
+            boxShadow: '0 20px 40px rgba(0,0,0,0.25)'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{ width: '36px', height: '36px', borderRadius: '12px', background: '#ffedd5', color: '#ea580c', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Watch size={20} />
+                </div>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '15px', fontWeight: '900', color: '#0f172a' }}>
+                    Calibrar con Smartwatch
+                  </h3>
+                  <span style={{ fontSize: '11px', color: '#64748b', fontWeight: '600' }}>
+                    Apple Watch, Garmin, Galaxy, Fitbit
+                  </span>
+                </div>
+              </div>
+              <button 
+                type="button" 
+                onClick={() => setShowWatchModal(false)}
+                style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#64748b' }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <p style={{ fontSize: '12px', color: '#475569', lineHeight: '1.4', marginBottom: '14px' }}>
+              Ingresa las <strong>calorías activas</strong> registradas en tu reloj para esta sesión. Adonis integrará el valor en un modelo ponderado que balancea la biomecánica y tus sensores cardíacos.
+            </p>
+
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: '800', color: '#1e293b', marginBottom: '6px' }}>
+                Calorías Activas del Reloj (kcal):
+              </label>
+              <input
+                type="number"
+                value={watchInput}
+                onChange={e => setWatchInput(e.target.value)}
+                placeholder="Ej. 180"
+                style={{
+                  width: '100%',
+                  padding: '12px 14px',
+                  borderRadius: '14px',
+                  border: '1.5px solid #cbd5e1',
+                  fontSize: '16px',
+                  fontWeight: '800',
+                  boxSizing: 'border-box'
+                }}
+              />
+            </div>
+
+            {calories && (
+              <div style={{ background: '#f8fafc', padding: '10px 12px', borderRadius: '12px', fontSize: '11px', color: '#475569', marginBottom: '16px', border: '1px solid #e2e8f0' }}>
+                <div>• Estimación Biomecánica Adonis: <strong>{calories.totalKcal} kcal</strong></div>
+                {watchInput && !isNaN(parseFloat(watchInput)) && parseFloat(watchInput) > 0 && (
+                  <div style={{ marginTop: '4px', color: '#0066ff' }}>
+                    • Promedio Integrado (50/50): <strong>{Math.round((calories.totalKcal + parseFloat(watchInput)) / 2)} kcal</strong>
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <button
+                type="button"
+                onClick={() => {
+                  const val = parseFloat(watchInput);
+                  if (onSetSmartwatchKcal) {
+                    onSetSmartwatchKcal(!isNaN(val) && val > 0 ? val : null);
+                  }
+                  setShowWatchModal(false);
+                }}
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  borderRadius: '14px',
+                  background: '#ea580c',
+                  color: '#ffffff',
+                  border: 'none',
+                  fontWeight: '900',
+                  fontSize: '13px',
+                  cursor: 'pointer'
+                }}
+              >
+                💾 Guardar Sincronización
+              </button>
+
+              {userSmartwatchKcal && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (onSetSmartwatchKcal) onSetSmartwatchKcal(null);
+                    setWatchInput('');
+                    setShowWatchModal(false);
+                  }}
+                  style={{
+                    width: '100%',
+                    padding: '10px',
+                    borderRadius: '12px',
+                    background: '#fef2f2',
+                    color: '#dc2626',
+                    border: '1px solid #fecaca',
+                    fontWeight: '800',
+                    fontSize: '12px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Restablecer a Cálculo Biomecánico
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

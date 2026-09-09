@@ -556,8 +556,8 @@ export default function SetLogger({
           const isWeightJumpAlert = prevWeightNum > 0 && weightNum > 0 && 
             (weightNum > prevWeightNum * 1.5 || weightNum < prevWeightNum * 0.5);
 
-          // Pasa machineConfig a la fórmula de sobrecarga para que use incrementos reales
-          const overloadTarget = getOverloadTarget(setNum, previousData, exercise.targetReps || '10-12', machineConfig, prevVal.weight, prevVal.reps);
+          // Pasa machineConfig y lo realizado hoy (exerciseData) para cálculo con incrementos reales y adaptación intra-entreno
+          const overloadTarget = getOverloadTarget(setNum, previousData, exercise.targetReps || '10-12', machineConfig, prevVal.weight, prevVal.reps, exerciseData);
           const current1RM = calculate1RM(setVal.weight, setVal.reps);
           const prev1RM = calculate1RM(prevVal.weight, prevVal.reps);
           const isPr = isDone && current1RM > 0 && prev1RM > 0 && current1RM > prev1RM;
@@ -702,13 +702,16 @@ export default function SetLogger({
                         inputMode="numeric"
                         pattern="[0-9]*"
                         placeholder="Izq"
-                        value={setVal.repsL ?? (setVal.reps ?? '')}
+                        value={setVal.repsL !== undefined ? setVal.repsL : ''}
                         onChange={(e) => {
-                          handleSanitizedChange(setNum, 'repsL', e.target.value);
-                          if (!setVal.repsR) handleSanitizedChange(setNum, 'reps', e.target.value);
+                          const val = e.target.value;
+                          handleSanitizedChange(setNum, 'repsL', val);
+                          const rR = setVal.repsR !== undefined && setVal.repsR !== '' ? Number(setVal.repsR) : Number(val);
+                          const rL = val !== '' ? Number(val) : 0;
+                          handleSanitizedChange(setNum, 'reps', String(Math.round((rL + rR) / 2)));
                         }}
                         style={{
-                          width: '26px',
+                          width: '28px',
                           padding: '5px 1px',
                           border: 'none',
                           fontSize: '12px',
@@ -726,13 +729,16 @@ export default function SetLogger({
                         inputMode="numeric"
                         pattern="[0-9]*"
                         placeholder="Der"
-                        value={setVal.repsR ?? (setVal.reps ?? '')}
+                        value={setVal.repsR !== undefined ? setVal.repsR : ''}
                         onChange={(e) => {
-                          handleSanitizedChange(setNum, 'repsR', e.target.value);
-                          handleSanitizedChange(setNum, 'reps', e.target.value);
+                          const val = e.target.value;
+                          handleSanitizedChange(setNum, 'repsR', val);
+                          const rL = setVal.repsL !== undefined && setVal.repsL !== '' ? Number(setVal.repsL) : Number(val);
+                          const rR = val !== '' ? Number(val) : 0;
+                          handleSanitizedChange(setNum, 'reps', String(Math.round((rL + rR) / 2)));
                         }}
                         style={{
-                          width: '26px',
+                          width: '28px',
                           padding: '5px 1px',
                           border: 'none',
                           fontSize: '12px',
@@ -820,12 +826,12 @@ export default function SetLogger({
               {/* ALERTAS ANTI-TYPO */}
               {isRepsHighAlert && (
                 <div style={{ fontSize: '10px', fontWeight: '800', color: '#dc2626', background: '#fef2f2', border: '1px solid #fecaca', padding: '2px 6px', borderRadius: '6px' }}>
-                  ⚠️ ¿${repsNum} reps? Verifica posible error tipográfico.
+                  ⚠️ ¿{repsNum} reps? Verifica posible error tipográfico.
                 </div>
               )}
               {isWeightJumpAlert && (
                 <div style={{ fontSize: '10px', fontWeight: '800', color: '#d97706', background: '#fffbeb', border: '1px solid #fed7aa', padding: '2px 6px', borderRadius: '6px' }}>
-                  ⚠️ Salto brusco detectado (${prevWeightNum} ➔ ${weightNum} lbs).
+                  ⚠️ Salto brusco detectado ({prevWeightNum} ➔ {weightNum} lbs).
                 </div>
               )}
             </div>
@@ -911,6 +917,7 @@ export default function SetLogger({
         initialWeight={plateModal.currentWeight}
         initialExerciseType={getApparatusType(exercise.name || '')}
         exerciseName={exercise.name}
+        machineConfig={machineConfig}
         onApplyWeight={(appliedWeight) => {
           if (plateModal.setNum !== null) {
             handleSanitizedChange(plateModal.setNum, 'weight', appliedWeight);

@@ -18,6 +18,7 @@ import { getPreviousDataForExercise } from '../utils/exerciseMatcher';
 import { calculateVolume, calculate1RM, calculateAverageRPE } from '../hooks/useWorkoutCalculations';
 import { calculateWorkoutCalories } from '../utils/calorieCalculations';
 import { shareOrExportWorkout, downloadWorkoutTCX } from '../services/workoutExportService';
+import { generateAISessionPrompt } from '../utils/aiPromptGenerator';
 import { useIndexedDB as useLocalStorage } from '../hooks/useIndexedDB';
 import { useWorkoutHistory } from '../hooks/useWorkoutHistory';
 import { Target, Calendar as CalendarIcon, Clock, ArrowRight, Loader2, Dumbbell, Save, Activity, Trash2, Cpu, FileText, CheckCircle, RotateCcw, ChevronDown, ChevronUp, RefreshCw, RefreshCcw, Plus, X, Layers, Settings2, Cloud, FileSpreadsheet, Lock, Sparkles, BookOpen, Copy, HelpCircle, Check, Flame, ShieldCheck, Zap, Database, History, Share2 } from 'lucide-react';
@@ -32,6 +33,8 @@ export default function WorkoutDay() {
   const [mesocycleStartDate, setMesocycleStartDate] = useLocalStorage('coachv2_mesocycle_start', null);
   const [customExercisesMap, setCustomExercisesMap] = useLocalStorage('coachv2_custom_day_exercises', {});
   const [swappedExercisesMap, setSwappedExercisesMap] = useLocalStorage('coachv2_swapped_exercises', {});
+  const [skippedExercisesMap, setSkippedExercisesMap] = useLocalStorage('coachv2_skipped_exercises', {});
+  const [smartwatchKcalMap, setSmartwatchKcalMap] = useLocalStorage('coachv2_smartwatch_kcal', {});
   const [exerciseOrderMap, setExerciseOrderMap] = useLocalStorage('coachv2_exercise_orders', {});
   const [globalWarmupDone, setGlobalWarmupDone] = useLocalStorage('coachv2_global_warmup', {});
   const [currentSessions, setCurrentSessions, isSessionsLoading] = useLocalStorage('coachv2_active_workouts', {});
@@ -452,6 +455,36 @@ export default function WorkoutDay() {
     }
   };
 
+  const handleSkipExercise = (exerciseId, reason = '') => {
+    setSkippedExercisesMap(prev => {
+      const daySkips = { ...(prev[baseDay.id] || {}) };
+      if (reason === null || reason === false) {
+        delete daySkips[exerciseId];
+      } else {
+        daySkips[exerciseId] = {
+          skippedAt: new Date().toISOString(),
+          reason: reason || 'Omitido voluntariamente'
+        };
+      }
+      return {
+        ...prev,
+        [baseDay.id]: daySkips
+      };
+    });
+  };
+
+  const handleSetSmartwatchKcal = (kcalValue) => {
+    setSmartwatchKcalMap(prev => {
+      const next = { ...(prev || {}) };
+      if (kcalValue === null || kcalValue === undefined || isNaN(kcalValue) || kcalValue <= 0) {
+        delete next[selectedDateKey];
+      } else {
+        next[selectedDateKey] = Math.round(Number(kcalValue));
+      }
+      return next;
+    });
+  };
+
   const handlePickFromLibrary = (libId) => {
     if (!libId) return;
     const item = UNIFIED_EXERCISE_LIBRARY.find(x => x.id === libId);
@@ -601,8 +634,9 @@ export default function WorkoutDay() {
     (currentDay.exercises || []).forEach(e => {
       defs[e.id] = { name: e.name, muscleGroup: e.muscleGroup };
     });
-    return calculateWorkoutCalories(todayWorkoutData, userWeightKg, defs, liveElapsedMinutes);
-  }, [todayWorkoutData, currentDay.exercises, userWeightKg, liveElapsedMinutes]);
+    const watchKcal = smartwatchKcalMap?.[selectedDateKey] || null;
+    return calculateWorkoutCalories(todayWorkoutData, userWeightKg, defs, liveElapsedMinutes, watchKcal);
+  }, [todayWorkoutData, currentDay.exercises, userWeightKg, liveElapsedMinutes, smartwatchKcalMap, selectedDateKey]);
 
   const handleExportTCX = async () => {
     const currentSessionLog = {
@@ -695,6 +729,7 @@ export default function WorkoutDay() {
           cardioCompleted,
           calories: todayCalories,
           exercises: todayWorkoutData,
+          skippedExercises: skippedExercisesMap[baseDay.id] || {},
           isCompleted: true,
           isRestDay: false,
           isMissedDay: false
@@ -1018,6 +1053,36 @@ export default function WorkoutDay() {
     }
   };
 
+  const handleCopySessionForAI = () => {
+    const prompt = generateAISessionPrompt({
+      currentDay,
+      todayWorkoutData,
+      previousExercisesData,
+      currentWeek,
+      selectedDateKey,
+      completedSets,
+      volume,
+      calories: todayCalories,
+      elapsedMinutes: liveElapsedMinutes,
+      isWarmupDone,
+      skippedExercises: skippedExercisesMap[baseDay.id] || {}
+    });
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(prompt).then(() => {
+        modal.showAlert({
+          title: "🤖 ¡Prompt para IA Copiado!",
+          message: "Se ha copiado a tu portapapeles un informe integral y estructurado con todos los datos cuantitativos de tu sesión.\n\nPégalo directamente en ChatGPT, Claude o Gemini para una auditoría de sobrecarga y prescripción de cargas.",
+          variant: "success"
+        });
+      }).catch(() => {
+        modal.showAlert({ title: "Prompt para IA", message: prompt, variant: "info" });
+      });
+    } else {
+      modal.showAlert({ title: "Prompt para IA", message: prompt, variant: "info" });
+    }
+  };
+
 
   const getFirstUncompletedIdx = () => {
     for (let idx = 0; idx < currentDay.exercises.length; idx++) {
@@ -1274,6 +1339,8 @@ export default function WorkoutDay() {
                 handleMoveExercise={handleMoveExercise}
                 deferredExIds={deferredExIds}
                 handleDeferExercise={handleDeferExercise}
+                skippedExercisesMap={skippedExercisesMap[baseDay.id] || {}}
+                handleSkipExercise={handleSkipExercise}
               />
 
               <AddCustomExerciseModal
@@ -1305,12 +1372,15 @@ export default function WorkoutDay() {
                 setShowGlosarioModal={setShowGlosarioModal}
                 handleCopyRoutineForCoach={handleCopyRoutineForCoach}
                 handleCopyWorkoutCard={handleCopyWorkoutCard}
+                handleCopySessionForAI={handleCopySessionForAI}
                 setShowRoutineBuilder={setShowRoutineBuilder}
                 handleResetToOfficialRoutine={handleResetToOfficialRoutine}
                 handleResetAllDaysToOfficial={handleResetAllDaysToOfficial}
                 baseDay={baseDay}
                 calories={todayCalories}
                 onExportTCX={handleExportTCX}
+                userSmartwatchKcal={smartwatchKcalMap?.[selectedDateKey] || null}
+                onSetSmartwatchKcal={handleSetSmartwatchKcal}
               />
 
             </div>

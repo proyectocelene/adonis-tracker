@@ -492,40 +492,95 @@ export const UNIFIED_EXERCISE_LIBRARY = [
     }
   },
   {
-    "id": "lib_piern_5",
-    "name": "Sentadilla Búlgara con Mancuernas o Smith",
+    "id": "lib_piern_5_db",
+    "name": "Sentadilla Búlgara con Mancuernas",
     "muscleGroup": "Cuádriceps",
-    "equipment": "Mancuernas / Smith",
-    "unifiedCode": "[HIPER-CUAD-BULGAR-05]",
+    "equipment": "Mancuernas",
+    "unifiedCode": "[HIPER-CUAD-BULGAR-DB]",
     "defaultSets": 3,
     "defaultReps": "8-10",
     "defaultRest": "90 s",
-    "ratio": 0.7,
+    "ratio": 0.65,
     "isUnilateral": true,
-    "biomechanics": "Paso largo e inclinación ligera hacia adelante. Trabajo unilateral profundo con sobrecarga en cuádriceps y glúteo.",
+    "biomechanics": "Paso largo e inclinación del torso a 30°. Mancuernas colgando a los lados. Trabajo unilateral con foco en estabilidad y cuádriceps/glúteo.",
     "mindMuscle": {
-      "title": "Cuádriceps & Cadena Anterior",
-      "internalCue": "Hunde las rodillas con flexión profunda cargando la tensión en los vastos sin redondear la zona lumbar.",
-      "externalCue": "Empuja el piso o la plataforma a través de los talones y tercio medio del pie sin bloquear bruscamente.",
-      "eccentricCue": "Desciende en 3 segundos lentos y continuos sintiendo cómo los muslos se estiran como resortes."
+      "title": "Cuádriceps & Cadena Anterior (Mancuernas)",
+      "internalCue": "Hunde la rodilla delantera con flexión profunda cargando la tensión en el vasto externo y glúteo.",
+      "externalCue": "Empuja el piso a través del talón y tercio medio del pie.",
+      "eccentricCue": "Desciende en 3 segundos lentos sintiendo el estiramiento profundo."
     }
   },
   {
-    "id": "lib_pierna_rdl",
-    "name": "Peso Muerto Rumano con Mancuernas o Smith (RDL)",
+    "id": "lib_piern_5_smith",
+    "name": "Sentadilla Búlgara en Máquina Smith",
+    "muscleGroup": "Cuádriceps",
+    "equipment": "Smith",
+    "unifiedCode": "[HIPER-CUAD-BULGAR-SMITH]",
+    "defaultSets": 3,
+    "defaultReps": "8-10",
+    "defaultRest": "90-120 s",
+    "ratio": 0.85,
+    "isUnilateral": true,
+    "biomechanics": "Barra guiada apoyada en trapecios. Permite eliminar la demanda de equilibrio lateral y sobrecargar con mayor peso efectivo el cuádriceps.",
+    "mindMuscle": {
+      "title": "Cuádriceps en Smith Guiada",
+      "internalCue": "Aprovecha los rieles para enfocar 100% de la energía en la flexión y empuje del muslo.",
+      "externalCue": "Empuja los rieles hacia arriba manteniendo la cadera alineada.",
+      "eccentricCue": "Baja en 3 segundos frenando el trineo con control muscular absoluto."
+    }
+  },
+  {
+    "id": "lib_pierna_rdl_db",
+    "name": "Peso Muerto Rumano con Mancuernas (RDL)",
     "muscleGroup": "Isquiotibiales",
-    "equipment": "Mancuernas / Smith",
-    "unifiedCode": "[HIPER-ISQU-RDL-06]",
+    "equipment": "Mancuernas",
+    "unifiedCode": "[HIPER-ISQU-RDL-DB]",
+    "defaultSets": 3,
+    "defaultReps": "8-10",
+    "defaultRest": "120-150 s",
+    "ratio": 0.75,
+    "biomechanics": "Mancuernas permiten un recorrido más ergonómico pegado a las espinillas con rotación neutra de muñecas. Bisagra pura de cadera.",
+    "mindMuscle": {
+      "title": "Isquiotibiales con Mancuernas",
+      "internalCue": "Empuja la pelvis hacia la pared trasera sintiendo el estiramiento violento de los femorales.",
+      "externalCue": "Desliza las mancuernas pegadas a los muslos sin permitir que se separen.",
+      "eccentricCue": "Baja en 3 segundos manteniendo la espalda recta y neutra."
+    }
+  },
+  {
+    "id": "lib_pierna_rdl_smith",
+    "name": "Peso Muerto Rumano en Máquina Smith (RDL)",
+    "muscleGroup": "Isquiotibiales",
+    "equipment": "Smith",
+    "unifiedCode": "[HIPER-ISQU-RDL-SMITH]",
     "defaultSets": 3,
     "defaultReps": "8-10",
     "defaultRest": "150-180 s",
-    "ratio": 0.9,
-    "biomechanics": "Bisagra de cadera pura con rodillas flexionadas a 20° fijas. Máximo estiramiento de isquios y glúteos con columna neutra e IAP.",
+    "ratio": 0.90,
+    "biomechanics": "Trayectoria fija vertical. Permite apoyar el peso en los talones y maximizar la elongación de isquiotibiales con mayor sobrecarga mecánica.",
     "mindMuscle": {
-      "title": "Isquiotibiales & Glúteo Mayor (Cadena Posterior)",
-      "internalCue": "Bisagra pura de cadera: siente los femorales tensarse mientras la pelvis viaja hacia atrás.",
-      "externalCue": "Imagina empujar una puerta con los glúteos manteniendo las espinillas verticales.",
-      "eccentricCue": "Baja las pesas rozando las piernas en 3 segundos sin arquear la espalda baja."
+      "title": "Isquiotibiales en Smith",
+      "internalCue": "Bisagra estricta: empuja los isquiones hacia atrás mientras la barra baja en línea recta.",
+      "externalCue": "Clava los talones contra el suelo al subir sin hiperextender la zona lumbar.",
+      "eccentricCue": "Resiste la bajada guiada en 3 segundos."
+    }
+  },
+  {
+    "id": "lib_pierna_rdl_bb",
+    "name": "Peso Muerto Rumano con Barra Libre (RDL)",
+    "muscleGroup": "Isquiotibiales",
+    "equipment": "Barra",
+    "unifiedCode": "[HIPER-ISQU-RDL-BB]",
+    "defaultSets": 3,
+    "defaultReps": "8-10",
+    "defaultRest": "180 s",
+    "ratio": 1.0,
+    "biomechanics": "Ejercicio básico compuesto de cadena posterior. Barra olímpica con discos sobre el suelo. Demanda máxima estabilización de erectores espinales e IAP.",
+    "mindMuscle": {
+      "title": "Cadena Posterior con Barra Libre",
+      "internalCue": "Aprieta dorsales para fijar la barra contra las tibias y mantén abdomen presurizado.",
+      "externalCue": "Empuja el suelo con fuerza al extender la cadera.",
+      "eccentricCue": "Controla el descenso en 3 segundos con rodillas semiflexionadas a 20°."
     }
   },
   {
