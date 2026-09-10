@@ -8,6 +8,9 @@
 /**
  * Genera el documento XML en estándar TCX para una sesión de entrenamiento
  */
+/**
+ * Genera el documento XML en estándar TCX para una sesión de entrenamiento
+ */
 export function generateWorkoutTCX(session = {}, calories = {}) {
   const startTime = session.startTime ? new Date(session.startTime) : (session.timestamp ? new Date(session.timestamp) : new Date());
   const isoTime = startTime.toISOString();
@@ -32,9 +35,10 @@ export function generateWorkoutTCX(session = {}, calories = {}) {
     totalDurationSeconds = Math.max(600, Math.round((setsCount * 150) + (cardioMinutes * 60)));
   }
 
-  const durationMinStr = Math.round(totalDurationSeconds / 60);
   const sessionName = session.dayName || 'Entrenamiento de Fuerza - Protocolo Adonis';
   const volumeLbs = session.volume ? session.volume.toLocaleString() : '0';
+  const athleteWeightNote = session.userWeightKg ? ` Atleta: ${session.userWeightKg} kg.` : '';
+  const detailNote = session.exercisesSummary ? ` Detalle: ${session.exercisesSummary}` : '';
 
   const tcxXml = `<?xml version="1.0" encoding="UTF-8"?>
 <TrainingCenterDatabase
@@ -51,7 +55,7 @@ export function generateWorkoutTCX(session = {}, calories = {}) {
         <Calories>${totalKcal}</Calories>
         <Intensity>Active</Intensity>
         <TriggerMethod>Manual</TriggerMethod>
-        <Notes><![CDATA[Protocolo Adonis: ${sessionName}. Volumen: ${volumeLbs} lbs en ${setsCount} series. Gasto: ${strengthKcal} kcal pesas + ${cardioKcal} kcal cardio.]]></Notes>
+        <Notes><![CDATA[Protocolo Adonis: ${sessionName}.${athleteWeightNote} Volumen: ${volumeLbs} lbs en ${setsCount} series efectivas. Gasto: ${strengthKcal} kcal pesas + ${cardioKcal} kcal cardio.${detailNote}]]></Notes>
       </Lap>
       <Creator xsi:type="Device_t">
         <Name>Adonis Tracker - Coach V2</Name>
@@ -95,6 +99,87 @@ export function downloadWorkoutTCX(session = {}, calories = {}) {
 }
 
 /**
+ * Genera y descarga un archivo JSON completo con absolutamente toda la información
+ * de la sesión: series, repeticiones, máquinas, RPE, 1RMs, gasto calórico y medidas corporales.
+ */
+export function downloadWorkoutJSON(session = {}, calories = {}, bodyMetrics = [], bodyComposition = {}) {
+  try {
+    const dateStr = session.date || new Date().toISOString().split('T')[0];
+    const latestMetric = Array.isArray(bodyMetrics) && bodyMetrics.length > 0 ? bodyMetrics[bodyMetrics.length - 1] : null;
+
+    const exportPayload = {
+      version: "2.0.0",
+      app: "Adonis Tracker - Coach V2",
+      exportTimestamp: new Date().toISOString(),
+      sessionOverview: {
+        date: dateStr,
+        week: session.week || 1,
+        dayName: session.dayName || 'Entrenamiento',
+        focus: session.focus || 'Hipertrofia & Fuerza',
+        durationMinutes: session.durationMinutes || 0,
+        volumeLbs: session.volume || 0,
+        effectiveSets: session.completedSets || 0,
+        warmupSets: session.warmupSets || 0,
+        cardioCompleted: !!session.cardioCompleted
+      },
+      bodyAnthropometrics: {
+        currentWeightKg: session.userWeightKg || latestMetric?.weightKg || parseFloat(bodyComposition?.weightKg) || 78.55,
+        currentWeightLbs: Math.round(((session.userWeightKg || latestMetric?.weightKg || parseFloat(bodyComposition?.weightKg) || 78.55) * 2.20462) * 10) / 10,
+        bodyFatPct: latestMetric?.bodyFatPct || bodyComposition?.bodyFatPct || null,
+        skeletalMusclePct: latestMetric?.skeletalMusclePct || bodyComposition?.skeletalMusclePct || null,
+        skeletalMuscleKg: bodyComposition?.skeletalMuscleKg || null,
+        circumferencesCm: {
+          waist: latestMetric?.waistCm || bodyComposition?.waistCm || null,
+          shoulders: latestMetric?.shouldersCm || bodyComposition?.shouldersCm || null,
+          chest: latestMetric?.chestCm || bodyComposition?.chestCm || null,
+          arms: latestMetric?.armsCm || bodyComposition?.armsCm || null
+        },
+        adonisRatio: (bodyComposition?.shouldersCm && bodyComposition?.waistCm) 
+          ? (parseFloat(bodyComposition.shouldersCm) / parseFloat(bodyComposition.waistCm)).toFixed(3) 
+          : ((latestMetric?.shouldersCm && latestMetric?.waistCm) 
+            ? (parseFloat(latestMetric.shouldersCm) / parseFloat(latestMetric.waistCm)).toFixed(3) 
+            : null),
+        metabolicAge: bodyComposition?.metabolicAge || null,
+        visceralFat: bodyComposition?.visceralFat || null,
+        bmrKcal: bodyComposition?.bmr || null
+      },
+      energyExpenditure: {
+        totalKcal: calories?.displayKcal || calories?.totalKcal || 0,
+        strengthMechanicalKcal: calories?.strengthKcal || 0,
+        epocKcal: calories?.epocKcal || 0,
+        cardioKcal: calories?.cardioKcal || 0,
+        smartwatchCalibrated: !!calories?.isHeartRateCalibrated || !!calories?.isBlended,
+        heartRateData: calories?.isHeartRateCalibrated ? {
+          hrAvgBpm: calories.watchHrAvg,
+          hrMaxBpm: calories.watchHrMax,
+          hrRestBpm: calories.watchHrRest,
+          karvonenHrrPct: calories.hrrPct
+        } : null
+      },
+      exercises: session.exercisesDetailed || [],
+      cardioSession: session.cardioDetailed || null,
+      rawWorkoutData: session.rawWorkoutData || null
+    };
+
+    const jsonStr = JSON.stringify(exportPayload, null, 2);
+    const fileName = `bitacora_completa_adonis_${dateStr}.json`;
+    const blob = new Blob([jsonStr], { type: 'application/json;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    return true;
+  } catch (err) {
+    console.error('Error al exportar JSON de sesión:', err);
+    return false;
+  }
+}
+
+/**
  * Comparte o exporta la sesión usando Web Share API en dispositivos móviles,
  * con fallback a descarga de archivo TCX.
  */
@@ -128,7 +213,6 @@ export async function shareOrExportWorkout(session = {}, calories = {}) {
       }
     } catch (err) {
       if (err.name !== 'AbortError') {
-        // Fallback a descarga
         downloadWorkoutTCX(session, calories);
         return { success: true, method: 'download_fallback' };
       }

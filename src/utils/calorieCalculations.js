@@ -143,11 +143,12 @@ export function calculateSetCalories(weightLbs, reps, patternKey, userWeightKg =
  * 4. Calibración y Consenso con la sesión de cardio del reloj inteligente
  */
 export function calculateCardioCalories(cardioData = {}, userWeightKg = 78.55) {
-  if (!cardioData || (!cardioData.completed && !cardioData.duration && !cardioData.machine)) {
+  if (!cardioData || (!cardioData.completed && !cardioData.cardioDone && !cardioData.duration && !cardioData.activeTimer)) {
     return { cardioKcal: 0, durationMinutes: 0 };
   }
 
-  const durationMinutes = parseFloat(cardioData.duration !== undefined ? cardioData.duration : 30) || 0;
+  const rawDuration = cardioData.duration !== undefined ? cardioData.duration : (cardioData.completed ? 30 : 0);
+  const durationMinutes = parseFloat(rawDuration) || 0;
   if (durationMinutes <= 0) {
     return { cardioKcal: 0, durationMinutes: 0 };
   }
@@ -323,22 +324,30 @@ export function calculateWorkoutCalories(
     });
   });
 
-  // Calcular cardio si se realizó
-  if (cardioDataFound) {
+  // Calcular cardio SOLO si se completó o realizó explícitamente en la sesión
+  const isCardioActiveOrDone = cardioDataFound && (
+    cardioDataFound.completed === true || 
+    cardioDataFound.cardioDone === true
+  );
+
+  if (isCardioActiveOrDone) {
     const cardioRes = calculateCardioCalories(cardioDataFound, userWeightKg);
     cardioKcal = cardioRes.cardioKcal;
     cardioMinutes = cardioRes.durationMinutes;
   }
 
   // Ajuste fisiológico por duración real del entrenamiento:
-  // En el gimnasio, el atleta está de pie, cambiando discos, caminando entre estaciones (~2.8 METs)
-  const nominalMinutes = Math.max(10, Math.round((completedSetsCount * 2.5) + cardioMinutes));
+  // Si no se ha completado ninguna serie ni cardio, el gasto debe ser estrictamente 0
+  const nominalMinutes = (completedSetsCount === 0 && cardioMinutes === 0)
+    ? 0
+    : Math.max(5, Math.round((completedSetsCount * 2.5) + cardioMinutes));
+
   let extraRestKcal = 0;
   let finalDurationMinutes = nominalMinutes;
 
-  if (actualDurationMinutes && actualDurationMinutes > 0) {
+  if (actualDurationMinutes && actualDurationMinutes > 0 && (completedSetsCount > 0 || isCardioActiveOrDone)) {
     finalDurationMinutes = Math.round(actualDurationMinutes);
-    if (finalDurationMinutes > nominalMinutes) {
+    if (finalDurationMinutes > nominalMinutes && nominalMinutes > 0) {
       const extraMinutes = finalDurationMinutes - nominalMinutes;
       extraRestKcal = ((2.8 * 3.5 * userWeightKg) / 200) * extraMinutes;
       strengthRestKcal += extraRestKcal;

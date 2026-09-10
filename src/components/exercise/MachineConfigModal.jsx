@@ -55,12 +55,16 @@ export default function MachineConfigModal({
   const handleSave = () => {
     // Generar lista física de pesos disponibles en la máquina
     let calculatedAvailableWeights = [];
+    const fp = parseFloat(firstPlate) || 10;
+    const st = parseFloat(plateStep) || (stackPreset === 'two_tens_then_twenty' ? 20 : 10);
+
     if (type === 'stack') {
       if (stackPreset === 'two_tens_then_twenty') {
-        calculatedAvailableWeights = [10, 20, 40, 60, 80, 100, 120, 140, 160, 180, 200, 220, 240, 260, 280, 300];
+        calculatedAvailableWeights = [fp, fp * 2];
+        for (let i = 1; i <= 18; i++) {
+          calculatedAvailableWeights.push((fp * 2) + (i * st));
+        }
       } else {
-        const fp = parseFloat(firstPlate) || 10;
-        const st = parseFloat(plateStep) || 10;
         calculatedAvailableWeights = Array.from({ length: 20 }, (_, i) => fp + (i * st));
       }
     }
@@ -71,8 +75,8 @@ export default function MachineConfigModal({
       station: (fullStationName || station).trim(),
       // Stack
       stackPreset,
-      plateStep: stackPreset === 'two_tens_then_twenty' ? 20 : (parseFloat(plateStep) || 10),
-      firstPlate: parseFloat(firstPlate) || 10,
+      plateStep: st,
+      firstPlate: fp,
       microWeight: parseFloat(microWeight) || 0,
       availableWeights: calculatedAvailableWeights,
       // Plates
@@ -84,7 +88,7 @@ export default function MachineConfigModal({
       // General
       minIncrement: type === 'plates' 
         ? minPlateIncrement 
-        : (type === 'stack' ? (microWeight > 0 ? microWeight : (stackPreset === 'two_tens_then_twenty' ? 10 : parseFloat(plateStep) || 10)) : parseFloat(dumbbellStep) || 5),
+        : (type === 'stack' ? (microWeight > 0 ? microWeight : (stackPreset === 'two_tens_then_twenty' ? Math.min(fp, st) : st)) : parseFloat(dumbbellStep) || 5),
       updatedAt: new Date().toISOString()
     };
 
@@ -398,63 +402,63 @@ export default function MachineConfigModal({
             </div>
 
             {/* SALTOS DE PESO POR PLACA */}
-            {stackPreset === 'linear' && (
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                  <label style={{ fontSize: '11px', fontWeight: '800', color: '#1e293b' }}>
-                    Salto de peso por placa en esta torre:
-                  </label>
-                  <span style={{ fontSize: '11px', fontWeight: '900', color: '#0066ff' }}>
-                    +{plateStep} lbs/kg
-                  </span>
-                </div>
-                <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginBottom: '6px' }}>
-                  {[5, 7.5, 10, 12.5, 15, 20].map(step => (
-                    <button
-                      key={step}
-                      type="button"
-                      onClick={() => setPlateStep(step)}
-                      style={{
-                        flex: '1 1 auto',
-                        padding: '5px 8px',
-                        borderRadius: '8px',
-                        border: plateStep === step ? '2px solid #0066ff' : '1px solid #cbd5e1',
-                        background: plateStep === step ? '#eff6ff' : '#ffffff',
-                        color: plateStep === step ? '#0066ff' : '#334155',
-                        fontWeight: '800',
-                        fontSize: '10.5px',
-                        cursor: 'pointer'
-                      }}
-                    >
-                      +{step}
-                    </button>
-                  ))}
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <span style={{ fontSize: '10.5px', color: '#64748b', fontWeight: '700' }}>✏️ O salto manual:</span>
-                  <input
-                    type="number"
-                    inputMode="decimal"
-                    step="any"
-                    placeholder="Ej. 12.5"
-                    value={plateStep}
-                    onChange={(e) => setPlateStep(parseFloat(e.target.value) || 0)}
-                    style={{
-                      width: '75px',
-                      padding: '4px 8px',
-                      borderRadius: '8px',
-                      border: '1.5px solid #0066ff',
-                      fontSize: '12px',
-                      fontWeight: '900',
-                      textAlign: 'center',
-                      background: '#ffffff',
-                      color: '#0f172a'
-                    }}
-                  />
-                  <span style={{ fontSize: '11px', fontWeight: '800', color: '#475569' }}>lbs / kg por placa</span>
-                </div>
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                <label style={{ fontSize: '11px', fontWeight: '800', color: '#1e293b' }}>
+                  {stackPreset === 'two_tens_then_twenty' 
+                    ? 'Salto a partir de Placa #3 (tras 2 iniciales):' 
+                    : 'Salto de peso por placa en esta torre:'}
+                </label>
+                <span style={{ fontSize: '11px', fontWeight: '900', color: '#0066ff' }}>
+                  +{plateStep} lbs/kg
+                </span>
               </div>
-            )}
+              <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginBottom: '6px' }}>
+                {(stackPreset === 'two_tens_then_twenty' ? [15, 20, 25, 30] : [5, 7.5, 10, 12.5, 15, 20]).map(step => (
+                  <button
+                    key={step}
+                    type="button"
+                    onClick={() => setPlateStep(step)}
+                    style={{
+                      flex: '1 1 auto',
+                      padding: '5px 8px',
+                      borderRadius: '8px',
+                      border: plateStep === step ? '2px solid #0066ff' : '1px solid #cbd5e1',
+                      background: plateStep === step ? '#eff6ff' : '#ffffff',
+                      color: plateStep === step ? '#0066ff' : '#334155',
+                      fontWeight: '800',
+                      fontSize: '10.5px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    +{step}
+                  </button>
+                ))}
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ fontSize: '10.5px', color: '#64748b', fontWeight: '700' }}>✏️ O salto manual:</span>
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  step="any"
+                  placeholder="Ej. 12.5"
+                  value={plateStep}
+                  onChange={(e) => setPlateStep(parseFloat(e.target.value) || 0)}
+                  style={{
+                    width: '75px',
+                    padding: '4px 8px',
+                    borderRadius: '8px',
+                    border: '1.5px solid #0066ff',
+                    fontSize: '12px',
+                    fontWeight: '900',
+                    textAlign: 'center',
+                    background: '#ffffff',
+                    color: '#0f172a'
+                  }}
+                />
+                <span style={{ fontSize: '11px', fontWeight: '800', color: '#475569' }}>lbs / kg por placa</span>
+              </div>
+            </div>
 
             {/* MICRO-CARGAS EXTRA */}
             <div>

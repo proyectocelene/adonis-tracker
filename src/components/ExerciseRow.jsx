@@ -161,12 +161,13 @@ export default function ExerciseRow({
 
   const toggleSetComplete = (setIndex) => {
     ensureMeta();
-    const isUnilateral = !!exerciseData.isUnilateral || !!exercise.isUnilateral;
+    const isStrictlyBilateral = /barra|smith|prensa|leg press|squat con barra|bench press con barra/i.test(exercise?.name || '');
+    const isUnilateral = !isStrictlyBilateral && (!!exerciseData.isUnilateral || !!exercise.isUnilateral);
     const currentSet = exerciseData[setIndex] || { 
       weight: previousData[setIndex]?.weight || '', 
       reps: previousData[setIndex]?.reps || '', 
-      repsL: previousData[setIndex]?.repsL || '',
-      repsR: previousData[setIndex]?.repsR || '',
+      repsL: isUnilateral ? (previousData[setIndex]?.repsL || '') : undefined,
+      repsR: isUnilateral ? (previousData[setIndex]?.repsR || '') : undefined,
       weightL: previousData[setIndex]?.weightL || '',
       weightR: previousData[setIndex]?.weightR || '',
       rpe: previousData[setIndex]?.rpe || '8', 
@@ -199,8 +200,7 @@ export default function ExerciseRow({
         onUpdateSet(nextIndex, {
           weight: finalWeight,
           reps: String(finalReps),
-          repsL: currentSet.repsL || '',
-          repsR: currentSet.repsR || '',
+          ...(isUnilateral ? { repsL: currentSet.repsL || '', repsR: currentSet.repsR || '' } : {}),
           rpe: currentSet.rpe || '8',
           completed: false,
           unit: currentSet.unit || exercise.defaultUnit || 'lbs'

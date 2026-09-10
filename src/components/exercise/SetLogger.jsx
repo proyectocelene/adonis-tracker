@@ -4,7 +4,7 @@ import PlateCalculatorModal from './PlateCalculatorModal';
 import OverloadScienceModal from './OverloadScienceModal';
 import ExerciseFeedbackModal from './ExerciseFeedbackModal';
 import MachineConfigModal from './MachineConfigModal';
-import { calculate1RM, getOverloadTarget, analyzeExercisePerformance } from '../../hooks/useWorkoutCalculations';
+import { calculate1RM, getOverloadTarget, analyzeExercisePerformance, getMachineStorageKey, getUnifiedExerciseTarget } from '../../hooks/useWorkoutCalculations';
 
 // Analizador fisiológico de calentamiento según prescripción oficial
 function getWarmupPlan(exercise, previousData, exerciseData, machineConfig, coachAnalysis) {
@@ -109,13 +109,20 @@ export default function SetLogger({
   handleRemoveSet,
   onUpdateExerciseMeta
 }) {
-  const isUnilateral = exerciseData.isUnilateral !== undefined ? !!exerciseData.isUnilateral : !!exercise.isUnilateral;
+  // Biomecánicamente bilateral rígido (barra recta, barra Z, smith, prensa, etc.)
+  const isStrictlyBilateral = useMemo(() => {
+    const name = (exercise?.name || '').toLowerCase();
+    return /barra|smith|prensa|leg press|squat con barra|bench press con barra|press militar con barra/i.test(name);
+  }, [exercise?.name]);
+
+  const isUnilateral = !isStrictlyBilateral && (exerciseData.isUnilateral !== undefined ? !!exerciseData.isUnilateral : !!exercise.isUnilateral);
   
-  // Machine Config: Prioridad a exerciseData, con persistencia fallback en localStorage
+  // Machine Config: Prioridad a exerciseData, con persistencia normalizada en localStorage
   const [machineConfig, setMachineConfig] = useState(() => {
     if (exerciseData.machineConfig) return exerciseData.machineConfig;
     try {
-      const saved = localStorage.getItem(`adonis_machine_${exercise.id}`);
+      const slugKey = getMachineStorageKey(exercise);
+      const saved = localStorage.getItem(slugKey) || localStorage.getItem(`adonis_machine_${exercise.id}`);
       return saved ? JSON.parse(saved) : null;
     } catch (e) {
       return null;
@@ -183,9 +190,13 @@ export default function SetLogger({
       onUpdateExerciseMeta({ machineConfig: configData });
     }
     try {
+      const slugKey = getMachineStorageKey(exercise);
       if (configData) {
-        localStorage.setItem(`adonis_machine_${exercise.id}`, JSON.stringify(configData));
+        const serialized = JSON.stringify(configData);
+        localStorage.setItem(slugKey, serialized);
+        localStorage.setItem(`adonis_machine_${exercise.id}`, serialized);
       } else {
+        localStorage.removeItem(slugKey);
         localStorage.removeItem(`adonis_machine_${exercise.id}`);
       }
     } catch (e) {}
@@ -203,52 +214,69 @@ export default function SetLogger({
         width: '100%',
         flexWrap: 'nowrap'
       }}>
-        {/* SELECTOR SEGMENTADO BILATERAL / POR LADO */}
-        <div style={{
-          display: 'inline-flex',
-          background: '#f1f5f9',
-          padding: '2px',
-          borderRadius: '10px',
-          border: '1px solid #cbd5e1',
-          flexShrink: 0
-        }}>
-          <button
-            type="button"
-            onClick={() => isUnilateral && onUpdateExerciseMeta && onUpdateExerciseMeta({ isUnilateral: false })}
-            style={{
-              padding: '4px 8px',
-              borderRadius: '8px',
-              border: 'none',
-              background: !isUnilateral ? '#ffffff' : 'transparent',
-              color: !isUnilateral ? '#0f172a' : '#64748b',
-              fontWeight: !isUnilateral ? '900' : '700',
-              fontSize: '10.5px',
-              cursor: 'pointer',
-              boxShadow: !isUnilateral ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
-              transition: 'all 0.15s ease'
-            }}
-          >
-            Bilateral
-          </button>
-          <button
-            type="button"
-            onClick={() => !isUnilateral && onUpdateExerciseMeta && onUpdateExerciseMeta({ isUnilateral: true })}
-            style={{
-              padding: '4px 8px',
-              borderRadius: '8px',
-              border: 'none',
-              background: isUnilateral ? '#7c3aed' : 'transparent',
-              color: isUnilateral ? '#ffffff' : '#64748b',
-              fontWeight: isUnilateral ? '900' : '700',
-              fontSize: '10.5px',
-              cursor: 'pointer',
-              boxShadow: isUnilateral ? '0 1px 4px rgba(124,58,237,0.3)' : 'none',
-              transition: 'all 0.15s ease'
-            }}
-          >
-            Por Lado
-          </button>
-        </div>
+        {/* SELECTOR SEGMENTADO BILATERAL / POR LADO O BADGE BILATERAL RÍGIDO */}
+        {isStrictlyBilateral ? (
+          <div style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            background: '#f1f5f9',
+            padding: '4px 8px',
+            borderRadius: '10px',
+            border: '1px solid #cbd5e1',
+            fontSize: '10.5px',
+            fontWeight: '800',
+            color: '#475569',
+            flexShrink: 0
+          }}>
+            🔗 Barra Bilateral
+          </div>
+        ) : (
+          <div style={{
+            display: 'inline-flex',
+            background: '#f1f5f9',
+            padding: '2px',
+            borderRadius: '10px',
+            border: '1px solid #cbd5e1',
+            flexShrink: 0
+          }}>
+            <button
+              type="button"
+              onClick={() => isUnilateral && onUpdateExerciseMeta && onUpdateExerciseMeta({ isUnilateral: false })}
+              style={{
+                padding: '4px 8px',
+                borderRadius: '8px',
+                border: 'none',
+                background: !isUnilateral ? '#ffffff' : 'transparent',
+                color: !isUnilateral ? '#0f172a' : '#64748b',
+                fontWeight: !isUnilateral ? '900' : '700',
+                fontSize: '10.5px',
+                cursor: 'pointer',
+                boxShadow: !isUnilateral ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+                transition: 'all 0.15s ease'
+              }}
+            >
+              Bilateral
+            </button>
+            <button
+              type="button"
+              onClick={() => !isUnilateral && onUpdateExerciseMeta && onUpdateExerciseMeta({ isUnilateral: true })}
+              style={{
+                padding: '4px 8px',
+                borderRadius: '8px',
+                border: 'none',
+                background: isUnilateral ? '#7c3aed' : 'transparent',
+                color: isUnilateral ? '#ffffff' : '#64748b',
+                fontWeight: isUnilateral ? '900' : '700',
+                fontSize: '10.5px',
+                cursor: 'pointer',
+                boxShadow: isUnilateral ? '0 1px 4px rgba(124,58,237,0.3)' : 'none',
+                transition: 'all 0.15s ease'
+              }}
+            >
+              Por Lado
+            </button>
+          </div>
+        )}
 
         {/* SELECTOR RÁPIDO DE PLANTA / MÁQUINA + BOTÓN ENGRANE */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '3px', flexShrink: 1, minWidth: 0 }}>
@@ -493,59 +521,71 @@ export default function SetLogger({
         </div>
       )}
 
-      {/* BANNER DE OBJETIVO CIENTÍFICO DE SESIÓN (CUANDO HAY AJUSTE, SOBRECARGA O UNIFICACIÓN) */}
-      {coachAnalysis.hasData && (coachAnalysis.isExcessiveLoad || coachAnalysis.isS1RampUp || coachAnalysis.canProgressWeight) && (
+      {/* BANNER PERMANENTE: META GLOBAL DEL EJERCICIO PARA HOY */}
+      {coachAnalysis?.unifiedTarget && (
         <div 
           onClick={() => setIsScienceModalOpen(true)}
           style={{
-            background: coachAnalysis.isExcessiveLoad ? '#fffbeb' : (coachAnalysis.canProgressWeight ? '#f0fdf4' : '#eff6ff'),
-            border: `1.5px solid ${coachAnalysis.isExcessiveLoad ? '#fde68a' : (coachAnalysis.canProgressWeight ? '#bbf7d0' : '#bfdbfe')}`,
-            borderRadius: '12px',
-            padding: '7px 10px',
-            marginBottom: '8px',
+            background: coachAnalysis.unifiedTarget.isExcessiveLoad 
+              ? 'linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)' 
+              : (coachAnalysis.unifiedTarget.canProgressWeight 
+                  ? 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)' 
+                  : 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)'),
+            border: `1.5px solid ${
+              coachAnalysis.unifiedTarget.isExcessiveLoad 
+                ? '#fde68a' 
+                : (coachAnalysis.unifiedTarget.canProgressWeight ? '#86efac' : '#bae6fd')
+            }`,
+            borderRadius: '14px',
+            padding: '8px 12px',
+            marginBottom: '10px',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            gap: '8px'
+            gap: '8px',
+            boxShadow: '0 2px 6px rgba(0,0,0,0.03)'
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
-            <span style={{ fontSize: '13px' }}>
-              {coachAnalysis.isExcessiveLoad ? '🔬' : (coachAnalysis.canProgressWeight ? '🚀' : '🎯')}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '16px' }}>
+              {coachAnalysis.unifiedTarget.isExcessiveLoad ? '🔬' : (coachAnalysis.unifiedTarget.canProgressWeight ? '🚀' : '🎯')}
             </span>
             <div>
               <div style={{ 
-                fontSize: '11px', 
+                fontSize: '11.5px', 
                 fontWeight: '900', 
-                color: coachAnalysis.isExcessiveLoad ? '#92400e' : (coachAnalysis.canProgressWeight ? '#166534' : '#1e40af') 
+                color: coachAnalysis.unifiedTarget.isExcessiveLoad 
+                  ? '#92400e' 
+                  : (coachAnalysis.unifiedTarget.canProgressWeight ? '#14532d' : '#0369a1') 
               }}>
-                {coachAnalysis.isExcessiveLoad 
-                  ? `Ajuste de Carga para Hipertrofia: ${coachAnalysis.adjustedLoad} lbs × ${coachAnalysis.minReps}-${coachAnalysis.maxReps} reps`
-                  : (coachAnalysis.canProgressWeight 
-                      ? `¡Sobrecarga Lista!: Sube a ${Math.round((coachAnalysis.anchorWeight + coachAnalysis.increment) * 10) / 10} lbs × ${coachAnalysis.minReps} reps`
-                      : `Carga Unificada: ${coachAnalysis.anchorWeight} lbs × ${coachAnalysis.minReps}-${coachAnalysis.maxReps} reps`)}
+                {coachAnalysis.unifiedTarget.headline}
               </div>
               <div style={{ 
                 fontSize: '9.5px', 
-                color: coachAnalysis.isExcessiveLoad ? '#b45309' : (coachAnalysis.canProgressWeight ? '#15803d' : '#2563eb'), 
-                fontWeight: '600' 
+                color: coachAnalysis.unifiedTarget.isExcessiveLoad 
+                  ? '#b45309' 
+                  : (coachAnalysis.unifiedTarget.canProgressWeight ? '#166534' : '#0284c7'), 
+                fontWeight: '600',
+                marginTop: '1px'
               }}>
-                {coachAnalysis.isExcessiveLoad 
-                  ? `Anterior (${coachAnalysis.maxWeight} lbs) causó fallo a 3-4 reps. Toca para ver prescripción.`
-                  : (coachAnalysis.canProgressWeight
-                      ? `Superaste el rango objetivo. Siguiente salto (+${coachAnalysis.increment} lbs).`
-                      : `S1 anterior fue ligera (${coachAnalysis.minWeight} lbs). Peso ancla: ${coachAnalysis.anchorWeight} lbs.`)}
+                {coachAnalysis.unifiedTarget.note}
               </div>
             </div>
           </div>
           <span style={{ 
             fontSize: '9.5px', 
-            color: coachAnalysis.isExcessiveLoad ? '#d97706' : (coachAnalysis.canProgressWeight ? '#16a34a' : '#3b82f6'), 
+            color: coachAnalysis.unifiedTarget.isExcessiveLoad 
+              ? '#d97706' 
+              : (coachAnalysis.unifiedTarget.canProgressWeight ? '#16a34a' : '#0284c7'), 
             fontWeight: '900',
-            flexShrink: 0
+            flexShrink: 0,
+            background: '#ffffff',
+            padding: '2px 7px',
+            borderRadius: '6px',
+            border: '1px solid rgba(0,0,0,0.06)'
           }}>
-            Ver ➔
+            Coach ➔
           </span>
         </div>
       )}
@@ -562,10 +602,17 @@ export default function SetLogger({
           const isRepsHighAlert = repsNum > 35 && !exercise.isTime;
           const weightNum = Number(setVal.weight) || 0;
           const prevWeightNum = Number(prevVal.weight) || 0;
-          const isWeightJumpAlert = prevWeightNum > 0 && weightNum > 0 && 
-            (weightNum > prevWeightNum * 1.5 || weightNum < prevWeightNum * 0.5);
+          const rpeNum = Number(setVal.rpe) || 0;
 
-          // Pasa machineConfig y lo realizado hoy (exerciseData) para cálculo con incrementos reales y adaptación intra-entreno
+          // Solo alertar si el salto es abrupto (>60%) Y no se registró RPE o el RPE fue fallo excesivo (>=9.5)
+          const isWeightJumpAlert = prevWeightNum > 0 && weightNum > 0 && 
+            (weightNum > prevWeightNum * 1.6 || weightNum < prevWeightNum * 0.5) &&
+            (!setVal.rpe || rpeNum >= 9.5);
+
+          // Si el usuario subió peso o mantuvo con RPE solvente (<= 8), es una consolidación exitosa
+          const isWeightSolidified = isDone && prevWeightNum > 0 && weightNum >= prevWeightNum && rpeNum > 0 && rpeNum <= 8;
+
+          // Pasa machineConfig y lo realizado hoy (exerciseData) para cálculo con incrementos reales y estabilidad
           const overloadTarget = getOverloadTarget(setNum, previousData, exercise.targetReps || '10-12', machineConfig, prevVal.weight, prevVal.reps, exerciseData);
           const current1RM = calculate1RM(setVal.weight, setVal.reps);
           const prev1RM = calculate1RM(prevVal.weight, prevVal.reps);
@@ -647,9 +694,17 @@ export default function SetLogger({
                     🎯 {overloadTarget.shortText}
                   </span>
                 )}
-                {isDone && current1RM > 0 && (
-                  <span style={{ color: isPr ? '#b45309' : '#64748b', fontSize: '10px', fontWeight: '800', whiteSpace: 'nowrap', flexShrink: 0 }}>
-                    {isPr ? `🏆 PR! 1RM: ${current1RM} lbs` : `1RM: ${current1RM} lbs`}
+                {isDone && (
+                  <span style={{ 
+                    color: isWeightSolidified ? '#15803d' : (isPr ? '#b45309' : '#64748b'), 
+                    fontSize: '10px', 
+                    fontWeight: '800', 
+                    whiteSpace: 'nowrap', 
+                    flexShrink: 0 
+                  }}>
+                    {isWeightSolidified
+                      ? `🔥 ${weightNum}# consolidado (RPE ${rpeNum})`
+                      : (isPr && current1RM > 0 ? `🏆 PR! 1RM: ${current1RM} lbs` : (current1RM > 0 ? `1RM: ${current1RM} lbs` : '✓ Listo'))}
                   </span>
                 )}
               </div>
@@ -724,7 +779,14 @@ export default function SetLogger({
                           if (val === '' || /^[0-9]+$/.test(val)) {
                             const rL = val !== '' ? Number(val) : '';
                             const rR = setVal.repsR !== undefined && setVal.repsR !== '' ? Number(setVal.repsR) : rL;
-                            const avgR = rL !== '' && rR !== '' ? String(Math.round((Number(rL) + Number(rR)) / 2)) : (rL !== '' ? String(rL) : '');
+                            let avgR = '';
+                            if (rL !== '' && rR !== '') {
+                              if (rL === 1 && rR >= 5) avgR = String(rR);
+                              else if (rR === 1 && rL >= 5) avgR = String(rL);
+                              else avgR = String(Math.round((Number(rL) + Number(rR)) / 2));
+                            } else if (rL !== '') {
+                              avgR = String(rL);
+                            }
                             handleSanitizedChange(setNum, {
                               repsL: val,
                               reps: avgR
@@ -757,7 +819,14 @@ export default function SetLogger({
                           if (val === '' || /^[0-9]+$/.test(val)) {
                             const rR = val !== '' ? Number(val) : '';
                             const rL = setVal.repsL !== undefined && setVal.repsL !== '' ? Number(setVal.repsL) : rR;
-                            const avgR = rL !== '' && rR !== '' ? String(Math.round((Number(rL) + Number(rR)) / 2)) : (rR !== '' ? String(rR) : '');
+                            let avgR = '';
+                            if (rL !== '' && rR !== '') {
+                              if (rL === 1 && rR >= 5) avgR = String(rR);
+                              else if (rR === 1 && rL >= 5) avgR = String(rL);
+                              else avgR = String(Math.round((Number(rL) + Number(rR)) / 2));
+                            } else if (rR !== '') {
+                              avgR = String(rR);
+                            }
                             handleSanitizedChange(setNum, {
                               repsR: val,
                               reps: avgR

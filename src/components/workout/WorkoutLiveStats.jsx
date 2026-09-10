@@ -5,6 +5,7 @@ export default function WorkoutLiveStats({
   currentDay,
   volume = 0,
   completedSets = 0,
+  warmupSets = 0,
   handleResetCurrent,
   calories = null,
   elapsedMinutes = 0
@@ -40,7 +41,12 @@ export default function WorkoutLiveStats({
       </div>
       <div>
         <span style={{ fontSize: '10px', color: '#94a3b8', display: 'block', textTransform: 'uppercase', fontWeight: '800' }}>Series</span>
-        <strong style={{ fontSize: '16px', color: '#00b464', fontWeight: '800' }}>{completedSets} <span style={{ fontSize: '10px', color: '#94a3b8' }}>listas</span></strong>
+        <strong style={{ fontSize: '16px', color: '#00b464', fontWeight: '800' }}>{completedSets} <span style={{ fontSize: '10px', color: '#94a3b8' }}>efectivas</span></strong>
+        {warmupSets > 0 && (
+          <div style={{ fontSize: '9px', color: '#94a3b8', fontWeight: '700', marginTop: '1px' }}>
+            +{warmupSets} aprox
+          </div>
+        )}
       </div>
       <div>
         <span style={{ fontSize: '10px', color: '#38bdf8', display: 'block', textTransform: 'uppercase', fontWeight: '800' }}>Tiempo</span>

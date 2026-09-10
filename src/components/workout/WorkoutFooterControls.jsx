@@ -26,6 +26,7 @@ export default function WorkoutFooterControls({
   baseDay = {},
   calories = null,
   onExportTCX = null,
+  onExportJSON = null,
   userSmartwatchKcal = null,
   onSetSmartwatchKcal = null,
   isWatchModalOpen = undefined,
@@ -248,6 +249,55 @@ export default function WorkoutFooterControls({
           >
             <Bot size={18} color="#7c3aed" /> 🤖 Copiar Prompt para IA (ChatGPT / Gemini / Claude)
           </button>
+        )}
+
+        {(completedSets > 0 || hasAnyDraftData) && (onExportTCX || onExportJSON) && (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+            {onExportTCX && (
+              <button
+                type="button"
+                onClick={onExportTCX}
+                style={{
+                  padding: '11px 8px',
+                  fontSize: '11.5px',
+                  borderRadius: '14px',
+                  fontWeight: '800',
+                  background: '#f0f9ff',
+                  color: '#0284c7',
+                  border: '1.5px solid #bae6fd',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px'
+                }}
+              >
+                <Share2 size={14} /> 📥 Exportar TCX
+              </button>
+            )}
+            {onExportJSON && (
+              <button
+                type="button"
+                onClick={onExportJSON}
+                style={{
+                  padding: '11px 8px',
+                  fontSize: '11.5px',
+                  borderRadius: '14px',
+                  fontWeight: '800',
+                  background: '#ecfdf5',
+                  color: '#047857',
+                  border: '1.5px solid #a7f3d0',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px'
+                }}
+              >
+                <Download size={14} /> 💾 Exportar JSON
+              </button>
+            )}
+          </div>
         )}
 
         {hasAnyDraftData && (

@@ -17,7 +17,7 @@ import WorkoutFooterControls from './workout/WorkoutFooterControls';
 import { getPreviousDataForExercise } from '../utils/exerciseMatcher';
 import { calculateVolume, calculate1RM, calculateAverageRPE } from '../hooks/useWorkoutCalculations';
 import { calculateWorkoutCalories } from '../utils/calorieCalculations';
-import { shareOrExportWorkout, downloadWorkoutTCX } from '../services/workoutExportService';
+import { shareOrExportWorkout, downloadWorkoutTCX, downloadWorkoutJSON } from '../services/workoutExportService';
 import { generateAISessionPrompt } from '../utils/aiPromptGenerator';
 import { useIndexedDB as useLocalStorage } from '../hooks/useIndexedDB';
 import { useWorkoutHistory } from '../hooks/useWorkoutHistory';
@@ -573,7 +573,8 @@ export default function WorkoutDay() {
   };
 
   const calculateVolumeAndSets = () => {
-    let completedSetsCount = 0;
+    let effectiveSetsCount = 0;
+    let warmupSetsCount = 0;
     let cardioCount = 0;
     const allCompletedSets = [];
 
@@ -583,12 +584,25 @@ export default function WorkoutDay() {
         if (exLogs.completed && (exLogs.cardioDone || exLogs.machine)) {
           cardioCount++;
         }
+
+        const exDef = currentDay.exercises?.find(e => e.id === exId);
+        const isStrictlyBilateral = /barra|smith|prensa|leg press|squat con barra|bench press con barra/i.test(exDef?.name || '');
+        const isUnilateral = !isStrictlyBilateral && (exLogs.isUnilateral !== undefined ? !!exLogs.isUnilateral : !!exDef?.isUnilateral);
+
         Object.keys(exLogs).forEach(key => {
-          if (!isNaN(parseInt(key))) {
+          const num = parseInt(key, 10);
+          if (!isNaN(num)) {
             const setObj = exLogs[key];
             if (setObj && setObj.completed) {
-              completedSetsCount++;
-              allCompletedSets.push(setObj);
+              if (num === 0) {
+                warmupSetsCount++;
+              } else {
+                effectiveSetsCount++;
+              }
+              allCompletedSets.push({
+                ...setObj,
+                isUnilateral
+              });
             }
           }
         });
@@ -596,10 +610,16 @@ export default function WorkoutDay() {
     });
 
     const totalVolume = calculateVolume(allCompletedSets);
-    return { volume: Math.round(totalVolume), completedSets: completedSetsCount, cardioCompleted: cardioCount };
+    return {
+      volume: Math.round(totalVolume),
+      completedSets: effectiveSetsCount,
+      warmupSets: warmupSetsCount,
+      totalSetsCount: effectiveSetsCount + warmupSetsCount,
+      cardioCompleted: cardioCount
+    };
   };
 
-  const { volume, completedSets, cardioCompleted } = calculateVolumeAndSets();
+  const { volume, completedSets, warmupSets, cardioCompleted } = calculateVolumeAndSets();
 
   // Peso corporal real para cálculo metabólico de gasto energético
   const latestWeight = (bodyMetrics && bodyMetrics.length > 0)
@@ -647,23 +667,118 @@ export default function WorkoutDay() {
     return calculateWorkoutCalories(todayWorkoutData, userWeightKg, defs, liveElapsedMinutes, watchKcal);
   }, [todayWorkoutData, currentDay.exercises, userWeightKg, liveElapsedMinutes, smartwatchKcalMap, selectedDateKey]);
 
-  const handleExportTCX = async () => {
-    const currentSessionLog = {
+  const buildCurrentSessionExportData = () => {
+    const exercisesDetailed = [];
+    const exercisesSummary = [];
+    let cardioDetailed = null;
+
+    (currentDay.exercises || []).forEach(ex => {
+      const logs = todayWorkoutData[ex.id] || {};
+      if (ex.isCardio) {
+        if (logs.completed) {
+          cardioDetailed = {
+            name: ex.name,
+            machine: logs.machine || ex.name,
+            duration: logs.duration || logs.timeMinutes || 0,
+            distanceKm: logs.distanceKm || logs.distance || 0,
+            speedKmh: logs.speedKmh || logs.speed || 0,
+            inclinePct: logs.inclinePct || logs.incline || 0,
+            resistanceLevel: logs.resistanceLevel || logs.resistance || null,
+            machineKcal: logs.machineKcal || logs.calories || 0,
+            watchKcal: logs.watchKcal || null,
+            watchHrAvg: logs.watchHrAvg || null,
+            watchHrMax: logs.watchHrMax || null,
+            rpe: logs.rpe || null
+          };
+        }
+        return;
+      }
+
+      const sets = [];
+      Object.keys(logs).forEach(k => {
+        const num = parseInt(k, 10);
+        if (!isNaN(num) && logs[k]?.completed) {
+          const s = logs[k];
+          const w = parseFloat(s.weight) || 0;
+          const r = parseFloat(s.reps) || Math.max(parseFloat(s.repsR) || 0, parseFloat(s.repsL) || 0) || 0;
+          sets.push({
+            setNum: num,
+            weight: w,
+            reps: r,
+            repsL: s.repsL || null,
+            repsR: s.repsR || null,
+            rpe: s.rpe || null,
+            unit: s.unit || ex.defaultUnit || 'lbs',
+            isWarmup: num === 0,
+            completed: true,
+            estimated1RM: calculate1RM(w, r)
+          });
+        }
+      });
+
+      if (sets.length > 0) {
+        sets.sort((a, b) => a.setNum - b.setNum);
+        const mConfig = logs.machineConfig || (() => {
+          try {
+            return JSON.parse(localStorage.getItem(`coachv2_machine_${ex.id}`) || 'null');
+          } catch (e) {
+            return null;
+          }
+        })();
+
+        exercisesDetailed.push({
+          id: ex.id,
+          name: ex.name,
+          muscleGroup: ex.muscleGroup || 'General',
+          machineConfig: mConfig,
+          sets
+        });
+
+        const bestSet = sets.reduce((max, s) => (s.weight > max.weight ? s : max), sets[0]);
+        exercisesSummary.push(`${ex.name}: ${sets.length} series (Máx ${bestSet.weight} lbs × ${bestSet.reps})`);
+      }
+    });
+
+    return {
       dayName: currentDay.name,
+      focus: currentDay.focus,
       date: selectedDateKey,
+      week: currentWeek,
       completedSets,
+      warmupSets,
       volume,
       cardioCompleted,
+      userWeightKg,
       startTime: sessionStartTime || new Date().toISOString(),
       endTime: new Date().toISOString(),
       durationMinutes: liveElapsedMinutes,
-      timestamp: new Date(`${selectedDateKey}T12:00:00`).toISOString()
+      timestamp: new Date(`${selectedDateKey}T12:00:00`).toISOString(),
+      exercisesDetailed,
+      exercisesSummary: exercisesSummary.join(' | '),
+      cardioDetailed,
+      rawWorkoutData: todayWorkoutData
     };
+  };
+
+  const handleExportTCX = async () => {
+    const currentSessionLog = buildCurrentSessionExportData();
     const res = await shareOrExportWorkout(currentSessionLog, todayCalories);
     if (res.success && res.method === 'download') {
       modal.showAlert({
         title: "📥 Archivo TCX Generado",
-        message: `Se descargó el archivo "entrenamiento_adonis_${selectedDateKey}.tcx".\n\n⏱️ Duración registrada: ${liveElapsedMinutes > 0 ? `${liveElapsedMinutes} min` : 'Estimada'}\n🔥 Gasto: ${todayCalories.totalKcal} kcal\nCompatible con Google Fit, Health Connect, Garmin y Strava.`,
+        message: `Se descargó el archivo "entrenamiento_adonis_${selectedDateKey}.tcx".\n\n⏱️ Duración registrada: ${liveElapsedMinutes > 0 ? `${liveElapsedMinutes} min` : 'Estimada'}\n🔥 Gasto: ${todayCalories?.totalKcal || 0} kcal\n⚖️ Peso atleta: ${userWeightKg} kg\nCompatible con Google Fit, Health Connect, Garmin y Strava.`,
+        variant: "success"
+      });
+    }
+  };
+
+  const handleExportJSON = () => {
+    const currentSessionLog = buildCurrentSessionExportData();
+    const success = downloadWorkoutJSON(currentSessionLog, todayCalories, bodyMetrics, bodyComposition);
+    if (success) {
+      modal.showAlert({
+        title: "💾 Bitácora Completa Exportada",
+        message: `Se ha descargado el archivo JSON con todos los datos cuantitativos:\n• Series, repeticiones, RPEs y 1RMs\n• Medidas corporales (% Grasa, Músculo, Cintura, Hombros)\n• Gasto energético y datos de smartwatch\n• Configuración exacta de máquinas y poleas`,
         variant: "success"
       });
     }
@@ -1005,7 +1120,7 @@ export default function WorkoutDay() {
     let card = `🏆 COACH V2 — WORKOUT CARD\n`;
     card += `📅 Fecha: ${selectedDateKey} | Semana ${currentWeek}\n`;
     card += `⚡ Rutina: ${currentDay.name || 'Entrenamiento'}\n`;
-    card += `📊 Volumen: ${volume.toLocaleString()} lbs | ${completedSets} Series completadas\n`;
+    card += `📊 Volumen: ${volume.toLocaleString()} lbs | ${completedSets} Series Efectivas${warmupSets > 0 ? ` (+${warmupSets} calentamiento)` : ''}\n`;
     card += `────────────────────────────\n`;
 
     let count = 0;
@@ -1022,14 +1137,26 @@ export default function WorkoutDay() {
       if (setsArr.length > 0) {
         count++;
         card += `\n• ${ex.name}:\n`;
+        const isStrictlyBilateral = /barra|smith|prensa|leg press|squat con barra|bench press con barra/i.test(ex.name || '');
+        const isUnilateralEx = !isStrictlyBilateral && (logs.isUnilateral || setsArr.some(s => s.isUnilateral || (s.repsL !== undefined && s.repsR !== undefined && s.repsL !== '' && s.repsR !== '')));
+
         setsArr.sort((a, b) => a.num - b.num).forEach(s => {
-          const epley = calculate1RM(s.weight, s.reps);
+          let r = 0;
+          if (isUnilateralEx) {
+            const rL = parseFloat(s.repsL) || 0;
+            const rR = parseFloat(s.repsR) || 0;
+            r = (rL > 0 && rR > 0) ? Math.min(rL, rR) : (rL > 0 ? rL : rR);
+          } else {
+            r = parseFloat(s.reps) || Math.max(parseFloat(s.repsR) || 0, parseFloat(s.repsL) || 0) || 0;
+          }
+
+          const epley = calculate1RM(s.weight, r);
           const epleyStr = epley > 0 ? ` (1RM est: ${epley} lbs)` : '';
           const rpeStr = s.rpe ? ` @ RPE ${s.rpe}` : '';
-          if (s.repsL !== undefined || s.repsR !== undefined) {
+          if (isUnilateralEx) {
             card += `  - S${s.num}: ${s.weight || 0} lbs × I:${s.repsL || s.reps} D:${s.repsR || s.reps}${rpeStr}${epleyStr}\n`;
           } else {
-            card += `  - S${s.num}: ${s.weight || 0} lbs × ${s.reps || 0} reps${rpeStr}${epleyStr}\n`;
+            card += `  - S${s.num}: ${s.weight || 0} lbs × ${r} reps${rpeStr}${epleyStr}\n`;
           }
         });
       }
@@ -1070,11 +1197,15 @@ export default function WorkoutDay() {
       currentWeek,
       selectedDateKey,
       completedSets,
+      warmupSets,
       volume,
       calories: todayCalories,
       elapsedMinutes: liveElapsedMinutes,
       isWarmupDone,
-      skippedExercises: skippedExercisesMap[baseDay.id] || {}
+      skippedExercises: skippedExercisesMap[baseDay.id] || {},
+      bodyMetrics,
+      bodyComposition,
+      userWeightKg
     });
 
     if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -1261,6 +1392,7 @@ export default function WorkoutDay() {
             currentDay={currentDay}
             volume={volume}
             completedSets={completedSets}
+            warmupSets={warmupSets}
             handleResetCurrent={handleResetCurrent}
             calories={todayCalories}
             elapsedMinutes={liveElapsedMinutes}
@@ -1391,6 +1523,7 @@ export default function WorkoutDay() {
                 baseDay={baseDay}
                 calories={todayCalories}
                 onExportTCX={handleExportTCX}
+                onExportJSON={handleExportJSON}
                 userSmartwatchKcal={smartwatchKcalMap?.[selectedDateKey] || null}
                 onSetSmartwatchKcal={handleSetSmartwatchKcal}
                 isWatchModalOpen={showStrengthWatchModal}

@@ -82,12 +82,13 @@ export default function PlateCalculatorModal({
 
   // Cálculo exacto para cada placa n (1 a 20) según machineConfig o preset
   const getPlateWeight = (plateNum) => {
-    if (stackPreset === 'two_tens_then_twenty') {
-      const w = [10, 20, 40, 60, 80, 100, 120, 140, 160, 180, 200, 220, 240, 260, 280, 300, 320, 340, 360, 380];
-      return w[plateNum - 1] || (380 + ((plateNum - 20) * 20));
-    }
     const fp = parseFloat(topPlateWeight) || (unit === 'kg' ? 5 : 10);
-    const inc = parseFloat(stackIncrement) || (unit === 'kg' ? 5 : 10);
+    const inc = parseFloat(stackIncrement) || (unit === 'kg' ? 5 : (stackPreset === 'two_tens_then_twenty' ? 20 : 10));
+    if (stackPreset === 'two_tens_then_twenty') {
+      if (plateNum === 1) return fp;
+      if (plateNum === 2) return fp * 2;
+      return Math.round(((fp * 2) + ((plateNum - 2) * inc)) * 10) / 10;
+    }
     if (plateNum === 1) return fp;
     return Math.round((fp + ((plateNum - 1) * inc)) * 10) / 10;
   };
@@ -666,64 +667,67 @@ export default function PlateCalculatorModal({
                 </div>
               </div>
 
-              {/* 2. INCREMENTO POR PLACA (#2 EN ADELANTE) */}
-              {stackPreset === 'linear' && (
-                <div style={{ background: '#f8fafc', padding: '10px 12px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                    <span style={{ fontSize: '11px', fontWeight: '800', color: '#475569' }}>
-                      INCREMENTO PLACAS (#2 EN ADELANTE)
-                    </span>
-                    <span style={{ fontSize: '12px', fontWeight: '900', color: '#7c3aed' }}>
-                      +{stackIncrement} {unit}/placa
-                    </span>
-                  </div>
-                  <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginBottom: '6px' }}>
-                    {(unit === 'kg' ? [2.5, 5, 7.5, 10] : [5, 7.5, 10, 12.5, 15, 20]).map(inc => (
-                      <button
-                        key={inc}
-                        type="button"
-                        onClick={() => setStackIncrement(inc)}
-                        style={{
-                          flex: '1 1 auto',
-                          padding: '4px 6px',
-                          borderRadius: '6px',
-                          fontSize: '11px',
-                          fontWeight: '800',
-                          border: stackIncrement === inc ? '1.5px solid #7c3aed' : '1px solid #cbd5e1',
-                          background: stackIncrement === inc ? '#f5f3ff' : '#ffffff',
-                          color: stackIncrement === inc ? '#7c3aed' : '#64748b',
-                          cursor: 'pointer'
-                        }}
-                      >
-                        +{inc} {unit}
-                      </button>
-                    ))}
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span style={{ fontSize: '10.5px', color: '#64748b', fontWeight: '700' }}>✏️ O salto manual:</span>
-                    <input
-                      type="number"
-                      inputMode="decimal"
-                      step="any"
-                      placeholder="Ej. 12.5"
-                      value={stackIncrement}
-                      onChange={(e) => setStackIncrement(parseFloat(e.target.value) || 0)}
-                      style={{
-                        width: '70px',
-                        padding: '4px 8px',
-                        borderRadius: '8px',
-                        border: '1.5px solid #7c3aed',
-                        fontSize: '12px',
-                        fontWeight: '900',
-                        textAlign: 'center',
-                        background: '#ffffff',
-                        color: '#4c1d95'
-                      }}
-                    />
-                    <span style={{ fontSize: '11px', fontWeight: '800', color: '#64748b' }}>{unit}/placa</span>
-                  </div>
+              {/* 2. INCREMENTO POR PLACA */}
+              <div style={{ background: '#f8fafc', padding: '10px 12px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                  <span style={{ fontSize: '11px', fontWeight: '800', color: '#475569' }}>
+                    {stackPreset === 'two_tens_then_twenty' 
+                      ? 'INCREMENTO PLACAS (A PARTIR DE #3)' 
+                      : 'INCREMENTO PLACAS (#2 EN ADELANTE)'}
+                  </span>
+                  <span style={{ fontSize: '12px', fontWeight: '900', color: '#7c3aed' }}>
+                    +{stackIncrement} {unit}/placa
+                  </span>
                 </div>
-              )}
+                <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginBottom: '6px' }}>
+                  {(stackPreset === 'two_tens_then_twenty' 
+                    ? (unit === 'kg' ? [10, 15, 20] : [15, 20, 25, 30])
+                    : (unit === 'kg' ? [2.5, 5, 7.5, 10] : [5, 7.5, 10, 12.5, 15, 20])
+                  ).map(inc => (
+                    <button
+                      key={inc}
+                      type="button"
+                      onClick={() => setStackIncrement(inc)}
+                      style={{
+                        flex: '1 1 auto',
+                        padding: '4px 6px',
+                        borderRadius: '6px',
+                        fontSize: '11px',
+                        fontWeight: '800',
+                        border: stackIncrement === inc ? '1.5px solid #7c3aed' : '1px solid #cbd5e1',
+                        background: stackIncrement === inc ? '#f5f3ff' : '#ffffff',
+                        color: stackIncrement === inc ? '#7c3aed' : '#64748b',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      +{inc} {unit}
+                    </button>
+                  ))}
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ fontSize: '10.5px', color: '#64748b', fontWeight: '700' }}>✏️ O salto manual:</span>
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    step="any"
+                    placeholder="Ej. 12.5"
+                    value={stackIncrement}
+                    onChange={(e) => setStackIncrement(parseFloat(e.target.value) || 0)}
+                    style={{
+                      width: '70px',
+                      padding: '4px 8px',
+                      borderRadius: '8px',
+                      border: '1.5px solid #7c3aed',
+                      fontSize: '12px',
+                      fontWeight: '900',
+                      textAlign: 'center',
+                      background: '#ffffff',
+                      color: '#4c1d95'
+                    }}
+                  />
+                  <span style={{ fontSize: '11px', fontWeight: '800', color: '#64748b' }}>{unit}/placa</span>
+                </div>
+              </div>
 
               {/* 3. PESAS AUXILIARES / ADD-ONS (+2.5, +5, +7.5, +10 LBS) */}
               <div style={{ background: '#f8fafc', padding: '10px 12px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
