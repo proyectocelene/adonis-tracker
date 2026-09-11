@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { AlertTriangle, CheckCircle2, TrendingUp, TrendingDown, Minus, ArrowUpDown, Sparkles, Filter } from 'lucide-react';
 import { UNIFIED_EXERCISE_LIBRARY } from '../../data/unifiedExerciseLibrary';
+import { normalizeExerciseName } from '../../utils/exerciseMatcher';
 
 export default function ExerciseConsistencyAudit({ workoutHistory = [] }) {
   const [sortCriteria, setSortCriteria] = useState('least_adherent'); // 'least_adherent' | 'most_adherent' | 'most_progress'
@@ -27,10 +28,13 @@ export default function ExerciseConsistencyAudit({ workoutHistory = [] }) {
         const setKeys = Object.keys(exData).filter(k => !isNaN(parseInt(k, 10)) && exData[k]?.completed);
         if (setKeys.length === 0) return;
 
-        if (!stats[exId]) {
-          stats[exId] = {
+        const rawName = exData.name || libraryNameMap[exId] || exId;
+        const groupKey = normalizeExerciseName(rawName) || exId;
+
+        if (!stats[groupKey]) {
+          stats[groupKey] = {
             id: exId,
-            name: exData.name || libraryNameMap[exId] || exId,
+            name: rawName,
             loggedCount: 0,
             skippedCount: 0,
             maxWeights: [],
@@ -44,27 +48,30 @@ export default function ExerciseConsistencyAudit({ workoutHistory = [] }) {
           if (w > maxW) maxW = w;
         });
 
-        stats[exId].loggedCount++;
+        stats[groupKey].loggedCount++;
         if (maxW > 0) {
-          stats[exId].maxWeights.push({ date: session.date, weight: maxW });
+          stats[groupKey].maxWeights.push({ date: session.date, weight: maxW });
         }
-        stats[exId].dates.push(session.date);
+        stats[groupKey].dates.push(session.date);
       });
 
       // 2. Ejercicios explícitamente omitidos / saltados
       const skipped = session.skippedExercises || {};
       Object.keys(skipped).forEach(exId => {
-        if (!stats[exId]) {
-          stats[exId] = {
+        const rawName = skipped[exId]?.name || libraryNameMap[exId] || exId;
+        const groupKey = normalizeExerciseName(rawName) || exId;
+
+        if (!stats[groupKey]) {
+          stats[groupKey] = {
             id: exId,
-            name: skipped[exId]?.name || libraryNameMap[exId] || exId,
+            name: rawName,
             loggedCount: 0,
             skippedCount: 0,
             maxWeights: [],
             dates: []
           };
         }
-        stats[exId].skippedCount++;
+        stats[groupKey].skippedCount++;
       });
     });
 

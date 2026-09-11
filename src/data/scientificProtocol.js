@@ -1554,70 +1554,19 @@ export const scientificProtocol = [
     "dayNumber": 5,
     "name": "Viernes: Piernas 2 (Cadena Posterior, Bisagra y Femorales)",
     "type": "workout",
-    "focus": "Enfoque biomecánico en cadena posterior: bisagra de cadera con RDL, flexión de rodilla sentada y empuje posterior.",
+    "focus": "🧬 PLAN DE BATALLA COMPLETO — Enfoque Biomecánico: Isquiotibiales (Flexión + Bisagra), Glúteo Mayor, Aductores y Pantorrilla (~70 min pesas + 30 min cardio = ~100 min sesión de élite).\n\n🔥 FASE 0: Calentamiento & Activación Articular (5 a 7 min):\n• Movilidad de tobillo: Estiramiento contra la pared con rodilla flexionada (30s por lado).\n• Puentes de glúteo en suelo: 2 series × 15 reps con pausa de 2s apretando arriba (despierta el glúteo antes de cargar peso).\n• Péndulo de pierna dinámico: 10 balanceos frontales y 10 laterales por pierna.",
     "exercises": [
-      {
-        "id": "d5_e1",
-        "name": "Peso Muerto Rumano con Mancuernas o en Smith (RDL)",
-        "muscleGroup": "Isquiotibiales & Glúteos (Cadena Posterior)",
-        "loadFamily": "Familia Peso Muerto Rumano / Bisagra Cadera",
-        "sets": 3,
-        "reps": "8-10",
-        "restTime": "150-180 s",
-        "defaultUnit": "lbs",
-        "biomechanics": "Pies al ancho de caderas con puntas al frente. Mancuernas o barra pegadas a los muslos durante todo el recorrido. Movimiento de bisagra de cadera pura: empuja la pelvis hacia atrás flexionando mínimamente las rodillas (15-20°) hasta que las manos bajen justo debajo de las rótulas sintiendo tensión máxima en los isquiotibiales. NUNCA redondees la columna lumbar. IAP: Inhala diafragmáticamente arriba bloqueando la espalda baja, mantén el aire durante todo el descenso (3s) y exhala al reincorporarte empujando las caderas al frente.",
-        "warmup": "🔥 Sí ocupa:\n• Serie 1: Con 40% del peso x 10 reps (calibrar estiramiento y columna neutra).\n• Serie 2: Con 70% del peso x 4 reps técnicas.",
-        "searchQuery": "romanian deadlift rdl dumbell smith machine technique",
-        "equivalents": [
-          {
-            "id": "d5_e1_eq1",
-            "name": "Peso Muerto Rumano con Barra",
-            "desc": "Sobrecarga pesada con barra libre.",
-            "ratio": 1.1,
-            "biomechanics": "Agarre a la anchura de hombros sobre barra olímpica. Barra rozando muslos y espinillas. Bisagra profunda con espalda neutra.",
-            "mindMuscle": {
-              "title": "RDL Clásico con Barra",
-              "internalCue": "Mantén los dorsales activos cerrando las axilas para pegar la barra a las piernas.",
-              "externalCue": "Lleva las caderas hacia atrás como si cerraras una puerta.",
-              "eccentricCue": "Desciende en 3 segundos hasta media espinilla."
-            },
-            "searchQuery": "Peso Muerto Rumano con Barra tecnica biomecanica",
-            "warmup": "🔥 Sí ocupa:\n• Serie 1: Con 40% del peso x 10 reps (calibrar estiramiento y columna neutra).\n• Serie 2: Con 70% del peso x 4 reps técnicas."
-          },
-          {
-            "id": "d5_e1_eq2",
-            "name": "Peso Muerto con Barra Hexagonal (Trap Bar)",
-            "desc": "Distribución neutral de la carga axial.",
-            "ratio": 1.1,
-            "biomechanics": "Espalda apoyada en banco a la altura de escápulas. Barra o almohadilla acolchada en el pliegue de la cadera. Empuje de cadera con retroversión pélvica arriba.",
-            "mindMuscle": {
-              "title": "Glúteo Mayor en Máximo Acortamiento",
-              "internalCue": "Aprieta los glúteos con fuerza máxima arriba manteniendo la mirada al frente.",
-              "externalCue": "Empuja el suelo con los talones elevando la pelvis a la horizontal.",
-              "eccentricCue": "Baja en 2 a 3 segundos rozando el suelo sin descansar."
-            },
-            "searchQuery": "Peso Muerto con Barra Hexagonal (Trap Bar) tecnica biomecanica",
-            "warmup": "🔥 Sí ocupa:\n• Serie 1: Con 40% del peso x 10 reps (calibrar estiramiento y columna neutra).\n• Serie 2: Con 70% del peso x 4 reps técnicas."
-          }
-        ],
-        "mindMuscle": {
-          "title": "Isquiotibiales & Glúteo Mayor (Fase Elongada)",
-          "internalCue": "Siente cómo los femorales y glúteos se tensan como una cuerda de arco tensada mientras la cadera viaja hacia atrás.",
-          "externalCue": "Imagina que intentas tocar una pared detrás de ti con los glúteos, manteniendo las espinillas completamente verticales.",
-          "eccentricCue": "Baja las pesas pegadas a las piernas en 3 segundos sintiendo el estiramiento extremo en la parte posterior del muslo."
-        }
-      },
       {
         "id": "d5_e2",
         "name": "Flexión de Femorales Sentado (Seated Leg Curl)",
         "muscleGroup": "Isquiotibiales (Flexores de Rodilla)",
         "loadFamily": "Familia Flexión de Femorales (Isquiotibiales)",
         "sets": 4,
-        "reps": "10-12",
+        "reps": "8-12",
         "restTime": "90-120 s",
         "defaultUnit": "lbs",
-        "biomechanics": "Rodillo superior ajustado firmemente sobre los muslos justo arriba de las rodillas para evitar cualquier elevación de la cadera. Rodillo inferior apoyado en el tendón de Aquiles. Eje de rotación alineado con la articulación de la rodilla. La posición sentada flexiona la cadera a 90°, colocando los isquiotibiales en estiramiento previo en su inserción proximal (mayor ventaja mecánica e hipertrofia que tumbado). Flexiona con fuerza llevando los talones debajo del asiento con pausa de 1s.",
-        "warmup": "🔥 Sí (1 serie): 60% de la carga x 6 reps.",
+        "biomechanics": "BLOQUE 1: Isquios en Flexión de Rodilla (Preactivación en Rango Elongado). Respaldo ajustado para que la rodilla coincida exactamente con el eje de rotación de la máquina. El rodillo de muslos debe quedar muy apretado contra tus cuádriceps para que tu pelvis no se mueva ni un milímetro. Tobillos en dorsiflexión activa (puntas hacia las espinillas). Flexión explosiva pero controlada hacia abajo, pausa de 1s apretando abajo, y retorno lento (3s excéntrica) sintiendo cómo los isquios se estiran bajo tensión.",
+        "warmup": "🔥 Aproximación:\n• 1 serie × 10 reps ligeras (~60 lbs) para lubricar la rodilla sin fatiga.\n\n🎯 Prescripción de Series & Cargas:\n• Serie 1 (Efectiva): 90 lbs × 12 reps (RPE 8)\n• Serie 2 (Top Set Pesada): 95 lbs × 10 reps (RPE 8.5)\n• Serie 3 (Efectiva): 95 lbs × 8-10 reps (RPE 9)\n• Serie 4 (Back-off + Parciales): 85 lbs × 12 reps completas + inmediatamente 3-4 parciales desde el estiramiento hasta el fallo.",
         "searchQuery": "seated leg curl hamstring hypertrophy stretch",
         "equivalents": [
           {
@@ -1653,22 +1602,22 @@ export const scientificProtocol = [
         ],
         "mindMuscle": {
           "title": "Isquiotibiales (Bíceps Femoral, Semitendinoso y Semimembranoso)",
-          "internalCue": "Mantén los tobillos en ángulo neutro (dorsiflexión) y piensa en clavar los talones contra el asiento.",
-          "externalCue": "Hala el rodillo hacia la base de la máquina con un tirón potente y continuo.",
-          "eccentricCue": "Frena el retorno en 3 segundos sintiendo cómo los femorales se alargan bajo carga hasta casi estirar por completo la pierna."
+          "internalCue": "Mantén los tobillos en dorsiflexión activa y clava los talones contra el asiento.",
+          "externalCue": "Hala el rodillo hacia abajo y atrás con pausa de 1 segundo.",
+          "eccentricCue": "Frena el retorno en 3 segundos sintiendo cómo los femorales se alargan bajo carga."
         }
       },
       {
         "id": "d5_e3",
-        "name": "Prensa de Piernas (Pies Altos y Abiertos)",
-        "muscleGroup": "Glúteos & Isquiotibiales",
+        "name": "Prensa de Piernas 45° (Pies Altos y Separados)",
+        "muscleGroup": "Glúteos & Isquiotibiales (Cadena Posterior)",
         "loadFamily": "Familia Prensa de Piernas",
         "sets": 3,
-        "reps": "8-10",
-        "restTime": "120-150 s",
+        "reps": "8-12",
+        "restTime": "120-180 s",
         "defaultUnit": "lbs",
-        "biomechanics": "Pies en el tercio superior de la plataforma, separados más allá del ancho de hombros con puntas a 30° hacia afuera. Esta posición transfiere la carga del cuádriceps hacia la cadena posterior (glúteos, aductor mayor e isquiotibiales). Desciende hasta 90° de flexión de rodilla sin levantar el sacro.",
-        "warmup": "🔥 No ocupa (la cadera ya está caliente del RDL).",
+        "biomechanics": "BLOQUE 2: Multiarticular Cadena Posterior (Fuerza e Hipertrofia). Colocación de pies en el tercio superior de la plataforma, separados ligeramente más que el ancho de hombros y con las puntas apuntando a 30° hacia afuera. Transfiere la tensión mecánica a glúteos, aductores e isquios proximales. Rango de movimiento: Baja todo lo profundo que puedas hasta que tus muslos casi toquen tus costillas, pero ¡ALERTA!: el sacro/coxis JAMÁS debe despegarse del respaldo (cero retroversión pélvica).",
+        "warmup": "🔥 Feeder Sets de aproximación:\n• Feeder 1: 180 lbs (2 platos por lado) × 8 reps\n• Feeder 2: 270 lbs (3 platos por lado) × 6 reps (aclimatación neurológica sin fatiga).\n\n🎯 Prescripción de Series & Cargas:\n• Serie 1 (Top Set Pesada): 360 lbs (4 platos por lado) × 8-10 reps (RPE 8.5)\n• Serie 2 (Efectiva): 360 lbs × 8 reps (RPE 9)\n• Serie 3 (Back-off Tensión Mecánica): 315 lbs (3.5 platos por lado) × 10-12 reps lentas (3s bajada).",
         "searchQuery": "leg press feet high wide glute focus",
         "equivalents": [
           {
@@ -1676,22 +1625,73 @@ export const scientificProtocol = [
             "name": "Hip Thrust en máquina o con barra libre (3x8-10)",
             "desc": "Máxima tensión en acortamiento de glúteo.",
             "ratio": 0.9,
-            "biomechanics": "Sentadilla búlgara con torso inclinado hacia adelante a 30° para estirar al máximo el glúteo en la pierna delantera.",
+            "biomechanics": "Espalda apoyada en banco a la altura de escápulas o en máquina específica. Empuje pélvico con retroversión en la cima.",
             "mindMuscle": {
-              "title": "Glúteo Elongado en Búlgara",
-              "internalCue": "Hunde la cadera sintiendo la nalga tensarse.",
-              "externalCue": "Empuja el suelo con el talón delantero.",
-              "eccentricCue": "Desciende en 3 segundos profundos."
+              "title": "Glúteo Elongado & Empuje",
+              "internalCue": "Hunde la cadera sintiendo el glúteo tensarse y empuja con los talones.",
+              "externalCue": "Empuja la plataforma / almohadilla alejando la carga.",
+              "eccentricCue": "Desciende en 3 segundos profundos y controlados."
             },
             "searchQuery": "Hip Thrust en máquina o con barra libre (3x8-10) tecnica biomecanica",
-            "warmup": "🔥 No ocupa (la cadera ya está caliente del RDL)."
+            "warmup": "🔥 2 series progresivas de aproximación."
           }
         ],
         "mindMuscle": {
           "title": "Glúteo Mayor & Cadena Posterior en Prensa",
-          "internalCue": "Siente cómo los glúteos y la cara interna y posterior del muslo absorben la carga en la bajada.",
-          "externalCue": "Empuja la plataforma a través de los talones abriendo las rodillas en la misma dirección de las puntas de los pies.",
-          "eccentricCue": "Baja en 3 segundos lentos y profundos con la pelvis anclada."
+          "internalCue": "Siente cómo los glúteos y la cara interna absorben la carga en la bajada.",
+          "externalCue": "Empuja la plataforma a través de los talones abriendo las rodillas en la misma dirección de las puntas.",
+          "eccentricCue": "Baja en 3 segundos lentos y profundos con la pelvis completamente anclada."
+        }
+      },
+      {
+        "id": "d5_e1",
+        "name": "Peso Muerto Rumano (RDL) con Mancuernas",
+        "muscleGroup": "Isquiotibiales & Glúteos (Cadena Posterior Elongada)",
+        "loadFamily": "Familia Peso Muerto Rumano / Bisagra Cadera",
+        "sets": 3,
+        "reps": "8-10",
+        "restTime": "120-150 s",
+        "defaultUnit": "lbs",
+        "biomechanics": "BLOQUE 3: Bisagra de Cadera en Rango Elongado (Isquios + Glúteo). Mancuernas pesadas rozando las espinillas con trayectoria vertical óptima. Pies al ancho de caderas, puntas ligeramente abiertas. Rodillas 'suaves' con microflexión fija de 15° a 20° que NO cambia en todo el ejercicio. Movimiento 100% horizontal: empuja tu cadera hacia atrás como si quisieras cerrar una puerta con los glúteos. Baja las mancuernas rozando tus espinillas hasta justo debajo de las rodillas (máximo estiramiento anatómico de isquiotibiales). Si bajas más redondeando la espalda, usas lumbares, no isquios. Subida: Empuja el piso con los talones y lleva la pelvis al frente contrayendo glúteos arriba.",
+        "warmup": "🔥 No requiere series pesadas de aproximación (isquios y glúteos vienen hiperirrigados de la prensa y el curl). Opcional: 1 serie técnica de 6 reps con mancuernas de 30 lbs.\n\n🎯 Prescripción de Series & Cargas (3 series efectivas):\n• Serie 1: Mancuernas de 40 lbs c/u × 10 reps\n• Serie 2: Mancuernas de 45-50 lbs c/u × 8-10 reps\n• Serie 3: Mancuernas de 50 lbs c/u × 8-10 reps (RPE 8.5-9).",
+        "searchQuery": "romanian deadlift rdl dumbell smith machine technique",
+        "equivalents": [
+          {
+            "id": "d5_e1_eq1",
+            "name": "Peso Muerto Rumano con Barra",
+            "desc": "Sobrecarga pesada con barra libre.",
+            "ratio": 1.1,
+            "biomechanics": "Agarre a la anchura de hombros sobre barra olímpica. Barra rozando muslos y espinillas. Bisagra profunda con espalda neutra.",
+            "mindMuscle": {
+              "title": "RDL Clásico con Barra",
+              "internalCue": "Mantén los dorsales activos cerrando las axilas para pegar la barra a las piernas.",
+              "externalCue": "Lleva las caderas hacia atrás como si cerraras una puerta.",
+              "eccentricCue": "Desciende en 3 segundos hasta media espinilla."
+            },
+            "searchQuery": "Peso Muerto Rumano con Barra tecnica biomecanica",
+            "warmup": "🔥 1 serie técnica ligera con barra vacía o 40%."
+          },
+          {
+            "id": "d5_e1_eq2",
+            "name": "Peso Muerto con Barra Hexagonal (Trap Bar)",
+            "desc": "Distribución neutral de la carga axial.",
+            "ratio": 1.1,
+            "biomechanics": "Espalda neutra, agarre neutro en manijas. Bisagra pura de cadera con microflexión de rodillas.",
+            "mindMuscle": {
+              "title": "Glúteo Mayor e Isquios con Trap Bar",
+              "internalCue": "Aprieta los dorsales y empuja la pelvis hacia atrás.",
+              "externalCue": "Clava los talones en el suelo al extender la cadera.",
+              "eccentricCue": "Baja en 3 segundos rozando la vertical de las espinillas."
+            },
+            "searchQuery": "Peso Muerto con Barra Hexagonal (Trap Bar) tecnica biomecanica",
+            "warmup": "🔥 1 serie técnica ligera."
+          }
+        ],
+        "mindMuscle": {
+          "title": "Isquiotibiales & Glúteo Mayor (Fase Elongada)",
+          "internalCue": "Siente cómo los femorales y glúteos se tensan como una cuerda de arco tensada mientras la cadera viaja hacia atrás.",
+          "externalCue": "Imagina que intentas tocar una pared detrás de ti con los glúteos, manteniendo las espinillas completamente verticales.",
+          "eccentricCue": "Baja las pesas pegadas a las piernas en 3 segundos sintiendo el estiramiento extremo en la parte posterior del muslo."
         }
       },
       {
@@ -1702,10 +1702,10 @@ export const scientificProtocol = [
         "loadFamily": "Familia Extensión de Cadera / Glúteo",
         "sets": 3,
         "reps": "10-12",
-        "restTime": "90 s",
+        "restTime": "60-90 s",
         "defaultUnit": "lbs",
-        "biomechanics": "Apoyado en cuatro puntos o de pie en máquina de patada de glúteo. Pie apoyado en la plataforma de empuje. Extensión pura de cadera hacia atrás y arriba sin rotar la columna lumbar ni arquear la espalda baja.",
-        "warmup": "🔥 No ocupa.",
+        "biomechanics": "BLOQUE 4: Trabajo de Aislamiento de Glúteos y Aductores. Objetivo: Extensión pura de cadera con máxima contracción en el glúteo mayor acortado. Mantén la columna recta sin arquear la zona lumbar. Empuja el pedal o rodillo hacia atrás con el talón, aguanta 1 segundo la contracción arriba en el punto más alto y regresa en 3 segundos.",
+        "warmup": "🔥 No ocupa (cadena posterior caliente).\n\n🎯 Prescripción (por pierna):\n• Serie 1: 100 lbs × 12 reps por pierna\n• Serie 2: 105 lbs × 10-12 reps por pierna\n• Serie 3: 105 lbs × 10 reps por pierna.",
         "searchQuery": "butt blaster glute kick machine form",
         "equivalents": [
           {
@@ -1713,7 +1713,7 @@ export const scientificProtocol = [
             "name": "Extensiones a 45° en Banco Romano (espalda alta redondeada)",
             "desc": "Estiramiento y contracción de glúteo mayor.",
             "ratio": 0.8,
-            "biomechanics": "De pie frente a polea baja con tobillera. Patada hacia atrás a 45° de abducción.",
+            "biomechanics": "De pie frente a polea baja con tobillera o en banco romano 45°. Extensión focalizada en glúteos.",
             "mindMuscle": {
               "title": "Patada de Glúteo en Polea",
               "internalCue": "Contracción máxima del glúteo arriba sin balanceo lumbar.",
@@ -1728,12 +1728,12 @@ export const scientificProtocol = [
             "name": "Patada de glúteo en polea",
             "desc": "Tensión continua con cable y tobillera.",
             "ratio": 0.5,
-            "biomechanics": "Máquina de Hip Thrust con cojín pélvico. Elevación de pelvis hasta la horizontal con pausa de 1 segundo.",
+            "biomechanics": "Máquina de Hip Thrust o polea baja. Elevación de pelvis o patada con pausa isométrica arriba.",
             "mindMuscle": {
-              "title": "Hip Thrust en Máquina",
-              "internalCue": "Aplasta los glúteos contra el cojín en la cima.",
-              "externalCue": "Empuja la almohadilla hacia el techo.",
-              "eccentricCue": "Baja en 2 a 3 segundos controlados."
+              "title": "Aislamiento de Glúteo",
+              "internalCue": "Aplasta el glúteo en la cima de la contracción.",
+              "externalCue": "Empuja la carga hacia atrás.",
+              "eccentricCue": "Baja en 3 segundos controlados."
             },
             "searchQuery": "Patada de glúteo en polea tecnica biomecanica",
             "warmup": "🔥 No ocupa."
@@ -1747,15 +1747,50 @@ export const scientificProtocol = [
         }
       },
       {
+        "id": "d5_e6",
+        "name": "Aductores en Máquina (Hip Adduction)",
+        "muscleGroup": "Aductores (Muslo Interno y Cadena Posterior)",
+        "sets": 3,
+        "reps": "12-15",
+        "restTime": "90 s",
+        "defaultUnit": "lbs",
+        "biomechanics": "BLOQUE 4: Muslo Interno y Densidad. El aductor mayor es el segundo músculo más grande del muslo y da densidad y grosor profundo a la pierna. Sentado con espalda bien erguida. Abre las piernas al máximo rango cómodo, junta con fuerza contrayendo los muslos internos y aguanta 1-2s apretando al centro. Regresa en 3s controlando el estiramiento.",
+        "warmup": "🔥 No ocupa.\n\n🎯 Prescripción:\n• 3 series × 12-15 reps (Carga objetivo: 100 a 110 lbs con 1-2s de contracción al centro).",
+        "searchQuery": "hip adductor machine inner thigh isolation",
+        "equivalents": [
+          {
+            "id": "d5_e6_eq1",
+            "name": "Aducción con tobillera en polea",
+            "desc": "Trabajo libre con polea baja.",
+            "ratio": 0.5,
+            "biomechanics": "De pie de costado a polea baja con tobillera en pierna interna. Cruce por delante.",
+            "mindMuscle": {
+              "title": "Aducción en Polea con Tobillera",
+              "internalCue": "Tracciona desde la ingle y aductor.",
+              "externalCue": "Barre el suelo con el pie hacia el lado opuesto.",
+              "eccentricCue": "Regresa en 3 segundos controlados."
+            },
+            "searchQuery": "Aducción con tobillera en polea tecnica biomecanica",
+            "warmup": "🔥 No ocupa."
+          }
+        ],
+        "mindMuscle": {
+          "title": "Aductor Mayor y Muslo Interno",
+          "internalCue": "Contracción potente de la cara interna del muslo.",
+          "externalCue": "Junta las rodillas como si aplastaras un balón medicinal.",
+          "eccentricCue": "Abre en 3 segundos sintiendo el estiramiento profundo."
+        }
+      },
+      {
         "id": "d5_e5",
-        "name": "Abductores en Máquina",
+        "name": "Abductores en Máquina (Hip Abduction)",
         "muscleGroup": "Glúteo Medio & Cadena Lateral",
         "sets": 3,
         "reps": "12-15",
         "restTime": "90 s",
         "defaultUnit": "lbs",
-        "biomechanics": "Sentado en máquina con espalda erguida. Almohadillas en la cara externa de las rodillas. Apertura máxima y pausa isométrica de 1 segundo.",
-        "warmup": "🔥 No ocupa.",
+        "biomechanics": "BLOQUE 4: Glúteo Medio y Menor (forma redondeada y estabilidad de cadera). Sentado en máquina, inclina el torso ligeramente hacia adelante apoyando las manos en el frente para alinear las fibras del glúteo medio con la línea de fuerza. Almohadillas en la cara externa de las rodillas. Abre con potencia y mantén 1s de isometría afuera. Regresa en 3 segundos sin golpear las placas.",
+        "warmup": "🔥 No ocupa.\n\n🎯 Prescripción:\n• 3 series × 12-15 reps (Carga objetivo: 100 a 115 lbs con pausa de 1s afuera).",
         "searchQuery": "hip abductor machine glute burn form",
         "equivalents": [
           {
@@ -1782,50 +1817,15 @@ export const scientificProtocol = [
         }
       },
       {
-        "id": "d5_e6",
-        "name": "Aductores en Máquina",
-        "muscleGroup": "Aductores (Muslo Interno)",
-        "sets": 3,
-        "reps": "12-15",
-        "restTime": "90 s",
-        "defaultUnit": "lbs",
-        "biomechanics": "Sentado con espalda erguida. Máxima apertura inicial. Cierra las piernas con fuerza constante y aprieta 1 segundo al centro.",
-        "warmup": "🔥 No ocupa.",
-        "searchQuery": "hip adductor machine inner thigh isolation",
-        "equivalents": [
-          {
-            "id": "d5_e6_eq1",
-            "name": "Aducción con tobillera en polea",
-            "desc": "Trabajo libre con polea baja.",
-            "ratio": 0.5,
-            "biomechanics": "De pie de costado a polea baja con tobillera en pierna interna. Cruce por delante.",
-            "mindMuscle": {
-              "title": "Aducción en Polea con Tobillera",
-              "internalCue": "Tracciona desde la ingle y aductor.",
-              "externalCue": "Barre el suelo con el pie hacia el lado opuesto.",
-              "eccentricCue": "Regresa en 3 segundos controlados."
-            },
-            "searchQuery": "Aducción con tobillera en polea tecnica biomecanica",
-            "warmup": "🔥 No ocupa."
-          }
-        ],
-        "mindMuscle": {
-          "title": "Aductor Mayor y Muslo Interno",
-          "internalCue": "Contracción potente de la cara interna del muslo.",
-          "externalCue": "Junta las rodillas como si aplastaras un balón.",
-          "eccentricCue": "Abre en 3 segundos sintiendo el estiramiento profundo."
-        }
-      },
-      {
         "id": "d5_e7",
-        "name": "Elevación de Pantorrillas (Rotary Calf o de Pie)",
-        "muscleGroup": "Pantorrillas (Sóleo & Gastrocnemio)",
+        "name": "Elevación de Pantorrillas (Rotary Calf o en Máquina de Pie)",
+        "muscleGroup": "Pantorrillas (Gastrocnemio & Sóleo)",
         "sets": 4,
-        "reps": "15-20",
-        "restTime": "90 s",
+        "reps": "10-12",
+        "restTime": "75-90 s",
         "defaultUnit": "lbs",
-        "biomechanics": "Apoyo exclusivo en metatarsos sobre la plataforma. Pausa de 2 segundos en máximo estiramiento abajo (elimina rebote elástico de Aquiles) y subida potente sobre el dedo gordo.",
-        "warmup": "🔥 No ocupa.",
+        "biomechanics": "BLOQUE 5: Pantorrilla Pesada (Gastrocnemio y Sóleo). Biomecánica Científica: Pausa OBLIGATORIA de 2 segundos en el fondo del estiramiento. Esto disipa por completo el reflejo elástico del tendón de Aquiles, obligando al músculo puro a levantar la carga. Subida explosiva sobre la bola del pie (metatarsos), apretando 1s arriba.",
+        "warmup": "🔥 No ocupa.\n\n🎯 Prescripción:\n• 4 series × 10-12 reps pesadas (Carga objetivo: 110 a 130 lbs con pausa de 2s abajo).",
         "searchQuery": "calf raises stretch pause high reps",
         "equivalents": [
           {
@@ -1838,7 +1838,7 @@ export const scientificProtocol = [
               "title": "Gastrocnemio en Máquina de Pie",
               "internalCue": "Compacta las dos cabezas de la pantorrilla arriba.",
               "externalCue": "Empuja las almohadillas hacia el techo con los pies.",
-              "eccentricCue": "Baja los talones al máximo en 3 segundos con 2s de pausa abajo."
+              "eccentricCue": "Baja los talones al máximo en 3 segundos con 2s de pausa obligatoria abajo."
             },
             "searchQuery": "Elevación en Smith sobre escalón o en Prensa tecnica biomecanica",
             "warmup": "🔥 No ocupa."
@@ -1848,59 +1848,88 @@ export const scientificProtocol = [
           "title": "Tríceps Sural (Pantorrilla de Pie)",
           "internalCue": "Siente el estiramiento completo del talón hacia abajo y la contracción en piedra arriba.",
           "externalCue": "Elévate sobre las puntas tocando el techo con la cabeza.",
-          "eccentricCue": "Baja en 3 segundos lentos con pausa obligatoria abajo."
+          "eccentricCue": "Baja en 3 segundos lentos con pausa obligatoria de 2s abajo."
         }
       },
       {
         "id": "d5_e8",
-        "name": "Pallof Press en Polea (Anti-Rotación de Core)",
-        "muscleGroup": "Core (Anti-Rotación & IAP)",
-        "isUnilateral": true,
-        "sets": 3,
-        "reps": "12",
-        "restTime": "60 s",
-        "defaultUnit": "lbs",
-        "biomechanics": "Polea a la altura del esternón. De pie perpendicular a la polea con agarre doble frente al pecho. Da un paso lateral para tensar el cable. Extiende los brazos al frente en línea recta resistiendo el torque rotacional del cable sin mover los hombros ni la pelvis. Sostén 2 segundos extendido.",
-        "warmup": "🔥 No ocupa.",
-        "searchQuery": "pallof press cable anti rotation core stability",
+        "name": "Vacuum Abdominal (Transverso) o Pallof Press",
+        "muscleGroup": "Core Profundo (Transverso & Estabilidad)",
+        "sets": 4,
+        "reps": "15-20 s",
+        "restTime": "45 s",
+        "defaultUnit": "seg",
+        "biomechanics": "BLOQUE 6: Core Profundo. Postura: En cuadrupedia (4 apoyos en el suelo) o de pie inclinado apoyando las manos sobre las rodillas. Exhala todo el aire vaciando completamente los pulmones. Sin volver a inhalar, mete el ombligo lo más adentro y arriba posible, como si quisieras pegarlo a tu columna torácica. Mantén 15 a 20 segundos de retención isométrica (apnea).",
+        "warmup": "🔥 1 serie de ensayo de 10s.\n\n🎯 Prescripción:\n• 4 series de 15 a 20 segundos de retención isométrica (apnea).",
+        "searchQuery": "stomach vacuum transverse abdominis form",
         "equivalents": [
           {
             "id": "d5_e8_eq1",
-            "name": "Press Pallof con banda de resistencia elástica",
-            "desc": "Variante dinámica con tensión progresiva.",
+            "name": "Pallof Press en Polea (Anti-Rotación)",
+            "desc": "Fuerza y control anti-rotacional de core.",
             "ratio": 1,
-            "biomechanics": "Caminar erguido sosteniendo una mancuerna pesada en una sola mano. Hombros nivelados sin inclinarse lateralmente.",
+            "biomechanics": "Polea a la altura del esternón. De pie perpendicular a la polea con agarre doble frente al pecho. Extiende los brazos al frente en línea recta resistiendo el torque rotacional del cable sin mover los hombros ni la pelvis. Sostén 2 segundos extendido.",
             "mindMuscle": {
-              "title": "Suitcase Carry (Paseo a 1 Mano)",
-              "internalCue": "Activa el cuadrado lumbar y oblicuo opuesto para mantener el torso perpendicular.",
-              "externalCue": "Camina como si tu cuerpo fuera una columna rígida.",
-              "eccentricCue": "Paso firme y respiración diafragmática constante."
+              "title": "Core Funcional Anti-Rotación",
+              "internalCue": "Contrae los oblicuos y el abdomen profundo para impedir que el cable gire tu torso hacia la polea.",
+              "externalCue": "Extiende las manos al frente formando una línea perpendicular perfecta con tu esternón.",
+              "eccentricCue": "Regresa las manos al pecho en 2 segundos controlando la fuerza lateral."
             },
-            "searchQuery": "Press Pallof con banda de resistencia elástica tecnica biomecanica",
-            "warmup": "🔥 No ocupa."
-          },
-          {
-            "id": "d5_e8_eq2",
-            "name": "Cable Crunch",
-            "desc": "Flexión de columna con polea alta.",
-            "ratio": 1.2,
-            "biomechanics": "Plancha lateral sobre antebrazo. Eleva la cadera hasta formar una línea recta de cabeza a pies con 2s de pausa arriba.",
-            "mindMuscle": {
-              "title": "Plancha Lateral Dinámica",
-              "internalCue": "Siente el oblicuo inferior sostener el peso de la pelvis.",
-              "externalCue": "Eleva la cadera hacia el techo.",
-              "eccentricCue": "Desciende rozando el suelo en 2 segundos."
-            },
-            "searchQuery": "Cable Crunch tecnica biomecanica",
+            "searchQuery": "pallof press cable anti rotation core stability",
             "warmup": "🔥 No ocupa."
           }
         ],
         "mindMuscle": {
-          "title": "Core Funcional (Anti-Rotación, Oblicuos y Transverso)",
-          "internalCue": "Contrae los oblicuos y el abdomen profundo para impedir que el cable gire tu torso hacia la polea.",
-          "externalCue": "Extiende las manos al frente formando una línea perpendicular perfecta con tu esternón.",
-          "eccentricCue": "Regresa las manos al pecho en 2 segundos controlando la fuerza lateral."
+          "title": "Transverso Abdominal (Vacuum)",
+          "internalCue": "Succiona el abdomen hacia adentro y hacia arriba por detrás del esternón.",
+          "externalCue": "Pega el ombligo a la columna vaciando todo el aire.",
+          "eccentricCue": "Inhala de forma pausada y controlada al terminar los segundos de apnea."
         }
+      },
+      {
+        "id": "d5_e9",
+        "name": "Cardio Aeróbico en Zona 2 (Caminadora Inclinada)",
+        "muscleGroup": "Cardiovascular (Zona 2 & Recuperación)",
+        "sets": 1,
+        "reps": "30 min",
+        "isCardio": true,
+        "restTime": "0 s",
+        "defaultUnit": "min",
+        "biomechanics": "BLOQUE 6: Finalizador Metabólico. 30 minutos continuos en Caminadora Inclinada: 8% a 10% de inclinación, velocidad de 4.5 a 5.0 km/h (caminata rápida continua). Frecuencia Cardíaca: 120 a 135 BPM (Zona 2). Acelera la remoción de subproductos metabólicos en las piernas, maximiza la oxidación lipídica mitocondrial y previene la rigidez muscular al día siguiente.",
+        "warmup": "🔥 3 minutos progresivos a ritmo suave.",
+        "searchQuery": "zone 2 cardio fat oxidation incline walk",
+        "equivalents": [
+          {
+            "id": "d5_e9_eq1",
+            "name": "Caminadora en Inclinación",
+            "desc": "Bajo impacto articular y alto gasto calórico.",
+            "ratio": 1,
+            "biomechanics": "Caminadora a 4.5-5.0 km/h con inclinación del 8-10%. Cero impacto articular en rodillas, activación sostenida de gemelos y glúteos.",
+            "mindMuscle": {
+              "title": "Caminata Inclinada Zona 2",
+              "internalCue": "Camina erguido sin sujetar las barandillas para activar la musculatura estabilizadora.",
+              "externalCue": "Empuja la cinta con cada zancada manteniendo cadencia uniforme.",
+              "eccentricCue": "Controla el ritmo respiratorio continuo."
+            },
+            "searchQuery": "Caminadora en Inclinación tecnica biomecanica",
+            "warmup": "🔥 3 minutos progresivos a ritmo suave."
+          },
+          {
+            "id": "d5_e9_eq2",
+            "name": "Bicicleta Estática",
+            "desc": "Alternativa de nulo impacto articular.",
+            "ratio": 1,
+            "biomechanics": "Cadencia sostenida de 75-85 RPM con resistencia moderada manteniendo FC en 120-135 BPM.",
+            "mindMuscle": {
+              "title": "Pedaleo Continuo Zona 2",
+              "internalCue": "Fluidez en el pedaleo circular constante.",
+              "externalCue": "Mantén la cadencia sin frenar.",
+              "eccentricCue": "Respiración rítmica y relajada."
+            },
+            "searchQuery": "Bicicleta Estática Zona 2",
+            "warmup": "🔥 3 minutos progresivos a ritmo suave."
+          }
+        ]
       }
     ]
   },

@@ -1,4 +1,4 @@
-import { db } from './firebase';
+import { db, sanitizeForFirestore } from './firebase';
 import { collection, getDocs, doc, getDoc, setDoc, deleteDoc } from 'firebase/firestore';
 import { entries, setMany } from 'idb-keyval';
 import { scientificProtocol } from '../data/scientificProtocol';
@@ -42,25 +42,11 @@ export function downloadTextFile(text, filename) {
  * - Estructura base del protocolo científico y catálogo de ejercicios
  */
 export async function exportFullDatabase(currentUser) {
-  if (!currentUser) {
-    throw new Error("Usuario no autenticado para exportar desde la nube.");
-  }
-
-  // 1. Obtener todas las sesiones de la subcolección 'history'
-  const historyRef = collection(db, 'users', currentUser.uid, 'history');
-  const historySnapshot = await getDocs(historyRef);
-  const workoutHistory = historySnapshot.docs.map(doc => doc.data());
-
-  // 2. Obtener todos los documentos de la subcolección 'store'
-  const storeRef = collection(db, 'users', currentUser.uid, 'store');
-  const storeSnapshot = await getDocs(storeRef);
+  let workoutHistory = [];
   const storeData = {};
-  storeSnapshot.docs.forEach(doc => {
-    storeData[doc.id] = doc.data().value !== undefined ? doc.data().value : doc.data();
-  });
-
-  // 3. Obtener volcado de IndexedDB local como respaldo de seguridad adicional
   let localDbDump = {};
+
+  // 1. Obtener volcado de IndexedDB local como respaldo de seguridad prioritario
   try {
     const idbEntries = await entries();
     idbEntries.forEach(([key, val]) => {
@@ -70,29 +56,89 @@ export async function exportFullDatabase(currentUser) {
     console.warn("No se pudo leer idb-keyval local:", e);
   }
 
+  // 2. Si hay usuario autenticado, obtener datos de Firebase Firestore
+  if (currentUser) {
+    try {
+      // 2.1 Obtener todas las sesiones de la subcolección 'history'
+      const historyRef = collection(db, 'users', currentUser.uid, 'history');
+      const historySnapshot = await getDocs(historyRef);
+      workoutHistory = historySnapshot.docs.map(doc => doc.data());
+
+      // 2.2 Obtener todos los documentos de la subcolección 'store'
+      const storeRef = collection(db, 'users', currentUser.uid, 'store');
+      const storeSnapshot = await getDocs(storeRef);
+      storeSnapshot.docs.forEach(doc => {
+        storeData[doc.id] = doc.data().value !== undefined ? doc.data().value : doc.data();
+      });
+    } catch (err) {
+      console.warn("Aviso: Conexión Firestore lenta u offline durante exportación. Usando copia local:", err);
+    }
+  }
+
+  // 3. Fusionar inteligentemente historial de Firestore y caché local (0% pérdida de datos)
+  const localHistory = (currentUser && localDbDump[`coachv2_history_cache_${currentUser.uid}`])
+    || localDbDump['coachv2_history_cache_anon']
+    || localDbDump['coachv2_history']
+    || [];
+
+  const sessionMap = new Map();
+  workoutHistory.forEach(s => {
+    const key = s.id || s.timestamp;
+    if (key) sessionMap.set(key, s);
+  });
+  if (Array.isArray(localHistory)) {
+    localHistory.forEach(s => {
+      const key = s.id || s.timestamp;
+      if (key && !sessionMap.has(key)) {
+        sessionMap.set(key, s);
+      }
+    });
+  }
+  const mergedWorkoutHistory = Array.from(sessionMap.values()).sort((a, b) => {
+    const timeA = new Date(a.timestamp || a.date || 0).getTime();
+    const timeB = new Date(b.timestamp || b.date || 0).getTime();
+    return timeA - timeB;
+  });
+
   // Extraer datos clave para acceso directo y compatibilidad
   const currentActiveSessions = storeData['coachv2_active_workouts'] || localDbDump['coachv2_active_workouts'] || {};
   const customExercises = storeData['coachv2_custom_day_exercises'] || localDbDump['coachv2_custom_day_exercises'] || {};
   const swappedExercises = storeData['coachv2_swapped_exercises'] || localDbDump['coachv2_swapped_exercises'] || {};
+  const skippedExercises = storeData['coachv2_skipped_exercises'] || localDbDump['coachv2_skipped_exercises'] || {};
   const exerciseOrders = storeData['coachv2_exercise_orders'] || localDbDump['coachv2_exercise_orders'] || {};
   const bodyWeightHistory = storeData['coachv2_body_metrics_history'] || localDbDump['coachv2_body_metrics_history'] || [];
+  const bodyComposition = storeData['coachv2_body_composition_data'] || localDbDump['coachv2_body_composition_data'] || {};
+  const physiqueGoal = storeData['coachv2_physique_goal'] || localDbDump['coachv2_physique_goal'] || {};
+  const machineConfigs = storeData['coachv2_machine_configs'] || localDbDump['coachv2_machine_configs'] || {};
+  const smartwatchKcal = storeData['coachv2_smartwatch_kcal'] || localDbDump['coachv2_smartwatch_kcal'] || {};
   const customRoutine = storeData['coachv2_custom_routine'] || localDbDump['coachv2_custom_routine'] || null;
+  const mesocycleStartDate = storeData['coachv2_mesocycle_start'] || localDbDump['coachv2_mesocycle_start'] || null;
+  const weightPreferredUnit = storeData['coachv2_weight_preferred_unit'] || localDbDump['coachv2_weight_preferred_unit'] || 'kg';
+  const googleSheetsUrl = storeData['coachv2_google_sheets_url'] || localDbDump['coachv2_google_sheets_url'] || '';
 
   const fullMasterBackup = {
-    appVersion: "COACH V2 - Protocolo Adonis Científico (Backup Maestro 100% Firebase)",
+    appVersion: "COACH V2 - Protocolo Adonis Científico (Backup Maestro 100% Firebase & Local)",
     exportTimestamp: new Date().toISOString(),
-    atleta: currentUser.displayName || "Carlos Donato",
-    userId: currentUser.uid,
-    userEmail: currentUser.email || "",
+    atleta: currentUser?.displayName || "Carlos Donato",
+    userId: currentUser?.uid || "local_user",
+    userEmail: currentUser?.email || "",
     
-    // Colecciones Principales
-    workoutHistory,
+    // Colecciones y Métricas Principales
+    workoutHistory: mergedWorkoutHistory,
     bodyWeightHistory,
+    bodyComposition,
+    physiqueGoal,
+    machineConfigs,
     currentActiveSessions,
     customExercises,
     swappedExercises,
+    skippedExercises,
     exerciseOrders,
+    smartwatchKcal,
     customRoutine,
+    mesocycleStartDate,
+    weightPreferredUnit,
+    googleSheetsUrl,
 
     // Estructuras de Referencia
     scientificProtocol,
@@ -105,7 +151,7 @@ export async function exportFullDatabase(currentUser) {
 
   const filename = `COACH_V2_Backup_Total_Firebase_${new Date().toISOString().split('T')[0]}.json`;
   downloadJsonFile(fullMasterBackup, filename);
-  return { success: true, countSessions: workoutHistory.length, filename };
+  return { success: true, countSessions: mergedWorkoutHistory.length, filename };
 }
 
 /**
@@ -191,18 +237,35 @@ export function exportExerciseLibrary() {
   return { success: true, count: UNIFIED_EXERCISE_LIBRARY.length };
 }
 
-/**
- * 4. EXPORTAR HISTORIAL COMPLETO DE ENTRENAMIENTOS (JSON)
- */
 export async function exportWorkoutHistory(currentUser) {
-  if (!currentUser) throw new Error("Usuario no autenticado.");
-  const historyRef = collection(db, 'users', currentUser.uid, 'history');
-  const snapshot = await getDocs(historyRef);
-  const workoutHistory = snapshot.docs.map(doc => doc.data());
+  let workoutHistory = [];
+  if (currentUser) {
+    try {
+      const historyRef = collection(db, 'users', currentUser.uid, 'history');
+      const snapshot = await getDocs(historyRef);
+      workoutHistory = snapshot.docs.map(doc => doc.data());
+    } catch (e) {
+      console.warn("Error leyendo Firestore en exportWorkoutHistory:", e);
+    }
+  }
+
+  if (workoutHistory.length === 0) {
+    try {
+      const cached = (currentUser && await get(`coachv2_history_cache_${currentUser.uid}`))
+        || await get('coachv2_history_cache_anon')
+        || await get('coachv2_history')
+        || [];
+      if (Array.isArray(cached) && cached.length > 0) {
+        workoutHistory = cached;
+      }
+    } catch (e) {
+      console.warn("Error leyendo IndexedDB local:", e);
+    }
+  }
 
   const historyExport = {
     exportDate: new Date().toISOString(),
-    atleta: currentUser.displayName || "Carlos Donato",
+    atleta: currentUser?.displayName || "Carlos Donato",
     totalSessions: workoutHistory.length,
     history: workoutHistory
   };
@@ -212,19 +275,51 @@ export async function exportWorkoutHistory(currentUser) {
 }
 
 /**
- * 5. EXPORTAR HISTORIAL DE PESO CORPORAL (JSON)
+ * 5. EXPORTAR HISTORIAL DE PESO CORPORAL Y MEDIDAS (JSON)
  */
 export async function exportBodyMetrics(currentUser) {
-  if (!currentUser) throw new Error("Usuario no autenticado.");
-  const docRef = doc(db, 'users', currentUser.uid, 'store', 'coachv2_body_metrics_history');
-  const snap = await getDoc(docRef);
-  const bodyMetrics = snap.exists() ? (snap.data().value || []) : [];
+  let bodyMetrics = [];
+  let bodyComposition = {};
+  let physiqueGoal = {};
+
+  if (currentUser) {
+    try {
+      const docRef = doc(db, 'users', currentUser.uid, 'store', 'coachv2_body_metrics_history');
+      const snap = await getDoc(docRef);
+      if (snap.exists()) bodyMetrics = snap.data().value || [];
+
+      const compRef = doc(db, 'users', currentUser.uid, 'store', 'coachv2_body_composition_data');
+      const compSnap = await getDoc(compRef);
+      if (compSnap.exists()) bodyComposition = compSnap.data().value || {};
+
+      const goalRef = doc(db, 'users', currentUser.uid, 'store', 'coachv2_physique_goal');
+      const goalSnap = await getDoc(goalRef);
+      if (goalSnap.exists()) physiqueGoal = goalSnap.data().value || {};
+    } catch (e) {
+      console.warn("Error leyendo Firestore en exportBodyMetrics:", e);
+    }
+  }
+
+  if (bodyMetrics.length === 0) {
+    try {
+      const localMetrics = await get('coachv2_body_metrics_history');
+      if (Array.isArray(localMetrics)) bodyMetrics = localMetrics;
+      const localComp = await get('coachv2_body_composition_data');
+      if (localComp) bodyComposition = localComp;
+      const localGoal = await get('coachv2_physique_goal');
+      if (localGoal) physiqueGoal = localGoal;
+    } catch (e) {
+      console.warn("Error leyendo IndexedDB local en exportBodyMetrics:", e);
+    }
+  }
 
   const metricsExport = {
     exportDate: new Date().toISOString(),
-    atleta: currentUser.displayName || "Carlos Donato",
+    atleta: currentUser?.displayName || "Carlos Donato",
     totalRecords: bodyMetrics.length,
-    records: bodyMetrics
+    records: bodyMetrics,
+    latestBodyComposition: bodyComposition,
+    physiqueGoal
   };
 
   downloadJsonFile(metricsExport, `Historial_Peso_Corporal_${new Date().toISOString().split('T')[0]}.json`);
@@ -329,7 +424,7 @@ export async function sanitizeCloudHistory(currentUser, onProgress) {
       };
 
       if (onProgress) onProgress(`Corrigiendo errores de captura en sesión: ${data.date || docId}...`);
-      await setDoc(doc(db, 'users', currentUser.uid, 'history', docId), updatedSession, { merge: true });
+      await setDoc(doc(db, 'users', currentUser.uid, 'history', docId), sanitizeForFirestore(updatedSession), { merge: true });
       fixedSessionsCount++;
     }
   }
@@ -403,7 +498,7 @@ export async function restoreFullDatabase(currentUser, jsonData, onProgress) {
       session.id = sessionId;
       
       const sessionRef = doc(db, 'users', currentUser.uid, 'history', sessionId);
-      await setDoc(sessionRef, session, { merge: true });
+      await setDoc(sessionRef, sanitizeForFirestore(session), { merge: true });
       totalSessionsRestored++;
     }
   }
@@ -415,9 +510,17 @@ export async function restoreFullDatabase(currentUser, jsonData, onProgress) {
   if (jsonData.currentActiveSessions) storeEntries['coachv2_active_workouts'] = jsonData.currentActiveSessions;
   if (jsonData.customExercises) storeEntries['coachv2_custom_day_exercises'] = jsonData.customExercises;
   if (jsonData.swappedExercises) storeEntries['coachv2_swapped_exercises'] = jsonData.swappedExercises;
+  if (jsonData.skippedExercises) storeEntries['coachv2_skipped_exercises'] = jsonData.skippedExercises;
   if (jsonData.exerciseOrders) storeEntries['coachv2_exercise_orders'] = jsonData.exerciseOrders;
   if (jsonData.bodyWeightHistory) storeEntries['coachv2_body_metrics_history'] = jsonData.bodyWeightHistory;
+  if (jsonData.bodyComposition) storeEntries['coachv2_body_composition_data'] = jsonData.bodyComposition;
+  if (jsonData.physiqueGoal) storeEntries['coachv2_physique_goal'] = jsonData.physiqueGoal;
+  if (jsonData.machineConfigs) storeEntries['coachv2_machine_configs'] = jsonData.machineConfigs;
+  if (jsonData.smartwatchKcal) storeEntries['coachv2_smartwatch_kcal'] = jsonData.smartwatchKcal;
   if (jsonData.customRoutine) storeEntries['coachv2_custom_routine'] = jsonData.customRoutine;
+  if (jsonData.mesocycleStartDate) storeEntries['coachv2_mesocycle_start'] = jsonData.mesocycleStartDate;
+  if (jsonData.weightPreferredUnit) storeEntries['coachv2_weight_preferred_unit'] = jsonData.weightPreferredUnit;
+  if (jsonData.googleSheetsUrl) storeEntries['coachv2_google_sheets_url'] = jsonData.googleSheetsUrl;
 
   // Extraer del volcado FirestoreDump o rawIndexedDBDump
   const dumpSource = jsonData.firestoreStoreDump || jsonData.rawIndexedDBDump || jsonData.rawLocalStorageDump || {};
@@ -431,7 +534,7 @@ export async function restoreFullDatabase(currentUser, jsonData, onProgress) {
   for (const [key, value] of Object.entries(storeEntries)) {
     if (value !== undefined) {
       const docRef = doc(db, 'users', currentUser.uid, 'store', key);
-      await setDoc(docRef, { value }, { merge: true });
+      await setDoc(docRef, { value: sanitizeForFirestore(value) }, { merge: true });
       totalKeysRestored++;
     }
   }

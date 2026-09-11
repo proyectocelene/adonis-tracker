@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Settings2, Check, RotateCcw, Disc, Cable, Dumbbell, MapPin, Building2 } from 'lucide-react';
 
 export default function MachineConfigModal({
@@ -10,7 +10,6 @@ export default function MachineConfigModal({
   onSaveConfig,
   onOpenCalculator
 }) {
-  if (!isOpen) return null;
 
   const lowerName = (exerciseName || '').toLowerCase();
   const isPlateDefault = lowerName.includes('prensa') || lowerName.includes('leg press') || lowerName.includes('hack') || lowerName.includes('smith') || lowerName.includes('barra');
@@ -100,6 +99,23 @@ export default function MachineConfigModal({
     onSaveConfig(null);
     onClose();
   };
+
+  useEffect(() => {
+    if (isOpen) {
+      setType(currentConfig?.type || defaultType);
+      setFloor(currentConfig?.floor || '');
+      setStation(currentConfig?.station || '');
+      setStackPreset(currentConfig?.stackPreset || (lowerName.includes('extension') ? 'two_tens_then_twenty' : 'linear'));
+      setPlateStep(currentConfig?.plateStep !== undefined ? currentConfig.plateStep : 10);
+      setFirstPlate(currentConfig?.firstPlate !== undefined ? currentConfig.firstPlate : 10);
+      setMicroWeight(currentConfig?.microWeight !== undefined ? currentConfig.microWeight : 0);
+      setBaseWeight(currentConfig?.baseWeight !== undefined ? currentConfig.baseWeight : defaultSled);
+      setAvailablePlates(currentConfig?.availablePlates || [45, 35, 25, 10, 5, 2.5]);
+      setDumbbellStep(currentConfig?.dumbbellStep || 5);
+    }
+  }, [isOpen, currentConfig]);
+
+  if (!isOpen) return null;
 
   return (
     <div 

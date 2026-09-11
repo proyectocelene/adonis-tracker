@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { db } from '../services/firebase';
+import { db, sanitizeForFirestore } from '../services/firebase';
 import { doc, onSnapshot, setDoc, getDoc } from 'firebase/firestore';
 import { get, set } from 'idb-keyval';
 import { useAuth } from '../contexts/AuthContext';
@@ -18,6 +18,14 @@ export function useIndexedDB(key, initialValue) {
       return;
     }
 
+    // 1. Carga instantánea (0ms) desde IndexedDB local
+    get(key).then(localVal => {
+      if (isMounted && localVal !== undefined) {
+        setStoredValue(localVal);
+        setIsLoading(false);
+      }
+    }).catch(() => {});
+
     const docRef = doc(db, 'users', currentUser.uid, 'store', key);
 
     const initialize = async () => {
@@ -27,21 +35,34 @@ export function useIndexedDB(key, initialValue) {
           // Si no existe en la nube, rescatar del almacenamiento local viejo (idb-keyval)
           const localVal = await get(key);
           if (localVal !== undefined) {
-            await setDoc(docRef, { value: localVal });
+            const cleanVal = sanitizeForFirestore(localVal);
+            await setDoc(docRef, { value: cleanVal }).catch(err => {
+              console.warn(`[useIndexedDB] Firestore offline/permisos para ${key}:`, err.message);
+            });
             if (isMounted) setStoredValue(localVal);
           }
         }
         
         // Suscribirse a cambios en tiempo real desde la nube/caché offline de Firebase
-        unsubscribe = onSnapshot(docRef, (snap) => {
-          if (snap.exists() && isMounted) {
-            setStoredValue(snap.data().value);
+        unsubscribe = onSnapshot(
+          docRef, 
+          (snap) => {
+            if (snap.exists() && isMounted) {
+              const val = snap.data().value !== undefined ? snap.data().value : snap.data();
+              setStoredValue(val);
+              // Guardar en la base de datos local IndexedDB para acceso offline y análisis
+              set(key, val).catch(() => {});
+            }
+            if (isMounted) setIsLoading(false);
+          },
+          (err) => {
+            console.warn(`[useIndexedDB] Snapshot offline/permisos para ${key}:`, err.message);
+            if (isMounted) setIsLoading(false);
           }
-          if (isMounted) setIsLoading(false);
-        });
+        );
 
       } catch (err) {
-        console.error(`Error inicializando Firestore para ${key}:`, err);
+        console.warn(`[useIndexedDB] Error inicializando Firestore para ${key}:`, err.message);
         if (isMounted) setIsLoading(false);
       }
     };
@@ -61,7 +82,8 @@ export function useIndexedDB(key, initialValue) {
         
         if (currentUser) {
           const docRef = doc(db, 'users', currentUser.uid, 'store', key);
-          setDoc(docRef, { value: valueToStore }).catch(err => console.error("Error guardando en Firestore", err));
+          const cleanVal = sanitizeForFirestore(valueToStore);
+          setDoc(docRef, { value: cleanVal }).catch(err => console.warn(`Error guardando en Firestore (${key}):`, err.message));
         }
         
         // Mantener también en idb-keyval como respaldo heredado

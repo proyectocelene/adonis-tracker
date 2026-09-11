@@ -16,6 +16,9 @@ export default function AddCustomExerciseModal({
   handleAddCustomExercise,
   handlePickFromLibrary
 }) {
+  const [searchTerm, setSearchTerm] = React.useState('');
+  const [selectedMuscleFilter, setSelectedMuscleFilter] = React.useState('ALL');
+
   if (!isAddingExercise) {
     return (
       <button 
@@ -28,9 +31,6 @@ export default function AddCustomExerciseModal({
       </button>
     );
   }
-
-  const [searchTerm, setSearchTerm] = React.useState('');
-  const [selectedMuscleFilter, setSelectedMuscleFilter] = React.useState('ALL');
 
   const filteredLibrary = UNIFIED_EXERCISE_LIBRARY.filter(ex => {
     const matchesSearch = !searchTerm || ex.name.toLowerCase().includes(searchTerm.toLowerCase()) || (ex.muscleGroup && ex.muscleGroup.toLowerCase().includes(searchTerm.toLowerCase()));

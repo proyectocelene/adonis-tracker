@@ -36,6 +36,32 @@ export default function ExerciseRow({
   const [internalExpanded, setInternalExpanded] = useState(initiallyExpanded);
   const isExpanded = controlledExpanded !== undefined ? controlledExpanded : internalExpanded;
 
+  const [activeSubTab, setActiveSubTab] = useState('logger');
+  const [machineSetupInput, setMachineSetupInput] = useState(exerciseData.machineSetup || '');
+  const [exerciseNotesInput, setExerciseNotesInput] = useState('');
+
+  // Estado del Gesto "Dejar Presionado" (Long Press Reorder Mode)
+  const [isReorderMode, setIsReorderMode] = useState(false);
+  const longPressTimerRef = useRef(null);
+
+  const startLongPress = () => {
+    if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
+    longPressTimerRef.current = setTimeout(() => {
+      setIsReorderMode(true);
+      if (navigator.vibrate) navigator.vibrate(60);
+    }, 400); // 400ms para activar como launcher móvil
+  };
+
+  const cancelLongPress = () => {
+    if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
+  };
+
+  useEffect(() => {
+    if (exerciseData.machineSetup !== undefined) {
+      setMachineSetupInput(exerciseData.machineSetup);
+    }
+  }, [exerciseData.machineSetup]);
+
   if (isSkipped) {
     return (
       <div style={{
@@ -85,32 +111,6 @@ export default function ExerciseRow({
       </div>
     );
   }
-
-  const [activeSubTab, setActiveSubTab] = useState('logger');
-  const [machineSetupInput, setMachineSetupInput] = useState(exerciseData.machineSetup || '');
-  const [exerciseNotesInput, setExerciseNotesInput] = useState('');
-
-  // Estado del Gesto "Dejar Presionado" (Long Press Reorder Mode)
-  const [isReorderMode, setIsReorderMode] = useState(false);
-  const longPressTimerRef = useRef(null);
-
-  const startLongPress = () => {
-    if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
-    longPressTimerRef.current = setTimeout(() => {
-      setIsReorderMode(true);
-      if (navigator.vibrate) navigator.vibrate(60);
-    }, 400); // 400ms para activar como launcher móvil
-  };
-
-  const cancelLongPress = () => {
-    if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
-  };
-
-  useEffect(() => {
-    if (exerciseData.machineSetup !== undefined) {
-      setMachineSetupInput(exerciseData.machineSetup);
-    }
-  }, [exerciseData.machineSetup]);
 
   const totalSets = exerciseData.customSetsCount ? parseInt(exerciseData.customSetsCount) : (parseInt(exercise.sets) || 3);
   const targetReps = exercise.reps || '10-12';

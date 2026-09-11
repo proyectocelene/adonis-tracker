@@ -4,6 +4,8 @@ import {
   Calendar, Award, Brain, Dumbbell, ShieldCheck, Clock, Zap
 } from 'lucide-react';
 import { calculate1RM } from '../../hooks/useWorkoutCalculations';
+import { matchExercise, getHistoricalRecordsForExercise } from '../../utils/exerciseMatcher';
+import ExerciseProgressionChart from './ExerciseProgressionChart';
 
 export default function ExerciseStrengthProgressModal({
   isOpen,
@@ -13,73 +15,54 @@ export default function ExerciseStrengthProgressModal({
   todayWorkoutData = {},
   machineConfig = null
 }) {
-  if (!isOpen || !exercise) return null;
+  const exId = exercise?.id;
+  const exName = exercise?.name || '';
 
-  const exId = exercise.id;
-  const exName = exercise.name;
-
-  // Extraer todas las sesiones donde se realizó este ejercicio
+  // Extraer todas las sesiones donde se realizó este ejercicio usando el motor universal unificado
   const sessionHistory = useMemo(() => {
-    const list = [];
+    if (!isOpen || !exercise || !exId) return [];
+    const records = getHistoricalRecordsForExercise(exercise, workoutHistory);
+    const rawOccurrences = records.sessionOccurrences || [];
 
-    (workoutHistory || []).forEach(session => {
-      if (session.isRestDay || session.isMissedDay || !session.exercises) return;
-
-      const exLog = session.exercises[exId];
-      if (!exLog) return;
-
-      const completedSets = [];
-      let maxW = 0;
-      let maxR = 0;
+    return rawOccurrences.map(occ => {
       let max1RM = 0;
       let sessionVol = 0;
 
-      Object.keys(exLog).forEach(k => {
-        const num = parseInt(k, 10);
-        if (!isNaN(num) && exLog[k] && exLog[k].completed) {
-          const w = parseFloat(exLog[k].weight) || 0;
-          const r = parseInt(exLog[k].reps, 10) || 0;
-          const epley = calculate1RM(w, r);
-          sessionVol += (w * r);
-
-          if (w > maxW) { maxW = w; maxR = r; }
-          if (epley > max1RM) max1RM = epley;
-
-          completedSets.push({
-            setNum: num,
-            weight: w,
-            reps: r,
-            repsL: exLog[k].repsL,
-            repsR: exLog[k].repsR,
-            rpe: exLog[k].rpe,
-            est1RM: epley
-          });
-        }
+      (occ.detailedSets || []).forEach(s => {
+        const w = s.weight || 0;
+        const r = s.reps || 0;
+        const epley = calculate1RM(w, r);
+        sessionVol += (w * r);
+        if (epley > max1RM) max1RM = epley;
       });
 
-      if (completedSets.length > 0) {
-        list.push({
-          sessionId: session.id,
-          date: session.date || (session.timestamp ? session.timestamp.split('T')[0] : ''),
-          dateFormatted: session.dateString || session.date,
-          maxWeight: maxW,
-          maxReps: maxR,
-          est1RM: max1RM,
-          volume: sessionVol,
-          sets: completedSets.sort((a, b) => a.setNum - b.setNum)
-        });
-      }
+      return {
+        sessionId: occ.sessionId,
+        date: occ.dateStr,
+        dateFormatted: occ.dateStr,
+        maxWeight: occ.maxWeight,
+        maxReps: occ.bestReps,
+        est1RM: max1RM,
+        volume: sessionVol,
+        matchedName: occ.sourceName,
+        sets: occ.detailedSets || []
+      };
     });
-
-    // Ordenar cronológicamente ascendente
-    list.sort((a, b) => new Date(a.date) - new Date(b.date));
-
-    return list;
-  }, [workoutHistory, exId]);
+  }, [workoutHistory, exId, exercise, isOpen]);
 
   // Sesión actual en progreso si tiene series marcadas hoy
   const todaySets = useMemo(() => {
-    const exLog = todayWorkoutData[exId];
+    let exLog = todayWorkoutData[exId];
+    if (!exLog) {
+      for (const [candKey, candData] of Object.entries(todayWorkoutData || {})) {
+        if (!candData || candData.machine) continue;
+        const matchRes = matchExercise(exercise, candKey, candData);
+        if (matchRes.isMatch) {
+          exLog = candData;
+          break;
+        }
+      }
+    }
     if (!exLog) return null;
 
     let maxW = 0;
@@ -99,9 +82,9 @@ export default function ExerciseStrengthProgressModal({
       }
     });
 
-    if (sets.length === 0) return null;
+    if (sets.length === 0 || maxW <= 0) return null;
     return { maxWeight: maxW, maxReps: maxR, est1RM: max1RM, count: sets.length };
-  }, [todayWorkoutData, exId]);
+  }, [todayWorkoutData, exId, exercise]);
 
   // Métricas estadísticas y tendencias
   const stats = useMemo(() => {
@@ -111,6 +94,18 @@ export default function ExerciseStrengthProgressModal({
 
     const first = sessionHistory.length > 0 ? sessionHistory[0] : todaySets;
     const latest = todaySets || sessionHistory[sessionHistory.length - 1];
+
+    // Carga pico histórica real (Récord absoluto de la serie histórica y de hoy)
+    let peakWeight = 0;
+    let peak1RM = 0;
+    sessionHistory.forEach(s => {
+      if (s.maxWeight > peakWeight) peakWeight = s.maxWeight;
+      if (s.est1RM > peak1RM) peak1RM = s.est1RM;
+    });
+    if (todaySets) {
+      if (todaySets.maxWeight > peakWeight) peakWeight = todaySets.maxWeight;
+      if (todaySets.est1RM > peak1RM) peak1RM = todaySets.est1RM;
+    }
 
     const initial1RM = first.est1RM || first.maxWeight || 0;
     const current1RM = latest.est1RM || latest.maxWeight || 0;
@@ -128,12 +123,12 @@ export default function ExerciseStrengthProgressModal({
       const diffWeeks = Math.max(1, (d2 - d1) / (1000 * 60 * 60 * 24 * 7));
       weeklyRateLbs = Math.round((delta1RM / diffWeeks) * 10) / 10;
     } else {
-      weeklyRateLbs = Math.round(currentWeight * 0.015 * 10) / 10; // Tasa esperada ~1.5% semanal
+      weeklyRateLbs = Math.round((peakWeight || currentWeight) * 0.015 * 10) / 10; // Tasa esperada ~1.5% semanal
     }
 
     // Diagnóstico del estado de sobrecarga
     let status = { label: 'Línea Base Inicial', color: '#0066ff', bg: '#eff6ff', tip: 'Continúa registrando series para mapear tu curva de fuerza.' };
-    if (delta1RM > 5) {
+    if (delta1RM > 5 || peakWeight > initialWeight) {
       status = { 
         label: '🚀 Sobrecarga Acelerada', 
         color: '#15803d', 
@@ -149,27 +144,30 @@ export default function ExerciseStrengthProgressModal({
       };
     } else {
       status = { 
-        label: '⚖️ Consolidación / Fatiga', 
+        label: '⚖️ Consolidación / Back-off', 
         color: '#b45309', 
         bg: '#fef3c7', 
-        tip: 'Pequeña fluctuación de fuerza. Cuida el sueño y los carbohidratos previos.' 
+        tip: 'Sesión de descarga o back-off controlada. Tu récord histórico se mantiene protegido.' 
       };
     }
 
-    // Proyecciones a 4 y 8 semanas basadas en tasa fisiológica
-    const baselineWeight = currentWeight || 100;
-    const safeWeeklyGain = Math.max(1.5, Math.min(5.0, weeklyRateLbs > 0 ? weeklyRateLbs : baselineWeight * 0.01));
+    // Proyecciones a 4 y 8 semanas basadas en tasa fisiológica y el verdadero récord de fuerza (no series ligeras)
+    const baselineWeight = Math.max(peakWeight, currentWeight) || 100;
+    const baseline1RM = Math.max(peak1RM, current1RM) || 100;
+    const safeWeeklyGain = Math.max(1.5, Math.min(5.0, weeklyRateLbs > 0 ? weeklyRateLbs : baselineWeight * 0.015));
 
     const proj4WeeksWeight = Math.round(baselineWeight + (safeWeeklyGain * 4));
     const proj8WeeksWeight = Math.round(baselineWeight + (safeWeeklyGain * 8));
 
-    const proj4Weeks1RM = Math.round(current1RM + (safeWeeklyGain * 4 * 1.1));
-    const proj8Weeks1RM = Math.round(current1RM + (safeWeeklyGain * 8 * 1.1));
+    const proj4Weeks1RM = Math.round(baseline1RM + (safeWeeklyGain * 4 * 1.1));
+    const proj8Weeks1RM = Math.round(baseline1RM + (safeWeeklyGain * 8 * 1.1));
 
     return {
       totalSessions: sessionHistory.length + (todaySets ? 1 : 0),
       currentWeight,
       current1RM,
+      peakWeight,
+      peak1RM,
       initialWeight,
       initial1RM,
       deltaWeight,
@@ -182,6 +180,8 @@ export default function ExerciseStrengthProgressModal({
       proj8Weeks1RM
     };
   }, [sessionHistory, todaySets]);
+
+  if (!isOpen || !exercise) return null;
 
   return (
     <div style={{
@@ -273,24 +273,34 @@ export default function ExerciseStrengthProgressModal({
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                 <div>
-                  <span style={{ fontSize: '10.5px', color: '#94a3b8', display: 'block' }}>Carga Pico Lograda</span>
+                  <span style={{ fontSize: '10.5px', color: '#94a3b8', display: 'block' }}>
+                    {stats.peakWeight > stats.currentWeight ? 'Carga Pico (Récord)' : 'Carga Pico Lograda'}
+                  </span>
                   <strong style={{ fontSize: '22px', color: '#ffffff', fontWeight: '900' }}>
-                    {stats.currentWeight} <span style={{ fontSize: '12px', color: '#94a3b8' }}>lbs</span>
+                    {stats.peakWeight > stats.currentWeight ? stats.peakWeight : stats.currentWeight} <span style={{ fontSize: '12px', color: '#94a3b8' }}>lbs</span>
                   </strong>
-                  {stats.deltaWeight !== 0 && (
-                    <span style={{ fontSize: '11px', color: stats.deltaWeight > 0 ? '#4ade80' : '#f87171', display: 'block', fontWeight: '800' }}>
-                      {stats.deltaWeight > 0 ? `+${stats.deltaWeight}` : stats.deltaWeight} lbs ({stats.initialWeight} ➔ {stats.currentWeight})
+                  {stats.peakWeight > stats.currentWeight ? (
+                    <span style={{ fontSize: '10.5px', color: '#cbd5e1', display: 'block', fontWeight: '700' }}>
+                      Última sesión: {stats.currentWeight} lbs
                     </span>
+                  ) : (
+                    stats.deltaWeight !== 0 && (
+                      <span style={{ fontSize: '11px', color: stats.deltaWeight > 0 ? '#4ade80' : '#f87171', display: 'block', fontWeight: '800' }}>
+                        {stats.deltaWeight > 0 ? `+${stats.deltaWeight}` : stats.deltaWeight} lbs ({stats.initialWeight} ➔ {stats.currentWeight})
+                      </span>
+                    )
                   )}
                 </div>
 
                 <div>
-                  <span style={{ fontSize: '10.5px', color: '#94a3b8', display: 'block' }}>1RM Estimado (Epley)</span>
+                  <span style={{ fontSize: '10.5px', color: '#94a3b8', display: 'block' }}>
+                    {stats.peak1RM > stats.current1RM ? '1RM Máx (Récord)' : '1RM Estimado (Epley)'}
+                  </span>
                   <strong style={{ fontSize: '22px', color: '#38bdf8', fontWeight: '900' }}>
-                    {stats.current1RM} <span style={{ fontSize: '12px', color: '#94a3b8' }}>lbs</span>
+                    {stats.peak1RM > stats.current1RM ? stats.peak1RM : stats.current1RM} <span style={{ fontSize: '12px', color: '#94a3b8' }}>lbs</span>
                   </strong>
                   <span style={{ fontSize: '10.5px', color: '#cbd5e1', display: 'block' }}>
-                    Tasa: ~+{stats.weeklyRateLbs} lbs/sem
+                    {stats.peak1RM > stats.current1RM ? `Última: ${stats.current1RM} lbs | ` : ''}Tasa: ~+{stats.weeklyRateLbs} lbs/sem
                   </span>
                 </div>
               </div>
@@ -308,22 +318,22 @@ export default function ExerciseStrengthProgressModal({
               padding: '14px',
               marginBottom: '16px'
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
-                <Brain size={16} color="#7c3aed" />
-                <strong style={{ fontSize: '13px', color: '#5b21b6', fontWeight: '900' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                <Brain size={18} color="#7c3aed" />
+                <strong style={{ fontSize: '12.5px', color: '#5b21b6' }}>
                   Previsiones Científicas de Fuerza Adonis
                 </strong>
               </div>
-              <p style={{ fontSize: '11px', color: '#6d28d9', margin: '0 0 10px 0', lineHeight: '1.4' }}>
+              <p style={{ margin: '0 0 12px 0', fontSize: '11px', color: '#6d28d9', lineHeight: '1.35' }}>
                 Basadas en tu tasa actual de adaptación miofibrilar y sobrecarga progresiva sin fallar la técnica:
               </p>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                <div style={{ background: '#ffffff', padding: '10px', borderRadius: '12px', border: '1px solid #ddd6fe' }}>
-                  <div style={{ fontSize: '10px', color: '#7c3aed', fontWeight: '800', textTransform: 'uppercase' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                <div style={{ background: '#ffffff', padding: '10px 12px', borderRadius: '14px', border: '1px solid #ddd6fe' }}>
+                  <span style={{ fontSize: '10px', color: '#7c3aed', fontWeight: '800', display: 'block', textTransform: 'uppercase' }}>
                     🎯 Meta a 4 Semanas
-                  </div>
-                  <div style={{ fontSize: '16px', fontWeight: '900', color: '#4c1d95', margin: '2px 0' }}>
+                  </span>
+                  <div style={{ fontSize: '18px', fontWeight: '900', color: '#1e1b4b', margin: '2px 0' }}>
                     ~{stats.proj4WeeksWeight} lbs
                   </div>
                   <span style={{ fontSize: '10px', color: '#64748b' }}>
@@ -331,11 +341,11 @@ export default function ExerciseStrengthProgressModal({
                   </span>
                 </div>
 
-                <div style={{ background: '#ffffff', padding: '10px', borderRadius: '12px', border: '1px solid #ddd6fe' }}>
-                  <div style={{ fontSize: '10px', color: '#7c3aed', fontWeight: '800', textTransform: 'uppercase' }}>
+                <div style={{ background: '#ffffff', padding: '10px 12px', borderRadius: '14px', border: '1px solid #ddd6fe' }}>
+                  <span style={{ fontSize: '10px', color: '#7c3aed', fontWeight: '800', display: 'block', textTransform: 'uppercase' }}>
                     🚀 Meta a 8 Semanas
-                  </div>
-                  <div style={{ fontSize: '16px', fontWeight: '900', color: '#4c1d95', margin: '2px 0' }}>
+                  </span>
+                  <div style={{ fontSize: '18px', fontWeight: '900', color: '#1e1b4b', margin: '2px 0' }}>
                     ~{stats.proj8WeeksWeight} lbs
                   </div>
                   <span style={{ fontSize: '10px', color: '#64748b' }}>
@@ -345,6 +355,17 @@ export default function ExerciseStrengthProgressModal({
               </div>
             </div>
 
+            {/* GRÁFICA INTERACTIVA DE SOBRECARGA, HIPERTROFIA Y PROYECCIONES */}
+            <div style={{ marginBottom: '16px' }}>
+              <ExerciseProgressionChart
+                exercise={exercise}
+                workoutHistory={workoutHistory}
+                todayWorkoutData={todayWorkoutData}
+                height={240}
+                compact
+              />
+            </div>
+
             {/* HISTORIAL SESIÓN POR SESIÓN */}
             <div>
               <h4 style={{ margin: '0 0 8px 0', fontSize: '12.5px', fontWeight: '900', color: '#1e293b' }}>
@@ -352,7 +373,7 @@ export default function ExerciseStrengthProgressModal({
               </h4>
 
               {sessionHistory.length > 0 ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '180px', overflowY: 'auto' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '200px', overflowY: 'auto' }}>
                   {sessionHistory.slice().reverse().map((item, idx) => (
                     <div
                       key={item.sessionId || idx}
@@ -373,6 +394,11 @@ export default function ExerciseStrengthProgressModal({
                         </strong>
                         <span style={{ color: '#64748b' }}>
                           {item.sets.length} series • Vol: {item.volume.toLocaleString()} lbs
+                          {item.matchedName && item.matchedName.toLowerCase() !== exName.toLowerCase() && (
+                            <span style={{ display: 'block', color: '#7c3aed', fontSize: '9.5px', fontWeight: '700' }}>
+                              ⚡ Vinculado con: {item.matchedName}
+                            </span>
+                          )}
                         </span>
                       </div>
 

@@ -116,12 +116,13 @@ function AppContent() {
         // 2. Extraer de IndexedDB e Inyectar en Firebase (solo las llaves vitales)
         const { get } = await import('idb-keyval');
         const { doc, setDoc } = await import('firebase/firestore');
-        const { db } = await import('./services/firebase');
+        const { db, sanitizeForFirestore } = await import('./services/firebase');
 
         const keysToMigrate = [
           'coachv2_active_workouts', 
           'coachv2_custom_day_exercises',
-          'coachv2_swapped_exercises'
+          'coachv2_swapped_exercises',
+          'coachv2_machine_configs'
         ];
 
         // Migrar primero el historial (como documentos individuales en subcolección)
@@ -129,18 +130,26 @@ function AppContent() {
         if (localHistory && Array.isArray(localHistory)) {
           for (const session of localHistory) {
             if (session && session.id) {
-              const sessionRef = doc(db, 'users', currentUser.uid, 'history', session.id);
-              await setDoc(sessionRef, session, { merge: true });
+              try {
+                const sessionRef = doc(db, 'users', currentUser.uid, 'history', session.id);
+                await setDoc(sessionRef, sanitizeForFirestore(session), { merge: true });
+              } catch (setErr) {
+                console.warn(`[Migration] Error subiendo sesión ${session.id}:`, setErr.message);
+              }
             }
           }
         }
 
         // Luego migrar el resto (como documentos simples)
         for (const key of keysToMigrate) {
-          const localVal = await get(key);
-          if (localVal !== undefined) {
-             const docRef = doc(db, 'users', currentUser.uid, 'store', key);
-             await setDoc(docRef, { value: localVal }, { merge: true });
+          try {
+            const localVal = await get(key);
+            if (localVal !== undefined) {
+              const docRef = doc(db, 'users', currentUser.uid, 'store', key);
+              await setDoc(docRef, { value: sanitizeForFirestore(localVal) }, { merge: true });
+            }
+          } catch (storeErr) {
+            console.warn(`[Migration] Error subiendo clave ${key}:`, storeErr.message);
           }
         }
 
@@ -173,12 +182,16 @@ function AppContent() {
         await set('coachv2_custom_routine', null);
 
         if (currentUser) {
-          const { doc, setDoc } = await import('firebase/firestore');
-          const { db } = await import('./services/firebase');
-          await setDoc(doc(db, 'users', currentUser.uid, 'store', 'coachv2_custom_day_exercises'), { value: {} }, { merge: true });
-          await setDoc(doc(db, 'users', currentUser.uid, 'store', 'coachv2_swapped_exercises'), { value: {} }, { merge: true });
-          await setDoc(doc(db, 'users', currentUser.uid, 'store', 'coachv2_exercise_orders'), { value: {} }, { merge: true });
-          await setDoc(doc(db, 'users', currentUser.uid, 'store', 'coachv2_custom_routine'), { value: null }, { merge: true });
+          try {
+            const { doc, setDoc } = await import('firebase/firestore');
+            const { db, sanitizeForFirestore } = await import('./services/firebase');
+            await setDoc(doc(db, 'users', currentUser.uid, 'store', 'coachv2_custom_day_exercises'), { value: {} }, { merge: true });
+            await setDoc(doc(db, 'users', currentUser.uid, 'store', 'coachv2_swapped_exercises'), { value: {} }, { merge: true });
+            await setDoc(doc(db, 'users', currentUser.uid, 'store', 'coachv2_exercise_orders'), { value: {} }, { merge: true });
+            await setDoc(doc(db, 'users', currentUser.uid, 'store', 'coachv2_custom_routine'), { value: null }, { merge: true });
+          } catch (e) {
+            console.warn("[ProtocolV3] Firestore store cleanup aviso:", e.message);
+          }
         }
         localStorage.setItem(PROTOCOL_V3_FLAG, 'true');
       }).catch(() => {});
@@ -191,15 +204,27 @@ function AppContent() {
         await set('coachv2_active_workouts', {});
         await set('coachv2_global_warmup', {});
         if (currentUser) {
-          const { doc, setDoc } = await import('firebase/firestore');
-          const { db } = await import('./services/firebase');
-          await setDoc(doc(db, 'users', currentUser.uid, 'store', 'coachv2_active_workouts'), { value: {} });
-          await setDoc(doc(db, 'users', currentUser.uid, 'store', 'coachv2_global_warmup'), { value: {} });
+          try {
+            const { doc, setDoc } = await import('firebase/firestore');
+            const { db } = await import('./services/firebase');
+            await setDoc(doc(db, 'users', currentUser.uid, 'store', 'coachv2_active_workouts'), { value: {} });
+            await setDoc(doc(db, 'users', currentUser.uid, 'store', 'coachv2_global_warmup'), { value: {} });
+          } catch (e) {
+            console.warn("[PurgeActive] Firestore purge aviso:", e.message);
+          }
         }
         localStorage.setItem(PURGE_ACTIVE_V7, 'true');
         console.log("🧹 [Adonis] coachv2_active_workouts y coachv2_global_warmup purgados al 100% en IndexedDB y Firestore.");
       }).catch(err => console.error("Error purgando coachv2_active_workouts:", err));
     }
+  }, [currentUser]);
+
+  // 6. Sincronización Maestra Nube ➔ IndexedDB al entrar a la app (garantiza análisis local al 100%)
+  useEffect(() => {
+    if (!currentUser) return;
+    import('./services/syncService').then(({ syncAllCloudDataToIndexedDB }) => {
+      syncAllCloudDataToIndexedDB(currentUser);
+    }).catch(err => console.warn("[App] Aviso cargando syncService:", err));
   }, [currentUser]);
 
   if (isMigrating) {

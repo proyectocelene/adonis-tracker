@@ -8,6 +8,7 @@ import ExerciseConsistencyAudit from './ExerciseConsistencyAudit';
 import { LiquidDropdown } from '../common/UIComponents';
 import { ErrorBoundary } from '../common/ErrorBoundary';
 import { calculateWorkoutCalories } from '../../utils/calorieCalculations';
+import ExerciseProgressionChart from '../exercise/ExerciseProgressionChart';
 
 export default function HistoryChartsView({
   totalSessions = 0,
@@ -22,7 +23,8 @@ export default function HistoryChartsView({
   setSelectedMuscleGroup,
   exerciseOptions = [],
   muscleGroupOptions = [],
-  progData = []
+  progData = [],
+  allAvailableExercises = []
 }) {
   const totalCaloriesBurned = useMemo(() => {
     return (workoutHistory || []).reduce((acc, ses) => {
@@ -35,6 +37,11 @@ export default function HistoryChartsView({
       return acc;
     }, 0);
   }, [workoutHistory]);
+
+  const selectedExObj = useMemo(() => {
+    if (!selectedExId) return null;
+    return (allAvailableExercises || []).find(e => e.id === selectedExId) || { id: selectedExId, name: selectedExId };
+  }, [selectedExId, allAvailableExercises]);
 
   return (
     <div className="animate-fade">
@@ -124,26 +131,36 @@ export default function HistoryChartsView({
           )}
 
           {/* Gráfica de Progreso */}
-          {progData.length > 0 ? (
-            <ErrorBoundary inline>
-              <div style={{ height: '260px', width: '100%', marginTop: '14px' }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={progData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                    <XAxis dataKey="date" tick={{ fontSize: 11, fontWeight: '700', fill: '#64748b' }} />
-                    <YAxis domain={['auto', 'auto']} tick={{ fontSize: 11, fontWeight: '700', fill: '#64748b' }} />
-                    <Tooltip contentStyle={{ borderRadius: '14px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
-                    <Legend />
-                    <Line type="monotone" dataKey="maxWeight" name="Carga Máxima" stroke="#0066ff" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
-                    <Line type="monotone" dataKey="est1RM" name="1RM Estimado" stroke="#10b981" strokeWidth={2} strokeDasharray="4 4" dot={{ r: 3 }} />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </ErrorBoundary>
-          ) : (
-            <div style={{ padding: '24px', textAlign: 'center', color: '#64748b', fontSize: '12px' }}>
-              Sin registros suficientes para este ejercicio en el historial.
+          {analysisMode === 'exercise' ? (
+            <div style={{ marginTop: '14px' }}>
+              <ExerciseProgressionChart
+                exercise={selectedExObj}
+                workoutHistory={workoutHistory}
+                height={280}
+              />
             </div>
+          ) : (
+            progData.length > 0 ? (
+              <ErrorBoundary inline>
+                <div style={{ height: '260px', width: '100%', marginTop: '14px' }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={progData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                      <XAxis dataKey="date" tick={{ fontSize: 11, fontWeight: '700', fill: '#64748b' }} />
+                      <YAxis domain={['auto', 'auto']} tick={{ fontSize: 11, fontWeight: '700', fill: '#64748b' }} />
+                      <Tooltip contentStyle={{ borderRadius: '14px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
+                      <Legend />
+                      <Line type="monotone" dataKey="maxWeight" name="Carga Máxima" stroke="#0066ff" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                      <Line type="monotone" dataKey="est1RM" name="1RM Estimado" stroke="#10b981" strokeWidth={2} strokeDasharray="4 4" dot={{ r: 3 }} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </ErrorBoundary>
+            ) : (
+              <div style={{ padding: '24px', textAlign: 'center', color: '#64748b', fontSize: '12px' }}>
+                Sin registros suficientes para este grupo muscular en el historial.
+              </div>
+            )
           )}
 
           {/* GUÍA CIENTÍFICA: CÓMO INTERPRETAR LA GRÁFICA DE SOBRECARGA */}

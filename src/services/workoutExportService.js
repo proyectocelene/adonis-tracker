@@ -156,9 +156,9 @@ export function downloadWorkoutJSON(session = {}, calories = {}, bodyMetrics = [
           karvonenHrrPct: calories.hrrPct
         } : null
       },
-      exercises: session.exercisesDetailed || [],
+      exercises: session.exercisesDetailed || session.exercises || {},
       cardioSession: session.cardioDetailed || null,
-      rawWorkoutData: session.rawWorkoutData || null
+      rawWorkoutData: session.rawWorkoutData || session.exercises || null
     };
 
     const jsonStr = JSON.stringify(exportPayload, null, 2);

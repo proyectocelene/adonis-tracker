@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Check, Layers, Disc, Settings2 } from 'lucide-react';
 
 export default function PlateCalculatorModal({
@@ -11,8 +11,6 @@ export default function PlateCalculatorModal({
   onSaveMachineConfig,
   onOpenMachineConfig
 }) {
-  if (!isOpen) return null;
-
   const numericInitial = parseFloat(initialWeight) || 0;
   
   // Detectar automáticamente el tipo de ejercicio considerando machineConfig
@@ -154,6 +152,28 @@ export default function PlateCalculatorModal({
     }
     onClose();
   };
+
+  useEffect(() => {
+    if (isOpen) {
+      const mode = machineConfig?.type 
+        ? (machineConfig.type === 'plates' ? 'plates' : 'stack')
+        : ((isLegPress || isHack || isSmith || lowerName.includes('barra') || lowerName.includes('rumano') || lowerName.includes('deadlift')) ? 'plates' : 'stack');
+      setActiveTab(mode);
+      const defBase = machineConfig?.baseWeight !== undefined
+        ? machineConfig.baseWeight
+        : (unit === 'kg'
+            ? (isLegPress ? 45 : (isHack ? 35 : (isSmith ? 10 : (lowerName.includes('barra') ? 20 : 0))))
+            : (isLegPress ? 100 : (isHack ? 75 : (isSmith ? 20 : (lowerName.includes('barra') ? 45 : 0)))));
+      setBaseWeight(defBase);
+      setTargetWeight(numericInitial > 0 ? numericInitial : (defBase + (unit === 'kg' ? 40 : 90)));
+      setStackPreset(machineConfig?.stackPreset || (lowerName.includes('extension') ? 'two_tens_then_twenty' : 'linear'));
+      setTopPlateWeight(machineConfig?.firstPlate !== undefined ? machineConfig.firstPlate : (unit === 'kg' ? 5 : 10));
+      setStackIncrement(machineConfig?.plateStep !== undefined ? machineConfig.plateStep : (unit === 'kg' ? 5 : 10));
+      setAddOnWeight(machineConfig?.microWeight || 0);
+    }
+  }, [isOpen, machineConfig, initialWeight]);
+
+  if (!isOpen) return null;
 
   return (
     <div style={{

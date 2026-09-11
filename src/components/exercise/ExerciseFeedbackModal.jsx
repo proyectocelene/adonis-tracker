@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Sparkles, Check, ThumbsUp, Activity, ShieldCheck, HeartCrack, Trash2 } from 'lucide-react';
 
 export default function ExerciseFeedbackModal({
@@ -8,13 +8,23 @@ export default function ExerciseFeedbackModal({
   currentFeedback = {},
   onSaveFeedback
 }) {
-  if (!isOpen) return null;
+  const [rpe, setRpe] = useState(currentFeedback?.rpe || '');
+  const [pump, setPump] = useState(currentFeedback?.pump || '');
+  const [jointPain, setJointPain] = useState(currentFeedback?.jointPain || 'none');
+  const [technique, setTechnique] = useState(currentFeedback?.technique || 'great');
+  const [actionNext, setActionNext] = useState(currentFeedback?.actionNext || '');
 
-  const [rpe, setRpe] = useState(currentFeedback.rpe || '');
-  const [pump, setPump] = useState(currentFeedback.pump || '');
-  const [jointPain, setJointPain] = useState(currentFeedback.jointPain || 'none');
-  const [technique, setTechnique] = useState(currentFeedback.technique || 'great');
-  const [actionNext, setActionNext] = useState(currentFeedback.actionNext || '');
+  useEffect(() => {
+    if (isOpen) {
+      setRpe(currentFeedback?.rpe || '');
+      setPump(currentFeedback?.pump || '');
+      setJointPain(currentFeedback?.jointPain || 'none');
+      setTechnique(currentFeedback?.technique || 'great');
+      setActionNext(currentFeedback?.actionNext || '');
+    }
+  }, [isOpen, currentFeedback]);
+
+  if (!isOpen) return null;
 
   const handleSave = () => {
     const feedbackData = {

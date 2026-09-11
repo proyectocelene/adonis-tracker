@@ -383,9 +383,17 @@ export function getUnifiedExerciseTarget(previousData = {}, targetRepsStr = "10-
   const isS1RampUp = sets.length >= 2 && sets[0].weight > 0 && sets[0].weight <= anchorWeight * 0.80;
 
   // 4. Progresión en repeticiones / Consolidación de peso ancla
-  const targetRepsDisplay = avgReps < maxReps
-    ? `${Math.min(maxReps, Math.max(minReps, Math.round(avgReps) + 1))}-${maxReps}`
-    : `${maxReps}`;
+  let targetRepsDisplay = `${minReps}-${maxReps}`;
+  if (minReps === maxReps) {
+    targetRepsDisplay = `${maxReps}`;
+  } else {
+    const nextTargetMin = Math.min(maxReps, Math.max(minReps, Math.round(avgReps) + 1));
+    if (nextTargetMin >= maxReps) {
+      targetRepsDisplay = `${maxReps}`;
+    } else {
+      targetRepsDisplay = `${nextTargetMin}-${maxReps}`;
+    }
+  }
 
   return {
     hasData: true,

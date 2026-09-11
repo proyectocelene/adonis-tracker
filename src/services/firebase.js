@@ -29,4 +29,25 @@ const googleProvider = new GoogleAuthProvider();
 export const signInWithGoogle = () => signInWithPopup(auth, googleProvider);
 export const logoutUser = () => signOut(auth);
 
+/**
+ * Limpia recursivamente cualquier valor 'undefined' para que Firestore nunca lance
+ * 'Unsupported field value: undefined'. Los valores undefined en objetos son eliminados,
+ * y en arrays son convertidos a null.
+ */
+export function sanitizeForFirestore(data) {
+  if (data === undefined) return null;
+  if (data === null || typeof data !== 'object') return data;
+  if (data instanceof Date) return data.toISOString();
+  if (Array.isArray(data)) {
+    return data.map(item => item === undefined ? null : sanitizeForFirestore(item));
+  }
+  const clean = {};
+  for (const [key, value] of Object.entries(data)) {
+    if (value !== undefined) {
+      clean[key] = sanitizeForFirestore(value);
+    }
+  }
+  return clean;
+}
+
 export { auth, db, storage };

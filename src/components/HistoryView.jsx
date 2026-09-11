@@ -135,39 +135,19 @@ export default function HistoryView() {
     const progData = [];
 
     if (analysisMode === 'exercise') {
-      workoutHistory.forEach(ses => {
-        if (ses.exercises && ses.exercises[selectedExId]) {
-          const exSets = ses.exercises[selectedExId];
-          let maxW = 0;
-          let bestReps = 0;
-          let unit = 'lbs';
-
-          Object.keys(exSets).forEach(setNum => {
-            if (!isNaN(parseInt(setNum))) {
-              const s = exSets[setNum];
-              if (s && s.completed && s.weight && !isNaN(parseFloat(s.weight))) {
-                const w = parseFloat(s.weight);
-                if (w >= maxW) {
-                  maxW = w;
-                  bestReps = parseInt(s.reps) || 0;
-                  unit = s.unit || 'lbs';
-                }
-              }
-            }
+      const selectedExObj = allAvailableExercises.find(e => e.id === selectedExId) || { id: selectedExId, name: selectedExId };
+      const records = getHistoricalRecordsForExercise(selectedExObj, workoutHistory);
+      if (records.sessionOccurrences && records.sessionOccurrences.length > 0) {
+        records.sessionOccurrences.forEach(occ => {
+          progData.push({
+            date: occ.dateStr || 'Sesión',
+            maxWeight: Math.round(occ.maxWeight),
+            reps: occ.bestReps,
+            est1RM: Math.round(occ.est1RM),
+            unit: occ.unit || 'lbs'
           });
-
-          if (maxW > 0) {
-            const est1RM = calculate1RM(maxW, bestReps);
-            progData.push({
-              date: ses.dateString ? ses.dateString.split(',')[0] : (ses.timestamp ? ses.timestamp.split('T')[0] : 'Sesión'),
-              maxWeight: maxW,
-              reps: bestReps,
-              est1RM,
-              unit
-            });
-          }
-        }
-      });
+        });
+      }
     } else {
       workoutHistory.forEach(ses => {
         if (ses.exercises) {
@@ -546,6 +526,7 @@ export default function HistoryView() {
           exerciseOptions={exerciseOptions}
           muscleGroupOptions={muscleGroupOptions}
           progData={progData}
+          allAvailableExercises={allAvailableExercises}
         />
       )}
 

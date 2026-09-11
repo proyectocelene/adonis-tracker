@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Search, Video, Info, Zap, Sparkles, Brain, Clock, TrendingUp } from 'lucide-react';
 import ExerciseNotes from './ExerciseNotes';
 import ExerciseStrengthProgressModal from './ExerciseStrengthProgressModal';
+import ExerciseProgressionChart from './ExerciseProgressionChart';
 
 // Generador de claves atencionales (Internal & External Focus) basado en ciencia motora (Wulf & Schoenfeld)
 function getMindMuscleCues(exercise) {
@@ -149,8 +150,16 @@ export default function ExerciseBiomechanics({
           transition: 'all 0.2s ease'
         }}
       >
-        <TrendingUp size={18} /> 📈 Progreso de Fuerza, Tendencias & Proyecciones
+        <TrendingUp size={18} /> 📈 Ver Diagnóstico Completo & Historial
       </button>
+
+      {/* 0.1 GRÁFICA INTERACTIVA DE SOBRECARGA, HIPERTROFIA & PROYECCIONES */}
+      <ExerciseProgressionChart
+        exercise={exercise}
+        workoutHistory={workoutHistory}
+        todayWorkoutData={todayWorkoutData}
+        height={260}
+      />
 
       {/* 1. TARJETA DE PRESCRIPCIÓN & OBJETIVO CIENTÍFICO ÓPTIMO */}
       <div style={{

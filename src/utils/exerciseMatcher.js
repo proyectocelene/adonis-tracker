@@ -60,14 +60,16 @@ const LOAD_FAMILY_KEYWORDS = {
  */
 function areIncompatibleExercises(nameA, nameB) {
   if (!nameA || !nameB) return false;
+  if (nameA.trim().toLowerCase() === nameB.trim().toLowerCase()) return false;
+
   const a = nameA.toLowerCase();
   const b = nameB.toLowerCase();
 
   // Sentadilla Hack vs Prensa de Piernas NUNCA deben mezclarse
   const isHackA = a.includes('hack') || a.includes('v-squat') || a.includes('v squat');
   const isHackB = b.includes('hack') || b.includes('v-squat') || b.includes('v squat');
-  const isPressA = a.includes('prensa') || a.includes('leg press');
-  const isPressB = b.includes('prensa') || b.includes('leg press');
+  const isPressA = (a.includes('prensa') && !a.includes('pecho') && !a.includes('chest press') && !a.includes('pallof')) || a.includes('leg press');
+  const isPressB = (b.includes('prensa') && !b.includes('pecho') && !b.includes('chest press') && !b.includes('pallof')) || b.includes('leg press');
 
   if ((isHackA && isPressB) || (isPressA && isHackB)) {
     return true;
@@ -96,17 +98,19 @@ function areIncompatibleExercises(nameA, nameB) {
     return true;
   }
 
-  // Mancuerna vs Máquina / Smith / Barra: Biomecánicamente incompatibles en pesos
-  const isDumbbellA = a.includes('mancuerna') || a.includes('dumbbell');
-  const isDumbbellB = b.includes('mancuerna') || b.includes('dumbbell');
-  const isMachineA = a.includes('maquina') || a.includes('máquina') || a.includes('machine') || a.includes('smith') || a.includes('multipower') || a.includes('nitro') || a.includes('hammer');
-  const isMachineB = b.includes('maquina') || b.includes('máquina') || b.includes('machine') || b.includes('smith') || b.includes('multipower') || b.includes('nitro') || b.includes('hammer');
-  const isBarbellA = (a.includes('barra') && !a.includes('mancuerna')) || a.includes('barbell');
-  const isBarbellB = (b.includes('barra') && !b.includes('mancuerna')) || b.includes('barbell');
+  // Mancuerna vs Máquina / Smith / Barra: Biomecánicamente incompatibles en pesos SOLO si son de aparatos estrictamente distintos
+  const isStrictDumbbellA = (a.includes('mancuerna') || a.includes('dumbbell')) && !a.includes('maquina') && !a.includes('máquina') && !a.includes('smith');
+  const isStrictDumbbellB = (b.includes('mancuerna') || b.includes('dumbbell')) && !b.includes('maquina') && !b.includes('máquina') && !b.includes('smith');
 
-  if ((isDumbbellA && isMachineB) || (isMachineA && isDumbbellB)) return true;
-  if ((isDumbbellA && isBarbellB) || (isBarbellA && isDumbbellB)) return true;
-  if ((isMachineA && isBarbellB) || (isBarbellA && isMachineB)) return true;
+  const isStrictMachineA = (a.includes('maquina') || a.includes('máquina') || a.includes('machine') || a.includes('smith') || a.includes('multipower') || a.includes('nitro') || a.includes('hammer')) && !a.includes('mancuerna');
+  const isStrictMachineB = (b.includes('maquina') || b.includes('máquina') || b.includes('machine') || b.includes('smith') || b.includes('multipower') || b.includes('nitro') || b.includes('hammer')) && !b.includes('mancuerna');
+
+  const isStrictBarbellA = ((a.includes('barra') || a.includes('barbell')) && !a.includes('mancuerna') && !a.includes('polea') && !a.includes('cable') && !a.includes('smith') && !a.includes('maquina'));
+  const isStrictBarbellB = ((b.includes('barra') || b.includes('barbell')) && !b.includes('mancuerna') && !b.includes('polea') && !b.includes('cable') && !b.includes('smith') && !b.includes('maquina'));
+
+  if ((isStrictDumbbellA && isStrictMachineB) || (isStrictMachineA && isStrictDumbbellB)) return true;
+  if ((isStrictDumbbellA && isStrictBarbellB) || (isStrictBarbellA && isStrictDumbbellB)) return true;
+  if ((isStrictMachineA && isStrictBarbellB) || (isStrictBarbellA && isStrictMachineB)) return true;
 
   return false;
 }
@@ -173,8 +177,100 @@ export function matchExercise(currentEx, historicalKey, historicalData) {
 }
 
 /**
+/**
+ * Extrae la lista de ejercicios de una sesión de forma uniforme, soportando:
+ * - ses.exercises como mapa { exId: data }
+ * - ses.exercises como array [ data ]
+ * - ses.exercisesDetailed como array [ data ]
+ * - ses.rawWorkoutData como mapa { exId: data }
+ */
+export function getExercisesFromSession(ses) {
+  if (!ses) return [];
+
+  // 1. Si exercises es un objeto mapa { [exId]: data }
+  if (ses.exercises && typeof ses.exercises === 'object' && !Array.isArray(ses.exercises)) {
+    return Object.entries(ses.exercises).map(([key, data]) => ({ key, data }));
+  }
+
+  // 2. Si exercises es un array
+  if (Array.isArray(ses.exercises) && ses.exercises.length > 0) {
+    return ses.exercises.map((data, idx) => ({ key: data?.id || String(idx), data }));
+  }
+
+  // 3. Si exercisesDetailed es un array (respaldos / exportaciones completas)
+  if (Array.isArray(ses.exercisesDetailed) && ses.exercisesDetailed.length > 0) {
+    return ses.exercisesDetailed.map((data, idx) => ({ key: data?.id || String(idx), data }));
+  }
+
+  // 4. Si rawWorkoutData existe
+  if (ses.rawWorkoutData && typeof ses.rawWorkoutData === 'object' && !Array.isArray(ses.rawWorkoutData)) {
+    return Object.entries(ses.rawWorkoutData).map(([key, data]) => ({ key, data }));
+  }
+
+  return [];
+}
+
+/**
+ * Extrae las series completadas de un ejercicio de forma uniforme,
+ * tanto si están en array `exData.sets` como si son claves numéricas '0', '1', '2'.
+ */
+export function extractExerciseSets(exData) {
+  if (!exData) return [];
+  const sets = [];
+
+  // Formato A: array de sets
+  if (Array.isArray(exData.sets)) {
+    exData.sets.forEach((s, idx) => {
+      if (!s) return;
+      const w = parseFloat(s.weight) || 0;
+      const r = parseInt(s.reps, 10) || Math.max(parseInt(s.repsR, 10) || 0, parseInt(s.repsL, 10) || 0) || 0;
+      const isDone = s.completed !== false; // no completado únicamente si completed es explícitamente false
+      if (w > 0 && isDone) {
+        sets.push({
+          setNum: s.setNum !== undefined ? s.setNum : idx + 1,
+          weight: w,
+          reps: r,
+          repsL: s.repsL,
+          repsR: s.repsR,
+          rpe: s.rpe || '8',
+          unit: s.unit || exData.unit || 'lbs'
+        });
+      }
+    });
+    return sets;
+  }
+
+  // Formato B: claves numéricas directas ('0', '1', '2', etc.)
+  Object.keys(exData).forEach(k => {
+    const num = parseInt(k, 10);
+    if (!isNaN(num)) {
+      const s = exData[k];
+      if (s) {
+        const w = parseFloat(s.weight) || 0;
+        const r = parseInt(s.reps, 10) || Math.max(parseInt(s.repsR, 10) || 0, parseInt(s.repsL, 10) || 0) || 0;
+        const isDone = s.completed !== false;
+        if (w > 0 && isDone) {
+          sets.push({
+            setNum: num,
+            weight: w,
+            reps: r,
+            repsL: s.repsL,
+            repsR: s.repsR,
+            rpe: s.rpe || '8',
+            unit: s.unit || exData.unit || 'lbs'
+          });
+        }
+      }
+    }
+  });
+
+  return sets;
+}
+
+/**
  * Extrae todo el historial de sobrecarga acumulado para un ejercicio específico
- * buscando en todas las sesiones archivadas sin importar si el nombre varió ligeramente.
+ * buscando en todas las sesiones archivadas sin importar si el nombre varió ligeramente
+ * o si la sesión fue guardada con diferente estructura.
  */
 export function getHistoricalRecordsForExercise(currentEx, workoutHistory = []) {
   if (!currentEx || !workoutHistory || workoutHistory.length === 0) {
@@ -196,19 +292,24 @@ export function getHistoricalRecordsForExercise(currentEx, workoutHistory = []) 
 
   // Recorrer historial en orden cronológico
   const sortedHistory = [...workoutHistory].sort((a, b) => {
-    const timeA = new Date(a.timestamp || a.date || 0).getTime();
-    const timeB = new Date(b.timestamp || b.date || 0).getTime();
+    const timeA = new Date(a.timestamp || a.date || a.startTime || a.id || 0).getTime() || 0;
+    const timeB = new Date(b.timestamp || b.date || b.startTime || b.id || 0).getTime() || 0;
     return timeA - timeB;
   });
 
   sortedHistory.forEach(ses => {
-    if (!ses.exercises) return;
+    if (ses.isRestDay || ses.isMissedDay) return;
 
-    // Buscar en los ejercicios de esta sesión
+    // Obtener los ejercicios de esta sesión de cualquier formato
+    const sessionExercisesList = getExercisesFromSession(ses);
+    if (sessionExercisesList.length === 0) return;
+
     let matchedExData = null;
     let matchedName = '';
 
-    for (const [key, exData] of Object.entries(ses.exercises)) {
+    for (const item of sessionExercisesList) {
+      const key = item.key;
+      const exData = item.data;
       if (!exData || exData.machine) continue; // Saltar cardio
 
       const matchRes = matchExercise(currentEx, key, exData);
@@ -221,43 +322,65 @@ export function getHistoricalRecordsForExercise(currentEx, workoutHistory = []) 
     }
 
     if (matchedExData) {
-      const validSetNums = Object.keys(matchedExData)
-        .filter(k => !isNaN(parseInt(k)) && matchedExData[k] && matchedExData[k].completed && matchedExData[k].weight);
+      const detailedSets = extractExerciseSets(matchedExData);
 
-      if (validSetNums.length > 0) {
+      if (detailedSets.length > 0) {
         let maxW = 0;
-        let bestR = 0;
+        let minW = Infinity;
+        let maxR = 0;
+        let minR = Infinity;
+        let repsSum = 0;
+        let best1RM = 0;
+        let topSet = null;
         let unit = 'lbs';
-        const detailedSets = [];
+        let totalVol = 0;
 
-        validSetNums.forEach(sNum => {
-          const sObj = matchedExData[sNum];
-          const w = parseFloat(sObj.weight) || 0;
-          const r = parseInt(sObj.reps) || 0;
-          if (w >= maxW) {
-            maxW = w;
-            bestR = r;
+        detailedSets.forEach((s, idx) => {
+          const w = parseFloat(s.weight) || 0;
+          const r = parseInt(s.reps, 10) || 0;
+          const epley = (w > 0 && r > 0) ? (r === 1 ? Math.round(w) : Math.round(w * (1 + r / 30))) : 0;
+          totalVol += (w * r);
+          repsSum += r;
+
+          if (w > maxW) maxW = w;
+          if (w < minW && w > 0) minW = w;
+          if (r > maxR) maxR = r;
+          if (r < minR && r > 0) minR = r;
+
+          // Mejor serie (Top Set): la que genera el mayor 1RM estimado
+          if (epley > best1RM || (!topSet && w > 0)) {
+            best1RM = epley;
+            topSet = { ...s, setNum: s.setNum !== undefined ? s.setNum : idx + 1, est1RM: epley };
           }
-          unit = sObj.unit || 'lbs';
-          detailedSets.push({
-            setNum: sNum,
-            weight: w,
-            reps: r,
-            rpe: sObj.rpe || '8',
-            unit: sObj.unit || 'lbs'
-          });
+          if (s.unit) unit = s.unit;
         });
 
+        const avgReps = detailedSets.length > 0 ? Math.round((repsSum / detailedSets.length) * 10) / 10 : 0;
+        // Reps logradas en la carga máxima (si hay varias series con el peso pico, tomar el máximo)
+        const peakWeightSets = detailedSets.filter(s => s.weight === maxW);
+        const bestRepsAtPeakWeight = peakWeightSets.length > 0 ? Math.max(...peakWeightSets.map(s => s.reps)) : 0;
+
         if (maxW > 0) {
+          const dateLabel = ses.dateString
+            ? ses.dateString.split(',')[0]
+            : (ses.date || (ses.timestamp ? ses.timestamp.split('T')[0] : 'Sesión'));
+
           occurrences.push({
             sessionId: ses.id,
-            dateStr: ses.dateString ? ses.dateString.split(',')[0] : (ses.timestamp ? ses.timestamp.split('T')[0] : 'Fecha'),
+            dateStr: dateLabel,
             weekNumber: ses.weekNumber || 1,
             maxWeight: maxW,
-            bestReps: bestR,
+            minWeight: minW !== Infinity ? minW : maxW,
+            bestReps: bestRepsAtPeakWeight, // Reps en la serie pico
+            maxRepsSession: maxR, // Máximo de repeticiones en cualquier serie de la sesión
+            minRepsSession: minR !== Infinity ? minR : maxR, // Mínimo de repeticiones de la sesión
+            avgReps: avgReps, // Promedio matemático de repeticiones de toda la sesión
+            est1RM: best1RM,
+            totalVolume: totalVol,
             unit,
             setsCount: detailedSets.length,
             detailedSets,
+            topSet: topSet || { weight: maxW, reps: bestRepsAtPeakWeight, est1RM: best1RM },
             sourceName: matchedName
           });
         }
@@ -305,20 +428,40 @@ export function getHistoricalRecordsForExercise(currentEx, workoutHistory = []) 
  * Prioriza coincidencia exacta por ID y Nombre para que ejercicios del mismo día (ej. Press Mancuernas vs Press Máquina)
  * no se roben mutuamente los datos históricos.
  */
-function findBestMatchInSession(currentEx, sessionExercises) {
-  if (!sessionExercises) return null;
-  const entries = Object.entries(sessionExercises);
+/**
+ * Encuentra la coincidencia más precisa para un ejercicio dentro de los ejercicios de una sesión.
+ * Prioriza coincidencia exacta por ID y Nombre para que ejercicios del mismo día (ej. Press Mancuernas vs Press Máquina)
+ * no se roben mutuamente los datos históricos.
+ */
+function findBestMatchInSession(currentEx, sessionOrExercises) {
+  if (!sessionOrExercises) return null;
+
+  // Normalizar a lista de { key, data }
+  let entries = [];
+  if (Array.isArray(sessionOrExercises)) {
+    entries = sessionOrExercises.map((item, idx) => {
+      if (item && item.key && item.data) return item;
+      return { key: item?.id || String(idx), data: item };
+    });
+  } else if (sessionOrExercises.exercises || sessionOrExercises.exercisesDetailed || sessionOrExercises.rawWorkoutData) {
+    entries = getExercisesFromSession(sessionOrExercises);
+  } else {
+    entries = Object.entries(sessionOrExercises).map(([key, data]) => ({ key, data }));
+  }
+
   if (entries.length === 0) return null;
 
   // Prioridad 1: Coincidencia exacta por ID (clave o propiedad id)
-  for (const [key, exData] of entries) {
+  for (const { key, data: exData } of entries) {
+    if (!exData) continue;
     if ((key === currentEx.id || exData.id === currentEx.id) && !areIncompatibleExercises(currentEx.name, exData.name || key)) {
       return exData;
     }
   }
 
   // Prioridad 2: Coincidencia exacta por Nombre (ignorando mayúsculas y espacios extremos)
-  for (const [key, exData] of entries) {
+  for (const { key, data: exData } of entries) {
+    if (!exData) continue;
     const histName = exData.name || exData.originalName || key;
     if (currentEx.name && histName && currentEx.name.trim().toLowerCase() === histName.trim().toLowerCase()) {
       return exData;
@@ -327,7 +470,8 @@ function findBestMatchInSession(currentEx, sessionExercises) {
 
   // Prioridad 3: Coincidencia por nombre normalizado (siempre que los aparatos sean compatibles)
   const normCurrent = normalizeExerciseName(currentEx.name);
-  for (const [key, exData] of entries) {
+  for (const { key, data: exData } of entries) {
+    if (!exData) continue;
     const histName = exData.name || exData.originalName || key;
     if (areIncompatibleExercises(currentEx.name, histName)) continue;
     const normHist = normalizeExerciseName(histName);
@@ -340,7 +484,8 @@ function findBestMatchInSession(currentEx, sessionExercises) {
   if (currentEx.equivalents && Array.isArray(currentEx.equivalents)) {
     for (const eq of currentEx.equivalents) {
       const normEq = normalizeExerciseName(eq.name);
-      for (const [key, exData] of entries) {
+      for (const { key, data: exData } of entries) {
+        if (!exData) continue;
         const histName = exData.name || exData.originalName || key;
         if (areIncompatibleExercises(currentEx.name, histName)) continue;
         const normHist = normalizeExerciseName(histName);
@@ -352,7 +497,8 @@ function findBestMatchInSession(currentEx, sessionExercises) {
   }
 
   // Prioridad 5: Coincidencia por Familia de Carga (solo si no compite con otro ejercicio más afín)
-  for (const [key, exData] of entries) {
+  for (const { key, data: exData } of entries) {
+    if (!exData) continue;
     const match = matchExercise(currentEx, key, exData);
     if (match.isMatch) {
       return exData;
@@ -369,21 +515,64 @@ function findBestMatchInSession(currentEx, sessionExercises) {
 export function getPreviousDataForExercise(currentEx, dayId, currentWeek, workoutHistory = [], currentSessions = {}) {
   if (!currentEx) return {};
 
-  // 1. Si semana > 1, buscar en la sesión archivada de la semana anterior
+  const hasValidLoggedSets = (exData) => {
+    if (!exData || typeof exData !== 'object') return false;
+    const sets = extractExerciseSets(exData);
+    return sets.length > 0;
+  };
+
+  const normalizeResult = (matched) => {
+    if (!matched) return {};
+    const result = { ...matched };
+    // Asegurar que si los sets vienen como array, estén también disponibles como claves '1', '2', etc.
+    if (Array.isArray(matched.sets)) {
+      matched.sets.forEach((s, idx) => {
+        const sNum = s.setNum !== undefined ? s.setNum : idx + 1;
+        if (!result[sNum]) {
+          result[sNum] = {
+            weight: s.weight,
+            reps: s.reps,
+            repsL: s.repsL,
+            repsR: s.repsR,
+            rpe: s.rpe || '8',
+            unit: s.unit || matched.unit || 'lbs',
+            completed: true
+          };
+        }
+      });
+    }
+    return result;
+  };
+
+  const historyRev = [...workoutHistory].reverse();
+
+  // 1. Si semana > 1, buscar en la sesión archivada de la semana anterior del MISMO día si tiene series válidas
   if (currentWeek > 1) {
-    const prevWeekLog = [...workoutHistory].reverse().find(s => s.dayId === dayId && s.weekNumber === (currentWeek - 1));
-    if (prevWeekLog && prevWeekLog.exercises) {
-      const matched = findBestMatchInSession(currentEx, prevWeekLog.exercises);
-      if (matched) return matched;
+    const prevWeekLog = historyRev.find(s => s.dayId === dayId && s.weekNumber === (currentWeek - 1));
+    if (prevWeekLog) {
+      const matched = findBestMatchInSession(currentEx, prevWeekLog);
+      if (matched && hasValidLoggedSets(matched)) return normalizeResult(matched);
     }
   }
 
-  // 2. Buscar en la última sesión registrada en el historial
-  const lastLogs = [...workoutHistory].reverse();
-  for (const s of lastLogs) {
-    if (!s.exercises) continue;
-    const matched = findBestMatchInSession(currentEx, s.exercises);
-    if (matched) return matched;
+  // 2. Buscar en la última sesión del MISMO DÍA en el historial con series válidas
+  for (const s of historyRev) {
+    if (s.dayId === dayId) {
+      const matched = findBestMatchInSession(currentEx, s);
+      if (matched && hasValidLoggedSets(matched)) return normalizeResult(matched);
+    }
+  }
+
+  // 3. Buscar en CUALQUIER sesión previa donde se haya realizado este ejercicio con series válidas
+  for (const s of historyRev) {
+    const matched = findBestMatchInSession(currentEx, s);
+    if (matched && hasValidLoggedSets(matched)) return normalizeResult(matched);
+  }
+
+  // 4. Fallback final (incluso si no tiene sets marcados) para no perder metadata o configuraciones
+  for (const s of historyRev) {
+    const matched = findBestMatchInSession(currentEx, s);
+    if (matched) return normalizeResult(matched);
   }
 
   return {};

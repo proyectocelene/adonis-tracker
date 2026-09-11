@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Flame, Check, Plus, Minus, Trophy, Sparkles, Settings2 } from 'lucide-react';
 import PlateCalculatorModal from './PlateCalculatorModal';
 import OverloadScienceModal from './OverloadScienceModal';
 import ExerciseFeedbackModal from './ExerciseFeedbackModal';
 import MachineConfigModal from './MachineConfigModal';
 import { calculate1RM, getOverloadTarget, analyzeExercisePerformance, getMachineStorageKey, getUnifiedExerciseTarget } from '../../hooks/useWorkoutCalculations';
+import { useIndexedDB as useLocalStorage } from '../../hooks/useIndexedDB';
 
 // Analizador fisiológico de calentamiento según prescripción oficial
 function getWarmupPlan(exercise, previousData, exerciseData, machineConfig, coachAnalysis) {
@@ -117,11 +118,17 @@ export default function SetLogger({
 
   const isUnilateral = !isStrictlyBilateral && (exerciseData.isUnilateral !== undefined ? !!exerciseData.isUnilateral : !!exercise.isUnilateral);
   
-  // Machine Config: Prioridad a exerciseData, con persistencia normalizada en localStorage
+  const slugKey = useMemo(() => getMachineStorageKey(exercise), [exercise]);
+  const [globalMachineConfigs, setGlobalMachineConfigs] = useLocalStorage('coachv2_machine_configs', {});
+
+  // Machine Config: Prioridad a exerciseData, luego al almacén sincronizado en Firestore / IndexedDB
   const [machineConfig, setMachineConfig] = useState(() => {
-    if (exerciseData.machineConfig) return exerciseData.machineConfig;
+    if (exerciseData?.machineConfig) return exerciseData.machineConfig;
+    if (globalMachineConfigs && typeof globalMachineConfigs === 'object') {
+      const stored = globalMachineConfigs[exercise?.id] || globalMachineConfigs[slugKey];
+      if (stored) return stored;
+    }
     try {
-      const slugKey = getMachineStorageKey(exercise);
       const saved = localStorage.getItem(slugKey) || localStorage.getItem(`adonis_machine_${exercise.id}`);
       return saved ? JSON.parse(saved) : null;
     } catch (e) {
@@ -130,10 +137,15 @@ export default function SetLogger({
   });
 
   useEffect(() => {
-    if (exerciseData.machineConfig) {
+    if (exerciseData?.machineConfig) {
       setMachineConfig(exerciseData.machineConfig);
+    } else if (globalMachineConfigs && typeof globalMachineConfigs === 'object') {
+      const stored = globalMachineConfigs[exercise?.id] || globalMachineConfigs[slugKey];
+      if (stored && !machineConfig) {
+        setMachineConfig(stored);
+      }
     }
-  }, [exerciseData.machineConfig]);
+  }, [exerciseData?.machineConfig, globalMachineConfigs, exercise?.id, slugKey]);
 
   const [plateModal, setPlateModal] = useState({ isOpen: false, setNum: null, currentWeight: 0 });
   const [isScienceModalOpen, setIsScienceModalOpen] = useState(false);
@@ -189,8 +201,24 @@ export default function SetLogger({
     if (onUpdateExerciseMeta) {
       onUpdateExerciseMeta({ machineConfig: configData });
     }
+    // Sincronizar en Firestore / IndexedDB en la colección coachv2_machine_configs
+    setGlobalMachineConfigs(prev => {
+      const next = { ...(prev || {}) };
+      if (configData) {
+        next[exercise.id] = configData;
+        next[slugKey] = configData;
+        if (configData.station) {
+          const stationSlug = `${exercise.id}_${configData.station.toLowerCase().replace(/[^a-z0-9]/g, '_')}`;
+          next[stationSlug] = configData;
+        }
+      } else {
+        delete next[exercise.id];
+        delete next[slugKey];
+      }
+      return next;
+    });
+    // Respaldo de compatibilidad en localStorage
     try {
-      const slugKey = getMachineStorageKey(exercise);
       if (configData) {
         const serialized = JSON.stringify(configData);
         localStorage.setItem(slugKey, serialized);
@@ -609,14 +637,71 @@ export default function SetLogger({
             (weightNum > prevWeightNum * 1.6 || weightNum < prevWeightNum * 0.5) &&
             (!setVal.rpe || rpeNum >= 9.5);
 
-          // Si el usuario subió peso o mantuvo con RPE solvente (<= 8), es una consolidación exitosa
-          const isWeightSolidified = isDone && prevWeightNum > 0 && weightNum >= prevWeightNum && rpeNum > 0 && rpeNum <= 8;
+          const prevRepsNum = Number(prevVal.reps) || (prevVal.repsL !== undefined || prevVal.repsR !== undefined ? Math.max(Number(prevVal.repsL) || 0, Number(prevVal.repsR) || 0) : 0);
+          const deltaWeight = (prevWeightNum > 0 && weightNum > 0) ? (weightNum - prevWeightNum) : 0;
+          const deltaReps = (prevRepsNum > 0 && repsNum > 0) ? (repsNum - prevRepsNum) : 0;
+          const isExtraSet = !prevWeightNum && !prevRepsNum;
 
           // Pasa machineConfig y lo realizado hoy (exerciseData) para cálculo con incrementos reales y estabilidad
           const overloadTarget = getOverloadTarget(setNum, previousData, exercise.targetReps || '10-12', machineConfig, prevVal.weight, prevVal.reps, exerciseData);
           const current1RM = calculate1RM(setVal.weight, setVal.reps);
           const prev1RM = calculate1RM(prevVal.weight, prevVal.reps);
           const isPr = isDone && current1RM > 0 && prev1RM > 0 && current1RM > prev1RM;
+
+          // Insignia inteligente delta-aware al completar la serie
+          let completedBadge = null;
+          if (isDone) {
+            if (isExtraSet) {
+              completedBadge = {
+                text: '➕ Extra (+Volumen)',
+                color: '#4f46e5',
+                bg: '#eef2ff',
+                border: '#c7d2fe'
+              };
+            } else if (deltaWeight > 0) {
+              completedBadge = {
+                text: `${isPr ? '🏆 PR! ' : ''}🚀 +${deltaWeight}# Sobrecarga!`,
+                color: '#15803d',
+                bg: '#dcfce7',
+                border: '#86efac'
+              };
+            } else if (deltaWeight === 0 && deltaReps > 0) {
+              completedBadge = {
+                text: `${isPr ? '🏆 PR! ' : ''}⚡ +${deltaReps}r Sobrecarga!`,
+                color: '#0369a1',
+                bg: '#e0f2fe',
+                border: '#7dd3fc'
+              };
+            } else if (deltaWeight === 0 && deltaReps === 0) {
+              completedBadge = {
+                text: `✓ ${weightNum}# Consolidado (RPE ${rpeNum || 8})`,
+                color: '#15803d',
+                bg: '#f0fdf4',
+                border: '#bbf7d0'
+              };
+            } else if (deltaWeight < 0) {
+              completedBadge = {
+                text: `⚖️ Back-off (${deltaWeight} lbs)`,
+                color: '#b45309',
+                bg: '#fef3c7',
+                border: '#fde68a'
+              };
+            } else if (deltaReps < 0) {
+              completedBadge = {
+                text: rpeNum >= 9.5 ? `⚠️ Fatiga (${repsNum} vs ${prevRepsNum}r)` : `✓ ${weightNum}# × ${repsNum}r`,
+                color: '#64748b',
+                bg: '#f1f5f9',
+                border: '#cbd5e1'
+              };
+            } else {
+              completedBadge = {
+                text: current1RM > 0 ? `1RM: ${current1RM} lbs` : '✓ Listo',
+                color: '#15803d',
+                bg: '#f0fdf4',
+                border: '#bbf7d0'
+              };
+            }
+          }
 
           return (
             <div
@@ -694,17 +779,19 @@ export default function SetLogger({
                     🎯 {overloadTarget.shortText}
                   </span>
                 )}
-                {isDone && (
+                {isDone && completedBadge && (
                   <span style={{ 
-                    color: isWeightSolidified ? '#15803d' : (isPr ? '#b45309' : '#64748b'), 
+                    color: completedBadge.color,
+                    background: completedBadge.bg,
+                    border: `1px solid ${completedBadge.border}`,
                     fontSize: '10px', 
                     fontWeight: '800', 
                     whiteSpace: 'nowrap', 
+                    padding: '1.5px 6px',
+                    borderRadius: '6px',
                     flexShrink: 0 
                   }}>
-                    {isWeightSolidified
-                      ? `🔥 ${weightNum}# consolidado (RPE ${rpeNum})`
-                      : (isPr && current1RM > 0 ? `🏆 PR! 1RM: ${current1RM} lbs` : (current1RM > 0 ? `1RM: ${current1RM} lbs` : '✓ Listo'))}
+                    {completedBadge.text}
                   </span>
                 )}
               </div>
@@ -1041,6 +1128,7 @@ export default function SetLogger({
         loadRecommendation={loadRecommendation}
         targetReps={exercise.targetReps || '8-10'}
         previousData={previousData}
+        todayWorkoutData={exerciseData}
         machineConfig={machineConfig}
       />
 

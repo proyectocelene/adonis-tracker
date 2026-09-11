@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { db } from '../services/firebase';
+import { db, sanitizeForFirestore } from '../services/firebase';
 import { collection, doc, onSnapshot, setDoc, deleteDoc, query, orderBy } from 'firebase/firestore';
 import { useAuth } from '../contexts/AuthContext';
 import { get, set } from 'idb-keyval';
@@ -19,7 +19,14 @@ export function useWorkoutHistory() {
 
     async function loadCachedHistory() {
       try {
-        const cached = await get(cacheKey);
+        let cached = await get(cacheKey);
+        if (!Array.isArray(cached) || cached.length === 0) {
+          cached = await get('coachv2_history');
+        }
+        if (!Array.isArray(cached) || cached.length === 0) {
+          cached = await get('coachv2_history_cache_anon');
+        }
+
         if (isMounted && Array.isArray(cached) && cached.length > 0) {
           setHistory(cached);
           setIsLoading(false);
@@ -31,8 +38,20 @@ export function useWorkoutHistory() {
 
     loadCachedHistory();
 
+    const handleCloudSynced = (e) => {
+      if (isMounted && e?.detail?.allSessions && Array.isArray(e.detail.allSessions)) {
+        setHistory(e.detail.allSessions);
+        setIsLoading(false);
+      } else {
+        loadCachedHistory();
+      }
+    };
+
+    window.addEventListener('adonis_cloud_synced', handleCloudSynced);
+
     return () => {
       isMounted = false;
+      window.removeEventListener('adonis_cloud_synced', handleCloudSynced);
     };
   }, [cacheKey]);
 
@@ -46,16 +65,40 @@ export function useWorkoutHistory() {
       return;
     }
 
+    // Consulta directa a la colección completa sin orderBy('timestamp') para que Firestore
+    // NO excluya documentos antiguos o importados que carezcan de esa propiedad específica.
     const historyCollectionRef = collection(db, 'users', currentUser.uid, 'history');
-    const q = query(historyCollectionRef, orderBy('timestamp', 'asc'));
 
-    unsubscribe = onSnapshot(q, (snapshot) => {
+    unsubscribe = onSnapshot(historyCollectionRef, (snapshot) => {
       if (isMounted) {
-        const data = snapshot.docs.map(docSnap => docSnap.data());
-        setHistory(data);
+        const firestoreSessions = snapshot.docs.map(docSnap => docSnap.data());
+
+        // Fusión inteligente: preservar sesiones locales que aún no hayan terminado de subir
+        const sessionMap = new Map();
+        firestoreSessions.forEach(s => {
+          const key = s.id || s.timestamp || s.date;
+          if (key) sessionMap.set(key, s);
+        });
+
+        const currentLocal = historyRefState.current || [];
+        currentLocal.forEach(s => {
+          const key = s.id || s.timestamp || s.date;
+          if (key && !sessionMap.has(key)) {
+            sessionMap.set(key, s);
+          }
+        });
+
+        const allSessions = Array.from(sessionMap.values()).sort((a, b) => {
+          const timeA = new Date(a.timestamp || a.date || a.startTime || a.id || 0).getTime() || 0;
+          const timeB = new Date(b.timestamp || b.date || b.startTime || b.id || 0).getTime() || 0;
+          return timeA - timeB;
+        });
+
+        setHistory(allSessions);
         setIsLoading(false);
         // Persistir en caché local IndexedDB
-        set(cacheKey, data).catch(err => console.warn("Error guardando en caché IndexedDB:", err));
+        set(cacheKey, allSessions).catch(err => console.warn("Error guardando en caché IndexedDB:", err));
+        set('coachv2_history', allSessions).catch(() => {});
       }
     }, (error) => {
       console.warn("Aviso: Conexión Firestore lenta u offline. Usando datos locales:", error.message);
@@ -84,7 +127,7 @@ export function useWorkoutHistory() {
               await deleteDoc(docRef);
             } else if (item.session && item.session.id) {
               const docRef = doc(db, 'users', currentUser.uid, 'history', item.session.id);
-              await setDoc(docRef, item.session);
+              await setDoc(docRef, sanitizeForFirestore(item.session));
             }
           } catch (e) {
             console.warn(`[Outbox] Error sincronizando ${item.sessionId || item.session?.id}, reintentando luego:`, e);
@@ -128,7 +171,7 @@ export function useWorkoutHistory() {
       if (isOnline) {
         try {
           const docRef = doc(db, 'users', currentUser.uid, 'history', session.id);
-          await setDoc(docRef, session);
+          await setDoc(docRef, sanitizeForFirestore(session));
           return;
         } catch (error) {
           console.warn("[Outbox] Fallo envío a Firebase, encolando en Outbox:", error);

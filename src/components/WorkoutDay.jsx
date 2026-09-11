@@ -40,6 +40,7 @@ export default function WorkoutDay() {
   const [currentSessions, setCurrentSessions, isSessionsLoading] = useLocalStorage('coachv2_active_workouts', {});
   const [bodyMetrics, , isMetricsLoading] = useLocalStorage('coachv2_body_metrics_history', []);
   const [bodyComposition] = useLocalStorage('coachv2_body_composition_data', {});
+  const [globalMachineConfigs] = useLocalStorage('coachv2_machine_configs', {});
   const [workoutHistory, setWorkoutHistory, isHistoryLoading, saveSession, deleteSession] = useWorkoutHistory();
   const [apiKey] = useLocalStorage('coachv2_deepseek_apikey', '');
   const [googleSheetsUrl, setGoogleSheetsUrl] = useLocalStorage('coachv2_google_sheets_url', 'https://script.google.com/macros/s/AKfycbxA-KbUcEgWUq4jvjdSBxLw3tGsgPxXsF2Y7mX5JsNIpE2qslN1v7xW3NqdJ3-4b-RCwg/exec');
@@ -835,6 +836,22 @@ export default function WorkoutDay() {
         const startIso = sessionStartTime || new Date(Date.now() - Math.max(15, liveElapsedMinutes || 45) * 60000).toISOString();
         const finalDuration = liveElapsedMinutes > 0 ? liveElapsedMinutes : Math.max(15, Math.round((completedSets * 2.2) + (cardioCompleted * 35)));
 
+        // Asegurar que cada ejercicio conserve su machineConfig en el registro histórico
+        const exercisesWithConfigs = { ...todayWorkoutData };
+        Object.keys(exercisesWithConfigs).forEach(exKey => {
+          if (exercisesWithConfigs[exKey] && typeof exercisesWithConfigs[exKey] === 'object') {
+            if (!exercisesWithConfigs[exKey].machineConfig) {
+              const matchedConfig = globalMachineConfigs[exKey] || globalMachineConfigs[exercisesWithConfigs[exKey]?.name];
+              if (matchedConfig) {
+                exercisesWithConfigs[exKey] = {
+                  ...exercisesWithConfigs[exKey],
+                  machineConfig: matchedConfig
+                };
+              }
+            }
+          }
+        });
+
         const sessionLog = {
           id: sessionId,
           weekNumber: currentWeek,
@@ -852,8 +869,10 @@ export default function WorkoutDay() {
           completedSets,
           cardioCompleted,
           calories: todayCalories,
-          exercises: todayWorkoutData,
+          exercises: exercisesWithConfigs,
           skippedExercises: skippedExercisesMap[baseDay.id] || {},
+          userWeightKg: userWeightKg || (bodyMetrics.length > 0 ? bodyMetrics[bodyMetrics.length - 1]?.weightKg : null),
+          bodyComposition: bodyComposition || null,
           isCompleted: true,
           isRestDay: false,
           isMissedDay: false
@@ -1203,6 +1222,7 @@ export default function WorkoutDay() {
       elapsedMinutes: liveElapsedMinutes,
       isWarmupDone,
       skippedExercises: skippedExercisesMap[baseDay.id] || {},
+      machineConfigs: globalMachineConfigs || {},
       bodyMetrics,
       bodyComposition,
       userWeightKg

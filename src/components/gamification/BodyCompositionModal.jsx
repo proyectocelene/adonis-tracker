@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Scale, X, Check, Activity, Target, Sparkles, Ruler, Flame } from 'lucide-react';
 
 export default function BodyCompositionModal({
@@ -8,8 +8,6 @@ export default function BodyCompositionModal({
   initialGoals = {},
   onSave
 }) {
-  if (!isOpen) return null;
-
   const [activeTab, setActiveTab] = useState('scale'); // 'scale' | 'tape' | 'goals'
 
   // Estado de Datos de Báscula (Sin datos falsos prellenados)
@@ -58,6 +56,41 @@ export default function BodyCompositionModal({
     onSave(formData, goalData);
     onClose();
   };
+
+  useEffect(() => {
+    if (isOpen) {
+      setFormData({
+        weightKg: initialData.weightKg || initialData.weight || '',
+        heightCm: initialData.heightCm || initialData.height || '',
+        bodyFatPct: initialData.bodyFatPct || '',
+        fatMassKg: initialData.fatMassKg || '',
+        skeletalMusclePct: initialData.skeletalMusclePct || '',
+        skeletalMuscleKg: initialData.skeletalMuscleKg || '',
+        fatFreeMassKg: initialData.fatFreeMassKg || '',
+        waterPct: initialData.waterPct || '',
+        waterKg: initialData.waterKg || '',
+        visceralFat: initialData.visceralFat || '',
+        boneMassKg: initialData.boneMassKg || '',
+        bmr: initialData.bmr || '',
+        proteinPct: initialData.proteinPct || '',
+        obesityDegreePct: initialData.obesityDegreePct || '',
+        metabolicAge: initialData.metabolicAge || '',
+        realAge: initialData.realAge || '',
+        waistCm: initialData.waistCm || '',
+        shouldersCm: initialData.shouldersCm || '',
+        chestCm: initialData.chestCm || '',
+        armsCm: initialData.armsCm || ''
+      });
+      setGoalData({
+        targetWeightKg: initialGoals.targetWeightKg || '72.0',
+        targetFatPct: initialGoals.targetFatPct || '12.0',
+        muscleGainTargetKg: initialGoals.muscleGainTargetKg || '2.0',
+        goalType: initialGoals.goalType || 'recomposition'
+      });
+    }
+  }, [isOpen, initialData, initialGoals]);
+
+  if (!isOpen) return null;
 
   return (
     <div style={{
