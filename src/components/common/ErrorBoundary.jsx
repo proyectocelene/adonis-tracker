@@ -13,16 +13,45 @@ export class ErrorBoundary extends React.Component {
 
   componentDidCatch(error, errorInfo) {
     console.error("⚡️ ErrorBoundary atrapó una excepción:", error, errorInfo);
+
+    const isChunkError = error && (
+      (error.message && (
+        error.message.includes('Failed to fetch dynamically imported module') ||
+        error.message.includes('Loading chunk') ||
+        error.message.includes('preload')
+      )) ||
+      error.name === 'ChunkLoadError'
+    );
+
+    if (isChunkError) {
+      const lastReload = sessionStorage.getItem('pwa_chunk_auto_reload');
+      const now = Date.now();
+      if (!lastReload || now - parseInt(lastReload, 10) > 10000) {
+        sessionStorage.setItem('pwa_chunk_auto_reload', String(now));
+        this.handleForceUpdate();
+      }
+    }
   }
 
   handleReload = () => {
     window.location.reload();
   };
 
-  handleResetStorage = () => {
-    if (window.confirm("¿Deseas intentar reiniciar la memoria caché local para solucionar el fallo? Tu historial principal guardado no se perderá.")) {
-      window.location.reload();
+  handleForceUpdate = async () => {
+    try {
+      if ('caches' in window) {
+        const names = await caches.keys();
+        await Promise.all(names.map(name => caches.delete(name)));
+      }
+      if ('serviceWorker' in navigator) {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(regs.map(r => r.unregister()));
+      }
+    } catch (e) {
+      console.warn("Error al limpiar cachés:", e);
     }
+    const cleanUrl = window.location.origin + window.location.pathname + '?v=' + Date.now();
+    window.location.href = cleanUrl;
   };
 
   handleRetry = () => {
@@ -31,6 +60,15 @@ export class ErrorBoundary extends React.Component {
 
   render() {
     if (this.state.hasError) {
+      const isChunkError = this.state.error && (
+        (this.state.error.message && (
+          this.state.error.message.includes('Failed to fetch dynamically imported module') ||
+          this.state.error.message.includes('Loading chunk') ||
+          this.state.error.message.includes('preload')
+        )) ||
+        this.state.error.name === 'ChunkLoadError'
+      );
+
       if (this.props.fallback) {
         if (typeof this.props.fallback === 'function') {
           return this.props.fallback(this.state.error, this.handleRetry);
@@ -82,28 +120,30 @@ export class ErrorBoundary extends React.Component {
               width: '64px',
               height: '64px',
               borderRadius: '20px',
-              background: '#fef2f2',
-              color: '#ef4444',
+              background: isChunkError ? '#eff6ff' : '#fef2f2',
+              color: isChunkError ? '#0066ff' : '#ef4444',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               margin: '0 auto 20px auto'
             }}>
-              <AlertTriangle size={32} />
+              {isChunkError ? <RefreshCw size={32} /> : <AlertTriangle size={32} />}
             </div>
 
             <h2 style={{ fontSize: '20px', fontWeight: '800', marginBottom: '8px', color: '#0f172a' }}>
-              ¡Ups! Algo inesperado ocurrió
+              {isChunkError ? '¡Nueva versión disponible!' : '¡Ups! Algo inesperado ocurrió'}
             </h2>
 
             <p style={{ fontSize: '13px', color: '#64748b', lineHeight: '1.6', marginBottom: '24px' }}>
-              La PWA detectó una interrupción en el renderizado. No te preocupes, tus datos en el celular están a salvo.
+              {isChunkError 
+                ? 'Se ha publicado una actualización de la aplicación en el servidor. Tu dispositivo solo necesita sincronizar los archivos más recientes. Tu historial y datos locales están 100% seguros.'
+                : 'La PWA detectó una interrupción en el renderizado. No te preocupes, tus datos en el celular están a salvo.'}
             </p>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <button
                 type="button"
-                onClick={this.handleReload}
+                onClick={this.handleForceUpdate}
                 style={{
                   width: '100%',
                   padding: '14px',
@@ -121,15 +161,15 @@ export class ErrorBoundary extends React.Component {
                   boxShadow: '0 4px 12px rgba(0, 102, 255, 0.25)'
                 }}
               >
-                <RefreshCw size={18} /> Recargar Aplicación
+                <RefreshCw size={18} /> {isChunkError ? 'Actualizar y Sincronizar Ahora' : 'Recargar con Versión Limpia'}
               </button>
 
               <button
                 type="button"
-                onClick={this.handleResetStorage}
+                onClick={this.handleReload}
                 style={{
                   width: '100%',
-                  padding: '14px',
+                  padding: '12px',
                   borderRadius: '16px',
                   background: '#f1f5f9',
                   color: '#475569',
@@ -143,7 +183,7 @@ export class ErrorBoundary extends React.Component {
                   gap: '8px'
                 }}
               >
-                <Database size={16} /> Reintentar Carga Limpia
+                <Database size={16} /> Recarga Rápida
               </button>
             </div>
           </div>

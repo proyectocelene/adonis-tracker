@@ -36,10 +36,43 @@ async function migrateLocalStorageToIndexedDB() {
   localStorage.setItem('coachv2_migrated_to_idb', 'true');
 }
 
-// Code Splitting por pestañas para velocidad de carga instantánea (~200KB por chunk)
-const WorkoutDay = lazy(() => import('./components/WorkoutDay'));
-const HistoryView = lazy(() => import('./components/HistoryView'));
-const BodyWeightView = lazy(() => import('./components/BodyWeightView'));
+import WorkoutDay from './components/WorkoutDay';
+
+function lazyWithRetry(factory) {
+  return lazy(async () => {
+    try {
+      return await factory();
+    } catch (error) {
+      console.warn('Error al cargar módulo dinámico (posible nueva versión desplegada):', error);
+      const isChunkError = error && (
+        (error.message && (
+          error.message.includes('Failed to fetch dynamically imported module') ||
+          error.message.includes('Loading chunk') ||
+          error.message.includes('preload')
+        )) ||
+        error.name === 'ChunkLoadError'
+      );
+
+      const hasRefreshed = sessionStorage.getItem('chunk_retry_' + factory.toString());
+      if (isChunkError && !hasRefreshed) {
+        sessionStorage.setItem('chunk_retry_' + factory.toString(), 'true');
+        if ('serviceWorker' in navigator) {
+          try {
+            const regs = await navigator.serviceWorker.getRegistrations();
+            for (let r of regs) await r.update();
+          } catch (e) {}
+        }
+        window.location.reload();
+        return new Promise(() => {});
+      }
+      sessionStorage.removeItem('chunk_retry_' + factory.toString());
+      throw error;
+    }
+  });
+}
+
+const HistoryView = lazyWithRetry(() => import('./components/HistoryView'));
+const BodyWeightView = lazyWithRetry(() => import('./components/BodyWeightView'));
 
 function PageLoader() {
   return (
