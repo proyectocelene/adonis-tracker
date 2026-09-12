@@ -1,0 +1,1 @@
+import{Y as e}from"./index.esm-CrLr-cwD.js";import{$t as t,S as n,l as r}from"./index-BAxZxPnv.js";var i=e(t()),a=[`axis`],o=(0,i.forwardRef)((e,t)=>i.createElement(r,{chartName:`LineChart`,defaultTooltipEventType:`axis`,validateTooltipEventTypes:a,tooltipPayloadSearcher:n,categoricalChartProps:e,ref:t}));export{o as t};
