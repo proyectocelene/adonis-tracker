@@ -18,20 +18,20 @@ export const scientificProtocol = [
   {
     "id": "d1",
     "dayNumber": 1,
-    "name": "Lunes: Empuje 1 (Pecho Clavicular, Deltoides Lateral y Tríceps)",
+    "name": "Lunes: Empuje 1 (Haz Clavicular & Deltoides Lateral 3D)",
     "type": "workout",
-    "focus": "Prioridad neurológica en haz clavicular y deltoides lateral para maximizar el V-Taper y el Índice de Adonis. Pausas y parciales elongadas al fallar.",
+    "focus": "Prioridad en haz clavicular y deltoides lateral 3D con parciales en estiramiento (0°-45°). Tríceps en elongación profunda tras nuca (cabeza larga = 65% del brazo). Pre-entreno óptimo: 40-50g carbos + sal y agua 1.5-2h antes para turgencia celular máxima.",
     "exercises": [
       {
         "id": "d1_e1",
         "name": "Press Inclinado con Mancuernas (Banco a 30°)",
         "muscleGroup": "Pecho (Pectoral Superior Clavicular)",
         "loadFamily": "Familia Press Superior Inclinado",
-        "sets": 3,
+        "sets": 4,
         "reps": "8-10",
-        "restTime": "150-180 s",
+        "restTime": "180-240 s",
         "defaultUnit": "lbs",
-        "biomechanics": "Banco inclinado a 30° exactos para alinear las fibras del haz clavicular del pectoral con la línea de empuje. Escápulas deprimidas y retraídas contra el banco. Descenso en arco convergente natural donde las mancuernas inician a la altura del pecho alto y suben en diagonal sin chocar arriba. IAP: Inhala diafragmáticamente expandiendo el abdomen en 360° antes de bajar; contén el aire durante la excéntrica (3 segundos) para estabilizar la articulación glenohumeral. Exhala al superar el punto de estancamiento.",
+        "biomechanics": "Constructor #1 del pecho alto. 3s de bajada excéntrica controlando el estiramiento abajo. Mancuernas en ángulo de 45° (no en cruz) para proteger el manguito rotador. Banco inclinado a 30° exactos para alinear las fibras del haz clavicular del pectoral con la línea de empuje. Escápulas deprimidas y retraídas contra el banco. IAP: Inhala diafragmáticamente expandiendo el abdomen en 360° antes de bajar; contén el aire durante la excéntrica (3 segundos) para estabilizar la articulación glenohumeral. Exhala al superar el punto de estancamiento.",
         "warmup": "🔥 Sí ocupa:\n• Serie 1: 50% del peso efectivo x 10 reps (control articular).\n• Serie 2: 75% del peso efectivo x 4 reps (activación neural sin fatiga).",
         "searchQuery": "dumbbell incline chest press 30 degree bench proper form",
         "equivalents": [
@@ -55,7 +55,7 @@ export const scientificProtocol = [
             "name": "Press Inclinado en Máquina (Nitro Incline)",
             "desc": "Tensión constante en recorrido convergente.",
             "ratio": 2.2,
-            "biomechanics": "Asiento calibrado para que los manerales comiencen a la altura de la clavícula. Apoyo lumbar y dorsal firme. Trayectoria convergente que concentra la máxima tensión al final de la contracción. Al fallar concéntrico, ejecuta 2-3 repeticiones parciales en el tercio inferior estirado.",
+            "biomechanics": "Asiento calibrado para que los manerales comiencen a la altura de la clavícula. Apoyo lumbar y dorsal firme. Trayectoria convergente que concentra la máxima tensión al final de la contracción.",
             "mindMuscle": {
               "title": "Pectoral Clavicular en Trayectoria Convergente",
               "internalCue": "Siente cómo las fibras del pecho alto se compactan contra el centro del esternón al juntar los manerales.",
@@ -74,167 +74,15 @@ export const scientificProtocol = [
         }
       },
       {
-        "id": "d1_e2",
-        "name": "Press Inclinado en Máquina (Nitro Incline)",
-        "muscleGroup": "Pecho (Pectoral Superior & Medio)",
-        "loadFamily": "Familia Press Superior Inclinado",
-        "sets": 3,
-        "reps": "8-10",
-        "restTime": "120-150 s",
-        "defaultUnit": "lbs",
-        "biomechanics": "Asiento ajustado para que los mangos queden a nivel de las clavículas. Respaldo inclinado con apoyo lumbar firme. IAP: Presiona la espalda alta y glúteos contra el respaldo, llena el abdomen de aire para blindar el torso y empuja en trayectoria convergente sin despegar los hombros. En la última serie añade 2-3 repeticiones parciales en el fondo estirado.",
-        "warmup": "🔥 Sí (1 serie feeder): 70% de la carga x 4 reps para calibrar el recorrido de la máquina.",
-        "searchQuery": "nitro incline chest press machine setup",
-        "equivalents": [
-          {
-            "id": "d1_e2_eq1",
-            "name": "Press Inclinado con Barra",
-            "desc": "Sobrecarga axial máxima.",
-            "ratio": 1.15,
-            "biomechanics": "Banco inclinado a 30°, agarre a 1.5 anchos de hombros con muñecas neutras sobre el antebrazo. La barra desciende controlada hacia la parte media-alta del esternón. Retracción escapular firme. IAP: Toma aire al diafragma arriba, bloquea el núcleo y baja conteniendo el aire para crear un bloque sólido que proteja la cintura escapular.",
-            "mindMuscle": {
-              "title": "Pectoral Superior con Barra Libre",
-              "internalCue": "Siente la tensión acumulada en las fibras claviculares mientras la barra se acerca al pecho.",
-              "externalCue": "Imagina empujar el suelo con los pies y alejar la barra con un empuje explosivo y controlado.",
-              "eccentricCue": "Desciende en 3 segundos sin rebotar la barra en el esternón."
-            },
-            "searchQuery": "Press Inclinado con Barra tecnica biomecanica",
-            "warmup": "🔥 Sí (1 serie feeder): 70% de la carga x 4 reps para calibrar el recorrido de la máquina."
-          },
-          {
-            "id": "d1_e2_eq2",
-            "name": "Hammer Strength Incline",
-            "desc": "Carga unilateral convergente.",
-            "ratio": 1,
-            "biomechanics": "Máquina con brazos independientes y carga por discos. Asiento colocado de modo que las manijas queden a nivel de las tetillas/clavículas al iniciar. Permite generar máxima fuerza unilateral compensando desbalances bilaterales.",
-            "mindMuscle": {
-              "title": "Pectoral Superior Unilateral Hammer",
-              "internalCue": "Enfócate en la inserción esternal del pectoral mientras contraes al máximo al frente.",
-              "externalCue": "Conduce los codos hacia adentro como si intentaras cerrar una pinza gigante.",
-              "eccentricCue": "Permite que los brazos de la máquina abran tu caja torácica durante 3 segundos completos."
-            },
-            "searchQuery": "Hammer Strength Incline tecnica biomecanica",
-            "warmup": "🔥 Sí (1 serie feeder): 70% de la carga x 4 reps para calibrar el recorrido de la máquina."
-          }
-        ],
-        "mindMuscle": {
-          "title": "Pectoral Superior & Medio Convergente",
-          "internalCue": "Al empujar, enfócate en deslizar los codos hacia el centro del pecho sin permitir que los hombros se adelanten.",
-          "externalCue": "Piensa en empujar las agarraderas lejos de tu cuerpo juntando las manos al frente.",
-          "eccentricCue": "Frena el retorno en 3 segundos sintiendo el estiramiento en la caja torácica antes del tope."
-        }
-      },
-      {
-        "id": "d1_e3",
-        "name": "Press Militar en Máquina (Dual Axis)",
-        "muscleGroup": "Hombro (Deltoides Anterior y Medio)",
-        "loadFamily": "Familia Press Vertical Hombros",
-        "sets": 3,
-        "reps": "8-10",
-        "restTime": "120 s",
-        "defaultUnit": "lbs",
-        "biomechanics": "Ajusta el asiento para que los mangos queden a la altura de la mandíbula o lóbulos de las orejas. Codos a 30° adelantados en el plano escapular (no abiertos a 90° para evitar pinzamiento subacromial). IAP: Bloquea el abdomen contra el respaldo lumbar antes del empuje para evitar arquear la columna baja.",
-        "warmup": "🔥 No ocupa (el deltoides anterior ya viene pre-activado de los presses inclinados). Pasa directo a series efectivas.",
-        "searchQuery": "dual axis overhead shoulder press machine",
-        "equivalents": [
-          {
-            "id": "d1_e3_eq1",
-            "name": "Press Militar con Mancuernas sentado",
-            "desc": "Trabajo estabilizador de deltoides.",
-            "ratio": 0.45,
-            "biomechanics": "Banco vertical ajustado a 75-80° (un punto por debajo de 90° para respetar la movilidad escapular). Mancuernas sostenidas en agarre semi-pronado. Subida en arco natural sin chocar las pesas arriba.",
-            "mindMuscle": {
-              "title": "Deltoides Libre con Mancuernas",
-              "internalCue": "Siente cómo las cabezas anteriores y laterales del deltoides sostienen y elevan la carga.",
-              "externalCue": "Empuja las mancuernas hacia arriba buscando formar una 'A' en el aire.",
-              "eccentricCue": "Baja en 3 segundos manteniendo los antebrazos completamente verticales respecto al suelo."
-            },
-            "searchQuery": "Press Militar con Mancuernas sentado tecnica biomecanica",
-            "warmup": "🔥 No ocupa (el deltoides anterior ya viene pre-activado de los presses inclinados). Pasa directo a series efectivas."
-          },
-          {
-            "id": "d1_e3_eq2",
-            "name": "Shoulder Press en Smith",
-            "desc": "Estabilidad en guía vertical.",
-            "ratio": 0.9,
-            "biomechanics": "Banco a 80° colocado bajo la guía Smith de modo que la barra baje frente a la nariz/mentón. Máxima estabilidad para reclutar unidades motoras de alto umbral en el deltoides sin balanceos.",
-            "mindMuscle": {
-              "title": "Deltoides Anterior en Guía Smith",
-              "internalCue": "Aísla el empuje empujando con los codos debajo de la barra.",
-              "externalCue": "Imagina empujar la barra a través del techo con fuerza pura de hombros.",
-              "eccentricCue": "Frena la barra en 2 a 3 segundos antes de rozar la barbilla."
-            },
-            "searchQuery": "Shoulder Press en Smith tecnica biomecanica",
-            "warmup": "🔥 No ocupa (el deltoides anterior ya viene pre-activado de los presses inclinados). Pasa directo a series efectivas."
-          }
-        ],
-        "mindMuscle": {
-          "title": "Deltoides Anterior y Cabeza Lateral",
-          "internalCue": "Inicia el empuje desde los deltoides sin encoger los trapecios ni levantar el cuello del respaldo.",
-          "externalCue": "Empuja los manerales hacia el techo en línea vertical suave, extendiendo los brazos sin hiperextender la columna.",
-          "eccentricCue": "Baja la máquina en 2 a 3 segundos hasta que los codos queden justo a 90° sintiendo la carga en los hombros."
-        }
-      },
-      {
-        "id": "d1_e4",
-        "name": "Cristos en Máquina (Pec Deck)",
-        "muscleGroup": "Pecho (Aislamiento Pectoral)",
-        "sets": 3,
-        "reps": "10-12",
-        "restTime": "90 s",
-        "defaultUnit": "lbs",
-        "biomechanics": "Codos a la altura media del esternón con una ligera flexión constante de 15°. Retrae y deprime escápulas pegándolas al cojín. Pausa de 1s en estiramiento y 1s en contracción al centro. Al fallar concéntrico, sostén 5 segundos en estiramiento bajo tensión continua.",
-        "warmup": "🔥 No ocupa.",
-        "searchQuery": "pec deck fly machine lengthened partials chest",
-        "equivalents": [
-          {
-            "id": "d1_e4_eq1",
-            "name": "Cruce de poleas a media altura (Cable Crossover)",
-            "desc": "Tensión continua en todo el rango.",
-            "ratio": 0.8,
-            "biomechanics": "Poleas a la altura del pecho medio. Paso al frente con torso ligeramente inclinado a 10° y abdomen firme. Los cables ofrecen tensión constante sin punto muerto al centro.",
-            "mindMuscle": {
-              "title": "Pectoral en Polea Continua (Crossover)",
-              "internalCue": "Cruza ligeramente las muñecas al frente para maximizar el acortamiento pectoral.",
-              "externalCue": "Dibuja un círculo amplio con las manos hacia el centro de tu pecho.",
-              "eccentricCue": "Deja que los cables jalen tus brazos hacia afuera en 3 segundos sintiendo el estiramiento pectoral."
-            },
-            "searchQuery": "Cruce de poleas a media altura (Cable Crossover) tecnica biomecanica",
-            "warmup": "🔥 No ocupa."
-          },
-          {
-            "id": "d1_e4_eq2",
-            "name": "Aperturas con mancuernas en banco plano",
-            "desc": "Gran tensión en máximo estiramiento.",
-            "ratio": 0.4,
-            "biomechanics": "Banco horizontal, mancuernas neutras. Codos flexionados a 15-20°. Descenso controlado hasta que los codos alcancen la altura del torso sin sobreestirar la articulación anterior del hombro.",
-            "mindMuscle": {
-              "title": "Pectoral Libre en Estiramiento",
-              "internalCue": "Siente cómo las fibras del pecho se alargan en el fondo del banco.",
-              "externalCue": "Abre los brazos como alas y luego condúcelos al centro contrayendo el pecho.",
-              "eccentricCue": "Baja en 3 segundos completos con caja torácica inflada y orgullosa."
-            },
-            "searchQuery": "Aperturas con mancuernas en banco plano tecnica biomecanica",
-            "warmup": "🔥 No ocupa."
-          }
-        ],
-        "mindMuscle": {
-          "title": "Pectoral Mayor (Aislamiento y Aducción Horizontal)",
-          "internalCue": "No pienses en juntar las manos: piensa en intentar tocar la cara interna de ambos codos frente a tu corazón.",
-          "externalCue": "Imagina que abrazas el tronco de una secoya gigante manteniendo los hombros pegados atrás.",
-          "eccentricCue": "Abre los brazos en 3 segundos sintiendo el estiramiento máximo de las fibras pectorales hasta la horizontal."
-        }
-      },
-      {
         "id": "d1_e5",
-        "name": "Elevaciones Laterales en Máquina",
-        "muscleGroup": "Hombro (Deltoides Lateral)",
+        "name": "Elevaciones Laterales en Máquina (¡Prioridad!)",
+        "muscleGroup": "Hombro (Deltoides Lateral 3D)",
         "sets": 4,
         "reps": "12-15",
-        "restTime": "90 s",
+        "restTime": "120-150 s",
         "defaultUnit": "lbs",
-        "biomechanics": "El eje de rotación de la máquina debe coincidir con la articulación glenohumeral (hombro). Almohadillas apoyadas en el tercio distal del brazo (justo arriba del codo). Torso ligeramente adelantado (10°) para alinear el deltoides lateral en el plano escapular. Pausa de 1s arriba; parciales abajo al fallar.",
-        "warmup": "🔥 No ocupa.",
+        "biomechanics": "Se adelantan al puesto #2 con el SNC fresco. Eje de la máquina alineado con el hombro (articulación glenohumeral). Almohadillas apoyadas en el tercio distal del brazo (justo arriba del codo). Torso ligeramente inclinado 10° adelante para alinear el deltoides lateral en el plano escapular. Haz 12-15 reps estrictas hasta que ya no puedas subir el peso a la horizontal; ¡NO sueltes el peso al fallar! Inmediatamente saca 4 a 6 repeticiones parciales en el tercio inferior (0° a 45° de abducción, Pedrosa 2022 / Kassiano 2023) controlando la bajada para inducir tensión mecánica descomunal en estiramiento sin riesgo articular.",
+        "warmup": "🔥 1 serie de aproximación con 50% de la carga si lo requieres.",
         "searchQuery": "machine lateral raise deltoid isolation",
         "equivalents": [
           {
@@ -257,7 +105,7 @@ export const scientificProtocol = [
             "name": "Elevaciones con mancuernas recostado de lado en banco a 30°",
             "desc": "Sobrecarga en ángulo estirado.",
             "ratio": 0.7,
-            "biomechanics": "Acostado de costado sobre un banco inclinado a 30-45°. El brazo libre sostiene la mancuerna. Esta inclinación sobrecarga el tercio inicial del recorrido (fase elongada), donde la mancuerna de pie no tiene palanca.",
+            "biomechanics": "Acostado de costado sobre un banco inclinado a 30-45°. El brazo libre sostiene la mancuerna. Esta inclinación sobrecarga el tercio inicial del recorrido (fase elongada).",
             "mindMuscle": {
               "title": "Deltoides Lateral en Fase Elongada",
               "internalCue": "Inicia la contracción desde el fondo sintiendo el deltoides en tensión máxima.",
@@ -269,35 +117,136 @@ export const scientificProtocol = [
           }
         ],
         "mindMuscle": {
-          "title": "Deltoides Lateral (Amplitud V-Taper)",
-          "internalCue": "Lidera la elevación empujando desde los codos, no desde las manos. Mantén el cuello relajado y los trapecios deprimidos.",
-          "externalCue": "Imagina que empujas las almohadillas hacia las paredes laterales de la habitación, lo más lejos posible de tu cuerpo.",
-          "eccentricCue": "Frena la bajada en 2 a 3 segundos resistiendo el peso antes de que las placas toquen el tope."
+          "title": "Deltoides Lateral (Hombro 3D & Parciales Elongadas)",
+          "internalCue": "Lidera la elevación empujando desde los codos con el torso inclinado 10° adelante. Al fallar en la horizontal, ¡NO sueltes el peso! Saca de 4 a 6 parciales en el tercio inferior (0° a 45°, Pedrosa 2022 / Kassiano 2023).",
+          "externalCue": "Imagina que empujas las almohadillas hacia las paredes laterales lejanas (hacia afuera, no hacia arriba).",
+          "eccentricCue": "Frena la bajada en 2 a 3 segundos resistiendo el peso; en las parciales finales, controla cada descenso en la zona elongada."
+        }
+      },
+      {
+        "id": "d1_e2",
+        "name": "Press Inclinado en Máquina (Nitro Incline)",
+        "muscleGroup": "Pecho (Pectoral Superior Clavicular)",
+        "loadFamily": "Familia Press Superior Inclinado",
+        "sets": 3,
+        "reps": "8-10",
+        "restTime": "180 s",
+        "defaultUnit": "lbs",
+        "biomechanics": "Estabilidad guiada para exprimir las fibras claviculares sin fatiga de estabilizadores. Lleva la 3ª serie a RIR 0. Asiento ajustado para que los mangos queden a nivel de las clavículas. Respaldo inclinado con apoyo lumbar firme. IAP: Presiona la espalda alta y glúteos contra el respaldo, llena el abdomen de aire para blindar el torso y empuja en trayectoria convergente sin despegar los hombros. En la última serie añade 2-3 repeticiones parciales en el fondo estirado.",
+        "warmup": "🔥 Sí (1 serie feeder): 70% de la carga x 4 reps para calibrar el recorrido de la máquina.",
+        "searchQuery": "nitro incline chest press machine setup",
+        "equivalents": [
+          {
+            "id": "d1_e2_eq1",
+            "name": "Press Inclinado con Barra",
+            "desc": "Sobrecarga axial máxima.",
+            "ratio": 1.15,
+            "biomechanics": "Banco inclinado a 30°, agarre a 1.5 anchos de hombros con muñecas neutras sobre el antebrazo. La barra desciende controlada hacia la parte media-alta del esternón. Retracción escapular firme.",
+            "mindMuscle": {
+              "title": "Pectoral Superior con Barra Libre",
+              "internalCue": "Siente la tensión acumulada en las fibras claviculares mientras la barra se acerca al pecho.",
+              "externalCue": "Imagina empujar el suelo con los pies y alejar la barra con un empuje explosivo y controlado.",
+              "eccentricCue": "Desciende en 3 segundos sin rebotar la barra en el esternón."
+            },
+            "searchQuery": "Press Inclinado con Barra tecnica biomecanica",
+            "warmup": "🔥 Sí (1 serie feeder): 70% de la carga x 4 reps para calibrar el recorrido de la máquina."
+          },
+          {
+            "id": "d1_e2_eq2",
+            "name": "Hammer Strength Incline",
+            "desc": "Carga unilateral convergente.",
+            "ratio": 1,
+            "biomechanics": "Máquina con brazos independientes y carga por discos. Asiento colocado de modo que las manijas queden a nivel de las clavículas al iniciar.",
+            "mindMuscle": {
+              "title": "Pectoral Superior Unilateral Hammer",
+              "internalCue": "Enfócate en la inserción esternal del pectoral mientras contraes al máximo al frente.",
+              "externalCue": "Conduce los codos hacia adentro como si intentaras cerrar una pinza gigante.",
+              "eccentricCue": "Permite que los brazos de la máquina abran tu caja torácica durante 3 segundos completos."
+            },
+            "searchQuery": "Hammer Strength Incline tecnica biomecanica",
+            "warmup": "🔥 Sí (1 serie feeder): 70% de la carga x 4 reps para calibrar el recorrido de la máquina."
+          }
+        ],
+        "mindMuscle": {
+          "title": "Pectoral Superior Clavicular Convergente",
+          "internalCue": "Al empujar, enfócate en deslizar los codos hacia el centro del pecho sin permitir que los hombros se adelanten.",
+          "externalCue": "Piensa en empujar las agarraderas lejos de tu cuerpo juntando las manos al frente.",
+          "eccentricCue": "Frena el retorno en 3 segundos sintiendo el estiramiento en la caja torácica antes del tope."
+        }
+      },
+      {
+        "id": "d1_e4",
+        "name": "Cristos en Máquina (Pec Deck)",
+        "muscleGroup": "Pecho (Aislamiento Pectoral)",
+        "sets": 3,
+        "reps": "10-12",
+        "restTime": "120 s",
+        "defaultUnit": "lbs",
+        "biomechanics": "Estiramiento horizontal puro. Abre el pecho, mantén microflexión de codos (15°) y aprieta 1s al centro. Retrae y deprime escápulas pegándolas al cojín. Pausa de 1s en estiramiento y 1s en contracción al centro. Al fallar concéntrico, sostén 5 segundos en estiramiento bajo tensión continua.",
+        "warmup": "🔥 No ocupa.",
+        "searchQuery": "pec deck fly machine lengthened partials chest",
+        "equivalents": [
+          {
+            "id": "d1_e4_eq1",
+            "name": "Cruce de poleas a media altura (Cable Crossover)",
+            "desc": "Tensión continua en todo el rango.",
+            "ratio": 0.8,
+            "biomechanics": "Poleas a la altura del pecho medio. Paso al frente con torso ligeramente inclinado a 10° y abdomen firme.",
+            "mindMuscle": {
+              "title": "Pectoral en Polea Continua (Crossover)",
+              "internalCue": "Cruza ligeramente las muñecas al frente para maximizar el acortamiento pectoral.",
+              "externalCue": "Dibuja un círculo amplio con las manos hacia el centro de tu pecho.",
+              "eccentricCue": "Deja que los cables jalen tus brazos hacia afuera en 3 segundos sintiendo el estiramiento pectoral."
+            },
+            "searchQuery": "Cruce de poleas a media altura (Cable Crossover) tecnica biomecanica",
+            "warmup": "🔥 No ocupa."
+          },
+          {
+            "id": "d1_e4_eq2",
+            "name": "Aperturas con mancuernas en banco plano",
+            "desc": "Gran tensión en máximo estiramiento.",
+            "ratio": 0.4,
+            "biomechanics": "Banco horizontal, mancuernas neutras. Codos flexionados a 15-20°. Descenso controlado hasta que los codos alcancen la altura del torso.",
+            "mindMuscle": {
+              "title": "Pectoral Libre en Estiramiento",
+              "internalCue": "Siente cómo las fibras del pecho se alargan en el fondo del banco.",
+              "externalCue": "Abre los brazos como alas y luego condúcelos al centro contrayendo el pecho.",
+              "eccentricCue": "Baja en 3 segundos completos con caja torácica inflada y orgullosa."
+            },
+            "searchQuery": "Aperturas con mancuernas en banco plano tecnica biomecanica",
+            "warmup": "🔥 No ocupa."
+          }
+        ],
+        "mindMuscle": {
+          "title": "Pectoral Mayor (Aislamiento y Aducción Horizontal)",
+          "internalCue": "No pienses en juntar las manos: piensa en intentar tocar la cara interna de ambos codos frente à tu corazón.",
+          "externalCue": "Imagina que abrazas el tronco de una secoya gigante manteniendo los hombros pegados atrás.",
+          "eccentricCue": "Abre los brazos en 3 segundos sintiendo el estiramiento máximo de las fibras pectorales hasta la horizontal."
         }
       },
       {
         "id": "d1_e6",
-        "name": "Extensión de Tríceps Copa Sobre la Cabeza en Polea (Cuerda)",
+        "name": "Extensión de Tríceps Copa en Polea (Cuerda)",
         "muscleGroup": "Tríceps (Cabeza Larga en Estiramiento)",
-        "sets": 3,
+        "sets": 4,
         "reps": "10-12",
-        "restTime": "90 s",
+        "restTime": "120 s",
         "defaultUnit": "lbs",
-        "biomechanics": "Polea fijada a media altura o alta. Colócate de espaldas con un paso al frente para estabilidad en zancada. Torso a 45°. Codos flexionados y apuntando hacia adelante/arriba junto a las sienes. La posición con el brazo sobre la cabeza coloca la cabeza larga del tríceps en estiramiento máximo (insuficiencia activa disminuida).",
+        "biomechanics": "El tríceps compone el 60-65% del volumen total del brazo; la cabeza larga otorga la masa y grosor visto de perfil. De espaldas a la polea, torso inclinado a 45°. Asegura una flexión profunda del codo por detrás de la cabeza para estirar al 100% la cabeza larga desde su origen en el tubérculo infraglenoideo de la escápula. Fija los codos como bisagras inmóviles, extiende separando los cabos de la cuerda bloqueando 1s al frente y resiste la fase excéntrica en 3 segundos sintiendo el estiramiento profundo bajo carga.",
         "warmup": "🔥 No ocupa.",
         "searchQuery": "overhead cable rope tricep extension long head stretch",
         "equivalents": [
           {
             "id": "d1_e6_eq1",
             "name": "Extensión de Tríceps en Máquina sentado",
-            "desc": "Recorrido guiado con apoyo de codos.",
+            "desc": "Recorrido guiado con apoyo de codos y estabilidad total.",
             "ratio": 1,
-            "biomechanics": "Polea a la altura del hombro opuesto. Agarre del cable sin maneral o con tope de bola cruzando el brazo detrás de la cabeza como desenfundando una espada katana.",
+            "biomechanics": "Sentado con codos apoyados y alineados al eje de rotación. Empuje vertical controlado hacia abajo.",
             "mindMuscle": {
-              "title": "Cabeza Larga Unilateral Katana",
-              "internalCue": "Aísla la cabeza larga sin ninguna compensación de hombro.",
-              "externalCue": "Extiende el codo en diagonal siguiendo la línea natural de la escápula.",
-              "eccentricCue": "Baja en 3 segundos hasta máxima flexión detrás del cuello."
+              "title": "Tríceps Guiado en Máquina",
+              "internalCue": "Aísla el tríceps sin ninguna compensación de hombro.",
+              "externalCue": "Empuja las almohadillas hacia el suelo bloqueando codos.",
+              "eccentricCue": "Baja en 3 segundos sintiendo la tracción controlada."
             },
             "searchQuery": "Extensión de Tríceps en Máquina sentado tecnica biomecanica",
             "warmup": "🔥 No ocupa."
@@ -307,7 +256,7 @@ export const scientificProtocol = [
             "name": "French Press con mancuerna a dos manos",
             "desc": "Variante clásica con mancuerna sobre cabeza.",
             "ratio": 0.5,
-            "biomechanics": "Banco a 30-45°. Dos mancuernas neutras. Los codos se mantienen inclinados hacia atrás a 60° (no verticales a 90°) para mantener tensión continua en el punto de bloqueo.",
+            "biomechanics": "Banco a 30-45°. Dos mancuernas neutras o una pesada a dos manos. Codos inclinados hacia atrás para mantener tensión continua.",
             "mindMuscle": {
               "title": "Press Francés Inclinado Libre",
               "internalCue": "Siente la cabeza larga del tríceps alargarse hacia atrás en cada bajada.",
@@ -316,63 +265,28 @@ export const scientificProtocol = [
             },
             "searchQuery": "French Press con mancuerna a dos manos tecnica biomecanica",
             "warmup": "🔥 No ocupa."
-          }
-        ],
-        "mindMuscle": {
-          "title": "Tríceps (Cabeza Larga en Estiramiento Máximo)",
-          "internalCue": "Fija los codos como bisagras inmóviles. Extiende los antebrazos separando los cabos de la cuerda y apretando la parte posterior del brazo.",
-          "externalCue": "Imagina empujar los extremos de la cuerda hacia las esquinas superiores frente a ti.",
-          "eccentricCue": "Permite que la cuerda viaje detrás de tu cabeza en 3 segundos sintiendo el estiramiento profundo en la axila."
-        }
-      },
-      {
-        "id": "d1_e7",
-        "name": "Extensión de Tríceps en Polea (Pushdown con barra recta o V)",
-        "muscleGroup": "Tríceps (Cabeza Lateral y Medial)",
-        "sets": 3,
-        "reps": "10-12",
-        "restTime": "90 s",
-        "defaultUnit": "lbs",
-        "biomechanics": "Polea alta con barra recta o en V. Codos pegados a los costados del torso y ligeramente adelantados. Hombros deprimidos y caja torácica firme. Extensión completa del codo con bloqueo articular controlado sin balancear el torso.",
-        "warmup": "🔥 No ocupa.",
-        "searchQuery": "cable triceps pushdown straight bar technique",
-        "equivalents": [
-          {
-            "id": "d1_e7_eq1",
-            "name": "Pushdown con cuerda",
-            "desc": "Separación lateral en contracción final.",
-            "ratio": 0.9,
-            "biomechanics": "Polea alta con cuerda doble. Al extender, separa activamente los cabos hacia los costados de las caderas con pronación de muñeca.",
-            "mindMuscle": {
-              "title": "Cabeza Lateral en Pronación Forzada",
-              "internalCue": "Abre las manos al fondo sintiendo la cabeza lateral del tríceps arder.",
-              "externalCue": "Separa los extremos de la cuerda hacia las paredes laterales.",
-              "eccentricCue": "Controla el retorno de la cuerda hasta el esternón en 2 a 3 segundos."
-            },
-            "searchQuery": "Pushdown con cuerda tecnica biomecanica",
-            "warmup": "🔥 No ocupa."
           },
           {
-            "id": "d1_e7_eq2",
-            "name": "Fondos en máquina asistida (Dips)",
-            "desc": "Gran sobrecarga en empuje de tríceps.",
-            "ratio": 1.2,
-            "biomechanics": "Barras paralelas estrechas. Torso completamente vertical (no inclinado adelante para no activar pecho). Codos pegados al cuerpo bajando hasta 90°.",
+            "id": "d1_e6_eq3",
+            "name": "Extensión cruzada de tríceps en poleas (Katana extension)",
+            "desc": "Alineación biomecánica perfecta con la cabeza larga.",
+            "ratio": 0.8,
+            "biomechanics": "Polea alta a la altura del hombro opuesto. Brazo cruzando por detrás de la cabeza en la línea escapular.",
             "mindMuscle": {
-              "title": "Tríceps Compuesto en Paralelas",
-              "internalCue": "Empuja con la base de la palma extendiendo los brazos con potencia pura de tríceps.",
-              "externalCue": "Imagina hundir las barras en el suelo para elevar tu cuerpo.",
-              "eccentricCue": "Baja en 3 segundos sintiendo el estiramiento del tríceps sin dejar caer los hombros."
+              "title": "Katana Triceps Extension",
+              "internalCue": "Extensión diagonal pura del codo sin mover el hombro.",
+              "externalCue": "Desenfundar una katana hacia el frente.",
+              "eccentricCue": "Frena en 3 segundos hasta flexión profunda."
             },
-            "searchQuery": "Fondos en máquina asistida (Dips) tecnica biomecanica",
+            "searchQuery": "Katana cable triceps extension proper form",
             "warmup": "🔥 No ocupa."
           }
         ],
         "mindMuscle": {
-          "title": "Tríceps (Cabezas Lateral y Medial)",
-          "internalCue": "Contrae al máximo la cara externa del brazo durante 1 segundo completo en la posición baja.",
-          "externalCue": "Imagina empujar la barra contra tus muslos como si quisieras romper una tabla debajo de ti.",
-          "eccentricCue": "Sube la barra solo hasta la altura de los pezones en 2 a 3 segundos sin despegar los codos del costado."
+          "title": "Tríceps (Cabeza Larga en Estiramiento Máximo - 65% del Brazo)",
+          "internalCue": "Flexión profunda de codo detrás de la cabeza. Siente la tracción extrema en el tubérculo infraglenoideo antes de extender.",
+          "externalCue": "Separa los extremos de la cuerda al frente y bloquea los codos con fuerza durante 1 segundo.",
+          "eccentricCue": "Regresa en 3 segundos continuos sin permitir que los codos se abran hacia los lados."
         }
       },
       {
@@ -380,11 +294,11 @@ export const scientificProtocol = [
         "name": "Vacuum Abdominal (Transverso)",
         "muscleGroup": "Core (Transverso & Cintura Estrecha)",
         "sets": 4,
-        "reps": "15-20 s",
+        "reps": "20-25 s",
         "isTime": true,
         "restTime": "60 s",
         "defaultUnit": "s",
-        "biomechanics": "De pie, manos apoyadas en rodillas o barra. Exhala todo el aire residual de los pulmones. Sin inhalar, expande la caja torácica aspirando el ombligo hacia la columna vertebral y hacia arriba bajo las costillas. Mantén 15 a 20 segundos en apnea espiratoria.",
+        "biomechanics": "Apnea espiratoria completa. Ombligo succionado hacia la columna para cerrar el perímetro de la cintura. De pie o apoyado en rodillas. Exhala todo el aire residual de los pulmones. Sin inhalar, expande la caja torácica aspirando el ombligo hacia la columna vertebral y hacia arriba bajo las costillas. Mantén 20 a 25 segundos en apnea espiratoria.",
         "warmup": "🔥 No ocupa (solo 2 exhalaciones profundas previas).",
         "searchQuery": "stomach vacuum exercise waist tightening",
         "equivalents": [
@@ -413,14 +327,14 @@ export const scientificProtocol = [
       },
       {
         "id": "d1_e9",
-        "name": "Cardio Aeróbico en Zona 2",
+        "name": "Cardio Zona 2 en Caminadora",
         "muscleGroup": "Cardiovascular (Zona 2)",
         "sets": 1,
-        "reps": "30 min",
+        "reps": "35-45 min",
         "isCardio": true,
         "restTime": "0 s",
         "defaultUnit": "min",
-        "biomechanics": "Ritmo cardíaco sostenido entre 60% y 70% de la frecuencia cardíaca máxima (esfuerzo donde puedes mantener una conversación hablada sin jadear). Optimización del flujo sanguíneo, reciclaje de lactato y depuración metabólica sin fatiga periférica muscular.",
+        "biomechanics": "Inclinación 11-12% a 3.8-4.2 km/h (120-135 BPM). Directo a oxidar ácidos grasos libres tras depletar glucógeno en el pecho. Cero impacto articular en rodillas, activación sostenida de gemelos y glúteos.",
         "warmup": "🔥 3 minutos progresivos a ritmo suave.",
         "searchQuery": "zone 2 cardio fat oxidation incline walk",
         "equivalents": [
@@ -429,7 +343,7 @@ export const scientificProtocol = [
             "name": "Caminadora en Inclinación",
             "desc": "Bajo impacto articular y alto gasto calórico.",
             "ratio": 1,
-            "biomechanics": "Caminadora a 3-4.5 km/h con inclinación del 8-12%. Cero impacto articular en rodillas, activación sostenida de gemelos y glúteos.",
+            "biomechanics": "Caminadora a 3.8-4.2 km/h con inclinación del 11-12%.",
             "mindMuscle": {
               "title": "Caminata Inclinada Zona 2",
               "internalCue": "Camina erguido sin sujetar las barandillas para activar la musculatura estabilizadora.",
@@ -448,8 +362,8 @@ export const scientificProtocol = [
             "mindMuscle": {
               "title": "Ciclismo Zona 2",
               "internalCue": "Pedaleo circular fluido empujando y halando suavemente los pedales.",
-              "externalCue": "Mantén las revoluciones fijas en la pantalla.",
-              "eccentricCue": "Respiración rítmica y controlada."
+              "externalCue": "Mantén la cadencia continua.",
+              "eccentricCue": "Respiración uniforme."
             },
             "searchQuery": "Bicicleta Estática tecnica biomecanica",
             "warmup": "🔥 3 minutos progresivos a ritmo suave."
@@ -467,20 +381,70 @@ export const scientificProtocol = [
   {
     "id": "d2",
     "dayNumber": 2,
-    "name": "Martes: Piernas 1 (Enfoque Cuádriceps y Glúteo)",
+    "name": "Martes: Piernas 1 (Enfoque Cuádriceps & Vasto Medial)",
     "type": "workout",
     "focus": "Desarrollo masivo del tren inferior y cuádriceps mediante flexión profunda de rodilla con máxima estabilidad articular.",
     "exercises": [
+      {
+        "id": "d2_e3",
+        "name": "Extensión de Cuádriceps (Pre-activación)",
+        "muscleGroup": "Cuádriceps (Aislamiento Recto Femoral & Vasto Medial)",
+        "sets": 3,
+        "reps": "12-15",
+        "restTime": "120 s",
+        "defaultUnit": "lbs",
+        "biomechanics": "Lubrica el líquido sinovial rotuliano e inunda los cuádriceps de sangre antes de cargar las máquinas pesadas. El eje de giro de la máquina debe quedar alineado milimétricamente con el centro de la articulación de la rodilla. Almohadilla apoyada en el empeine/tobillo bajo. Sujeta con fuerza los mangos laterales para evitar que los glúteos se levanten del asiento al patear. Extensión completa arriba con pausa de 1 segundo; al fallar concéntrico, ejecuta 3 a 5 parciales en el fondo estirado.",
+        "warmup": "🔥 1 serie ligera de aproximación si lo requieres.",
+        "searchQuery": "leg extension machine lengthened partials quad hypertrophy",
+        "equivalents": [
+          {
+            "id": "d2_e3_eq1",
+            "name": "Sissy Squat en soporte",
+            "desc": "Tensión extrema en máxima elongación del recto femoral.",
+            "ratio": 0.4,
+            "biomechanics": "Pies fijados en banco sissy, torso y muslos formando una línea recta. Descenso echando el cuerpo hacia atrás mediante flexión pura de rodilla.",
+            "mindMuscle": {
+              "title": "Recto Femoral en Sissy Squat",
+              "internalCue": "Siente el estiramiento violento y controlado en toda la longitud del muslo.",
+              "externalCue": "Empuja los empeines contra los rodillos para volver a la vertical.",
+              "eccentricCue": "Baja en 3 segundos manteniendo la cadera bloqueada en extensión."
+            },
+            "searchQuery": "Sissy Squat en soporte tecnica biomecanica",
+            "warmup": "🔥 No ocupa."
+          },
+          {
+            "id": "d2_e3_eq2",
+            "name": "Extensiones unilaterales en máquina",
+            "desc": "Equilibrio bilateral de cuádriceps.",
+            "ratio": 0.45,
+            "biomechanics": "Sentado en banco alto con tobillera conectada a polea baja. Tensión constante durante todo el arco de extensión.",
+            "mindMuscle": {
+              "title": "Extensión en Polea con Tensión Continua",
+              "internalCue": "Aísla el vasto interno apretando en el pico concéntrico.",
+              "externalCue": "Extiende la pierna hacia adelante contra el cable.",
+              "eccentricCue": "Resiste el tirón del cable en 3 segundos."
+            },
+            "searchQuery": "Extensiones unilaterales en máquina tecnica biomecanica",
+            "warmup": "🔥 No ocupa."
+          }
+        ],
+        "mindMuscle": {
+          "title": "Cuádriceps Aislado (Recto Femoral en Acortamiento)",
+          "internalCue": "Aprieta la parte superior del muslo con fuerza brutal al llegar arriba. Mantén los tobillos en flexión neutra.",
+          "externalCue": "Patea la almohadilla hacia el techo como si quisieras estirar la pierna en una línea recta perfecta.",
+          "eccentricCue": "Frena la caída en 3 segundos sintiendo cómo el cuádriceps resiste toda la bajada."
+        }
+      },
       {
         "id": "d2_e1",
         "name": "Sentadilla en Máquina Hack (Hack Squat)",
         "muscleGroup": "Cuádriceps & Glúteo",
         "loadFamily": "Familia Sentadilla Hack",
-        "sets": 3,
+        "sets": 4,
         "reps": "8-10",
-        "restTime": "150-180 s",
+        "restTime": "180-240 s",
         "defaultUnit": "lbs",
-        "biomechanics": "Pies en la parte media-baja de la plataforma, separados al ancho de caderas con ligera rotación externa (15°). Espalda lumbar y pelvis firmemente pegadas al respaldo. Permite que las rodillas viajen hacia adelante sobre las puntas de los pies para maximizar la flexión de rodilla y elongación de cuádriceps. IAP: Inhala profundo expandiendo la faja abdominal antes de descender, mantén la presión intra-abdominal conteniendo el aire durante la bajada (3s) y no rebotes en el fondo. Exhala superando la mitad de la subida.",
+        "biomechanics": "El rey de las piernas. Pies en la parte media-baja. Descenso profundo (flexión máxima de rodilla) con 3 segundos de bajada. RIR 1-2. Pies al ancho de caderas con ligera rotación externa (15°). Espalda lumbar y pelvis firmemente pegadas al respaldo. Permite que las rodillas viajen hacia adelante sobre las puntas de los pies para maximizar la flexión de rodilla y elongación de cuádriceps. IAP: Inhala profundo expandiendo la faja abdominal antes de descender, mantén la presión intra-abdominal conteniendo el aire durante la bajada (3s) y no rebotes en el fondo. Exhala superando la mitad de la subida.",
         "warmup": "🔥 Sí ocupa:\n• Serie 1: 50% de carga x 8 reps fluidas.\n• Serie 2: 75% de carga x 3 reps con cadencia controlada.",
         "searchQuery": "hack squat machine quad focus deep knee flexion",
         "equivalents": [
@@ -524,15 +488,15 @@ export const scientificProtocol = [
       },
       {
         "id": "d2_e2",
-        "name": "Prensa de Piernas (Posición Central)",
+        "name": "Prensa de Piernas 45° (Posición Central)",
         "muscleGroup": "Cuádriceps & Tren Inferior",
         "loadFamily": "Familia Prensa de Piernas",
-        "sets": 3,
+        "sets": 4,
         "reps": "10-12",
-        "restTime": "120-150 s",
+        "restTime": "180 s",
         "defaultUnit": "lbs",
-        "biomechanics": "Pies colocados en el centro de la plataforma al ancho de hombros. Espalda y sacro completamente pegados al asiento; NUNCA permitas retroversión pélvica ('butt wink') al fondo. Baja hasta que los muslos queden a unos 80-90° respecto al torso. IAP: Respira hondo antes de liberar la carga, mantén el torso inflado y las manos sujetando firmemente los mangos laterales para anclar la pelvis.",
-        "warmup": "🔥 Sí (1 serie): 70% de la carga x 5 reps para ajustar posición de pies.",
+        "biomechanics": "Pies al ancho de hombros. Descenso profundo sin que el sacro despegue del respaldo. Enorme sobrecarga de cuádriceps y glúteo. Pies colocados en el centro de la plataforma al ancho de hombros. Espalda y sacro completamente pegados al asiento; NUNCA permitas retroversión pélvica ('butt wink') al fondo. Baja hasta que los muslos queden a unos 80-90° respecto al torso. IAP: Respira hondo antes de liberar la carga, mantén el torso inflado y las manos sujetando firmemente los mangos laterales para anclar la pelvis.",
+        "warmup": "🔥 Sí (1 serie feeder): 70% de la carga x 5 reps para ajustar posición de pies.",
         "searchQuery": "leg press 45 degree proper feet placement quad focus",
         "equivalents": [
           {
@@ -564,6 +528,21 @@ export const scientificProtocol = [
             },
             "searchQuery": "Hack invertida tecnica biomecanica",
             "warmup": "🔥 Sí (1 serie): 70% de la carga x 5 reps para ajustar posición de pies."
+          },
+          {
+            "id": "d2_e4",
+            "name": "Prensa Unilateral a 1 Pierna (Pie Alto)",
+            "desc": "Enfoque unilateral para corregir desbalances.",
+            "ratio": 0.5,
+            "biomechanics": "Un pie colocado en la plataforma y el otro libre.",
+            "mindMuscle": {
+              "title": "Prensa Unilateral",
+              "internalCue": "Aísla la pierna activa con control completo.",
+              "externalCue": "Empuja la plataforma con el talón.",
+              "eccentricCue": "Baja en 3 segundos controlados."
+            },
+            "searchQuery": "Prensa Unilateral a 1 Pierna tecnica",
+            "warmup": "🔥 No ocupa."
           }
         ],
         "mindMuscle": {
@@ -574,150 +553,14 @@ export const scientificProtocol = [
         }
       },
       {
-        "id": "d2_e3",
-        "name": "Extensión de Cuádriceps (Leg Extension)",
-        "muscleGroup": "Cuádriceps (Aislamiento Recto Femoral)",
-        "sets": 3,
-        "reps": "12-15",
-        "restTime": "90 s",
-        "defaultUnit": "lbs",
-        "biomechanics": "El eje de giro de la máquina debe quedar alineado milimétricamente con el centro de la articulación de la rodilla. Almohadilla apoyada en el empeine/tobillo bajo. Sujeta con fuerza los mangos laterales para evitar que los glúteos se levanten del asiento al patear. Extensión completa arriba con pausa de 1 segundo; al fallar concéntrico, ejecuta 3 a 5 parciales en el fondo estirado.",
-        "warmup": "🔥 No ocupa.",
-        "searchQuery": "leg extension machine lengthened partials quad hypertrophy",
-        "equivalents": [
-          {
-            "id": "d2_e3_eq1",
-            "name": "Sissy Squat en soporte",
-            "desc": "Tensión extrema en máxima elongación del recto femoral.",
-            "ratio": 0.4,
-            "biomechanics": "Pies fijados en banco sissy, torso y muslos formando una línea recta. Descenso echando el cuerpo hacia atrás mediante flexión pura de rodilla. Estiramiento extremo del recto femoral.",
-            "mindMuscle": {
-              "title": "Recto Femoral en Sissy Squat",
-              "internalCue": "Siente el estiramiento violento y controlado en toda la longitud del muslo.",
-              "externalCue": "Empuja los empeines contra los rodillos para volver a la vertical.",
-              "eccentricCue": "Baja en 3 segundos manteniendo la cadera bloqueada en extensión."
-            },
-            "searchQuery": "Sissy Squat en soporte tecnica biomecanica",
-            "warmup": "🔥 No ocupa."
-          },
-          {
-            "id": "d2_e3_eq2",
-            "name": "Extensiones unilaterales en máquina",
-            "desc": "Equilibrio bilateral de cuádriceps.",
-            "ratio": 0.45,
-            "biomechanics": "Sentado en banco alto con tobillera conectada a polea baja. Tensión constante durante todo el arco de extensión.",
-            "mindMuscle": {
-              "title": "Extensión en Polea con Tensión Continua",
-              "internalCue": "Aísla el vasto interno apretando en el pico concéntrico.",
-              "externalCue": "Extiende la pierna hacia adelante contra el cable.",
-              "eccentricCue": "Resiste el tirón del cable en 3 segundos."
-            },
-            "searchQuery": "Extensiones unilaterales en máquina tecnica biomecanica",
-            "warmup": "🔥 No ocupa."
-          }
-        ],
-        "mindMuscle": {
-          "title": "Cuádriceps Aislado (Recto Femoral en Acortamiento)",
-          "internalCue": "Aprieta la parte superior del muslo con fuerza brutal al llegar arriba. Mantén los tobillos en flexión neutra.",
-          "externalCue": "Patea la almohadilla hacia el techo como si quisieras estirar la pierna en una línea recta perfecta.",
-          "eccentricCue": "Frena la caída en 3 segundos sintiendo cómo el cuádriceps resiste toda la bajada."
-        }
-      },
-      {
-        "id": "d2_e4",
-        "name": "Prensa Unilateral a 1 Pierna (Pie Alto)",
-        "muscleGroup": "Glúteo Mayor & Isquios",
-        "isUnilateral": true,
-        "sets": 3,
-        "reps": "10-12",
-        "restTime": "90 s",
-        "defaultUnit": "lbs",
-        "biomechanics": "Un pie colocado en la esquina superior de la plataforma. La pierna contraria relajada fuera de la máquina. La posición de pie alto maximiza la flexión de cadera y el reclutamiento del glúteo mayor y vasto externo. Desciende profundo hasta que la rodilla pase rozando el torso lateral sin rotar la pelvis.",
-        "warmup": "🔥 No ocupa.",
-        "searchQuery": "single leg press foot high glute focus",
-        "equivalents": [
-          {
-            "id": "d2_e4_eq1",
-            "name": "Sentadilla Búlgara en Multipower (Smith)",
-            "desc": "Estabilidad vertical y máxima sobrecarga de glúteo.",
-            "ratio": 0.6,
-            "biomechanics": "Pie trasero apoyado sobre banco a la altura de la rodilla. Mancuerna en la mano contraria a la pierna delantera. Torso inclinado a 20° para mayor activación de glúteo.",
-            "mindMuscle": {
-              "title": "Sentadilla Búlgara para Glúteo",
-              "internalCue": "Hunde la cadera hacia abajo y atrás sintiendo el glúteo estirarse.",
-              "externalCue": "Empuja el suelo con el talón delantero para reincorporarte.",
-              "eccentricCue": "Desciende en 3 segundos sin dejar caer el torso sobre el muslo."
-            },
-            "searchQuery": "Sentadilla Búlgara en Multipower (Smith) tecnica biomecanica",
-            "warmup": "🔥 No ocupa."
-          },
-          {
-            "id": "d2_e4_eq2",
-            "name": "Zancadas estáticas con mancuernas",
-            "desc": "Trabajo dinámico unilateral.",
-            "ratio": 0.5,
-            "biomechanics": "Cajón a la altura de la rótula. Pie de trabajo apoyado arriba. Sube impulsándote exclusivamente con la pierna del cajón sin dar salto con la pierna del suelo.",
-            "mindMuscle": {
-              "title": "Step-Up Estricto en Cajón",
-              "internalCue": "Aísla la pierna alta contrayendo el glúteo al llegar a la cima.",
-              "externalCue": "Pisa con fuerza el cajón elevando tu centro de gravedad.",
-              "eccentricCue": "Baja en 3 segundos como si pisaras una superficie frágil."
-            },
-            "searchQuery": "Zancadas estáticas con mancuernas tecnica biomecanica",
-            "warmup": "🔥 No ocupa."
-          }
-        ],
-        "mindMuscle": {
-          "title": "Glúteo Mayor y Cuádriceps Unilateral",
-          "internalCue": "Siente el glúteo de la pierna activa estirarse profundamente en el fondo del asiento.",
-          "externalCue": "Empuja la plataforma desde el talón como si quisieras traspasar el metal.",
-          "eccentricCue": "Baja en 3 segundos controlando que la rodilla viaje alineada con el segundo dedo del pie."
-        }
-      },
-      {
-        "id": "d2_e5",
-        "name": "Aductores en Máquina (Cerrar Cadera)",
-        "muscleGroup": "Aductores (Muslo Interno & Estabilidad)",
-        "sets": 3,
-        "reps": "12-15",
-        "restTime": "90 s",
-        "defaultUnit": "lbs",
-        "biomechanics": "Sentado en máquina con la espalda erguida apoyada al cojín. Ajusta los brazos de la máquina en máxima apertura inicial para estirar los aductores. Cierra las piernas con fuerza uniforme y mantén 1 segundo de contracción isométrica al centro. IAP: Respira con normalidad apretando el transverso.",
-        "warmup": "🔥 No ocupa.",
-        "searchQuery": "hip adductor machine inner thigh growth",
-        "equivalents": [
-          {
-            "id": "d2_e5_eq1",
-            "name": "Aducción de cadera en polea baja con tobillera",
-            "desc": "Tensión dinámica con cable.",
-            "ratio": 0.5,
-            "biomechanics": "De pie de costado a la polea baja con tobillera en la pierna interna. Cruza la pierna por delante del cuerpo en aducción controlada.",
-            "mindMuscle": {
-              "title": "Aductores en Polea Baja",
-              "internalCue": "Conduce el movimiento desde la ingle y muslo interno.",
-              "externalCue": "Barre el suelo con el pie hacia el lado opuesto.",
-              "eccentricCue": "Resiste el regreso del cable en 3 segundos."
-            },
-            "searchQuery": "Aducción de cadera en polea baja con tobillera tecnica biomecanica",
-            "warmup": "🔥 No ocupa."
-          }
-        ],
-        "mindMuscle": {
-          "title": "Aductor Mayor, Medio y Corto (Muslo Interno)",
-          "internalCue": "Siente cómo la cara interna de los muslos se activa para juntar las rodillas contra la resistencia.",
-          "externalCue": "Imagina que intentas aplastar un balón de fútbol entre tus rodillas.",
-          "eccentricCue": "Abre las piernas de forma lenta en 3 segundos sintiendo el estiramiento profundo del aductor."
-        }
-      },
-      {
         "id": "d2_e6",
         "name": "Abductores en Máquina (Abrir Cadera)",
         "muscleGroup": "Glúteo Medio & Superior",
         "sets": 3,
         "reps": "12-15",
-        "restTime": "90 s",
+        "restTime": "120 s",
         "defaultUnit": "lbs",
-        "biomechanics": "Sentado en máquina con la pelvis bien anclada al respaldo. Almohadillas en la cara externa de las rodillas. Abre las piernas al máximo rango posible y sostén 1 segundo la contracción. Para mayor activación de glúteo medio, inclina el torso 15° hacia adelante.",
+        "biomechanics": "Torso inclinado 15° hacia adelante. Estimula el glúteo medio y superior, dando soporte a la cadera y forma a la pelvis. Sentado en máquina con la pelvis bien anclada al respaldo. Almohadillas en la cara externa de las rodillas. Abre las piernas al máximo rango posible y sostén 1 segundo la contracción.",
         "warmup": "🔥 No ocupa.",
         "searchQuery": "hip abductor machine glute medius lean forward",
         "equivalents": [
@@ -735,6 +578,21 @@ export const scientificProtocol = [
             },
             "searchQuery": "Abducción de cadera en polea baja con tobillera tecnica biomecanica",
             "warmup": "🔥 No ocupa."
+          },
+          {
+            "id": "d2_e5",
+            "name": "Aductores en Máquina (Cerrar Cadera)",
+            "desc": "Aislamiento de cara interna del muslo.",
+            "ratio": 1,
+            "biomechanics": "Sentado con espalda erguida. Cierra las piernas con fuerza uniforme y mantén 1s al centro.",
+            "mindMuscle": {
+              "title": "Aductores en Máquina",
+              "internalCue": "Contrae la cara interna del muslo.",
+              "externalCue": "Junta las rodillas con fuerza.",
+              "eccentricCue": "Abre en 3 segundos sintiendo el estiramiento."
+            },
+            "searchQuery": "Aductores en Máquina tecnica",
+            "warmup": "🔥 No ocupa."
           }
         ],
         "mindMuscle": {
@@ -746,13 +604,13 @@ export const scientificProtocol = [
       },
       {
         "id": "d2_e7",
-        "name": "Elevación de Pantorrillas (Rotary Calf o Sentado)",
+        "name": "Elevación de Pantorrillas (Rotary o de Pie)",
         "muscleGroup": "Pantorrillas (Gastrocnemio & Sóleo)",
         "sets": 4,
         "reps": "10-12",
-        "restTime": "90 s",
+        "restTime": "120 s",
         "defaultUnit": "lbs",
-        "biomechanics": "Apoyo exclusivo en las almohadillas metatarsianas de los pies sobre el borde de la plataforma. Rodillas con microflexión fija (si es sentado, rodillas a 90° enfatizando sóleo; si es de pie, rodillas extendidas enfatizando gastrocnemio). Pausa obligatoria de 2 segundos en máximo estiramiento abajo (elimina el rebote del tendón de Aquiles) y elevación concéntrica potente con 1s de contracción arriba.",
+        "biomechanics": "Regla de oro: 2 segundos de pausa completa en el punto más bajo (estiramiento) para anular el rebote elástico del tendón de Aquiles y obligar al sóleo/gastrocnemio a trabajar. Apoyo exclusivo en las almohadillas metatarsianas de los pies sobre el borde de la plataforma. Elevación concéntrica potente con 1s de contracción en piedra arriba.",
         "warmup": "🔥 No ocupa.",
         "searchQuery": "rotary calf machine stretch pause calf growth",
         "equivalents": [
@@ -761,12 +619,12 @@ export const scientificProtocol = [
             "name": "Elevación de pantorrillas en la Prensa de piernas",
             "desc": "Apoyo lumbar cómodo y sobrecarga.",
             "ratio": 1.2,
-            "biomechanics": "De pie con hombreras de Smith o máquina de gemelos de pie. Rodillas bloqueadas pero no hiperextendidas. Mayor énfasis en gastrocnemio.",
+            "biomechanics": "Puntas de los pies en el borde inferior de la prensa de piernas. Empuje de flexión plantar.",
             "mindMuscle": {
-              "title": "Gastrocnemio de Pie en Smith",
-              "internalCue": "Siente las dos cabezas de la pantorrilla compactarse como piedras arriba.",
-              "externalCue": "Elévate sobre las puntas empujando el suelo con los metatarsos.",
-              "eccentricCue": "Baja los talones 3 segundos hasta el máximo estiramiento con pausa de 2s abajo."
+              "title": "Pantorrilla en Prensa de Piernas",
+              "internalCue": "Control estricto de los tobillos.",
+              "externalCue": "Empuja la plataforma con los dedos de los pies.",
+              "eccentricCue": "Deja que el peso baje los talones en 3 segundos sin soltar la tensión."
             },
             "searchQuery": "Elevación de pantorrillas en la Prensa de piernas tecnica biomecanica",
             "warmup": "🔥 No ocupa."
@@ -776,12 +634,12 @@ export const scientificProtocol = [
             "name": "Elevación en Smith de pie sobre plataforma",
             "desc": "Carga axial vertical completa.",
             "ratio": 1,
-            "biomechanics": "Puntas de los pies en el borde inferior de la prensa de piernas. Seguro quitado con rodillas ligeramente flexionadas. Empuje de flexión plantar.",
+            "biomechanics": "De pie sobre escalón con barra Smith sobre hombros. Pausa de 2s abajo.",
             "mindMuscle": {
-              "title": "Pantorrilla en Prensa de Piernas",
-              "internalCue": "Control estricto de los tobillos evitando que se tuerzan hacia adentro o afuera.",
-              "externalCue": "Empuja la plataforma con los dedos de los pies.",
-              "eccentricCue": "Deja que el peso baje los talones en 3 segundos sin soltar la tensión."
+              "title": "Gastrocnemio de Pie en Smith",
+              "internalCue": "Siente las dos cabezas de la pantorrilla compactarse como piedras arriba.",
+              "externalCue": "Elévate sobre las puntas empujando el suelo con los metatarsos.",
+              "eccentricCue": "Baja los talones 3 segundos hasta el máximo estiramiento con pausa de 2s abajo."
             },
             "searchQuery": "Elevación en Smith de pie sobre plataforma tecnica biomecanica",
             "warmup": "🔥 No ocupa."
@@ -795,39 +653,54 @@ export const scientificProtocol = [
         }
       },
       {
-        "id": "d2_e8",
-        "name": "Plancha Abdominal Isométrica (Hardstyle Plank)",
-        "muscleGroup": "Core (Anti-Extensión & IAP)",
-        "sets": 3,
-        "reps": "45-60 s",
-        "isTime": true,
-        "restTime": "60 s",
-        "defaultUnit": "s",
-        "biomechanics": "Posición de plancha sobre antebrazos y puntas de los pies. Codos justo debajo de los hombros. Tensión 'Hardstyle': aprieta cuádriceps, glúteos y puños simultáneamente, y tracciona isométricamente los codos hacia los pies y los pies hacia los codos sin moverlos del suelo. Respiración superficial rápida manteniendo el abdomen de acero.",
-        "warmup": "🔥 No ocupa.",
-        "searchQuery": "hardstyle plank isometric core bracing",
+        "id": "d2_e9",
+        "name": "Cardio Zona 2 en Caminadora",
+        "muscleGroup": "Cardiovascular (Zona 2)",
+        "sets": 1,
+        "reps": "35-45 min",
+        "isCardio": true,
+        "restTime": "0 s",
+        "defaultUnit": "min",
+        "biomechanics": "Inclinación 10-11% a 3.5-3.8 km/h. Ritmo cardíaco sostenido en Zona 2 (120-135 BPM). Optimización del flujo sanguíneo, reciclaje de lactato y depuración metabólica sin fatiga periférica muscular.",
+        "warmup": "🔥 3 minutos progresivos a ritmo suave.",
+        "searchQuery": "zone 2 cardio incline treadmill fat burning",
         "equivalents": [
           {
-            "id": "d2_e8_eq1",
-            "name": "Ab Wheel (Rueda abdominal) controlada",
-            "desc": "Anti-extensión dinámica avanzada.",
+            "id": "d2_e9_eq1",
+            "name": "Caminadora en Inclinación",
+            "desc": "Bajo impacto articular.",
             "ratio": 1,
-            "biomechanics": "De rodillas con rueda abdominal. Rueda hacia adelante manteniendo ligera curvatura dorsal y pelvis en retroversión. Regresa tirando desde el abdomen, no desde los dorsales.",
+            "biomechanics": "Caminadora a 3.5-3.8 km/h con inclinación del 10-11%.",
             "mindMuscle": {
-              "title": "Rueda Abdominal (Ab Wheel Rollout)",
-              "internalCue": "Siente la pared abdominal alargarse bajo carga y contraerse para iniciar la vuelta.",
-              "externalCue": "Rueda hacia adelante lo más lejos posible sin que la zona lumbar se arquee.",
-              "eccentricCue": "Extiende el cuerpo en 3 segundos controlados."
+              "title": "Caminata Inclinada Zona 2",
+              "internalCue": "Camina erguido sin sujetar las barandillas.",
+              "externalCue": "Empuja la cinta con cada zancada uniforme.",
+              "eccentricCue": "Control del ritmo respiratorio."
             },
-            "searchQuery": "Ab Wheel (Rueda abdominal) controlada tecnica biomecanica",
-            "warmup": "🔥 No ocupa."
+            "searchQuery": "Caminadora en Inclinación tecnica biomecanica",
+            "warmup": "🔥 3 minutos progresivos."
+          },
+          {
+            "id": "d2_e9_eq2",
+            "name": "Bicicleta Estática",
+            "desc": "Cadencia sin impacto articular.",
+            "ratio": 1,
+            "biomechanics": "Bicicleta estática a 80 RPM continua.",
+            "mindMuscle": {
+              "title": "Bicicleta Estática Zona 2",
+              "internalCue": "Pedaleo circular suave sin tirones.",
+              "externalCue": "Mantén la cadencia fija.",
+              "eccentricCue": "Respiración uniforme."
+            },
+            "searchQuery": "Bicicleta Estática tecnica biomecanica",
+            "warmup": "🔥 3 minutos progresivos."
           }
         ],
         "mindMuscle": {
-          "title": "Pared Abdominal Anterior y Estabilidad de Core",
-          "internalCue": "Pega las costillas inferiores hacia la pelvis contrayendo el recto abdominal.",
-          "externalCue": "Imagina que alguien intentará empujarte y tu cuerpo debe ser un bloque de concreto sólido.",
-          "eccentricCue": "Sostén la tensión máxima en cada segundo sin que caiga la cadera."
+          "title": "Capacidad Mitocondrial y Zona 2",
+          "internalCue": "Mantén una zancada o pedaleo suave y rítmico con respiración nasal relajada.",
+          "externalCue": "Mantén el ritmo del cronómetro sin aceleraciones bruscas.",
+          "eccentricCue": "Disfruta de la oxigenación muscular para acelerar la recuperación del entrenamiento de pesas."
         }
       }
     ]
@@ -835,9 +708,9 @@ export const scientificProtocol = [
   {
     "id": "d3",
     "dayNumber": 3,
-    "name": "Miércoles: Jalón 1 (Amplitud Dorsal V-Taper y Bíceps)",
+    "name": "Miércoles: Jalón 1 (Amplitud V-Taper & Picos de Bíceps)",
     "type": "workout",
-    "focus": "Construcción de amplitud dorsal V-Taper y sobrecarga en estiramiento humeral para bíceps.",
+    "focus": "Amplitud dorsal V-Taper y sobrecarga en estiramiento humeral para bíceps (Bayesian Curl). Supinación activa llevando el meñique afuera/arriba y control excéntrico de 3s para reclutar el 100% de unidades motoras.",
     "exercises": [
       {
         "id": "d3_e1",
@@ -846,9 +719,9 @@ export const scientificProtocol = [
         "loadFamily": "Familia Jalón Vertical Dorsal",
         "sets": 4,
         "reps": "8-10",
-        "restTime": "120-150 s",
+        "restTime": "180 s",
         "defaultUnit": "lbs",
-        "biomechanics": "Agarre a 1.5 anchos de hombros con pulgares montados (agarre en gancho o thumbless para reducir la activación de antebrazos). Muslos firmemente asegurados bajo los rodillos. Torso con ligera inclinación posterior (10-15°). Inicia la tracción deprimiendo las escápulas y tirando de los codos verticalmente hacia abajo y hacia adentro, llevando la barra a la parte superior del esternón. IAP: Inhala al estirar los brazos arriba, contén el aire mientras desciendes los codos y exhala al rozar la clavícula.",
+        "biomechanics": "El constructor del V-Taper. Agarre 1.5 anchos de hombro con agarre thumbless (pulgar montado). Tracciona llevando los codos hacia las costillas y clavando las escápulas. Barra a la parte superior del esternón. IAP: Inhala al estirar los brazos arriba, contén el aire mientras desciendes los codos y exhala al rozar la clavícula.",
         "warmup": "🔥 Sí ocupa:\n• Serie 1: 50% de la carga x 10 reps (lubricación escapulohumeral).\n• Serie 2: 75% de la carga x 4 reps técnicas.",
         "searchQuery": "lat pulldown wide grip lats focus elbow drive",
         "equivalents": [
@@ -897,9 +770,9 @@ export const scientificProtocol = [
         "loadFamily": "Familia Remo Horizontal",
         "sets": 4,
         "reps": "8-10",
-        "restTime": "120-150 s",
+        "restTime": "180 s",
         "defaultUnit": "lbs",
-        "biomechanics": "Asiento ajustado de modo que el cojín de pecho quede a nivel del esternón, permitiendo extender los brazos sin perder el apoyo torácico. El apoyo elimina la compresión en la zona lumbar, permitiendo aislar la musculatura media de la espalda. Agarre neutro o semi-pronado a 45°. Tira con los codos hacia atrás juntando las escápulas al final con pausa de 1 segundo.",
+        "biomechanics": "Cero estrés lumbar. Apoyo firme del esternón. Tracción horizontal enfocada en retraer escápulas y densificar la espalda media. Tira con los codos hacia atrás juntando las escápulas al final con pausa de 1 segundo.",
         "warmup": "🔥 Sí (1 serie): 70% de la carga x 4 reps.",
         "searchQuery": "chest supported row machine mid back density",
         "equivalents": [
@@ -947,9 +820,9 @@ export const scientificProtocol = [
         "muscleGroup": "Espalda (Aislamiento Dorsal Ancho)",
         "sets": 3,
         "reps": "12-15",
-        "restTime": "90 s",
+        "restTime": "120 s",
         "defaultUnit": "lbs",
-        "biomechanics": "Polea alta con cuerda o barra recta. Da dos pasos atrás e inclina el torso hacia adelante a 45-60° con rodillas semiflexionadas y cadera en bisagra. Brazos casi extendidos con una microflexión fija en los codos (15°). Conduce las manos en un arco descendente amplio hacia los muslos sin doblar los codos.",
+        "biomechanics": "Torso a 45°, brazos con microflexión fija (15°). Aísla el dorsal ancho en rango elongado sin fatigar los bíceps. Conduce las manos en un arco descendente amplio hacia los muslos sin doblar los codos.",
         "warmup": "🔥 No ocupa.",
         "searchQuery": "cable straight arm pullover lat isolation rope",
         "equivalents": [
@@ -997,9 +870,9 @@ export const scientificProtocol = [
         "muscleGroup": "Hombro Posterior & Manguito Rotador",
         "sets": 4,
         "reps": "12-15",
-        "restTime": "90 s",
+        "restTime": "120 s",
         "defaultUnit": "lbs",
-        "biomechanics": "Polea ajustada a la altura de los ojos o frente con cuerda doble. Sujeta la cuerda con agarre neutro o pulgares hacia atrás. Retrocede un paso. Tira de la cuerda hacia el puente de la nariz separando los cabos hacia las orejas con rotación externa de hombro simultánea. Pausa de 1 segundo atrás.",
+        "biomechanics": "Cuerda hacia el tabique nasal separando extremos con rotación externa. Construye el deltoides posterior (hombro 3D) y endereza la postura. Polea ajustada a la altura de los ojos o frente con cuerda doble. Sujeta la cuerda con agarre neutro o pulgares hacia atrás. Retrocede un paso. Pausa de 1 segundo atrás.",
         "warmup": "🔥 No ocupa.",
         "searchQuery": "cable face pull external rotation rear delt",
         "equivalents": [
@@ -1043,20 +916,35 @@ export const scientificProtocol = [
       },
       {
         "id": "d3_e5",
-        "name": "Bayesian Cable Curl (Bíceps en Estiramiento Humeral)",
+        "name": "Bayesian Cable Curl (Estiramiento Humeral)",
         "muscleGroup": "Bíceps (Estiramiento Humeral)",
         "isUnilateral": true,
         "sets": 3,
         "reps": "10-12",
-        "restTime": "90 s",
+        "restTime": "120 s",
         "defaultUnit": "lbs",
-        "biomechanics": "Polea baja a tu espalda con maneral individual. Da un paso al frente de modo que el brazo quede extendido detrás del torso (en hiperextensión de hombro, estirando la cabeza larga del bíceps). Con el codo bloqueado detrás de la cadera, flexiona el antebrazo sin adelantar el codo. Pausa de 1s arriba.",
+        "biomechanics": "De espaldas a la polea baja, codo por detrás del cuerpo para colocar la cabeza larga del bíceps en tensión máxima elongada. Deja que el brazo se estire completamente hacia atrás antes de iniciar la contracción. Al flexionar, supina activamente llevando el dedo meñique hacia afuera y arriba (recluta el 100% de las unidades motoras del bíceps distal). Fija el codo como una bisagra inmóvil detrás de la cadera y frena la fase excéntrica en 3 segundos sintiendo la tracción elongada.",
         "warmup": "🔥 No ocupa.",
         "searchQuery": "bayesian cable curl behind back bicep stretch",
         "equivalents": [
           {
+            "id": "d3_e5_eq_cable",
+            "name": "Curl de Bíceps en Polea Baja (Barra Recta)",
+            "desc": "Tensión mecánica continua con codos pegados al torso.",
+            "ratio": 1,
+            "biomechanics": "Codos clavados como bisagras en las costillas. Pico concéntrico de 1 segundo arriba. Polea baja con barra recta o corta.",
+            "mindMuscle": {
+              "title": "Bíceps Braquial & Braquial Anterior",
+              "internalCue": "Aprieta los bíceps con fuerza en la cima.",
+              "externalCue": "Lleva la barra hacia tu barbilla con codos inmóviles.",
+              "eccentricCue": "Desciende la barra en 2 a 3 segundos."
+            },
+            "searchQuery": "cable straight bar bicep curl proper form",
+            "warmup": "🔥 No ocupa."
+          },
+          {
             "id": "d3_e5_eq1",
-            "name": "Curl en banco inclinado a 60° con mancuernas (Incline DB Curl)",
+            "name": "Curl de Bíceps con Mancuernas (Sentado en Banco a 60°)",
             "desc": "Estiramiento humeral clásico con mancuernas.",
             "ratio": 0.5,
             "biomechanics": "Banco a 60°, espalda apoyada, brazos colgando perpendicularmente al suelo por detrás del torso. Supinación estricta de muñeca.",
@@ -1067,6 +955,21 @@ export const scientificProtocol = [
               "eccentricCue": "Baja en 3 segundos hasta extensión completa del codo."
             },
             "searchQuery": "Curl en banco inclinado a 60° con mancuernas (Incline DB Curl) tecnica biomecanica",
+            "warmup": "🔥 No ocupa."
+          },
+          {
+            "id": "d3_e5_eq_scott",
+            "name": "Curl en Banco Predicador (Scott) o Máquina",
+            "desc": "Aislamiento estricto de cabeza corta y pico.",
+            "ratio": 0.9,
+            "biomechanics": "Tríceps y axilas firmemente apoyados sobre la almohadilla inclinada a 45°. Aislamiento puro sin inercia.",
+            "mindMuscle": {
+              "title": "Bíceps Braquial en Banco Scott",
+              "internalCue": "Siente cómo el bíceps hace todo el trabajo sin ayuda.",
+              "externalCue": "Tracciona hacia la frente con codos inmóviles.",
+              "eccentricCue": "Baja en 3 segundos muy controlados."
+            },
+            "searchQuery": "preacher curl machine scott arm curl isolation",
             "warmup": "🔥 No ocupa."
           }
         ],
@@ -1083,12 +986,42 @@ export const scientificProtocol = [
         "muscleGroup": "Bíceps (Tensión Continua)",
         "sets": 3,
         "reps": "10-12",
-        "restTime": "90 s",
+        "restTime": "120 s",
         "defaultUnit": "lbs",
-        "biomechanics": "Polea baja con barra recta o barra corta. De pie con rodillas suaves y torso erguido. Codos fijados como bisagras a los costados del abdomen. Flexión completa con muñecas neutras para no sobrecargar los flexores del antebrazo.",
+        "biomechanics": "Codos clavados como bisagras en las costillas sin balanceo de torso. Pico concéntrico apretando 1 segundo arriba con muñeca supinada activamente. Polea baja con barra recta. Controla la fase excéntrica en 3 segundos continuos sintiendo la tracción constante del cable desde el grado cero sin soltar la tensión en el fondo.",
         "warmup": "🔥 No ocupa.",
         "searchQuery": "cable straight bar bicep curl proper form",
         "equivalents": [
+          {
+            "id": "d3_e6_eq_bayes",
+            "name": "Bayesian Cable Curl (Estiramiento Humeral)",
+            "desc": "De espaldas a la polea baja, máxima tensión en estiramiento.",
+            "ratio": 0.8,
+            "biomechanics": "De espaldas a la polea baja, codo por detrás del cuerpo. Pone la cabeza larga del bíceps en tensión máxima elongada. Pausa de 1s arriba.",
+            "mindMuscle": {
+              "title": "Bíceps Braquial (Cabeza Larga en Estiramiento Humeral)",
+              "internalCue": "Siente cómo el tendón del bíceps se alarga al máximo detrás de tu cuerpo.",
+              "externalCue": "Curl hacia adelante y arriba manteniendo el codo anclado.",
+              "eccentricCue": "Deja que el cable jale tu brazo hacia atrás en 3 segundos completos."
+            },
+            "searchQuery": "bayesian cable curl behind back bicep stretch",
+            "warmup": "🔥 No ocupa."
+          },
+          {
+            "id": "d3_e6_eq_incline",
+            "name": "Curl de Bíceps con Mancuernas (Sentado en Banco a 60°)",
+            "desc": "La inclinación hacia atrás elonga la cabeza larga del bíceps.",
+            "ratio": 0.5,
+            "biomechanics": "Banco inclinado a 60°, brazos colgando detrás del torso con máxima elongación. Supinación activa en el ascenso.",
+            "mindMuscle": {
+              "title": "Curl Inclinado con Mancuernas a 60°",
+              "internalCue": "Inicia la contracción desde el estiramiento completo del bíceps.",
+              "externalCue": "Curl hacia arriba y afuera con supinación activa.",
+              "eccentricCue": "Desciende en 3 segundos lentos."
+            },
+            "searchQuery": "incline dumbbell bicep curl 60 degrees",
+            "warmup": "🔥 No ocupa."
+          },
           {
             "id": "d3_e6_eq1",
             "name": "Curl con barra Z de pie",
@@ -1106,14 +1039,14 @@ export const scientificProtocol = [
           },
           {
             "id": "d3_e6_eq2",
-            "name": "Curl en máquina Predicador (Scott)",
+            "name": "Curl en Banco Predicador (Scott) o Máquina",
             "desc": "Aislamiento estricto de pico.",
             "ratio": 0.9,
-            "biomechanics": "Agarre neutro con los pulgares arriba en cuerda doble. Gran énfasis en el músculo braquiorradial y braquial para dar grosor al brazo.",
+            "biomechanics": "Tríceps apoyados en almohadilla a 45°. Aislamiento puro de cabeza corta.",
             "mindMuscle": {
-              "title": "Braquial & Braquiorradial (Grosor de Brazo)",
-              "internalCue": "Siente la tensión en la cara lateral del brazo y el antebrazo.",
-              "externalCue": "Hala los extremos de la cuerda hacia los hombros con los pulgares apuntando al techo.",
+              "title": "Bíceps Braquial en Banco Scott",
+              "internalCue": "Siente la tensión directa en la bola del bíceps.",
+              "externalCue": "Lleva la barra hacia la frente con codos inmóviles.",
               "eccentricCue": "Baja en 3 segundos controlando el retorno."
             },
             "searchQuery": "Curl en máquina Predicador (Scott) tecnica biomecanica",
@@ -1129,14 +1062,14 @@ export const scientificProtocol = [
       },
       {
         "id": "d3_e7",
-        "name": "Vacuum Abdominal (Transverso)",
+        "name": "Vacuum Abdominal",
         "muscleGroup": "Core (Transverso & Cintura Estrecha)",
         "sets": 4,
-        "reps": "15-20 s",
+        "reps": "20-25 s",
         "isTime": true,
         "restTime": "60 s",
         "defaultUnit": "s",
-        "biomechanics": "De pie, manos apoyadas en rodillas o barra. Exhala todo el aire residual de los pulmones. Sin inhalar, expande la caja torácica aspirando el ombligo hacia la columna vertebral y hacia arriba bajo las costillas. Mantén 15 a 20 segundos en apnea espiratoria.",
+        "biomechanics": "Transverso profundo. De pie, manos apoyadas en rodillas o barra. Exhala todo el aire residual de los pulmones. Sin inhalar, expande la caja torácica aspirando el ombligo hacia la columna vertebral y hacia arriba bajo las costillas. Mantén 20 a 25 segundos en apnea espiratoria.",
         "warmup": "🔥 No ocupa.",
         "searchQuery": "stomach vacuum exercise waist tightening",
         "equivalents": [
@@ -1165,15 +1098,15 @@ export const scientificProtocol = [
       },
       {
         "id": "d3_e8",
-        "name": "Cardio Aeróbico en Zona 2",
+        "name": "Cardio Zona 2 en Caminadora",
         "muscleGroup": "Cardiovascular (Zona 2)",
         "sets": 1,
-        "reps": "30-35 min",
+        "reps": "35-45 min",
         "isCardio": true,
         "restTime": "0 s",
         "defaultUnit": "min",
-        "biomechanics": "Ritmo cardíaco sostenido entre 60% y 70% de la frecuencia cardíaca máxima (esfuerzo donde puedes mantener una conversación hablada sin jadear). Optimización del flujo sanguíneo, reciclaje de lactato y depuración metabólica sin fatiga periférica muscular.",
-        "warmup": "🔥 3 minutos progresivos.",
+        "biomechanics": "Inclinación 11-12% a 3.8-4.2 km/h. Ritmo cardíaco sostenido entre 60% y 70% de la frecuencia cardíaca máxima (120-135 BPM). Optimización del flujo sanguíneo, reciclaje de lactato y depuración metabólica sin fatiga periférica muscular.",
+        "warmup": "🔥 3 minutos progresivos a ritmo suave.",
         "searchQuery": "zone 2 stationary bike endurance fat burning",
         "equivalents": [
           {
@@ -1181,12 +1114,12 @@ export const scientificProtocol = [
             "name": "Caminadora en Inclinación",
             "desc": "Bajo impacto articular.",
             "ratio": 1,
-            "biomechanics": "Elíptica con resistencia moderada. Cero impacto, involucra brazos y piernas en sincronía suave.",
+            "biomechanics": "Caminadora a 3.8-4.2 km/h con inclinación del 11-12%.",
             "mindMuscle": {
-              "title": "Elíptica Zona 2",
-              "internalCue": "Movimiento fluido sin golpear los pedales.",
-              "externalCue": "Mantén la cadencia continua.",
-              "eccentricCue": "Respiración diafragmática nasal constante."
+              "title": "Caminata Inclinada Zona 2",
+              "internalCue": "Camina erguido sin sujetar las barandillas.",
+              "externalCue": "Empuja la cinta con cada zancada uniforme.",
+              "eccentricCue": "Control del ritmo respiratorio."
             },
             "searchQuery": "Caminadora en Inclinación tecnica biomecanica",
             "warmup": "🔥 3 minutos progresivos."
@@ -1196,12 +1129,12 @@ export const scientificProtocol = [
             "name": "Elíptica",
             "desc": "Cadencia sin impacto articular.",
             "ratio": 1,
-            "biomechanics": "Caminadora a 3-4.5 km/h con inclinación del 8-12%.",
+            "biomechanics": "Elíptica con resistencia moderada. Cero impacto.",
             "mindMuscle": {
-              "title": "Caminata Inclinada Zona 2",
-              "internalCue": "Camina erguido sin sujetar las barandillas.",
-              "externalCue": "Empuja la cinta con cada zancada uniforme.",
-              "eccentricCue": "Control del ritmo respiratorio."
+              "title": "Elíptica Zona 2",
+              "internalCue": "Movimiento fluido sin golpear los pedales.",
+              "externalCue": "Mantén la cadencia continua.",
+              "eccentricCue": "Respiración diafragmática nasal constante."
             },
             "searchQuery": "Elíptica tecnica biomecanica",
             "warmup": "🔥 3 minutos progresivos."
@@ -1219,20 +1152,20 @@ export const scientificProtocol = [
   {
     "id": "d4",
     "dayNumber": 4,
-    "name": "Jueves: Empuje 2 (Pectoral Esternal, Estabilidad y Tríceps)",
+    "name": "Jueves: Empuje 2 (Pectoral Esternal & Deltoides en Polea)",
     "type": "workout",
-    "focus": "Segunda sesión semanal de empuje con foco en pectoral esternal medio, deltoides lateral continuo y tríceps.",
+    "focus": "Pectoral esternal pesado (PR 140 lbs), deltoides lateral en polea tras espalda con parciales elongadas (0°-45°), frecuencia 2 en pecho alto (Nitro) y tríceps pushdown apretando 1s abajo (65% del brazo).",
     "exercises": [
       {
         "id": "d4_e1",
-        "name": "Machine Chest Press (Prensa de Pecho Plano)",
+        "name": "Machine Chest Press (Prensa Pecho Plano)",
         "muscleGroup": "Pecho (Pectoral Mayor & Medio)",
         "loadFamily": "Familia Press Plano de Pecho",
-        "sets": 3,
+        "sets": 4,
         "reps": "8-10",
-        "restTime": "150-180 s",
+        "restTime": "180-240 s",
         "defaultUnit": "lbs",
-        "biomechanics": "Asiento calibrado para que los manerales queden exactamente a la altura de la parte media del esternón (fibras esternocostales). Escápulas retraídas y clavadas firmemente al respaldo. Empuje horizontal potente sin permitir que los hombros se adelanten al final del recorrido. IAP: Toma aire profundo al diafragma antes de empujar, mantén el torso inflado en la bajada (3s) y exhala al superar la mitad concéntrica.",
+        "biomechanics": "Tu ejercicio estrella de fuerza (PR 140 lbs). Escápulas pegadas y deprimidas. Mantén 2-3 segundos de bajada excéntrica. 3-4 minutos de descanso entre series te permitirán no perder repeticiones en las series posteriores. Asiento calibrado para que los manerales queden exactamente a la altura de la parte media del esternón (fibras esternocostales). IAP: Toma aire profundo al diafragma antes de empujar, mantén el torso inflado en la bajada (3s) y exhala al superar la mitad concéntrica.",
         "warmup": "🔥 Sí ocupa:\n• Serie 1: 50% de la carga x 10 reps.\n• Serie 2: 75% de la carga x 4 reps.",
         "searchQuery": "machine chest press flat hammer strength form",
         "equivalents": [
@@ -1275,15 +1208,66 @@ export const scientificProtocol = [
         }
       },
       {
+        "id": "d4_e4",
+        "name": "Elevaciones Laterales en Polea Baja (Tras Espalda)",
+        "muscleGroup": "Hombro (Deltoides Lateral)",
+        "isUnilateral": true,
+        "sets": 4,
+        "reps": "12-15",
+        "restTime": "120 s",
+        "defaultUnit": "lbs",
+        "biomechanics": "El cable pasa por detrás de los glúteos proporcionando tensión mecánica continua desde los 0° de abducción (zona de máxima respuesta hipertrófica según Pedrosa 2022 / Kassiano 2023). Sostén el poste con la mano libre e inclina el torso 10-15° hacia afuera. Eleva el brazo en el plano escapular (30° adelantado) hasta la horizontal; al fallar en la última serie, ¡NO sueltes el maneral! Inmediatamente saca de 4 a 6 repeticiones parciales en el tercio inferior (0° a 45°) controlando la bajada para exprimir la tensión mecánica en estiramiento.",
+        "warmup": "🔥 No ocupa.",
+        "searchQuery": "cable lateral raise behind back deltoid isolation",
+        "equivalents": [
+          {
+            "id": "d4_e4_eq1",
+            "name": "Elevaciones Laterales en Máquina",
+            "desc": "Guía fija para aislar el húmero.",
+            "ratio": 1.5,
+            "biomechanics": "Máquina de elevaciones laterales con almohadillas en codos.",
+            "mindMuscle": {
+              "title": "Deltoides Lateral en Máquina",
+              "internalCue": "Empuja desde el húmero sin implicar las manos.",
+              "externalCue": "Abre las almohadillas hacia las paredes.",
+              "eccentricCue": "Baja en 3 segundos sin tocar los topes."
+            },
+            "searchQuery": "Elevaciones Laterales en Máquina tecnica biomecanica",
+            "warmup": "🔥 No ocupa."
+          },
+          {
+            "id": "d4_e4_eq2",
+            "name": "Elevaciones con mancuernas de pie",
+            "desc": "Variante clásica con mancuernas.",
+            "ratio": 0.7,
+            "biomechanics": "Torso apoyado de lado sobre banco inclinado a 60° con mancuerna en mano externa.",
+            "mindMuscle": {
+              "title": "Deltoides en Banco Inclinado con Mancuerna",
+              "internalCue": "Aísla el tercio inicial del recorrido.",
+              "externalCue": "Eleva la mancuerna en semicírculo perfecto.",
+              "eccentricCue": "Frena la bajada en 3 segundos."
+            },
+            "searchQuery": "Elevaciones con mancuernas de pie tecnica biomecanica",
+            "warmup": "🔥 No ocupa."
+          }
+        ],
+        "mindMuscle": {
+          "title": "Deltoides Lateral (Tensión Continua tras Espalda & Parciales)",
+          "internalCue": "Lidera con el codo manteniendo el hombro deprimido. Al fallar en la horizontal, saca 4 a 6 parciales en el tercio inferior.",
+          "externalCue": "Lanza la mano hacia la esquina del techo más alejada de tu cuerpo.",
+          "eccentricCue": "Resiste el tirón del cable en 3 segundos sintiendo la tracción constante detrás de la espalda."
+        }
+      },
+      {
         "id": "d4_e2",
         "name": "Press Inclinado en Máquina (Nitro Incline)",
         "muscleGroup": "Pecho (Pectoral Superior Clavicular)",
         "loadFamily": "Familia Press Superior Inclinado",
         "sets": 3,
         "reps": "8-10",
-        "restTime": "120-150 s",
+        "restTime": "180 s",
         "defaultUnit": "lbs",
-        "biomechanics": "Asiento calibrado a nivel clavicular. Trayectoria convergente con máxima carga en el tercio superior del pecho. Escápulas pegadas al respaldo. Realiza 2 a 3 repeticiones parciales en estiramiento al llegar al fallo.",
+        "biomechanics": "Frecuencia 2 para asegurar que el haz clavicular crezca a la par del esternal. Asiento calibrado a nivel clavicular. Trayectoria convergente con máxima carga en el tercio superior del pecho. Escápulas pegadas al respaldo. Realiza 2 a 3 repeticiones parciales en estiramiento al llegar al fallo.",
         "warmup": "🔥 Sí (1 serie): 70% de la carga x 4 reps.",
         "searchQuery": "incline chest press machine form",
         "equivalents": [
@@ -1331,9 +1315,9 @@ export const scientificProtocol = [
         "muscleGroup": "Pecho (Aislamiento Pectoral)",
         "sets": 3,
         "reps": "10-12",
-        "restTime": "90 s",
+        "restTime": "120 s",
         "defaultUnit": "lbs",
-        "biomechanics": "Codos a la altura media del pecho con 15° de flexión constante. Retracción y depresión escapular completa. Pausa de 1s en contracción.",
+        "biomechanics": "Bombeo y estiramiento transversal. Abraza el barril imaginario. Codos a la altura media del pecho con 15° de flexión constante. Retracción y depresión escapular completa. Pausa de 1s en contracción.",
         "warmup": "🔥 No ocupa.",
         "searchQuery": "pec deck flyes chest isolation technique",
         "equivalents": [
@@ -1376,124 +1360,38 @@ export const scientificProtocol = [
         }
       },
       {
-        "id": "d4_e4",
-        "name": "Elevaciones Laterales en Polea Baja (Cable tras la espalda)",
-        "muscleGroup": "Hombro (Deltoides Lateral)",
-        "isUnilateral": true,
-        "sets": 4,
-        "reps": "12-15",
-        "restTime": "90 s",
-        "defaultUnit": "lbs",
-        "biomechanics": "Polea ajustada a la altura de la cadera o rodilla. Colócate de pie de lado con el cable pasando por detrás del glúteo/espalda. Sostén el poste con la mano libre para estabilizar el torso con inclinación de 10-15° hacia afuera. Eleva el brazo en el plano escapular (30° adelantado) hasta la horizontal.",
-        "warmup": "🔥 No ocupa.",
-        "searchQuery": "cable lateral raise behind back deltoid isolation",
-        "equivalents": [
-          {
-            "id": "d4_e4_eq1",
-            "name": "Elevaciones Laterales en Máquina",
-            "desc": "Guía fija para aislar el húmero.",
-            "ratio": 1.5,
-            "biomechanics": "Máquina de elevaciones laterales con almohadillas en codos.",
-            "mindMuscle": {
-              "title": "Deltoides Lateral en Máquina",
-              "internalCue": "Empuja desde el húmero sin implicar las manos.",
-              "externalCue": "Abre las almohadillas hacia las paredes.",
-              "eccentricCue": "Baja en 3 segundos sin tocar los topes."
-            },
-            "searchQuery": "Elevaciones Laterales en Máquina tecnica biomecanica",
-            "warmup": "🔥 No ocupa."
-          },
-          {
-            "id": "d4_e4_eq2",
-            "name": "Elevaciones con mancuernas de pie",
-            "desc": "Variante clásica con mancuernas.",
-            "ratio": 0.7,
-            "biomechanics": "Torso apoyado de lado sobre banco inclinado a 60° con mancuerna en mano externa.",
-            "mindMuscle": {
-              "title": "Deltoides en Banco Inclinado con Mancuerna",
-              "internalCue": "Aísla el tercio inicial del recorrido.",
-              "externalCue": "Eleva la mancuerna en semicírculo perfecto.",
-              "eccentricCue": "Frena la bajada en 3 segundos."
-            },
-            "searchQuery": "Elevaciones con mancuernas de pie tecnica biomecanica",
-            "warmup": "🔥 No ocupa."
-          }
-        ],
-        "mindMuscle": {
-          "title": "Deltoides Lateral (Tensión Continua tras la Espalda)",
-          "internalCue": "Lidera con el codo manteniendo el hombro deprimido. Siente el deltoides arder desde el grado cero del movimiento.",
-          "externalCue": "Lanza la mano hacia la esquina del techo más alejada de tu cuerpo.",
-          "eccentricCue": "Resiste el tirón del cable en 3 segundos sintiendo la tracción constante detrás de la espalda."
-        }
-      },
-      {
-        "id": "d4_e5",
-        "name": "Extensión de Tríceps en Máquina (Sentado)",
-        "muscleGroup": "Tríceps (Cabeza Larga y Lateral)",
-        "sets": 3,
-        "reps": "10-12",
-        "restTime": "90 s",
-        "defaultUnit": "lbs",
-        "biomechanics": "Sentado con pecho o espalda apoyada en máquina de tríceps. Codos fijados sobre el rodillo de apoyo alineados con el eje de rotación. Empuja los manerales hacia abajo hasta la extensión completa de codo con 1s de contracción estricta.",
-        "warmup": "🔥 No ocupa.",
-        "searchQuery": "triceps extension machine seated proper form",
-        "equivalents": [
-          {
-            "id": "d4_e5_eq1",
-            "name": "Fondos en máquina asistida",
-            "desc": "Gran sobrecarga con asistencia de peso.",
-            "ratio": 1.2,
-            "biomechanics": "Barras paralelas con torso vertical y codos pegados al costado.",
-            "mindMuscle": {
-              "title": "Fondos en Paralelas para Tríceps",
-              "internalCue": "Empuja con las palmas extendiendo los codos con fuerza de tríceps.",
-              "externalCue": "Hunde las barras hacia abajo para elevar tu cuerpo.",
-              "eccentricCue": "Baja en 3 segundos hasta 90° de flexión."
-            },
-            "searchQuery": "Fondos en máquina asistida tecnica biomecanica",
-            "warmup": "🔥 No ocupa."
-          },
-          {
-            "id": "d4_e5_eq2",
-            "name": "Paralelas para tríceps",
-            "desc": "Fuerza calisténica para tríceps.",
-            "ratio": 1,
-            "biomechanics": "Polea alta con agarre unilateral de barra corta.",
-            "mindMuscle": {
-              "title": "Extensión en Polea con Codo Bloqueado",
-              "internalCue": "Aísla la cabeza medial y lateral.",
-              "externalCue": "Empuja el cable hacia el muslo.",
-              "eccentricCue": "Regresa en 3 segundos sin mover el codo."
-            },
-            "searchQuery": "Paralelas para tríceps tecnica biomecanica",
-            "warmup": "🔥 No ocupa."
-          }
-        ],
-        "mindMuscle": {
-          "title": "Tríceps en Máquina de Aislamiento",
-          "internalCue": "Aprieta la cara posterior del brazo contra las almohadillas al bloquear los codos.",
-          "externalCue": "Empuja las palancas hacia el suelo con fuerza constante.",
-          "eccentricCue": "Permite que los mangos suban en 3 segundos sin despegar los codos del soporte."
-        }
-      },
-      {
         "id": "d4_e6",
-        "name": "Extensión de Tríceps en Polea (Pushdown con Cuerda)",
+        "name": "Extensión de Tríceps en Polea (Pushdown)",
         "muscleGroup": "Tríceps (Cabeza Lateral)",
-        "sets": 3,
-        "reps": "12-15",
-        "restTime": "90 s",
+        "sets": 4,
+        "reps": "10-12",
+        "restTime": "120 s",
         "defaultUnit": "lbs",
-        "biomechanics": "Polea alta con cuerda doble. Al extender, separa activamente los cabos hacia los costados de las caderas con pronación de muñeca. Pausa de 1s abajo.",
+        "biomechanics": "El tríceps compone el 60-65% del volumen total del brazo; el grosor y amplitud frontal dependen directamente de la cabeza lateral. Barra recta o V. Codos bloqueados y anclados al torso como bisagras inmóviles. Tronco ligeramente inclinado 10° adelante. Al descender, bloquea por completo los codos y aprieta 1 segundo entero con contracción isométrica máxima. Controla la fase excéntrica en 3 segundos continuos sin separar los codos de las costillas.",
         "warmup": "🔥 No ocupa.",
-        "searchQuery": "triceps rope pushdown form terminal spread",
+        "searchQuery": "triceps pushdown straight v bar cable form",
         "equivalents": [
+          {
+            "id": "d4_e5",
+            "name": "Extensión de Tríceps en Máquina (Sentado)",
+            "desc": "Aislamiento guiado con apoyo de codos.",
+            "ratio": 1.2,
+            "biomechanics": "Sentado con codos fijados sobre el rodillo de apoyo alineados con el eje de rotación. Empuja hacia abajo con contracción estricta de 1s.",
+            "mindMuscle": {
+              "title": "Tríceps en Máquina de Aislamiento",
+              "internalCue": "Aprieta la cara posterior del brazo contra las almohadillas al bloquear los codos.",
+              "externalCue": "Empuja las palancas hacia el suelo con fuerza constante.",
+              "eccentricCue": "Permite que los mangos suban en 3 segundos sin despegar los codos."
+            },
+            "searchQuery": "triceps extension machine seated proper form",
+            "warmup": "🔥 No ocupa."
+          },
           {
             "id": "d4_e6_eq1",
             "name": "Extensión cruzada de tríceps en poleas (Katana extension)",
             "desc": "Alineación perfecta con la cabeza larga.",
             "ratio": 0.8,
-            "biomechanics": "Polea alta con barra en V. Agarre firme con empuje continuo.",
+            "biomechanics": "Polea alta con barra en V o cuerdas cruzadas. Agarre firme con empuje continuo.",
             "mindMuscle": {
               "title": "Pushdown con Barra V",
               "internalCue": "Extensión total con codos pegados.",
@@ -1505,10 +1403,10 @@ export const scientificProtocol = [
           }
         ],
         "mindMuscle": {
-          "title": "Tríceps (Cabeza Lateral con Cuerda)",
-          "internalCue": "Abre las muñecas al fondo sintiendo la cara externa del tríceps quemar.",
-          "externalCue": "Separa los extremos de la cuerda hacia los lados.",
-          "eccentricCue": "Sube la cuerda en 2 a 3 segundos hasta el pecho."
+          "title": "Tríceps (Cabeza Lateral - 65% del Brazo)",
+          "internalCue": "Clava los codos a los costados, extiende bloqueando y aprieta 1 segundo entero sintiendo la cabeza lateral arder.",
+          "externalCue": "Empuja la barra directo hacia abajo hacia los muslos como doblando el metal.",
+          "eccentricCue": "Sube en 3 segundos continuos hasta la altura del esternón sin mover los codos de su eje."
         }
       },
       {
@@ -1516,11 +1414,11 @@ export const scientificProtocol = [
         "name": "Vacuum Abdominal (Transverso)",
         "muscleGroup": "Core (Transverso & Cintura Estrecha)",
         "sets": 4,
-        "reps": "15-20 s",
+        "reps": "20-25 s",
         "isTime": true,
         "restTime": "60 s",
         "defaultUnit": "s",
-        "biomechanics": "De pie o apoyado en rodillas. Exhalación total del aire. Expande la caja torácica y aspira el ombligo hacia adentro por 15-20 segundos continuos.",
+        "biomechanics": "Compactación de cintura. Apnea espiratoria completa. Ombligo succionado hacia la columna para cerrar el perímetro de la cintura. Mantén 20-25 segundos continuos.",
         "warmup": "🔥 No ocupa.",
         "searchQuery": "stomach vacuum exercise waist tightening",
         "equivalents": [
@@ -1546,15 +1444,66 @@ export const scientificProtocol = [
           "externalCue": "Pega el ombligo contra la columna vertebral.",
           "eccentricCue": "Relaja de forma lenta al finalizar."
         }
+      },
+      {
+        "id": "d4_e9",
+        "name": "Cardio Zona 2 en Caminadora",
+        "muscleGroup": "Cardiovascular (Zona 2)",
+        "sets": 1,
+        "reps": "35-45 min",
+        "isCardio": true,
+        "restTime": "0 s",
+        "defaultUnit": "min",
+        "biomechanics": "Inclinación 11-12% a 3.8-4.2 km/h (120-135 BPM). Directo a oxidar ácidos grasos libres tras depletar glucógeno en el pecho. Cero impacto articular en rodillas, activación sostenida de gemelos y glúteos.",
+        "warmup": "🔥 3 minutos progresivos a ritmo suave.",
+        "searchQuery": "zone 2 cardio fat oxidation incline walk",
+        "equivalents": [
+          {
+            "id": "d4_e9_eq1",
+            "name": "Caminadora en Inclinación",
+            "desc": "Bajo impacto articular y alto gasto calórico.",
+            "ratio": 1,
+            "biomechanics": "Caminadora a 3.8-4.2 km/h con inclinación del 11-12%.",
+            "mindMuscle": {
+              "title": "Caminata Inclinada Zona 2",
+              "internalCue": "Camina erguido sin sujetar las barandillas para activar la musculatura estabilizadora.",
+              "externalCue": "Empuja la cinta con cada zancada manteniendo cadencia uniforme.",
+              "eccentricCue": "Controla el ritmo respiratorio continuo."
+            },
+            "searchQuery": "Caminadora en Inclinación tecnica biomecanica",
+            "warmup": "🔥 3 minutos progresivos a ritmo suave."
+          },
+          {
+            "id": "d4_e9_eq2",
+            "name": "Bicicleta Estática",
+            "desc": "Cadencia fluida sin estrés plantar.",
+            "ratio": 1,
+            "biomechanics": "Bicicleta estática con resistencia moderada a 80-90 RPM. Cadencia constante con frecuencia cardíaca estable.",
+            "mindMuscle": {
+              "title": "Ciclismo Zona 2",
+              "internalCue": "Pedaleo circular fluido empujando y halando suavemente los pedales.",
+              "externalCue": "Mantén la cadencia continua.",
+              "eccentricCue": "Respiración uniforme."
+            },
+            "searchQuery": "Bicicleta Estática tecnica biomecanica",
+            "warmup": "🔥 3 minutos progresivos a ritmo suave."
+          }
+        ],
+        "mindMuscle": {
+          "title": "Capacidad Mitocondrial y Zona 2",
+          "internalCue": "Mantén una zancada o pedaleo suave y rítmico con respiración nasal relajada.",
+          "externalCue": "Mantén el ritmo del cronómetro sin aceleraciones bruscas.",
+          "eccentricCue": "Disfruta de la oxigenación muscular para acelerar la recuperación del entrenamiento de pesas."
+        }
       }
     ]
   },
   {
     "id": "d5",
     "dayNumber": 5,
-    "name": "Viernes: Piernas 2 (Cadena Posterior, Bisagra y Femorales)",
+    "name": "Viernes: Piernas 2 (Cadena Posterior, Isquios & Glúteos)",
     "type": "workout",
-    "focus": "🧬 PLAN DE BATALLA COMPLETO — Enfoque Biomecánico: Isquiotibiales (Flexión + Bisagra), Glúteo Mayor, Aductores y Pantorrilla (~70 min pesas + 30 min cardio = ~100 min sesión de élite).\n\n🔥 FASE 0: Calentamiento & Activación Articular (5 a 7 min):\n• Movilidad de tobillo: Estiramiento contra la pared con rodilla flexionada (30s por lado).\n• Puentes de glúteo en suelo: 2 series × 15 reps con pausa de 2s apretando arriba (despierta el glúteo antes de cargar peso).\n• Péndulo de pierna dinámico: 10 balanceos frontales y 10 laterales por pierna.",
+    "focus": "Cadena posterior con flexión en rango elongado (Maeo 2021: cadera a 90°), sobrecarga en Prensa 45° pies altos, RDL con mancuernas, Butt Blaster, abductores y pantorrillas con pausa de 2s.",
     "exercises": [
       {
         "id": "d5_e2",
@@ -1562,11 +1511,11 @@ export const scientificProtocol = [
         "muscleGroup": "Isquiotibiales (Flexores de Rodilla)",
         "loadFamily": "Familia Flexión de Femorales (Isquiotibiales)",
         "sets": 4,
-        "reps": "8-12",
-        "restTime": "90-120 s",
+        "reps": "10-12",
+        "restTime": "120-150 s",
         "defaultUnit": "lbs",
-        "biomechanics": "BLOQUE 1: Isquios en Flexión de Rodilla (Preactivación en Rango Elongado). Respaldo ajustado para que la rodilla coincida exactamente con el eje de rotación de la máquina. El rodillo de muslos debe quedar muy apretado contra tus cuádriceps para que tu pelvis no se mueva ni un milímetro. Tobillos en dorsiflexión activa (puntas hacia las espinillas). Flexión explosiva pero controlada hacia abajo, pausa de 1s apretando abajo, y retorno lento (3s excéntrica) sintiendo cómo los isquios se estiran bajo tensión.",
-        "warmup": "🔥 Aproximación:\n• 1 serie × 10 reps ligeras (~60 lbs) para lubricar la rodilla sin fatiga.\n\n🎯 Prescripción de Series & Cargas:\n• Serie 1 (Efectiva): 90 lbs × 12 reps (RPE 8)\n• Serie 2 (Top Set Pesada): 95 lbs × 10 reps (RPE 8.5)\n• Serie 3 (Efectiva): 95 lbs × 8-10 reps (RPE 9)\n• Serie 4 (Back-off + Parciales): 85 lbs × 12 reps completas + inmediatamente 3-4 parciales desde el estiramiento hasta el fallo.",
+        "biomechanics": "Preactivación y elongación de isquiotibiales (Maeo 2021: los isquios crecen más cuando la cadera está a 90° flexionada). Respaldo ajustado para que la rodilla coincida con el eje de rotación. Ajusta bien la almohadilla superior sobre los muslos para anclar la pelvis firmemente. Tobillos en dorsiflexión activa. Flexión controlada hacia abajo, pausa de 1s en la contracción abajo, y retorno lento (3s excéntrica) sintiendo cómo los isquios se estiran bajo tensión.",
+        "warmup": "🔥 Aproximación:\n• 1 serie × 10 reps ligeras (~60 lbs) para lubricar la rodilla sin fatiga.",
         "searchQuery": "seated leg curl hamstring hypertrophy stretch",
         "equivalents": [
           {
@@ -1609,15 +1558,15 @@ export const scientificProtocol = [
       },
       {
         "id": "d5_e3",
-        "name": "Prensa de Piernas 45° (Pies Altos y Separados)",
+        "name": "Prensa 45° (Pies Altos y Abiertos)",
         "muscleGroup": "Glúteos & Isquiotibiales (Cadena Posterior)",
         "loadFamily": "Familia Prensa de Piernas",
-        "sets": 3,
-        "reps": "8-12",
-        "restTime": "120-180 s",
+        "sets": 4,
+        "reps": "8-10",
+        "restTime": "180-240 s",
         "defaultUnit": "lbs",
-        "biomechanics": "BLOQUE 2: Multiarticular Cadena Posterior (Fuerza e Hipertrofia). Colocación de pies en el tercio superior de la plataforma, separados ligeramente más que el ancho de hombros y con las puntas apuntando a 30° hacia afuera. Transfiere la tensión mecánica a glúteos, aductores e isquios proximales. Rango de movimiento: Baja todo lo profundo que puedas hasta que tus muslos casi toquen tus costillas, pero ¡ALERTA!: el sacro/coxis JAMÁS debe despegarse del respaldo (cero retroversión pélvica).",
-        "warmup": "🔥 Feeder Sets de aproximación:\n• Feeder 1: 180 lbs (2 platos por lado) × 8 reps\n• Feeder 2: 270 lbs (3 platos por lado) × 6 reps (aclimatación neurológica sin fatiga).\n\n🎯 Prescripción de Series & Cargas:\n• Serie 1 (Top Set Pesada): 360 lbs (4 platos por lado) × 8-10 reps (RPE 8.5)\n• Serie 2 (Efectiva): 360 lbs × 8 reps (RPE 9)\n• Serie 3 (Back-off Tensión Mecánica): 315 lbs (3.5 platos por lado) × 10-12 reps lentas (3s bajada).",
+        "biomechanics": "Pies en el tercio superior de la plataforma con puntas a 30° afuera. Transfiere la sobrecarga directamente a glúteo mayor y femorales con cero carga axial sobre la columna. Rango de movimiento: Descenso profundo hasta que los muslos rocen los costados del torso, pero ¡el sacro/coxis JAMÁS debe despegarse del respaldo!.",
+        "warmup": "🔥 Feeder Sets de aproximación:\n• Feeder 1: 180 lbs × 8 reps\n• Feeder 2: 270 lbs × 6 reps (sin fatiga).",
         "searchQuery": "leg press feet high wide glute focus",
         "equivalents": [
           {
@@ -1650,10 +1599,10 @@ export const scientificProtocol = [
         "loadFamily": "Familia Peso Muerto Rumano / Bisagra Cadera",
         "sets": 3,
         "reps": "8-10",
-        "restTime": "120-150 s",
+        "restTime": "180 s",
         "defaultUnit": "lbs",
-        "biomechanics": "BLOQUE 3: Bisagra de Cadera en Rango Elongado (Isquios + Glúteo). Mancuernas pesadas rozando las espinillas con trayectoria vertical óptima. Pies al ancho de caderas, puntas ligeramente abiertas. Rodillas 'suaves' con microflexión fija de 15° a 20° que NO cambia en todo el ejercicio. Movimiento 100% horizontal: empuja tu cadera hacia atrás como si quisieras cerrar una puerta con los glúteos. Baja las mancuernas rozando tus espinillas hasta justo debajo de las rodillas (máximo estiramiento anatómico de isquiotibiales). Si bajas más redondeando la espalda, usas lumbares, no isquios. Subida: Empuja el piso con los talones y lleva la pelvis al frente contrayendo glúteos arriba.",
-        "warmup": "🔥 No requiere series pesadas de aproximación (isquios y glúteos vienen hiperirrigados de la prensa y el curl). Opcional: 1 serie técnica de 6 reps con mancuernas de 30 lbs.\n\n🎯 Prescripción de Series & Cargas (3 series efectivas):\n• Serie 1: Mancuernas de 40 lbs c/u × 10 reps\n• Serie 2: Mancuernas de 45-50 lbs c/u × 8-10 reps\n• Serie 3: Mancuernas de 50 lbs c/u × 8-10 reps (RPE 8.5-9).",
+        "biomechanics": "Bisagra pura de cadera. Empuja las caderas hacia la pared de atrás, microflexión fija de rodillas (15°). Siente el estiramiento salvaje en isquios y glúteos. Mancuernas rozando espinillas hasta justo debajo de rodillas. Subida potente empujando con talones y contrayendo glúteos al frente.",
+        "warmup": "🔥 Opcional: 1 serie técnica ligera con 30-35 lbs x 6 reps.",
         "searchQuery": "romanian deadlift rdl dumbell smith machine technique",
         "equivalents": [
           {
@@ -1702,10 +1651,10 @@ export const scientificProtocol = [
         "loadFamily": "Familia Extensión de Cadera / Glúteo",
         "sets": 3,
         "reps": "10-12",
-        "restTime": "60-90 s",
+        "restTime": "120 s",
         "defaultUnit": "lbs",
-        "biomechanics": "BLOQUE 4: Trabajo de Aislamiento de Glúteos y Aductores. Objetivo: Extensión pura de cadera con máxima contracción en el glúteo mayor acortado. Mantén la columna recta sin arquear la zona lumbar. Empuja el pedal o rodillo hacia atrás con el talón, aguanta 1 segundo la contracción arriba en el punto más alto y regresa en 3 segundos.",
-        "warmup": "🔥 No ocupa (cadena posterior caliente).\n\n🎯 Prescripción (por pierna):\n• Serie 1: 100 lbs × 12 reps por pierna\n• Serie 2: 105 lbs × 10-12 reps por pierna\n• Serie 3: 105 lbs × 10 reps por pierna.",
+        "biomechanics": "Extensión terminal de cadera con contracción de 1 segundo arriba. Da redondez y altura al glúteo. Mantén la columna recta sin arquear la zona lumbar. Empuja el pedal con el talón y regresa en 3 segundos controlados.",
+        "warmup": "🔥 No ocupa (cadena posterior caliente).",
         "searchQuery": "butt blaster glute kick machine form",
         "equivalents": [
           {
@@ -1747,52 +1696,32 @@ export const scientificProtocol = [
         }
       },
       {
-        "id": "d5_e6",
-        "name": "Aductores en Máquina (Hip Adduction)",
-        "muscleGroup": "Aductores (Muslo Interno y Cadena Posterior)",
-        "sets": 3,
-        "reps": "12-15",
-        "restTime": "90 s",
-        "defaultUnit": "lbs",
-        "biomechanics": "BLOQUE 4: Muslo Interno y Densidad. El aductor mayor es el segundo músculo más grande del muslo y da densidad y grosor profundo a la pierna. Sentado con espalda bien erguida. Abre las piernas al máximo rango cómodo, junta con fuerza contrayendo los muslos internos y aguanta 1-2s apretando al centro. Regresa en 3s controlando el estiramiento.",
-        "warmup": "🔥 No ocupa.\n\n🎯 Prescripción:\n• 3 series × 12-15 reps (Carga objetivo: 100 a 110 lbs con 1-2s de contracción al centro).",
-        "searchQuery": "hip adductor machine inner thigh isolation",
-        "equivalents": [
-          {
-            "id": "d5_e6_eq1",
-            "name": "Aducción con tobillera en polea",
-            "desc": "Trabajo libre con polea baja.",
-            "ratio": 0.5,
-            "biomechanics": "De pie de costado a polea baja con tobillera en pierna interna. Cruce por delante.",
-            "mindMuscle": {
-              "title": "Aducción en Polea con Tobillera",
-              "internalCue": "Tracciona desde la ingle y aductor.",
-              "externalCue": "Barre el suelo con el pie hacia el lado opuesto.",
-              "eccentricCue": "Regresa en 3 segundos controlados."
-            },
-            "searchQuery": "Aducción con tobillera en polea tecnica biomecanica",
-            "warmup": "🔥 No ocupa."
-          }
-        ],
-        "mindMuscle": {
-          "title": "Aductor Mayor y Muslo Interno",
-          "internalCue": "Contracción potente de la cara interna del muslo.",
-          "externalCue": "Junta las rodillas como si aplastaras un balón medicinal.",
-          "eccentricCue": "Abre en 3 segundos sintiendo el estiramiento profundo."
-        }
-      },
-      {
         "id": "d5_e5",
-        "name": "Abductores en Máquina (Hip Abduction)",
+        "name": "Abductores en Máquina (Abrir Cadera)",
         "muscleGroup": "Glúteo Medio & Cadena Lateral",
         "sets": 3,
         "reps": "12-15",
-        "restTime": "90 s",
+        "restTime": "120 s",
         "defaultUnit": "lbs",
-        "biomechanics": "BLOQUE 4: Glúteo Medio y Menor (forma redondeada y estabilidad de cadera). Sentado en máquina, inclina el torso ligeramente hacia adelante apoyando las manos en el frente para alinear las fibras del glúteo medio con la línea de fuerza. Almohadillas en la cara externa de las rodillas. Abre con potencia y mantén 1s de isometría afuera. Regresa en 3 segundos sin golpear las placas.",
-        "warmup": "🔥 No ocupa.\n\n🎯 Prescripción:\n• 3 series × 12-15 reps (Carga objetivo: 100 a 115 lbs con pausa de 1s afuera).",
+        "biomechanics": "Torso inclinado 15° adelante apoyando las manos en el frente para alinear las fibras del glúteo medio y superior con la línea de fuerza. Almohadillas en la cara externa de las rodillas. Abre con potencia y mantén 1s de isometría afuera. Regresa en 3 segundos.",
+        "warmup": "🔥 No ocupa.",
         "searchQuery": "hip abductor machine glute burn form",
         "equivalents": [
+          {
+            "id": "d5_e6",
+            "name": "Aductores en Máquina (Hip Adduction)",
+            "desc": "Trabajo de la cara interna del muslo (aductor mayor).",
+            "ratio": 1,
+            "biomechanics": "Sentado con espalda erguida. Junta con fuerza contrayendo los muslos internos y aguanta 1-2s apretando al centro.",
+            "mindMuscle": {
+              "title": "Aductor Mayor y Muslo Interno",
+              "internalCue": "Contracción potente de la cara interna del muslo.",
+              "externalCue": "Junta las rodillas como si aplastaras un balón.",
+              "eccentricCue": "Abre en 3 segundos sintiendo el estiramiento."
+            },
+            "searchQuery": "hip adductor machine inner thigh isolation",
+            "warmup": "🔥 No ocupa."
+          },
           {
             "id": "d5_e5_eq1",
             "name": "Abducción con tobillera en polea",
@@ -1818,16 +1747,31 @@ export const scientificProtocol = [
       },
       {
         "id": "d5_e7",
-        "name": "Elevación de Pantorrillas (Rotary Calf o en Máquina de Pie)",
+        "name": "Elevación de Pantorrillas",
         "muscleGroup": "Pantorrillas (Gastrocnemio & Sóleo)",
         "sets": 4,
         "reps": "10-12",
-        "restTime": "75-90 s",
+        "restTime": "120 s",
         "defaultUnit": "lbs",
-        "biomechanics": "BLOQUE 5: Pantorrilla Pesada (Gastrocnemio y Sóleo). Biomecánica Científica: Pausa OBLIGATORIA de 2 segundos en el fondo del estiramiento. Esto disipa por completo el reflejo elástico del tendón de Aquiles, obligando al músculo puro a levantar la carga. Subida explosiva sobre la bola del pie (metatarsos), apretando 1s arriba.",
-        "warmup": "🔥 No ocupa.\n\n🎯 Prescripción:\n• 4 series × 10-12 reps pesadas (Carga objetivo: 110 a 130 lbs con pausa de 2s abajo).",
+        "biomechanics": "2 segundos de pausa en el fondo. Esto anula por completo el rebote elástico del tendón de Aquiles, obligando al sóleo y gastrocnemio a mover la carga al 100%. Subida explosiva sobre los metatarsos apretando 1s arriba.",
+        "warmup": "🔥 No ocupa.",
         "searchQuery": "calf raises stretch pause high reps",
         "equivalents": [
+          {
+            "id": "d5_e8",
+            "name": "Vacuum Abdominal (Transverso) o Pallof Press",
+            "desc": "Core profundo y estabilidad lumbar.",
+            "ratio": 1,
+            "biomechanics": "Exhala todo el aire vaciando completamente los pulmones. Sin volver a inhalar, mete el ombligo lo más adentro posible por 15-20 segundos.",
+            "mindMuscle": {
+              "title": "Transverso Abdominal (Vacuum)",
+              "internalCue": "Succiona el abdomen hacia adentro y arriba.",
+              "externalCue": "Pega el ombligo a la columna vaciando todo el aire.",
+              "eccentricCue": "Inhala pausado al terminar la apnea."
+            },
+            "searchQuery": "stomach vacuum transverse abdominis form",
+            "warmup": "🔥 No ocupa."
+          },
           {
             "id": "d5_e7_eq1",
             "name": "Elevación en Smith sobre escalón o en Prensa",
@@ -1852,50 +1796,15 @@ export const scientificProtocol = [
         }
       },
       {
-        "id": "d5_e8",
-        "name": "Vacuum Abdominal (Transverso) o Pallof Press",
-        "muscleGroup": "Core Profundo (Transverso & Estabilidad)",
-        "sets": 4,
-        "reps": "15-20 s",
-        "restTime": "45 s",
-        "defaultUnit": "seg",
-        "biomechanics": "BLOQUE 6: Core Profundo. Postura: En cuadrupedia (4 apoyos en el suelo) o de pie inclinado apoyando las manos sobre las rodillas. Exhala todo el aire vaciando completamente los pulmones. Sin volver a inhalar, mete el ombligo lo más adentro y arriba posible, como si quisieras pegarlo a tu columna torácica. Mantén 15 a 20 segundos de retención isométrica (apnea).",
-        "warmup": "🔥 1 serie de ensayo de 10s.\n\n🎯 Prescripción:\n• 4 series de 15 a 20 segundos de retención isométrica (apnea).",
-        "searchQuery": "stomach vacuum transverse abdominis form",
-        "equivalents": [
-          {
-            "id": "d5_e8_eq1",
-            "name": "Pallof Press en Polea (Anti-Rotación)",
-            "desc": "Fuerza y control anti-rotacional de core.",
-            "ratio": 1,
-            "biomechanics": "Polea a la altura del esternón. De pie perpendicular a la polea con agarre doble frente al pecho. Extiende los brazos al frente en línea recta resistiendo el torque rotacional del cable sin mover los hombros ni la pelvis. Sostén 2 segundos extendido.",
-            "mindMuscle": {
-              "title": "Core Funcional Anti-Rotación",
-              "internalCue": "Contrae los oblicuos y el abdomen profundo para impedir que el cable gire tu torso hacia la polea.",
-              "externalCue": "Extiende las manos al frente formando una línea perpendicular perfecta con tu esternón.",
-              "eccentricCue": "Regresa las manos al pecho en 2 segundos controlando la fuerza lateral."
-            },
-            "searchQuery": "pallof press cable anti rotation core stability",
-            "warmup": "🔥 No ocupa."
-          }
-        ],
-        "mindMuscle": {
-          "title": "Transverso Abdominal (Vacuum)",
-          "internalCue": "Succiona el abdomen hacia adentro y hacia arriba por detrás del esternón.",
-          "externalCue": "Pega el ombligo a la columna vaciando todo el aire.",
-          "eccentricCue": "Inhala de forma pausada y controlada al terminar los segundos de apnea."
-        }
-      },
-      {
         "id": "d5_e9",
-        "name": "Cardio Aeróbico en Zona 2 (Caminadora Inclinada)",
+        "name": "Cardio Zona 2 en Caminadora",
         "muscleGroup": "Cardiovascular (Zona 2 & Recuperación)",
         "sets": 1,
-        "reps": "30 min",
+        "reps": "35-45 min",
         "isCardio": true,
         "restTime": "0 s",
         "defaultUnit": "min",
-        "biomechanics": "BLOQUE 6: Finalizador Metabólico. 30 minutos continuos en Caminadora Inclinada: 8% a 10% de inclinación, velocidad de 4.5 a 5.0 km/h (caminata rápida continua). Frecuencia Cardíaca: 120 a 135 BPM (Zona 2). Acelera la remoción de subproductos metabólicos en las piernas, maximiza la oxidación lipídica mitocondrial y previene la rigidez muscular al día siguiente.",
+        "biomechanics": "Inclinación 10-11% a 3.5-3.8 km/h (120-135 BPM). Acelera la remoción de subproductos metabólicos en las piernas, maximiza la oxidación lipídica mitocondrial y previene la rigidez muscular al día siguiente.",
         "warmup": "🔥 3 minutos progresivos a ritmo suave.",
         "searchQuery": "zone 2 cardio fat oxidation incline walk",
         "equivalents": [
@@ -1904,7 +1813,7 @@ export const scientificProtocol = [
             "name": "Caminadora en Inclinación",
             "desc": "Bajo impacto articular y alto gasto calórico.",
             "ratio": 1,
-            "biomechanics": "Caminadora a 4.5-5.0 km/h con inclinación del 8-10%. Cero impacto articular en rodillas, activación sostenida de gemelos y glúteos.",
+            "biomechanics": "Caminadora a 3.5-3.8 km/h con inclinación del 10-11%. Cero impacto articular en rodillas, activación sostenida de gemelos y glúteos.",
             "mindMuscle": {
               "title": "Caminata Inclinada Zona 2",
               "internalCue": "Camina erguido sin sujetar las barandillas para activar la musculatura estabilizadora.",
@@ -1936,33 +1845,48 @@ export const scientificProtocol = [
   {
     "id": "d6",
     "dayNumber": 6,
-    "name": "Sábado: Jalón 2 (Densidad Dorsal Media, Trapecio y Brazos)",
+    "name": "Sábado: Jalón 2 (Fibras Bajas del Dorsal & Brazos)",
     "type": "workout",
-    "focus": "Segunda sesión de tirón con agarres neutros para dorsal inferior, retracción escapular y aislamiento de bíceps.",
+    "focus": "Tracción neutra para dorsales bajos, Frecuencia 3 de hombro lateral con parciales elongadas, Face Pulls y pico de bíceps en banco a 60° (supinación con meñique para 100% de unidades motoras) y aislamiento en Scott.",
     "exercises": [
       {
         "id": "d6_e1",
-        "name": "Jalón al Pecho con Agarre Estrecho Neutro (V-Grip)",
+        "name": "Jalón con Agarre Estrecho Neutro (V-Grip)",
         "muscleGroup": "Espalda (Dorsal Inferior & V-Taper)",
         "loadFamily": "Familia Jalón Vertical Dorsal",
         "sets": 4,
         "reps": "8-10",
-        "restTime": "120-150 s",
+        "restTime": "180 s",
         "defaultUnit": "lbs",
-        "biomechanics": "Maneral en V o agarre neutro cerrado en polea alta. Torso ligeramente reclinado (15°). La posición de agarre neutro permite una trayectoria con los codos pegados al cuerpo, alineando la tracción con las fibras lumbares e iliocostales del dorsal ancho. Tira hasta que el maneral toque el esternón bajo.",
+        "biomechanics": "El agarre neutro cerrado alinea perfectamente la tracción con las fibras ilíacas e inferiores del dorsal ancho, haciendo que el músculo nazca visualmente más abajo (cerca de la cintura). Maneral en V o agarre neutro cerrado en polea alta. Torso ligeramente reclinado (15°). Tira llevando los codos pegados al cuerpo hasta que el maneral toque el esternón bajo.",
         "warmup": "🔥 Sí ocupa:\n• Serie 1: 50% de la carga x 10 reps.\n• Serie 2: 75% de la carga x 4 reps.",
         "searchQuery": "close grip neutral lat pulldown lower lats v grip",
         "equivalents": [
+          {
+            "id": "d6_e1_eq_wide",
+            "name": "Jalón al Pecho en Polea (Agarre Ancho Pronado)",
+            "desc": "Constructor de amplitud con agarre amplio thumbless.",
+            "ratio": 1,
+            "biomechanics": "Agarre 1.5 anchos de hombro con agarre thumbless. Tracciona llevando los codos hacia las costillas y clavando las escápulas.",
+            "mindMuscle": {
+              "title": "Dorsal Ancho en Amplitud Pronada",
+              "internalCue": "Piensa en clavar los codos en los bolsillos del pantalón.",
+              "externalCue": "Baja la barra hacia la parte alta del esternón.",
+              "eccentricCue": "Controla el retorno en 3 segundos permitiendo que las escápulas suban con control."
+            },
+            "searchQuery": "lat pulldown wide grip form",
+            "warmup": "🔥 Sí ocupa:\n• Serie 1: 50% de la carga x 10 reps.\n• Serie 2: 75% de la carga x 4 reps."
+          },
           {
             "id": "d6_e1_eq1",
             "name": "Jalón con agarre supino (al ancho de hombros)",
             "desc": "Mayor ayuda de flexores para sobrecarga dorsal.",
             "ratio": 1,
-            "biomechanics": "Polea alta con maneral individual. Tracción unilateral pegando el codo a la cadera con ligera flexión lateral de torso.",
+            "biomechanics": "Polea alta con agarre supino o maneral individual. Tracción unilateral pegando el codo a la cadera con ligera flexión lateral de torso.",
             "mindMuscle": {
-              "title": "Jalón Unilateral Dorsal en Polea",
-              "internalCue": "Aísla el dorsal de un solo lado llevando el codo al bolsillo.",
-              "externalCue": "Tracciona el maneral hacia la cadera.",
+              "title": "Jalón Supino Dorsal en Polea",
+              "internalCue": "Aísla el dorsal llevando el codo al costado del cuerpo.",
+              "externalCue": "Tracciona la barra hacia el esternón bajo.",
               "eccentricCue": "Permite que el cable estire el dorsal hacia arriba en 3 segundos."
             },
             "searchQuery": "Jalón con agarre supino (al ancho de hombros) tecnica biomecanica",
@@ -1993,17 +1917,32 @@ export const scientificProtocol = [
       },
       {
         "id": "d6_e2",
-        "name": "Remo Compuesto en Máquina (o Remo Gironda en Polea Baja)",
+        "name": "Remo en Máquina o Gironda (Agarre Neutro)",
         "muscleGroup": "Espalda (Densidad Dorsal Media & Trapecio)",
         "loadFamily": "Familia Remo Horizontal",
         "sets": 4,
-        "reps": "10-12",
-        "restTime": "120 s",
+        "reps": "8-10",
+        "restTime": "180 s",
         "defaultUnit": "lbs",
-        "biomechanics": "Sentado en polea baja con pies en los soportes y rodillas ligeramente flexionadas. Agarre estrecho o neutro. Torso erguido perpendicular al suelo. Inicia retrayendo las escápulas y tira del maneral hacia el ombligo sin balancear la espalda hacia atrás.",
+        "biomechanics": "Tracción hacia el ombligo manteniendo el pecho erguido. Densidad dorsal media y baja. Sentado en polea baja con agarre estrecho o máquina de apoyo al pecho. Inicia retrayendo las escápulas y tira del maneral hacia el ombligo sin balancear la espalda hacia atrás.",
         "warmup": "🔥 Sí (1 serie): 70% de la carga x 4 reps.",
         "searchQuery": "machine row compound back thickness seated cable row",
         "equivalents": [
+          {
+            "id": "d6_e2_eq_comp",
+            "name": "Remo Compuesto en Máquina (Apoyo al Pecho)",
+            "desc": "Cero estrés lumbar, tracción horizontal retrayendo escápulas.",
+            "ratio": 1,
+            "biomechanics": "Apoyo firme del esternón. Tracción horizontal enfocada en retraer escápulas y densificar la espalda media.",
+            "mindMuscle": {
+              "title": "Remo con Apoyo al Pecho",
+              "internalCue": "Clava las escápulas atrás y siente los romboides activarse.",
+              "externalCue": "Hala los manerales hacia las costillas.",
+              "eccentricCue": "Controla el regreso en 3 segundos."
+            },
+            "searchQuery": "chest supported machine row proper form",
+            "warmup": "🔥 Sí (1 serie): 70% de la carga x 4 reps."
+          },
           {
             "id": "d6_e2_eq1",
             "name": "Remo con mancuerna a una mano apoyado en banco",
@@ -2028,14 +1967,79 @@ export const scientificProtocol = [
         }
       },
       {
+        "id": "d6_e4",
+        "name": "Elevaciones Laterales con Mancuernas (o Máquina)",
+        "muscleGroup": "Hombro (Deltoides Lateral)",
+        "sets": 4,
+        "reps": "12-15",
+        "restTime": "120 s",
+        "defaultUnit": "lbs",
+        "biomechanics": "Tercera sesión semanal de deltoides lateral (Frecuencia 3 para V-Taper 3D óptimo). Torso inclinado 10° adelante con codos a 30-45° en el plano escapular. Haz tus 12-15 reps estrictas hasta la horizontal; al fallar, ¡NO sueltes el peso! Saca de 4 a 6 repeticiones parciales en el tercio inferior (0° a 45°, Pedrosa 2022 / Kassiano 2023) controlando la bajada para inducir hipertrofia superior en rango elongado.",
+        "warmup": "🔥 No ocupa.",
+        "searchQuery": "machine lateral raise deltoid cap metabolic burn",
+        "equivalents": [
+          {
+            "id": "d6_e4_eq_mach",
+            "name": "Elevaciones Laterales en Máquina",
+            "desc": "Guía fija para aislar el húmero sin fatiga de trapecios.",
+            "ratio": 1.5,
+            "biomechanics": "Máquina de elevaciones laterales con almohadillas en codos.",
+            "mindMuscle": {
+              "title": "Deltoides Lateral en Máquina",
+              "internalCue": "Empuja desde el húmero sin implicar las manos.",
+              "externalCue": "Abre las almohadillas hacia las paredes.",
+              "eccentricCue": "Baja en 3 segundos sin tocar los topes."
+            },
+            "searchQuery": "Elevaciones Laterales en Máquina tecnica biomecanica",
+            "warmup": "🔥 No ocupa."
+          },
+          {
+            "id": "d6_e4_eq_cable_back",
+            "name": "Elevaciones Laterales en Polea Baja (Tras Espalda)",
+            "desc": "Tensión continua ininterrumpida desde los 0° de abducción.",
+            "ratio": 0.6,
+            "biomechanics": "Polea baja ajustada a la altura de la cadera o rodilla con cable pasando tras los glúteos.",
+            "mindMuscle": {
+              "title": "Deltoides en Polea Tras Espalda",
+              "internalCue": "Lidera con el codo con hombro deprimido.",
+              "externalCue": "Lanza la mano hacia la esquina del techo.",
+              "eccentricCue": "Resiste la bajada en 3 segundos completos."
+            },
+            "searchQuery": "cable lateral raise behind back deltoid isolation",
+            "warmup": "🔥 No ocupa."
+          },
+          {
+            "id": "d6_e4_eq1",
+            "name": "Elevaciones laterales en polea",
+            "desc": "Tensión uniforme en todo el arco articular.",
+            "ratio": 0.6,
+            "biomechanics": "Polea baja a la altura de la rodilla con un paso lateral. Tensión continua.",
+            "mindMuscle": {
+              "title": "Elevación Lateral en Polea Unilateral",
+              "internalCue": "Siente el deltoides activado desde el inicio.",
+              "externalCue": "Lanza la mano hacia la esquina del techo.",
+              "eccentricCue": "Baja en 3 segundos controlando el cable."
+            },
+            "searchQuery": "Elevaciones laterales en polea tecnica biomecanica",
+            "warmup": "🔥 No ocupa."
+          }
+        ],
+        "mindMuscle": {
+          "title": "Deltoides Lateral (Frecuencia 3 & Parciales Elongadas)",
+          "internalCue": "Lidera desde los codos. Al fallar en la horizontal, no pares: saca 4 a 6 parciales en el tercio inferior.",
+          "externalCue": "Empuja las mancuernas hacia las esquinas lejanas de la sala.",
+          "eccentricCue": "Frena la bajada en 2 a 3 segundos controlando el descenso en la zona de estiramiento."
+        }
+      },
+      {
         "id": "d6_e3",
         "name": "Face Pulls en Polea Alta",
         "muscleGroup": "Hombro (Deltoides Posterior & Manguito)",
-        "sets": 4,
+        "sets": 3,
         "reps": "12-15",
-        "restTime": "90 s",
+        "restTime": "120 s",
         "defaultUnit": "lbs",
-        "biomechanics": "Polea a nivel de los ojos con cuerda doble. Tira hacia la frente separando las manos hacia las orejas en rotación externa. Pausa de 1s atrás.",
+        "biomechanics": "Rotación externa y deltoides posterior. Polea a nivel de los ojos con cuerda doble. Tira hacia la frente/tabique nasal separando las manos hacia las orejas en rotación externa. Pausa de 1s atrás.",
         "warmup": "🔥 No ocupa.",
         "searchQuery": "cable face pull external rotation rear delt",
         "equivalents": [
@@ -2044,14 +2048,29 @@ export const scientificProtocol = [
             "name": "Pájaros en Pec Deck Inverso",
             "desc": "Aislamiento directo en máquina deltoides posterior.",
             "ratio": 1,
-            "biomechanics": "Torso inclinado a 45° apoyado en banco con mancuernas ligeras abriendo en arco lateral.",
+            "biomechanics": "Torso inclinado o sentado de frente en Pec Deck abriendo los brazos con codos a la altura de los hombros.",
             "mindMuscle": {
-              "title": "Pájaros con Mancuernas en Banco Inclinado",
+              "title": "Deltoides Posterior en Pec Deck Inverso",
               "internalCue": "Aísla la cara trasera del deltoides sin encoger hombros.",
               "externalCue": "Abre los brazos como alas hacia las paredes.",
               "eccentricCue": "Baja en 3 segundos sintiendo el control excéntrico."
             },
             "searchQuery": "Pájaros en Pec Deck Inverso tecnica biomecanica",
+            "warmup": "🔥 No ocupa."
+          },
+          {
+            "id": "d6_e3_eq_db",
+            "name": "Pájaros con Mancuernas en Banco Inclinado",
+            "desc": "Aislamiento libre para deltoides posterior.",
+            "ratio": 0.5,
+            "biomechanics": "Torso inclinado a 45° apoyado en banco con mancuernas ligeras abriendo en arco lateral.",
+            "mindMuscle": {
+              "title": "Pájaros con Mancuernas",
+              "internalCue": "Abre los brazos con codos ligeramente flexionados.",
+              "externalCue": "Lanza las mancuernas hacia las paredes.",
+              "eccentricCue": "Frena el descenso en 3 segundos."
+            },
+            "searchQuery": "rear delt dumbbell flyes incline bench form",
             "warmup": "🔥 No ocupa."
           },
           {
@@ -2078,65 +2097,90 @@ export const scientificProtocol = [
         }
       },
       {
-        "id": "d6_e4",
-        "name": "Elevaciones Laterales en Máquina o Mancuernas",
-        "muscleGroup": "Hombro (Deltoides Lateral)",
-        "sets": 4,
-        "reps": "12-15",
-        "restTime": "90 s",
-        "defaultUnit": "lbs",
-        "biomechanics": "El eje de rotación de la máquina debe coincidir con la articulación del hombro. Almohadillas apoyadas justo arriba del codo para empujar directamente desde el húmero sin sobrecargar el trapecio. Pausa de 1s arriba; parciales abajo al fallar.",
-        "warmup": "🔥 No ocupa.",
-        "searchQuery": "machine lateral raise deltoid cap metabolic burn",
-        "equivalents": [
-          {
-            "id": "d6_e4_eq1",
-            "name": "Elevaciones laterales en polea",
-            "desc": "Tensión uniforme en todo el arco articular.",
-            "ratio": 0.6,
-            "biomechanics": "Polea baja a la altura de la rodilla con un paso lateral. Tensión continua.",
-            "mindMuscle": {
-              "title": "Elevación Lateral en Polea Unilateral",
-              "internalCue": "Siente el deltoides activado desde el inicio.",
-              "externalCue": "Lanza la mano hacia la esquina del techo.",
-              "eccentricCue": "Baja en 3 segundos controlando el cable."
-            },
-            "searchQuery": "Elevaciones laterales en polea tecnica biomecanica",
-            "warmup": "🔥 No ocupa."
-          }
-        ],
-        "mindMuscle": {
-          "title": "Deltoides Lateral (Amplitud V-Taper)",
-          "internalCue": "Lidera la elevación empujando desde los codos con trapecios deprimidos.",
-          "externalCue": "Empuja las almohadillas hacia las paredes laterales.",
-          "eccentricCue": "Frena la bajada en 2 a 3 segundos."
-        }
-      },
-      {
         "id": "d6_e5",
-        "name": "Curl de Bíceps con Mancuernas (Supinado sentado)",
-        "muscleGroup": "Bíceps (Cabeza Corta y Larga)",
+        "name": "Curl de Bíceps con Mancuernas (Sentado en Banco a 60°)",
+        "muscleGroup": "Bíceps (Cabeza Larga & Pico)",
         "sets": 3,
         "reps": "10-12",
-        "restTime": "90 s",
+        "restTime": "120 s",
         "defaultUnit": "lbs",
-        "biomechanics": "Sentado en banco a 90° con dos mancuernas colgando a los lados. Inicia con agarre neutro. Al subir, supina activamente la muñeca (gira el dedo meñique hacia arriba y afuera para activar la función supinadora del bíceps braquial). Codos fijos a los lados del torso.",
+        "biomechanics": "El banco inclinado a 60° posiciona el húmero por detrás del torso, elongando la cabeza larga del bíceps (responsable del 'pico' y altura del bíceps). Deja que los brazos cuelguen completamente extendidos atrás antes de iniciar la contracción. Al subir, supina activamente girando la muñeca con el dedo meñique hacia afuera y arriba; ese último grado de rotación recluta el 100% de las unidades motoras del bíceps distal. Frena el descenso en 3 segundos continuos sintiendo el estiramiento profundo.",
         "warmup": "🔥 No ocupa.",
-        "searchQuery": "seated supinating dumbbell bicep curl proper technique",
+        "searchQuery": "incline dumbbell bicep curl 60 degrees",
         "equivalents": [
+          {
+            "id": "d6_e5_eq_bayes",
+            "name": "Bayesian Cable Curl (Estiramiento Humeral)",
+            "desc": "De espaldas a la polea baja, máxima tensión en estiramiento.",
+            "ratio": 0.8,
+            "biomechanics": "De espaldas a la polea baja, codo por detrás del cuerpo. Pone la cabeza larga del bíceps en tensión máxima elongada. Da un paso al frente de modo que el brazo quede extendido detrás del torso. Con el codo bloqueado detrás de la cadera, flexiona el antebrazo sin adelantar el codo. Pausa de 1s arriba.",
+            "mindMuscle": {
+              "title": "Bíceps Braquial (Cabeza Larga en Estiramiento Humeral)",
+              "internalCue": "Siente cómo el tendón del bíceps se alarga al máximo detrás de tu cuerpo antes de iniciar cada repetición.",
+              "externalCue": "Curl hacia adelante y arriba manteniendo el codo anclado firmemente detrás del torso.",
+              "eccentricCue": "Deja que el cable jale tu brazo hacia atrás en 3 segundos completos sintiendo el estiramiento profundo del bíceps."
+            },
+            "searchQuery": "bayesian cable curl behind back bicep stretch",
+            "warmup": "🔥 No ocupa."
+          },
+          {
+            "id": "d6_e5_eq_cable",
+            "name": "Curl de Bíceps en Polea Baja (Barra Recta)",
+            "desc": "Tensión mecánica continua con codos pegados al torso.",
+            "ratio": 1,
+            "biomechanics": "Codos clavados como bisagras en las costillas. Pico concéntrico de 1 segundo arriba. Polea baja con barra recta o corta. De pie con rodillas suaves y torso erguido. Flexión completa con muñecas neutras para no sobrecargar los flexores del antebrazo.",
+            "mindMuscle": {
+              "title": "Bíceps Braquial & Braquial Anterior",
+              "internalCue": "Aprieta los bíceps con fuerza en la cima imaginando comprimir una nuez en la flexura del codo.",
+              "externalCue": "Lleva la barra hacia tu barbilla manteniendo los codos inmóviles pegados a las costillas.",
+              "eccentricCue": "Desciende la barra en 2 a 3 segundos hasta que los brazos queden completamente extendidos."
+            },
+            "searchQuery": "cable straight bar bicep curl proper form",
+            "warmup": "🔥 No ocupa."
+          },
+          {
+            "id": "d6_e5_eq_scott",
+            "name": "Curl en Banco Predicador (Scott) o Máquina",
+            "desc": "Aislamiento estricto de cabeza corta y pico.",
+            "ratio": 0.9,
+            "biomechanics": "Tríceps y axilas firmemente apoyados sobre la almohadilla inclinada a 45°. Asiento ajustado para no encorvar la espalda. El apoyo del brazo elimina cualquier impulso del hombro o balanceo del torso.",
+            "mindMuscle": {
+              "title": "Bíceps Braquial en Aislamiento Puro (Banco Scott)",
+              "internalCue": "Siente cómo el bíceps hace todo el trabajo sin ayuda de ningún otro músculo.",
+              "externalCue": "Tracciona el maneral hacia tu frente manteniendo los brazos pegados al cojín.",
+              "eccentricCue": "Desciende en 3 segundos muy controlados, deteniéndote 2 cm antes del bloqueo articular para proteger los tendones."
+            },
+            "searchQuery": "preacher curl machine scott arm curl isolation",
+            "warmup": "🔥 No ocupa."
+          },
           {
             "id": "d6_e5_eq1",
             "name": "Curl martillo con mancuernas (enfoque en braquial y braquiorradial)",
             "desc": "Desarrollo del braquial anterior y antebrazo.",
             "ratio": 1,
-            "biomechanics": "Banco inclinado a 60°, brazos colgando detrás del torso con máxima elongación.",
+            "biomechanics": "Banco inclinado a 60°, brazos colgando detrás del torso con agarre neutro estricto.",
             "mindMuscle": {
-              "title": "Curl Inclinado con Mancuernas a 60°",
-              "internalCue": "Inicia la contracción desde el estiramiento completo del bíceps.",
-              "externalCue": "Curl hacia arriba y afuera con supinación activa.",
+              "title": "Curl Martillo con Mancuernas",
+              "internalCue": "Siente la activación profunda en la cara lateral del brazo y el antebrazo.",
+              "externalCue": "Eleva las mancuernas manteniendo los pulgares apuntando al techo.",
               "eccentricCue": "Desciende en 3 segundos lentos."
             },
             "searchQuery": "Curl martillo con mancuernas (enfoque en braquial y braquiorradial) tecnica biomecanica",
+            "warmup": "🔥 No ocupa."
+          },
+          {
+            "id": "d6_e5_eq_barbell",
+            "name": "Curl con barra Z de pie",
+            "desc": "Sobrecarga con barra libre para bíceps.",
+            "ratio": 1,
+            "biomechanics": "Agarre en las curvas de la barra Z para comodidad de muñecas. Cero balanceo de espalda lumbar.",
+            "mindMuscle": {
+              "title": "Bíceps con Barra Z Libre",
+              "internalCue": "Aísla los brazos sin balancear la pelvis.",
+              "externalCue": "Sube la barra Z en arco firme hacia el cuello.",
+              "eccentricCue": "Frena la caída en 3 segundos completos."
+            },
+            "searchQuery": "ez bar bicep curl proper form",
             "warmup": "🔥 No ocupa."
           }
         ],
@@ -2149,16 +2193,61 @@ export const scientificProtocol = [
       },
       {
         "id": "d6_e6",
-        "name": "Curl en Máquina Predicador (Scott / Arm Curl)",
-        "muscleGroup": "Bíceps (Aislamiento Estricto de Pico)",
+        "name": "Curl en Banco Predicador (Scott) o Máquina",
+        "muscleGroup": "Bíceps (Cabeza Corta & Grosor Interno)",
         "sets": 3,
         "reps": "10-12",
-        "restTime": "90 s",
+        "restTime": "120 s",
         "defaultUnit": "lbs",
-        "biomechanics": "Tríceps y axilas firmemente apoyados sobre la almohadilla inclinada a 45°. Asiento ajustado para no encorvar la espalda. El apoyo del brazo elimina cualquier impulso del hombro o balanceo del torso, aislando el bíceps en el tercio medio e inferior del movimiento. Flexiona hasta la vertical y frena la bajada antes de hiperextender el codo.",
+        "biomechanics": "Aislamiento puro de la cabeza corta (grosor, densidad y masa interna del brazo). Tríceps y axilas firmemente apoyados sobre la almohadilla inclinada a 45°. El soporte rígido anula cualquier impulso o compensación del hombro. Aprieta 1 segundo arriba en contracción isométrica máxima y desciende en 3 segundos muy controlados, deteniéndote 2 cm antes de la hiperextensión articular para proteger tendones distales.",
         "warmup": "🔥 No ocupa.",
         "searchQuery": "preacher curl machine scott arm curl isolation",
         "equivalents": [
+          {
+            "id": "d6_e6_eq_bayes",
+            "name": "Bayesian Cable Curl (Estiramiento Humeral)",
+            "desc": "De espaldas a la polea baja, máxima tensión en estiramiento.",
+            "ratio": 0.8,
+            "biomechanics": "De espaldas a la polea baja, codo por detrás del cuerpo. Pone la cabeza larga del bíceps en tensión máxima elongada. Da un paso al frente de modo que el brazo quede extendido detrás del torso. Con el codo bloqueado detrás de la cadera, flexiona el antebrazo sin adelantar el codo. Pausa de 1s arriba.",
+            "mindMuscle": {
+              "title": "Bíceps Braquial (Cabeza Larga en Estiramiento Humeral)",
+              "internalCue": "Siente cómo el tendón del bíceps se alarga al máximo detrás de tu cuerpo antes de iniciar cada repetición.",
+              "externalCue": "Curl hacia adelante y arriba manteniendo el codo anclado firmemente detrás del torso.",
+              "eccentricCue": "Deja que el cable jale tu brazo hacia atrás en 3 segundos completos sintiendo el estiramiento profundo del bíceps."
+            },
+            "searchQuery": "bayesian cable curl behind back bicep stretch",
+            "warmup": "🔥 No ocupa."
+          },
+          {
+            "id": "d6_e6_eq_cable",
+            "name": "Curl de Bíceps en Polea Baja (Barra Recta)",
+            "desc": "Tensión mecánica continua con codos pegados al torso.",
+            "ratio": 1,
+            "biomechanics": "Codos clavados como bisagras en las costillas. Pico concéntrico de 1 segundo arriba. Polea baja con barra recta o corta. De pie con rodillas suaves y torso erguido. Flexión completa con muñecas neutras para no sobrecargar los flexores del antebrazo.",
+            "mindMuscle": {
+              "title": "Bíceps Braquial & Braquial Anterior",
+              "internalCue": "Aprieta los bíceps con fuerza en la cima imaginando comprimir una nuez en la flexura del codo.",
+              "externalCue": "Lleva la barra hacia tu barbilla manteniendo los codos inmóviles pegados a las costillas.",
+              "eccentricCue": "Desciende la barra en 2 a 3 segundos hasta que los brazos queden completamente extendidos."
+            },
+            "searchQuery": "cable straight bar bicep curl proper form",
+            "warmup": "🔥 No ocupa."
+          },
+          {
+            "id": "d6_e6_eq_incline",
+            "name": "Curl de Bíceps con Mancuernas (Sentado en Banco a 60°)",
+            "desc": "La inclinación hacia atrás elonga la cabeza larga del bíceps.",
+            "ratio": 0.5,
+            "biomechanics": "Banco inclinado a 60°, brazos colgando detrás del torso con máxima elongación. Supinación activa en el ascenso.",
+            "mindMuscle": {
+              "title": "Curl Inclinado con Mancuernas a 60°",
+              "internalCue": "Inicia la contracción desde el estiramiento completo del bíceps.",
+              "externalCue": "Curl hacia arriba y afuera con supinación activa.",
+              "eccentricCue": "Desciende en 3 segundos lentos."
+            },
+            "searchQuery": "incline dumbbell bicep curl 60 degrees",
+            "warmup": "🔥 No ocupa."
+          },
           {
             "id": "d6_e6_eq1",
             "name": "Curl en banco Scott con barra Z",
@@ -2199,23 +2288,23 @@ export const scientificProtocol = [
       },
       {
         "id": "d6_e7",
-        "name": "Vacuum Abdominal (Transverso)",
+        "name": "Vacuum Abdominal",
         "muscleGroup": "Core (Transverso & Cintura Estrecha)",
         "sets": 4,
-        "reps": "15-20 s",
+        "reps": "20-25 s",
         "isTime": true,
         "restTime": "60 s",
         "defaultUnit": "s",
-        "biomechanics": "De pie o apoyado en rodillas. Exhalación total del aire. Expande la caja torácica y aspira el ombligo hacia adentro por 15-20 segundos continuos.",
+        "biomechanics": "Transverso. De pie o apoyado en rodillas. Exhalación total del aire. Expande la caja torácica y aspira el ombligo hacia adentro por 20-25 segundos continuos.",
         "warmup": "🔥 No ocupa.",
         "searchQuery": "stomach vacuum exercise waist tightening",
         "equivalents": [
           {
             "id": "d6_e7_eq1",
             "name": "Plancha Isométrica",
-            "desc": "Estabilidad del core.",
+            "desc": "Estabilidad y contracción del core.",
             "ratio": 1,
-            "biomechanics": "Posición de cuatro apoyos en colchoneta. Aspiración diafragmática de 15 segundos.",
+            "biomechanics": "Posición de cuatro apoyos en colchoneta. Aspiración diafragmática de 15 a 20 segundos.",
             "mindMuscle": {
               "title": "Plancha Vacío Abdominal en Cuadrupedia",
               "internalCue": "Aspira el abdomen hacia el techo.",
@@ -2223,6 +2312,21 @@ export const scientificProtocol = [
               "eccentricCue": "Control respiratorio pausado."
             },
             "searchQuery": "Plancha Isométrica tecnica biomecanica",
+            "warmup": "🔥 No ocupa."
+          },
+          {
+            "id": "d6_e7_eq_pallof",
+            "name": "Pallof Press en Polea",
+            "desc": "Fuerza y control anti-rotacional de core.",
+            "ratio": 1,
+            "biomechanics": "Polea a la altura del esternón. De pie perpendicular a la polea con agarre doble frente al pecho. Extiende los brazos al frente en línea recta resistiendo el torque rotacional del cable.",
+            "mindMuscle": {
+              "title": "Core Funcional Anti-Rotación",
+              "internalCue": "Contrae los oblicuos y el abdomen profundo para impedir que el cable gire tu torso hacia la polea.",
+              "externalCue": "Extiende las manos al frente formando una línea perpendicular perfecta con tu esternón.",
+              "eccentricCue": "Regresa las manos al pecho en 2 segundos controlando la fuerza lateral."
+            },
+            "searchQuery": "pallof press cable anti rotation core stability",
             "warmup": "🔥 No ocupa."
           }
         ],
@@ -2235,21 +2339,21 @@ export const scientificProtocol = [
       },
       {
         "id": "d6_e8",
-        "name": "Cardio Aeróbico en Zona 2",
+        "name": "Cardio Zona 2",
         "muscleGroup": "Cardiovascular (Zona 2)",
         "sets": 1,
-        "reps": "35-40 min",
+        "reps": "35-45 min",
         "isCardio": true,
         "restTime": "0 s",
         "defaultUnit": "min",
-        "biomechanics": "35 a 40 minutos continuos (Bicicleta estática o Caminadora) a 120-135 BPM para consolidar el gasto energético y recuperación sin estrés articular.",
+        "biomechanics": "Caminadora o elíptica. 35 a 45 minutos continuos a 120-135 BPM para consolidar el gasto energético y recuperación sin estrés articular.",
         "warmup": "🔥 3 minutos progresivos.",
         "searchQuery": "zone 2 cardio fat oxidation stationary bike",
         "equivalents": [
           {
             "id": "d6_e8_eq1",
             "name": "Caminadora en Inclinación",
-            "desc": "Bajo impacto articular.",
+            "desc": "Bajo impacto articular y alto gasto calórico.",
             "ratio": 1,
             "biomechanics": "Caminadora en inclinación de 8-10% a ritmo moderado continuo.",
             "mindMuscle": {
@@ -2264,7 +2368,7 @@ export const scientificProtocol = [
           {
             "id": "d6_e8_eq2",
             "name": "Bicicleta Estática",
-            "desc": "Cadencia continua.",
+            "desc": "Cadencia continua fluida sin impacto.",
             "ratio": 1,
             "biomechanics": "Bicicleta estática a 80 RPM continua.",
             "mindMuscle": {
@@ -2274,6 +2378,21 @@ export const scientificProtocol = [
               "eccentricCue": "Respiración uniforme."
             },
             "searchQuery": "Bicicleta Estática tecnica biomecanica",
+            "warmup": "🔥 3 minutos progresivos."
+          },
+          {
+            "id": "d6_e8_eq3",
+            "name": "Elíptica en Zona 2",
+            "desc": "Cero impacto articular con activación de cuerpo completo.",
+            "ratio": 1,
+            "biomechanics": "Elíptica a ritmo moderado constante manteniendo 120-135 BPM.",
+            "mindMuscle": {
+              "title": "Elíptica Zona 2",
+              "internalCue": "Ritmo fluido sin tirones en las articulaciones.",
+              "externalCue": "Mantén la cadencia sostenida.",
+              "eccentricCue": "Respiración relajada."
+            },
+            "searchQuery": "elliptical zone 2 cardio fat burn",
             "warmup": "🔥 3 minutos progresivos."
           }
         ],

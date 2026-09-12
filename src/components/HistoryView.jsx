@@ -93,7 +93,7 @@ export default function HistoryView() {
     const customEx = customExercisesMap[day.id] || [];
     [...baseEx, ...customEx].forEach(ex => {
       if (!ex.isCardio && !ex.isTime && !allAvailableExercises.some(a => a.id === ex.id)) {
-        allAvailableExercises.push({ id: ex.id, name: ex.name, day: dayPrefix, muscleGroup: ex.muscleGroup, biomechanics: ex.biomechanics });
+        allAvailableExercises.push({ ...ex, day: dayPrefix });
         exerciseOptions.push({ value: ex.id, label: `${dayPrefix} • ${ex.name}` });
       }
     });
@@ -102,7 +102,7 @@ export default function HistoryView() {
   // Asegurar que cualquier ejercicio personalizado adicional aparezca en la lista
   Object.values(customExercisesMap).flat().forEach(ex => {
     if (ex && ex.id && !ex.isCardio && !allAvailableExercises.some(a => a.id === ex.id)) {
-      allAvailableExercises.push({ id: ex.id, name: ex.name, day: '⚡️ Creado', muscleGroup: ex.muscleGroup, biomechanics: ex.biomechanics });
+      allAvailableExercises.push({ ...ex, day: '⚡️ Creado' });
       exerciseOptions.push({ value: ex.id, label: `⚡️ Creado • ${ex.name}` });
     }
   });

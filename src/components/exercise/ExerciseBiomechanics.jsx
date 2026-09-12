@@ -69,28 +69,28 @@ function getMindMuscleCues(exercise) {
 
   if (name.includes('lateral') || name.includes('hombro') || name.includes('deltoides') || name.includes('elevación') || mg.includes('hombro')) {
     return {
-      title: "Deltoides Lateral (V-Taper & Amplitud)",
-      internalCue: "Lidera la elevación empujando con los codos y el dorso de la mano. Mantén los trapecios deprimidos sin encoger el cuello.",
-      externalCue: "Imagina que empujas las mancuernas o poleas hacia las esquinas lejanas de la habitación (hacia afuera, no hacia arriba).",
-      eccentricCue: "Desciende en 2 a 3 segundos resistiendo la gravedad antes de que el peso toque tus muslos."
+      title: "Deltoides Lateral (Hombro 3D & Parciales Elongadas)",
+      internalCue: "Lidera la elevación empujando desde los codos con el torso inclinado 10° adelante. Al fallar en la horizontal, ¡NO sueltes el peso! Saca de 4 a 6 repeticiones parciales en el tercio inferior (0° a 45°, Pedrosa 2022 / Kassiano 2023).",
+      externalCue: "Empuja las mancuernas, poleas o almohadillas hacia las paredes laterales lejanas (hacia afuera, no hacia el techo).",
+      eccentricCue: "Frena la bajada en 2 a 3 segundos resistiendo el peso; en las parciales finales, controla cada descenso en la zona elongada."
     };
   }
 
   if (name.includes('bíceps') || name.includes('biceps') || name.includes('curl')) {
     return {
-      title: "Bíceps Braquial & Braquiorradial",
-      internalCue: "Fija los codos como bisagras inamovibles pegadas al costado. Supina activamente la muñeca (gira el meñique hacia arriba) al subir.",
-      externalCue: "Imagina aplastar una moneda entre tu antebrazo y tu bíceps en el pico de contracción.",
-      eccentricCue: "Extiende el brazo de forma lenta y controlada hasta estirar por completo la cabeza larga."
+      title: "Bíceps Braquial (Supinación Estricta & Estiramiento)",
+      internalCue: "Estira completamente el brazo hacia atrás antes de contraer. Al subir, gira activamente la muñeca llevando el dedo meñique hacia afuera y arriba (supinación máxima para reclutar el 100% de las unidades motoras).",
+      externalCue: "Fija los codos como bisagras inmóviles pegadas a las costillas y piensa en aplastar el antebrazo contra el pico del bíceps.",
+      eccentricCue: "Desciende en 3 segundos continuos sintiendo la tracción excéntrica en el vientre muscular sin rebotar abajo."
     };
   }
 
-  if (name.includes('tríceps') || name.includes('triceps') || name.includes('copa') || name.includes('fondos') || name.includes('frances')) {
+  if (name.includes('tríceps') || name.includes('triceps') || name.includes('copa') || name.includes('fondos') || name.includes('frances') || name.includes('pushdown')) {
     return {
-      title: "Tríceps (Cabeza Lateral, Medial y Larga)",
-      internalCue: "Extiende el codo por completo apretando la contracción durante 1 segundo completo sin mover la posición del hombro.",
-      externalCue: "Imagina partir la barra o separar los extremos de la cuerda hacia los lados al final del recorrido.",
-      eccentricCue: "Permite que el antebrazo suba hasta que el tríceps quede bajo máximo estiramiento bajo carga."
+      title: "Tríceps (60-65% del Brazo - Cabeza Larga & Lateral)",
+      internalCue: "El tríceps compone el 60-65% del volumen del brazo. En copa/tras nuca, flexiona profundamente el codo por detrás de la cabeza para estirar la cabeza larga en el tubérculo infraglenoideo. En polea, aprieta 1 segundo entero con codos bloqueados.",
+      externalCue: "Imagina partir la barra o abrir los cabos de la cuerda hacia los lados al final del recorrido con los codos anclados al torso.",
+      eccentricCue: "Controla la fase excéntrica en 3 segundos sintiendo el estiramiento profundo antes de iniciar la siguiente repetición."
     };
   }
 

@@ -11,7 +11,7 @@ import {
   ReferenceArea
 } from 'recharts';
 import { TrendingUp, Sparkles, Filter, Info } from 'lucide-react';
-import { getHistoricalRecordsForExercise } from '../../utils/exerciseMatcher.js';
+import { getHistoricalRecordsForExercise, matchExercise } from '../../utils/exerciseMatcher.js';
 import { calculate1RM } from '../../hooks/useWorkoutCalculations.js';
 
 export default function ExerciseProgressionChart({
@@ -69,7 +69,18 @@ export default function ExerciseProgressionChart({
 
     // 2. Extraer datos de la sesión de hoy si tiene series marcadas
     const exId = exercise.id;
-    const todayLogs = todayWorkoutData?.[exId] || {};
+    let todayLogs = todayWorkoutData?.[exId];
+    if (!todayLogs && todayWorkoutData) {
+      for (const [candKey, candData] of Object.entries(todayWorkoutData)) {
+        if (!candData || candData.machine) continue;
+        const matchRes = matchExercise(exercise, candKey, candData);
+        if (matchRes.isMatch) {
+          todayLogs = candData;
+          break;
+        }
+      }
+    }
+    todayLogs = todayLogs || {};
     let todayMaxW = 0;
     let todayMinW = Infinity;
     let todayMaxR = 0;

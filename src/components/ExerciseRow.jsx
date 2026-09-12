@@ -8,6 +8,7 @@ import ExerciseBiomechanics from './exercise/ExerciseBiomechanics';
 import ExerciseSwap from './exercise/ExerciseSwap';
 import { calculateSmartWarmup, getLoadRecommendation } from '../hooks/useWorkoutCalculations';
 import { UNIFIED_EXERCISE_LIBRARY } from '../data/unifiedExerciseLibrary';
+import { normalizeExerciseName } from '../utils/exerciseMatcher';
 
 export default function ExerciseRow({
   exercise,
@@ -287,11 +288,17 @@ export default function ExerciseRow({
     const matchEq = (exercise.equivalents || []).find(eq => eq.name === fullCandidate.name || eq.id === fullCandidate.id);
     if (matchEq) {
       fullCandidate = { ...matchEq, ...fullCandidate };
-    } else {
-      const matchLib = UNIFIED_EXERCISE_LIBRARY.find(x => x.name === fullCandidate.name || x.id === fullCandidate.id);
-      if (matchLib) {
-        fullCandidate = { ...matchLib, ...fullCandidate };
-      }
+    }
+    
+    // Enriquecer con biblioteca unificada si faltan biomecánica o detalles
+    const normCandName = normalizeExerciseName(fullCandidate.name);
+    const matchLib = UNIFIED_EXERCISE_LIBRARY.find(x => 
+      x.name === fullCandidate.name || 
+      x.id === fullCandidate.id ||
+      (normCandName && normalizeExerciseName(x.name) === normCandName)
+    );
+    if (matchLib) {
+      fullCandidate = { ...matchLib, ...fullCandidate, biomechanics: fullCandidate.biomechanics || matchLib.biomechanics, warmup: fullCandidate.warmup || matchLib.warmup, mindMuscle: fullCandidate.mindMuscle || matchLib.mindMuscle };
     }
 
     try {

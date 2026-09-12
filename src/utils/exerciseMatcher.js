@@ -103,14 +103,18 @@ function areIncompatibleExercises(nameA, nameB) {
   const isStrictDumbbellB = (b.includes('mancuerna') || b.includes('dumbbell')) && !b.includes('maquina') && !b.includes('máquina') && !b.includes('smith');
 
   const isStrictMachineA = (a.includes('maquina') || a.includes('máquina') || a.includes('machine') || a.includes('smith') || a.includes('multipower') || a.includes('nitro') || a.includes('hammer')) && !a.includes('mancuerna');
-  const isStrictMachineB = (b.includes('maquina') || b.includes('máquina') || b.includes('machine') || b.includes('smith') || b.includes('multipower') || b.includes('nitro') || b.includes('hammer')) && !b.includes('mancuerna');
+  const isStrictMachineB = (b.includes('maquina') || b.includes('máquina') || b.includes('machine') || b.includes('smith') || b.includes('multipower') || b.includes('nitro') || b.includes('hammer')) && !a.includes('mancuerna');
 
   const isStrictBarbellA = ((a.includes('barra') || a.includes('barbell')) && !a.includes('mancuerna') && !a.includes('polea') && !a.includes('cable') && !a.includes('smith') && !a.includes('maquina'));
   const isStrictBarbellB = ((b.includes('barra') || b.includes('barbell')) && !b.includes('mancuerna') && !b.includes('polea') && !b.includes('cable') && !b.includes('smith') && !b.includes('maquina'));
 
+  const isStrictCableA = (a.includes('polea') || a.includes('cable')) && !a.includes('mancuerna') && !a.includes('barra');
+  const isStrictCableB = (b.includes('polea') || b.includes('cable')) && !b.includes('mancuerna') && !b.includes('barra');
+
   if ((isStrictDumbbellA && isStrictMachineB) || (isStrictMachineA && isStrictDumbbellB)) return true;
   if ((isStrictDumbbellA && isStrictBarbellB) || (isStrictBarbellA && isStrictDumbbellB)) return true;
   if ((isStrictMachineA && isStrictBarbellB) || (isStrictBarbellA && isStrictMachineB)) return true;
+  if ((isStrictCableA && isStrictDumbbellB) || (isStrictDumbbellA && isStrictCableB)) return true;
 
   return false;
 }
@@ -124,6 +128,7 @@ export function matchExercise(currentEx, historicalKey, historicalData) {
   const currentId = currentEx.id;
   const currentName = currentEx.name || '';
   const histName = historicalData.name || historicalData.originalName || historicalKey || '';
+  const isSwapped = Boolean(currentEx.originalName && currentEx.originalName !== currentEx.name);
 
   // 1. Si son ejercicios biomecánicamente incompatibles, bloquear INCLUSO si coinciden por ID
   // (Previene que si d5_e1 antes era Prensa y ahora es RDL se mezclen pesos)
@@ -131,17 +136,12 @@ export function matchExercise(currentEx, historicalKey, historicalData) {
     return { isMatch: false };
   }
 
-  // 2. Coincidencia directa por ID (solo si no fueron incompatibles arriba)
-  if (currentId === historicalKey || historicalData.id === currentId) {
-    return { isMatch: true, matchType: 'exact_id', matchedName: histName };
-  }
-
-  // 2. Coincidencia exacta por nombre
+  // 2. Coincidencia exacta por nombre (Máxima fidelidad de progresión)
   if (currentName.trim().toLowerCase() === histName.trim().toLowerCase()) {
     return { isMatch: true, matchType: 'exact_name', matchedName: histName };
   }
 
-  // 3. Coincidencia normalizada
+  // 3. Coincidencia normalizada por nombre
   const normCurrent = normalizeExerciseName(currentName);
   const normHist = normalizeExerciseName(histName);
 
@@ -151,7 +151,23 @@ export function matchExercise(currentEx, historicalKey, historicalData) {
     }
   }
 
-  // 4. Coincidencia por Equivalencias Directas
+  // 4. Coincidencia directa por ID (solo si no fueron incompatibles y no es un slot sustituido con otro ejercicio)
+  if (currentId === historicalKey || historicalData.id === currentId) {
+    // Si el ejercicio actual está sustituido, NO asociar registros antiguos que tenían el nombre original
+    if (isSwapped && currentEx.originalName) {
+      const normOrig = normalizeExerciseName(currentEx.originalName);
+      if (normHist && (normHist === normOrig || normHist.includes(normOrig) || normOrig.includes(normHist))) {
+        return { isMatch: false }; // Evita contaminar el sustituto con los pesos del ejercicio original
+      }
+    }
+    // Si el historial tiene un nombre explícito distinto y no compatible, rechazar match ciego de ID
+    if (normHist && normCurrent && normHist !== normCurrent && areIncompatibleExercises(currentName, histName)) {
+      return { isMatch: false };
+    }
+    return { isMatch: true, matchType: 'exact_id', matchedName: histName };
+  }
+
+  // 5. Coincidencia por Equivalencias Directas
   if (currentEx.equivalents && Array.isArray(currentEx.equivalents)) {
     for (const eq of currentEx.equivalents) {
       if (areIncompatibleExercises(eq.name, histName)) continue;
@@ -162,7 +178,7 @@ export function matchExercise(currentEx, historicalKey, historicalData) {
     }
   }
 
-  // 5. Coincidencia por Familia de Carga
+  // 6. Coincidencia por Familia de Carga
   if (currentEx.loadFamily && LOAD_FAMILY_KEYWORDS[currentEx.loadFamily]) {
     const familyKeywords = LOAD_FAMILY_KEYWORDS[currentEx.loadFamily];
     const isHistInFamily = familyKeywords.some(kw => normHist.includes(normalizeExerciseName(kw)));
@@ -451,15 +467,9 @@ function findBestMatchInSession(currentEx, sessionOrExercises) {
 
   if (entries.length === 0) return null;
 
-  // Prioridad 1: Coincidencia exacta por ID (clave o propiedad id)
-  for (const { key, data: exData } of entries) {
-    if (!exData) continue;
-    if ((key === currentEx.id || exData.id === currentEx.id) && !areIncompatibleExercises(currentEx.name, exData.name || key)) {
-      return exData;
-    }
-  }
+  const isSwapped = Boolean(currentEx.originalName && currentEx.originalName !== currentEx.name);
 
-  // Prioridad 2: Coincidencia exacta por Nombre (ignorando mayúsculas y espacios extremos)
+  // Prioridad 1: Coincidencia exacta por Nombre (ignorando mayúsculas y espacios extremos)
   for (const { key, data: exData } of entries) {
     if (!exData) continue;
     const histName = exData.name || exData.originalName || key;
@@ -468,7 +478,7 @@ function findBestMatchInSession(currentEx, sessionOrExercises) {
     }
   }
 
-  // Prioridad 3: Coincidencia por nombre normalizado (siempre que los aparatos sean compatibles)
+  // Prioridad 2: Coincidencia por nombre normalizado (siempre que los aparatos sean compatibles)
   const normCurrent = normalizeExerciseName(currentEx.name);
   for (const { key, data: exData } of entries) {
     if (!exData) continue;
@@ -476,6 +486,24 @@ function findBestMatchInSession(currentEx, sessionOrExercises) {
     if (areIncompatibleExercises(currentEx.name, histName)) continue;
     const normHist = normalizeExerciseName(histName);
     if (normCurrent && normHist && normCurrent === normHist) {
+      return exData;
+    }
+  }
+
+  // Prioridad 3: Coincidencia exacta por ID (clave o propiedad id) solo si no hay contradicción de ejercicio
+  for (const { key, data: exData } of entries) {
+    if (!exData) continue;
+    if (key === currentEx.id || exData.id === currentEx.id) {
+      const histName = exData.name || exData.originalName || key;
+      if (areIncompatibleExercises(currentEx.name, histName)) continue;
+      // Si el ejercicio actual está sustituido, NO asociar datos del ejercicio original
+      if (isSwapped && currentEx.originalName) {
+        const normOrig = normalizeExerciseName(currentEx.originalName);
+        const normHist = normalizeExerciseName(histName);
+        if (normHist && (normHist === normOrig || normHist.includes(normOrig) || normOrig.includes(normHist))) {
+          continue;
+        }
+      }
       return exData;
     }
   }
