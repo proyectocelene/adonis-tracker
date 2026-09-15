@@ -117,13 +117,34 @@ export default function SetLogger({
   }, [exercise?.name]);
 
   const isUnilateral = !isStrictlyBilateral && (exerciseData.isUnilateral !== undefined ? !!exerciseData.isUnilateral : !!exercise.isUnilateral);
+  const prescribedReps = exercise?.reps || exercise?.targetReps || '10-12';
   
   const slugKey = useMemo(() => getMachineStorageKey(exercise), [exercise]);
   const [globalMachineConfigs, setGlobalMachineConfigs] = useLocalStorage('coachv2_machine_configs', {});
+  const [globalMachineProfiles, setGlobalMachineProfiles] = useLocalStorage('coachv2_machine_profiles', {});
 
-  // Machine Config: Prioridad a exerciseData, luego al almacén sincronizado en Firestore / IndexedDB
+  // Extraer perfiles guardados para este ejercicio
+  const exerciseProfiles = useMemo(() => {
+    let list = globalMachineProfiles?.[slugKey] || globalMachineProfiles?.[exercise?.id];
+    if (Array.isArray(list) && list.length > 0) return list;
+    try {
+      const raw = localStorage.getItem(`coachv2_profiles_${slugKey}`);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (e) {}
+    return [];
+  }, [globalMachineProfiles, slugKey, exercise?.id]);
+
+  // Machine Config: Prioridad a exerciseData, luego al perfil predeterminado o al almacén sincronizado
   const [machineConfig, setMachineConfig] = useState(() => {
     if (exerciseData?.machineConfig) return exerciseData.machineConfig;
+    const savedList = globalMachineProfiles?.[slugKey] || globalMachineProfiles?.[exercise?.id];
+    if (Array.isArray(savedList) && savedList.length > 0) {
+      const def = savedList.find(p => p.isDefault) || savedList[0];
+      if (def) return def;
+    }
     if (globalMachineConfigs && typeof globalMachineConfigs === 'object') {
       const stored = globalMachineConfigs[exercise?.id] || globalMachineConfigs[slugKey];
       if (stored) return stored;
@@ -139,13 +160,16 @@ export default function SetLogger({
   useEffect(() => {
     if (exerciseData?.machineConfig) {
       setMachineConfig(exerciseData.machineConfig);
+    } else if (exerciseProfiles.length > 0 && !machineConfig) {
+      const def = exerciseProfiles.find(p => p.isDefault) || exerciseProfiles[0];
+      if (def) setMachineConfig(def);
     } else if (globalMachineConfigs && typeof globalMachineConfigs === 'object') {
       const stored = globalMachineConfigs[exercise?.id] || globalMachineConfigs[slugKey];
       if (stored && !machineConfig) {
         setMachineConfig(stored);
       }
     }
-  }, [exerciseData?.machineConfig, globalMachineConfigs, exercise?.id, slugKey]);
+  }, [exerciseData?.machineConfig, exerciseProfiles, globalMachineConfigs, exercise?.id, slugKey]);
 
   const [plateModal, setPlateModal] = useState({ isOpen: false, setNum: null, currentWeight: 0 });
   const [isScienceModalOpen, setIsScienceModalOpen] = useState(false);
@@ -153,7 +177,7 @@ export default function SetLogger({
   const [isMachineConfigOpen, setIsMachineConfigOpen] = useState(false);
   const [manualWarmupOpen, setManualWarmupOpen] = useState(false);
 
-  const coachAnalysis = analyzeExercisePerformance(previousData, exercise.targetReps || '10-12', machineConfig);
+  const coachAnalysis = analyzeExercisePerformance(previousData, prescribedReps, machineConfig);
 
   const warmupPlan = getWarmupPlan(exercise, previousData, exerciseData, machineConfig, coachAnalysis);
 
@@ -196,12 +220,36 @@ export default function SetLogger({
     }
   };
 
-  const handleSaveMachineConfig = (configData) => {
+  const handleSaveMachineConfig = (configData, updatedProfiles) => {
     setMachineConfig(configData);
     if (onUpdateExerciseMeta) {
       onUpdateExerciseMeta({ machineConfig: configData });
     }
-    // Sincronizar en Firestore / IndexedDB en la colección coachv2_machine_configs
+
+    // Sincronizar perfiles de máquina en coachv2_machine_profiles
+    if (Array.isArray(updatedProfiles)) {
+      setGlobalMachineProfiles(prev => ({
+        ...(prev || {}),
+        [slugKey]: updatedProfiles,
+        [exercise.id]: updatedProfiles
+      }));
+      try {
+        localStorage.setItem(`coachv2_profiles_${slugKey}`, JSON.stringify(updatedProfiles));
+      } catch (e) {}
+    } else if (configData) {
+      setGlobalMachineProfiles(prev => {
+        const existing = prev?.[slugKey] || [];
+        const next = existing.filter(p => p.id !== configData.id);
+        next.push(configData);
+        return {
+          ...(prev || {}),
+          [slugKey]: next,
+          [exercise.id]: next
+        };
+      });
+    }
+
+    // Sincronizar en Firestore / IndexedDB en la colección legacy coachv2_machine_configs
     setGlobalMachineConfigs(prev => {
       const next = { ...(prev || {}) };
       if (configData) {
@@ -217,6 +265,7 @@ export default function SetLogger({
       }
       return next;
     });
+
     // Respaldo de compatibilidad en localStorage
     try {
       if (configData) {
@@ -228,6 +277,21 @@ export default function SetLogger({
         localStorage.removeItem(`adonis_machine_${exercise.id}`);
       }
     } catch (e) {}
+  };
+
+  const handleSelectMachineProfile = (profId) => {
+    if (profId === '__NEW__') {
+      setIsMachineConfigOpen(true);
+      return;
+    }
+    const target = exerciseProfiles.find(p => p.id === profId);
+    if (target) {
+      const updatedList = exerciseProfiles.map(p => ({
+        ...p,
+        isDefault: p.id === profId
+      }));
+      handleSaveMachineConfig({ ...target, isDefault: true }, updatedList);
+    }
   };
 
   return (
@@ -306,8 +370,8 @@ export default function SetLogger({
           </div>
         )}
 
-        {/* SELECTOR RÁPIDO DE PLANTA / MÁQUINA + BOTÓN ENGRANE */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '3px', flexShrink: 1, minWidth: 0 }}>
+        {/* SELECTOR DE MÁQUINA CON PERFILES Y CALIBRACIÓN */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 1, minWidth: 0 }}>
           <button
             type="button"
             onClick={() => setIsMachineConfigOpen(true)}
@@ -322,39 +386,78 @@ export default function SetLogger({
               justifyContent: 'center',
               flexShrink: 0
             }}
-            title="Calibrar discos, trineo o saltos de peso de esta máquina"
+            title="Calibrar máquina, asiento, respaldo, muesca o saltos de peso"
           >
             <Settings2 size={13} color={machineConfig ? '#0066ff' : '#64748b'} />
           </button>
 
           <select
-            value={currentLocation}
-            onChange={(e) => {
-              const val = e.target.value;
-              const updated = { ...(machineConfig || {}), floor: val, station: val };
-              handleSaveMachineConfig(updated);
-            }}
+            value={machineConfig?.id || ''}
+            onChange={(e) => handleSelectMachineProfile(e.target.value)}
             style={{
-              background: currentLocation ? '#f5f3ff' : '#ffffff',
-              border: currentLocation ? '1.5px solid #c084fc' : '1px solid #cbd5e1',
+              background: machineConfig ? '#f5f3ff' : '#ffffff',
+              border: machineConfig ? '1.5px solid #c084fc' : '1px solid #cbd5e1',
               borderRadius: '8px',
-              padding: '4px 4px',
+              padding: '4px 5px',
               fontSize: '10px',
               fontWeight: '800',
-              color: currentLocation ? '#7c3aed' : '#475569',
-              maxWidth: '115px',
+              color: machineConfig ? '#7c3aed' : '#475569',
+              maxWidth: '130px',
               cursor: 'pointer',
-              outline: 'none'
+              outline: 'none',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden'
             }}
-            title="Selecciona en qué piso o máquina estás entrenando hoy"
+            title="Selecciona qué máquina estás usando o añade una nueva"
           >
-            <option value="">🏢 Ubicación...</option>
-            <option value="Planta Baja">🏢 Planta Baja</option>
-            <option value="Planta Alta">🏢 Planta Alta</option>
-            {currentLocation && !['Planta Baja', 'Planta Alta'].includes(currentLocation) && (
-              <option value={currentLocation}>{currentLocation}</option>
+            <option value="">⚙️ Máquina...</option>
+            {exerciseProfiles.map(prof => (
+              <option key={prof.id} value={prof.id}>
+                {prof.name || prof.station || 'Máquina'}
+              </option>
+            ))}
+            {(!exerciseProfiles.some(p => p.id === machineConfig?.id) && (machineConfig?.name || machineConfig?.station)) && (
+              <option value={machineConfig.id || 'curr'}>
+                {machineConfig.name || machineConfig.station}
+              </option>
             )}
+            <option value="__NEW__">➕ Añadir nueva máquina...</option>
           </select>
+
+          {/* Chip de calibración biomecánica activa si existe asiento/respaldo/muesca */}
+          {(machineConfig?.seat || machineConfig?.backrest || machineConfig?.notch) && (
+            <button
+              type="button"
+              onClick={() => setIsMachineConfigOpen(true)}
+              style={{
+                background: '#ecfdf5',
+                border: '1px solid #86efac',
+                borderRadius: '8px',
+                padding: '3px 5px',
+                fontSize: '9px',
+                fontWeight: '800',
+                color: '#166534',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '2px',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                maxWidth: '110px'
+              }}
+              title="Calibración activa: clic para editar"
+            >
+              <span>
+                {[
+                  machineConfig.seat ? `Asiento: ${machineConfig.seat}` : '',
+                  machineConfig.backrest ? `Resp: ${machineConfig.backrest}` : '',
+                  machineConfig.notch ? `Muesca: ${machineConfig.notch}` : ''
+                ].filter(Boolean).join(' • ')}
+              </span>
+            </button>
+          )}
         </div>
 
         {/* CHIP DE SOBRECARGA CIENTÍFICA (ABRE MODAL) */}
@@ -1126,7 +1229,7 @@ export default function SetLogger({
         onClose={() => setIsScienceModalOpen(false)}
         exerciseName={exercise.name}
         loadRecommendation={loadRecommendation}
-        targetReps={exercise.targetReps || '8-10'}
+        targetReps={prescribedReps}
         previousData={previousData}
         todayWorkoutData={exerciseData}
         machineConfig={machineConfig}
@@ -1139,6 +1242,7 @@ export default function SetLogger({
         exerciseName={exercise.name}
         exerciseId={exercise.id}
         currentConfig={machineConfig}
+        profiles={exerciseProfiles}
         onSaveConfig={handleSaveMachineConfig}
         onOpenCalculator={() => {
           setIsMachineConfigOpen(false);

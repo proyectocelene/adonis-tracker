@@ -114,7 +114,7 @@ export default function ExerciseRow({
   }
 
   const totalSets = exerciseData.customSetsCount ? parseInt(exerciseData.customSetsCount) : (parseInt(exercise.sets) || 3);
-  const targetReps = exercise.reps || '10-12';
+  const targetReps = exercise.reps || exercise.targetReps || '10-12';
   const restPrescribed = exercise.restTime || '90 s';
   const parsedRestSeconds = parseInt(restPrescribed) || 90;
   

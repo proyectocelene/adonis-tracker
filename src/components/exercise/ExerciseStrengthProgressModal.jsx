@@ -75,10 +75,14 @@ export default function ExerciseStrengthProgressModal({
       if (!isNaN(num) && exLog[k] && exLog[k].completed) {
         const w = parseFloat(exLog[k].weight) || 0;
         const r = parseInt(exLog[k].reps, 10) || 0;
-        const epley = calculate1RM(w, r);
-        if (w > maxW) { maxW = w; maxR = r; }
-        if (epley > max1RM) max1RM = epley;
-        sets.push({ num, weight: w, reps: r, epley });
+        const label = (exLog[k].label || '').toLowerCase();
+        const isWarmup = exLog[k].isWarmup === true || num <= 0 || label.startsWith('c') || label.includes('calentamiento') || label.includes('aprox');
+        if (!isWarmup && w > 0 && r > 0) {
+          const epley = calculate1RM(w, r);
+          if (w > maxW) { maxW = w; maxR = r; }
+          if (epley > max1RM) max1RM = epley;
+          sets.push({ num, weight: w, reps: r, epley });
+        }
       }
     });
 

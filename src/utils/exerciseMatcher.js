@@ -55,6 +55,80 @@ const LOAD_FAMILY_KEYWORDS = {
   ]
 };
 
+const SPANISH_SHORT_MONTHS = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+const SPANISH_FULL_MONTHS = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+
+/**
+ * Formatea la fecha de una sesión de forma legible y corta para gráficas e historial.
+ * Evita truncar a sólo el día de la semana ("vie", "mar") que provocaba colisiones en Recharts.
+ * Ejemplos de salida: "12 Sep", "28 Ago", "5 Oct"
+ */
+export function formatSessionDate(ses) {
+  if (!ses) return 'Sesión';
+
+  // 1. Si existe fecha ISO o formato YYYY-MM-DD
+  const rawDate = ses.date || (ses.timestamp && typeof ses.timestamp === 'string' && ses.timestamp.includes('T') ? ses.timestamp.split('T')[0] : null);
+  if (rawDate && /^\d{4}-\d{2}-\d{2}$/.test(rawDate)) {
+    const [y, m, d] = rawDate.split('-');
+    const mIdx = parseInt(m, 10) - 1;
+    if (mIdx >= 0 && mIdx < 12) {
+      return `${parseInt(d, 10)} ${SPANISH_SHORT_MONTHS[mIdx]}`;
+    }
+  }
+
+  // 2. Si existe timestamp numérico o convertible a Date
+  if (ses.timestamp) {
+    const d = new Date(ses.timestamp);
+    if (!isNaN(d.getTime())) {
+      return `${d.getDate()} ${SPANISH_SHORT_MONTHS[d.getMonth()]}`;
+    }
+  }
+
+  // 3. Si existe dateString (ej. "vie, 12 sept 2026" o "sábado, 12 de septiembre de 2026")
+  if (ses.dateString && typeof ses.dateString === 'string') {
+    const parts = ses.dateString.split(',');
+    if (parts.length > 1) {
+      const rest = parts[1].trim();
+      const match = rest.match(/^(\d{1,2})\s+(?:de\s+)?([a-zA-ZáéíóúÁÉÍÓÚ]+)/i);
+      if (match) {
+        const day = match[1];
+        const mStr = match[2].slice(0, 3).toLowerCase();
+        const foundIdx = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'].indexOf(mStr);
+        if (foundIdx !== -1) return `${day} ${SPANISH_SHORT_MONTHS[foundIdx]}`;
+        return `${day} ${match[2].slice(0, 3)}`;
+      }
+      const clean = rest.replace(/\s+\d{4}$/, '');
+      if (clean.length > 0) return clean;
+    }
+    return ses.dateString;
+  }
+
+  return ses.date || 'Sesión';
+}
+
+/**
+ * Formatea la fecha completa y legible para auditoría en Tooltips.
+ * Ejemplo: "Viernes, 12 de septiembre de 2026"
+ */
+export function formatSessionFullDate(ses) {
+  if (!ses) return 'Sesión';
+  if (ses.dateString && typeof ses.dateString === 'string') return ses.dateString;
+  if (ses.date && /^\d{4}-\d{2}-\d{2}$/.test(ses.date)) {
+    const [y, m, d] = ses.date.split('-');
+    const mIdx = parseInt(m, 10) - 1;
+    if (mIdx >= 0 && mIdx < 12) {
+      return `${parseInt(d, 10)} de ${SPANISH_FULL_MONTHS[mIdx]} de ${y}`;
+    }
+  }
+  if (ses.timestamp) {
+    const d = new Date(ses.timestamp);
+    if (!isNaN(d.getTime())) {
+      return d.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    }
+  }
+  return ses.date || 'Sesión';
+}
+
 /**
  * Comprueba si dos nombres de ejercicios son mutuamente excluyentes (para evitar falsos positivos por substrings o familias)
  */
@@ -241,15 +315,20 @@ export function extractExerciseSets(exData) {
       const w = parseFloat(s.weight) || 0;
       const r = parseInt(s.reps, 10) || Math.max(parseInt(s.repsR, 10) || 0, parseInt(s.repsL, 10) || 0) || 0;
       const isDone = s.completed !== false; // no completado únicamente si completed es explícitamente false
+      const setNum = s.setNum !== undefined ? s.setNum : idx + 1;
+      const label = (s.label || '').toLowerCase();
+      const isWarmup = s.isWarmup === true || setNum <= 0 || label.startsWith('c') || label.includes('calentamiento') || label.includes('aprox');
       if (w > 0 && isDone) {
         sets.push({
-          setNum: s.setNum !== undefined ? s.setNum : idx + 1,
+          setNum,
           weight: w,
           reps: r,
           repsL: s.repsL,
           repsR: s.repsR,
           rpe: s.rpe || '8',
-          unit: s.unit || exData.unit || 'lbs'
+          unit: s.unit || exData.unit || 'lbs',
+          isWarmup: !!isWarmup,
+          label: s.label || (setNum <= 0 ? 'C1' : `S${setNum}`)
         });
       }
     });
@@ -265,6 +344,8 @@ export function extractExerciseSets(exData) {
         const w = parseFloat(s.weight) || 0;
         const r = parseInt(s.reps, 10) || Math.max(parseInt(s.repsR, 10) || 0, parseInt(s.repsL, 10) || 0) || 0;
         const isDone = s.completed !== false;
+        const label = (s.label || '').toLowerCase();
+        const isWarmup = s.isWarmup === true || num <= 0 || label.startsWith('c') || label.includes('calentamiento') || label.includes('aprox');
         if (w > 0 && isDone) {
           sets.push({
             setNum: num,
@@ -273,7 +354,9 @@ export function extractExerciseSets(exData) {
             repsL: s.repsL,
             repsR: s.repsR,
             rpe: s.rpe || '8',
-            unit: s.unit || exData.unit || 'lbs'
+            unit: s.unit || exData.unit || 'lbs',
+            isWarmup: !!isWarmup,
+            label: s.label || (num <= 0 ? 'C1' : `S${num}`)
           });
         }
       }
@@ -281,6 +364,51 @@ export function extractExerciseSets(exData) {
   });
 
   return sets;
+}
+
+/**
+ * Parsea con precisión el timestamp de una sesión en cualquier formato soportado
+ * garantizando un orden cronológico estricto de más antiguo a más reciente.
+ */
+export function parseSessionTimestamp(ses) {
+  if (!ses) return 0;
+  if (ses.timestamp) {
+    const t = new Date(ses.timestamp).getTime();
+    if (!isNaN(t) && t > 0) return t;
+  }
+  if (ses.startTime) {
+    const t = new Date(ses.startTime).getTime();
+    if (!isNaN(t) && t > 0) return t;
+  }
+  if (ses.date) {
+    if (typeof ses.date === 'string' && /^\d{4}-\d{2}-\d{2}/.test(ses.date)) {
+      const t = new Date(`${ses.date.slice(0, 10)}T12:00:00`).getTime();
+      if (!isNaN(t) && t > 0) return t;
+    }
+    const t = new Date(ses.date).getTime();
+    if (!isNaN(t) && t > 0) return t;
+  }
+  if (typeof ses.dateString === 'string') {
+    const match = ses.dateString.match(/(\d{1,2})\s+(?:de\s+)?([a-zA-ZáéíóúÁÉÍÓÚ]+)(?:\s+(?:de\s+)?(\d{4}))?/i);
+    if (match) {
+      const day = parseInt(match[1], 10);
+      const mStr = match[2].slice(0, 3).toLowerCase();
+      const year = match[3] ? parseInt(match[3], 10) : new Date().getFullYear();
+      const mIdx = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'].indexOf(mStr);
+      if (mIdx !== -1) {
+        return new Date(year, mIdx, day, 12, 0, 0).getTime();
+      }
+    }
+  }
+  if (typeof ses.id === 'string') {
+    const match = ses.id.match(/\d{10,13}/);
+    if (match) {
+      const num = parseInt(match[0], 10);
+      if (num > 100000000000) return num;
+      if (num > 100000000) return num * 1000;
+    }
+  }
+  return 0;
 }
 
 /**
@@ -306,19 +434,17 @@ export function getHistoricalRecordsForExercise(currentEx, workoutHistory = []) 
   const occurrences = [];
   const matchedNamesSet = new Set();
 
-  // Recorrer historial en orden cronológico
+  // Recorrer historial en orden cronológico estricto desde la primera sesión registrada
   const sortedHistory = [...workoutHistory].sort((a, b) => {
-    const timeA = new Date(a.timestamp || a.date || a.startTime || a.id || 0).getTime() || 0;
-    const timeB = new Date(b.timestamp || b.date || b.startTime || b.id || 0).getTime() || 0;
+    const timeA = parseSessionTimestamp(a);
+    const timeB = parseSessionTimestamp(b);
     return timeA - timeB;
   });
 
   sortedHistory.forEach(ses => {
-    if (ses.isRestDay || ses.isMissedDay) return;
-
-    // Obtener los ejercicios de esta sesión de cualquier formato
+    // Si la sesión es un día de descanso sin ejercicios o fue omitida sin registros, saltar
     const sessionExercisesList = getExercisesFromSession(ses);
-    if (sessionExercisesList.length === 0) return;
+    if (!sessionExercisesList || sessionExercisesList.length === 0) return;
 
     let matchedExData = null;
     let matchedName = '';
@@ -341,21 +467,28 @@ export function getHistoricalRecordsForExercise(currentEx, workoutHistory = []) 
       const detailedSets = extractExerciseSets(matchedExData);
 
       if (detailedSets.length > 0) {
+        // Separar series efectivas de aproximaciones/calentamientos
+        const effectiveSets = detailedSets.filter(s => !s.isWarmup && s.setNum > 0);
+        // Usar series efectivas para métricas de sobrecarga progresiva (fallback a detailedSets si solo hay calentamientos)
+        const workingSets = effectiveSets.length > 0 ? effectiveSets : detailedSets;
+
         let maxW = 0;
         let minW = Infinity;
+        let weightSum = 0;
         let maxR = 0;
         let minR = Infinity;
         let repsSum = 0;
         let best1RM = 0;
         let topSet = null;
         let unit = 'lbs';
-        let totalVol = 0;
+        let effectiveTonnage = 0;
 
-        detailedSets.forEach((s, idx) => {
+        workingSets.forEach((s, idx) => {
           const w = parseFloat(s.weight) || 0;
           const r = parseInt(s.reps, 10) || 0;
           const epley = (w > 0 && r > 0) ? (r === 1 ? Math.round(w) : Math.round(w * (1 + r / 30))) : 0;
-          totalVol += (w * r);
+          effectiveTonnage += (w * r);
+          weightSum += w;
           repsSum += r;
 
           if (w > maxW) maxW = w;
@@ -363,39 +496,47 @@ export function getHistoricalRecordsForExercise(currentEx, workoutHistory = []) 
           if (r > maxR) maxR = r;
           if (r < minR && r > 0) minR = r;
 
-          // Mejor serie (Top Set): la que genera el mayor 1RM estimado
-          if (epley > best1RM || (!topSet && w > 0)) {
+          // Mejor serie (Top Set): la que genera el mayor 1RM estimado (o mayor reps si peso 0)
+          if (epley > best1RM || (!topSet && (w > 0 || r > 0))) {
             best1RM = epley;
             topSet = { ...s, setNum: s.setNum !== undefined ? s.setNum : idx + 1, est1RM: epley };
           }
           if (s.unit) unit = s.unit;
         });
 
-        const avgReps = detailedSets.length > 0 ? Math.round((repsSum / detailedSets.length) * 10) / 10 : 0;
-        // Reps logradas en la carga máxima (si hay varias series con el peso pico, tomar el máximo)
-        const peakWeightSets = detailedSets.filter(s => s.weight === maxW);
-        const bestRepsAtPeakWeight = peakWeightSets.length > 0 ? Math.max(...peakWeightSets.map(s => s.reps)) : 0;
+        const avgW = workingSets.length > 0 ? Math.round((weightSum / workingSets.length) * 10) / 10 : maxW;
+        const avgR = workingSets.length > 0 ? Math.round((repsSum / workingSets.length) * 10) / 10 : 0;
 
-        if (maxW > 0) {
-          const dateLabel = ses.dateString
-            ? ses.dateString.split(',')[0]
-            : (ses.date || (ses.timestamp ? ses.timestamp.split('T')[0] : 'Sesión'));
+        // Reps logradas en la carga máxima de series de trabajo
+        const peakWeightSets = workingSets.filter(s => s.weight === maxW);
+        const bestRepsAtPeakWeight = peakWeightSets.length > 0 ? Math.max(...peakWeightSets.map(s => s.reps)) : (topSet?.reps || maxR);
+
+        if (maxW > 0 || maxR > 0) {
+          const shortDateLabel = formatSessionDate(ses);
+          const fullDateLabel = formatSessionFullDate(ses);
 
           occurrences.push({
             sessionId: ses.id,
-            dateStr: dateLabel,
+            dateStr: shortDateLabel,
+            dateFull: fullDateLabel,
+            dateRaw: ses.date || (ses.timestamp ? ses.timestamp.split('T')[0] : null),
             weekNumber: ses.weekNumber || 1,
-            maxWeight: maxW,
+            maxWeight: maxW, // Carga Pico (Top Set)
+            avgWeight: avgW, // Carga Promedio Efectiva
             minWeight: minW !== Infinity ? minW : maxW,
             bestReps: bestRepsAtPeakWeight, // Reps en la serie pico
-            maxRepsSession: maxR, // Máximo de repeticiones en cualquier serie de la sesión
-            minRepsSession: minR !== Infinity ? minR : maxR, // Mínimo de repeticiones de la sesión
-            avgReps: avgReps, // Promedio matemático de repeticiones de toda la sesión
+            maxRepsSession: maxR, // Máximo de reps en series de trabajo
+            minRepsSession: minR !== Infinity ? minR : maxR, // Mínimo de reps en series de trabajo
+            avgReps: avgR, // Promedio de reps de series de trabajo
             est1RM: best1RM,
-            totalVolume: totalVol,
+            totalVolume: effectiveTonnage, // Tonelaje de volumen efectivo
+            tonnage: effectiveTonnage, // Tonelaje de trabajo real
             unit,
             setsCount: detailedSets.length,
+            effectiveSetsCount: workingSets.length,
+            warmupSetsCount: detailedSets.length - workingSets.length,
             detailedSets,
+            workingSets,
             topSet: topSet || { weight: maxW, reps: bestRepsAtPeakWeight, est1RM: best1RM },
             sourceName: matchedName
           });

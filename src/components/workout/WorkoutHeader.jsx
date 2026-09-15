@@ -2,6 +2,7 @@ import React from 'react';
 import { RefreshCw, CheckCircle } from 'lucide-react';
 import GymMembershipReminder from '../common/GymMembershipReminder';
 import TimelineSelector from './TimelineSelector';
+import { formatSessionDate } from '../../utils/exerciseMatcher';
 
 export default function WorkoutHeader({
   isViewingHistory,
@@ -63,9 +64,9 @@ export default function WorkoutHeader({
             </h2>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            {previousSession?.dateString && !isViewingHistory && (
+            {(previousSession?.dateString || previousSession?.date) && !isViewingHistory && (
               <span style={{ fontSize: '10.5px', color: 'var(--text-muted)', fontWeight: '700', background: '#f1f5f9', padding: '3px 7px', borderRadius: '8px' }}>
-                Último: {previousSession.dateString.split(',')[0]}
+                Último: {formatSessionDate(previousSession)}
               </span>
             )}
             {!isViewingHistory && (

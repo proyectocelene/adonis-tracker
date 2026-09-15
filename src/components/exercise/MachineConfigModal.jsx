@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { X, Settings2, Check, RotateCcw, Disc, Cable, Dumbbell, MapPin, Building2 } from 'lucide-react';
+import { 
+  X, Settings2, Check, RotateCcw, Disc, Cable, Dumbbell, 
+  MapPin, Building2, Plus, Trash2, Star, Sliders 
+} from 'lucide-react';
 
 export default function MachineConfigModal({
   isOpen,
@@ -7,34 +10,167 @@ export default function MachineConfigModal({
   exerciseName = '',
   exerciseId = '',
   currentConfig = null,
+  profiles = [],
   onSaveConfig,
   onOpenCalculator
 }) {
-
   const lowerName = (exerciseName || '').toLowerCase();
   const isPlateDefault = lowerName.includes('prensa') || lowerName.includes('leg press') || lowerName.includes('hack') || lowerName.includes('smith') || lowerName.includes('barra');
   const isDumbbellDefault = lowerName.includes('mancuerna') || lowerName.includes('dumbbell');
-  
   const defaultType = isPlateDefault ? 'plates' : (isDumbbellDefault ? 'dumbbells' : 'stack');
+  const defaultSled = lowerName.includes('prensa') ? 100 : (lowerName.includes('hack') ? 75 : (lowerName.includes('smith') ? 20 : 45));
 
-  const [type, setType] = useState(currentConfig?.type || defaultType);
-  const [floor, setFloor] = useState(currentConfig?.floor || '');
-  const [station, setStation] = useState(currentConfig?.station || '');
-  
-  // Placas / Torre
-  const defaultStackPreset = currentConfig?.stackPreset || (lowerName.includes('extension') ? 'two_tens_then_twenty' : 'linear');
-  const [stackPreset, setStackPreset] = useState(defaultStackPreset);
-  const [plateStep, setPlateStep] = useState(currentConfig?.plateStep !== undefined ? currentConfig.plateStep : 10);
-  const [firstPlate, setFirstPlate] = useState(currentConfig?.firstPlate !== undefined ? currentConfig.firstPlate : 10);
-  const [microWeight, setMicroWeight] = useState(currentConfig?.microWeight !== undefined ? currentConfig.microWeight : 0);
+  // Lista de perfiles de máquina guardados
+  const [profileList, setProfileList] = useState([]);
+  const [activeProfileId, setActiveProfileId] = useState(null);
+
+  // Campos del perfil activo
+  const [name, setName] = useState('');
+  const [floor, setFloor] = useState('');
+  const [station, setStation] = useState('');
+  const [seat, setSeat] = useState('');
+  const [backrest, setBackrest] = useState('');
+  const [notch, setNotch] = useState('');
+  const [pad, setPad] = useState('');
+  const [notes, setNotes] = useState('');
+  const [isDefault, setIsDefault] = useState(false);
+
+  // Tipo de Resistencia
+  const [type, setType] = useState(defaultType);
+
+  // Stack / Placas
+  const [stackPreset, setStackPreset] = useState('linear');
+  const [plateStep, setPlateStep] = useState(10);
+  const [firstPlate, setFirstPlate] = useState(10);
+  const [microWeight, setMicroWeight] = useState(0);
 
   // Prensa / Discos
-  const defaultSled = lowerName.includes('prensa') ? 100 : (lowerName.includes('hack') ? 75 : (lowerName.includes('smith') ? 20 : 45));
-  const [baseWeight, setBaseWeight] = useState(currentConfig?.baseWeight !== undefined ? currentConfig.baseWeight : defaultSled);
-  const [availablePlates, setAvailablePlates] = useState(currentConfig?.availablePlates || [45, 35, 25, 10, 5, 2.5]);
+  const [baseWeight, setBaseWeight] = useState(defaultSled);
+  const [availablePlates, setAvailablePlates] = useState([45, 35, 25, 10, 5, 2.5]);
 
   // Mancuernas
-  const [dumbbellStep, setDumbbellStep] = useState(currentConfig?.dumbbellStep || 5);
+  const [dumbbellStep, setDumbbellStep] = useState(5);
+
+  // Cargar estado inicial al abrir modal
+  useEffect(() => {
+    if (!isOpen) return;
+
+    let initProfiles = Array.isArray(profiles) && profiles.length > 0 ? [...profiles] : [];
+
+    // Si no hay perfiles en props, buscar si currentConfig existe
+    if (initProfiles.length === 0) {
+      if (currentConfig && (currentConfig.name || currentConfig.floor || currentConfig.station || currentConfig.seat)) {
+        initProfiles = [{
+          id: currentConfig.id || 'prof_1',
+          name: currentConfig.name || `${currentConfig.station || 'Máquina 1'} (${currentConfig.floor || 'PB'})`,
+          floor: currentConfig.floor || 'Planta Baja',
+          station: currentConfig.station || '',
+          seat: currentConfig.seat || '',
+          backrest: currentConfig.backrest || '',
+          notch: currentConfig.notch || '',
+          pad: currentConfig.pad || '',
+          notes: currentConfig.notes || '',
+          isDefault: true,
+          type: currentConfig.type || defaultType,
+          stackPreset: currentConfig.stackPreset || 'linear',
+          plateStep: currentConfig.plateStep !== undefined ? currentConfig.plateStep : 10,
+          firstPlate: currentConfig.firstPlate !== undefined ? currentConfig.firstPlate : 10,
+          microWeight: currentConfig.microWeight || 0,
+          baseWeight: currentConfig.baseWeight !== undefined ? currentConfig.baseWeight : defaultSled,
+          availablePlates: currentConfig.availablePlates || [45, 35, 25, 10, 5, 2.5],
+          dumbbellStep: currentConfig.dumbbellStep || 5
+        }];
+      } else {
+        // Perfil por defecto inicial
+        initProfiles = [{
+          id: 'prof_default',
+          name: `${exerciseName} (Principal)`,
+          floor: 'Planta Baja',
+          station: 'Máquina #1',
+          seat: '',
+          backrest: '',
+          notch: '',
+          pad: '',
+          notes: '',
+          isDefault: true,
+          type: defaultType,
+          stackPreset: lowerName.includes('extension') ? 'two_tens_then_twenty' : 'linear',
+          plateStep: 10,
+          firstPlate: 10,
+          microWeight: 0,
+          baseWeight: defaultSled,
+          availablePlates: [45, 35, 25, 10, 5, 2.5],
+          dumbbellStep: 5
+        }];
+      }
+    }
+
+    setProfileList(initProfiles);
+
+    // Seleccionar perfil activo (priorizar el coincidente con currentConfig o el marcado como default)
+    let selected = initProfiles.find(p => p.id === currentConfig?.id) 
+      || initProfiles.find(p => p.isDefault) 
+      || initProfiles[0];
+
+    loadProfileIntoForm(selected);
+  }, [isOpen, currentConfig, profiles]);
+
+  const loadProfileIntoForm = (prof) => {
+    if (!prof) return;
+    setActiveProfileId(prof.id);
+    setName(prof.name || '');
+    setFloor(prof.floor || '');
+    setStation(prof.station || '');
+    setSeat(prof.seat || '');
+    setBackrest(prof.backrest || '');
+    setNotch(prof.notch || '');
+    setPad(prof.pad || '');
+    setNotes(prof.notes || '');
+    setIsDefault(!!prof.isDefault);
+    setType(prof.type || defaultType);
+    setStackPreset(prof.stackPreset || (lowerName.includes('extension') ? 'two_tens_then_twenty' : 'linear'));
+    setPlateStep(prof.plateStep !== undefined ? prof.plateStep : 10);
+    setFirstPlate(prof.firstPlate !== undefined ? prof.firstPlate : 10);
+    setMicroWeight(prof.microWeight || 0);
+    setBaseWeight(prof.baseWeight !== undefined ? prof.baseWeight : defaultSled);
+    setAvailablePlates(prof.availablePlates || [45, 35, 25, 10, 5, 2.5]);
+    setDumbbellStep(prof.dumbbellStep || 5);
+  };
+
+  const handleCreateNewProfile = () => {
+    const newId = `prof_${Date.now()}`;
+    const newNum = profileList.length + 1;
+    const newProf = {
+      id: newId,
+      name: `Máquina #${newNum} (${floor || 'Planta Alta'})`,
+      floor: floor === 'Planta Baja' ? 'Planta Alta' : 'Planta Baja',
+      station: `Máquina #${newNum}`,
+      seat: '',
+      backrest: '',
+      notch: '',
+      pad: '',
+      notes: '',
+      isDefault: false,
+      type: defaultType,
+      stackPreset: 'linear',
+      plateStep: 10,
+      firstPlate: 10,
+      microWeight: 0,
+      baseWeight: defaultSled,
+      availablePlates: [45, 35, 25, 10, 5, 2.5],
+      dumbbellStep: 5
+    };
+    const updatedList = [...profileList, newProf];
+    setProfileList(updatedList);
+    loadProfileIntoForm(newProf);
+  };
+
+  const handleDeleteProfile = (profId) => {
+    if (profileList.length <= 1) return;
+    const remaining = profileList.filter(p => p.id !== profId);
+    setProfileList(remaining);
+    loadProfileIntoForm(remaining[0]);
+  };
 
   const togglePlate = (p) => {
     if (availablePlates.includes(p)) {
@@ -47,9 +183,6 @@ export default function MachineConfigModal({
 
   const smallestPlate = availablePlates.length > 0 ? Math.min(...availablePlates) : 5;
   const minPlateIncrement = smallestPlate * 2;
-
-  // Combinación de ubicación y estación
-  const fullStationName = [floor, station].filter(Boolean).join(' • ');
 
   const handleSave = () => {
     // Generar lista física de pesos disponibles en la máquina
@@ -68,52 +201,57 @@ export default function MachineConfigModal({
       }
     }
 
-    const configData = {
+    const currentProfileData = {
+      id: activeProfileId || `prof_${Date.now()}`,
+      name: (name || station || `Máquina (${floor || 'Gym'})`).trim(),
+      floor: (floor || '').trim(),
+      station: (station || '').trim(),
+      seat: (seat || '').toString().trim(),
+      backrest: (backrest || '').toString().trim(),
+      notch: (notch || '').toString().trim(),
+      pad: (pad || '').toString().trim(),
+      notes: (notes || '').trim(),
+      isDefault: !!isDefault,
       type,
-      floor: floor.trim(),
-      station: (fullStationName || station).trim(),
-      // Stack
       stackPreset,
       plateStep: st,
       firstPlate: fp,
       microWeight: parseFloat(microWeight) || 0,
       availableWeights: calculatedAvailableWeights,
-      // Plates
       baseWeight: parseFloat(baseWeight) || 0,
       availablePlates,
       smallestPlate,
-      // Dumbbells
       dumbbellStep: parseFloat(dumbbellStep) || 5,
-      // General
       minIncrement: type === 'plates' 
         ? minPlateIncrement 
         : (type === 'stack' ? (microWeight > 0 ? microWeight : (stackPreset === 'two_tens_then_twenty' ? Math.min(fp, st) : st)) : parseFloat(dumbbellStep) || 5),
       updatedAt: new Date().toISOString()
     };
 
-    onSaveConfig(configData);
+    // Actualizar lista de perfiles
+    let updatedProfiles = profileList.map(p => {
+      if (p.id === currentProfileData.id) {
+        return currentProfileData;
+      }
+      // Si el actual se marcó como default, desmarcar los demás
+      if (isDefault) {
+        return { ...p, isDefault: false };
+      }
+      return p;
+    });
+
+    if (!updatedProfiles.some(p => p.id === currentProfileData.id)) {
+      updatedProfiles.push(currentProfileData);
+    }
+
+    onSaveConfig(currentProfileData, updatedProfiles);
     onClose();
   };
 
   const handleReset = () => {
-    onSaveConfig(null);
+    onSaveConfig(null, []);
     onClose();
   };
-
-  useEffect(() => {
-    if (isOpen) {
-      setType(currentConfig?.type || defaultType);
-      setFloor(currentConfig?.floor || '');
-      setStation(currentConfig?.station || '');
-      setStackPreset(currentConfig?.stackPreset || (lowerName.includes('extension') ? 'two_tens_then_twenty' : 'linear'));
-      setPlateStep(currentConfig?.plateStep !== undefined ? currentConfig.plateStep : 10);
-      setFirstPlate(currentConfig?.firstPlate !== undefined ? currentConfig.firstPlate : 10);
-      setMicroWeight(currentConfig?.microWeight !== undefined ? currentConfig.microWeight : 0);
-      setBaseWeight(currentConfig?.baseWeight !== undefined ? currentConfig.baseWeight : defaultSled);
-      setAvailablePlates(currentConfig?.availablePlates || [45, 35, 25, 10, 5, 2.5]);
-      setDumbbellStep(currentConfig?.dumbbellStep || 5);
-    }
-  }, [isOpen, currentConfig]);
 
   if (!isOpen) return null;
 
@@ -125,15 +263,24 @@ export default function MachineConfigModal({
         backgroundColor: 'rgba(15, 23, 42, 0.65)',
         backdropFilter: 'blur(4px)',
         zIndex: 9999,
-        display: 'flex', alignItems: 'flex-start', justifyContent: 'center', overflowY: 'auto', WebkitOverflowScrolling: 'touch', padding: '16px', paddingTop: 'calc(env(safe-area-inset-top, 0px) + 20px)', paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 40px)'
+        display: 'flex',
+        alignItems: 'flex-start',
+        justifyContent: 'center',
+        overflowY: 'auto',
+        WebkitOverflowScrolling: 'touch',
+        padding: '16px',
+        paddingTop: 'calc(env(safe-area-inset-top, 0px) + 20px)',
+        paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 40px)'
       }}
       onClick={onClose}
     >
       <div 
         style={{
           background: '#ffffff',
-          borderRadius: '20px', maxWidth: '460px', width: '100%', margin: 'auto 0',
-          overflowY: 'auto',
+          borderRadius: '22px',
+          maxWidth: '480px',
+          width: '100%',
+          margin: 'auto 0',
           boxShadow: '0 20px 40px rgba(0, 0, 0, 0.25)',
           padding: '20px',
           position: 'relative',
@@ -147,20 +294,20 @@ export default function MachineConfigModal({
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '8px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <div style={{
-              width: '36px',
-              height: '36px',
-              borderRadius: '10px',
+              width: '38px',
+              height: '38px',
+              borderRadius: '12px',
               background: '#eff6ff',
               color: '#0066ff',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center'
             }}>
-              <Settings2 size={20} />
+              <Settings2 size={22} />
             </div>
             <div>
               <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '900', color: '#0f172a' }}>
-                Calibrar Máquina & Ubicación
+                Gestor de Máquinas & Calibración
               </h3>
               <span style={{ fontSize: '11px', color: '#64748b', fontWeight: '700' }}>
                 {exerciseName}
@@ -187,17 +334,291 @@ export default function MachineConfigModal({
           </button>
         </div>
 
-        {/* 1. SELECCIÓN DE PLANTA / PISO DEL GIMNASIO (DIFERENCIADOR CLAVE) */}
+        {/* 1. SELECTOR Y GESTOR DE MÁQUINAS (MULTI-PERFILES) */}
+        <div style={{ background: '#f8fafc', border: '1.5px solid #e2e8f0', borderRadius: '14px', padding: '12px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+            <label style={{ fontSize: '11px', fontWeight: '900', color: '#334155', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <Sliders size={13} color="#0066ff" /> Mis Máquinas Guardadas:
+            </label>
+            <button
+              type="button"
+              onClick={handleCreateNewProfile}
+              style={{
+                padding: '3px 8px',
+                borderRadius: '8px',
+                background: '#eff6ff',
+                border: '1px solid #bfdbfe',
+                color: '#0066ff',
+                fontSize: '10.5px',
+                fontWeight: '900',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '3px'
+              }}
+            >
+              <Plus size={12} /> Nueva Máquina
+            </button>
+          </div>
+
+          {/* LISTA DE PESTAÑAS / MÁQUINAS DISPONIBLES */}
+          <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', paddingBottom: '4px', marginBottom: '8px' }}>
+            {profileList.map((prof) => {
+              const isSelected = prof.id === activeProfileId;
+              return (
+                <button
+                  key={prof.id}
+                  type="button"
+                  onClick={() => loadProfileIntoForm(prof)}
+                  style={{
+                    padding: '6px 10px',
+                    borderRadius: '10px',
+                    border: isSelected ? '2px solid #0066ff' : '1px solid #cbd5e1',
+                    background: isSelected ? '#eff6ff' : '#ffffff',
+                    color: isSelected ? '#0066ff' : '#475569',
+                    fontWeight: isSelected ? '900' : '700',
+                    fontSize: '11px',
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    boxShadow: isSelected ? '0 2px 6px rgba(0,102,255,0.15)' : 'none'
+                  }}
+                >
+                  {prof.isDefault && <Star size={11} fill="#f59e0b" color="#f59e0b" />}
+                  <span>{prof.name || 'Máquina'}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* NOMBRE DEL PERFIL ACTIVO */}
+          <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+            <input
+              type="text"
+              placeholder="Nombre descriptivo (ej. Nautilus Nitro PB o Cybex PA)"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              style={{
+                flex: 1,
+                padding: '7px 10px',
+                borderRadius: '8px',
+                border: '1.5px solid #cbd5e1',
+                fontSize: '11.5px',
+                fontWeight: '800',
+                background: '#ffffff'
+              }}
+            />
+            {profileList.length > 1 && (
+              <button
+                type="button"
+                onClick={() => handleDeleteProfile(activeProfileId)}
+                style={{
+                  padding: '7px 10px',
+                  borderRadius: '8px',
+                  background: '#fef2f2',
+                  border: '1px solid #fecaca',
+                  color: '#dc2626',
+                  cursor: 'pointer'
+                }}
+                title="Eliminar este perfil de máquina"
+              >
+                <Trash2 size={14} />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* 2. CALIBRACIÓN BIOMECÁNICA (ASIENTO, RESPALDO, MUESCA, RODILLO) */}
+        <div style={{ background: '#f0fdf4', border: '1.5px solid #bbf7d0', borderRadius: '14px', padding: '12px' }}>
+          <label style={{ display: 'block', fontSize: '11px', fontWeight: '900', color: '#166534', textTransform: 'uppercase', marginBottom: '8px' }}>
+            📐 Calibración de Posición Biomecánica:
+          </label>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+            {/* ASIENTO */}
+            <div>
+              <span style={{ fontSize: '10.5px', fontWeight: '800', color: '#14532d', display: 'block', marginBottom: '3px' }}>
+                🪑 Asiento / Sillín:
+              </span>
+              <div style={{ display: 'flex', gap: '3px', flexWrap: 'wrap', marginBottom: '4px' }}>
+                {['1', '2', '3', '4', '5', '6', '7'].map(num => (
+                  <button
+                    key={num}
+                    type="button"
+                    onClick={() => setSeat(seat === num ? '' : num)}
+                    style={{
+                      padding: '3px 6px',
+                      borderRadius: '6px',
+                      border: seat === num ? '1.5px solid #16a34a' : '1px solid #cbd5e1',
+                      background: seat === num ? '#dcfce7' : '#ffffff',
+                      color: seat === num ? '#166534' : '#475569',
+                      fontSize: '10px',
+                      fontWeight: '800',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    {num}
+                  </button>
+                ))}
+              </div>
+              <input
+                type="text"
+                placeholder="Ej. 4 o Medio"
+                value={seat}
+                onChange={(e) => setSeat(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '5px 8px',
+                  borderRadius: '6px',
+                  border: '1px solid #cbd5e1',
+                  fontSize: '11px',
+                  fontWeight: '700',
+                  boxSizing: 'border-box'
+                }}
+              />
+            </div>
+
+            {/* RESPALDO */}
+            <div>
+              <span style={{ fontSize: '10.5px', fontWeight: '800', color: '#14532d', display: 'block', marginBottom: '3px' }}>
+                📐 Respaldo / Inclinación:
+              </span>
+              <div style={{ display: 'flex', gap: '3px', flexWrap: 'wrap', marginBottom: '4px' }}>
+                {['1', '2', '3', '30°', '45°', 'Plano'].map(opt => (
+                  <button
+                    key={opt}
+                    type="button"
+                    onClick={() => setBackrest(backrest === opt ? '' : opt)}
+                    style={{
+                      padding: '3px 6px',
+                      borderRadius: '6px',
+                      border: backrest === opt ? '1.5px solid #16a34a' : '1px solid #cbd5e1',
+                      background: backrest === opt ? '#dcfce7' : '#ffffff',
+                      color: backrest === opt ? '#166534' : '#475569',
+                      fontSize: '10px',
+                      fontWeight: '800',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    {opt}
+                  </button>
+                ))}
+              </div>
+              <input
+                type="text"
+                placeholder="Ej. 2 o 30°"
+                value={backrest}
+                onChange={(e) => setBackrest(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '5px 8px',
+                  borderRadius: '6px',
+                  border: '1px solid #cbd5e1',
+                  fontSize: '11px',
+                  fontWeight: '700',
+                  boxSizing: 'border-box'
+                }}
+              />
+            </div>
+
+            {/* MUESCA / PIN POLEA */}
+            <div>
+              <span style={{ fontSize: '10.5px', fontWeight: '800', color: '#14532d', display: 'block', marginBottom: '3px' }}>
+                📍 Muesca / Pin de Polea:
+              </span>
+              <div style={{ display: 'flex', gap: '3px', flexWrap: 'wrap', marginBottom: '4px' }}>
+                {['Baja', 'Media', 'Alta', '8', '12', '16'].map(opt => (
+                  <button
+                    key={opt}
+                    type="button"
+                    onClick={() => setNotch(notch === opt ? '' : opt)}
+                    style={{
+                      padding: '3px 6px',
+                      borderRadius: '6px',
+                      border: notch === opt ? '1.5px solid #16a34a' : '1px solid #cbd5e1',
+                      background: notch === opt ? '#dcfce7' : '#ffffff',
+                      color: notch === opt ? '#166534' : '#475569',
+                      fontSize: '10px',
+                      fontWeight: '800',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    {opt}
+                  </button>
+                ))}
+              </div>
+              <input
+                type="text"
+                placeholder="Ej. Muesca 10"
+                value={notch}
+                onChange={(e) => setNotch(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '5px 8px',
+                  borderRadius: '6px',
+                  border: '1px solid #cbd5e1',
+                  fontSize: '11px',
+                  fontWeight: '700',
+                  boxSizing: 'border-box'
+                }}
+              />
+            </div>
+
+            {/* RODILLO / SOPORTE MUSLOS */}
+            <div>
+              <span style={{ fontSize: '10.5px', fontWeight: '800', color: '#14532d', display: 'block', marginBottom: '3px' }}>
+                🦵 Rodillo / Soporte Muslos:
+              </span>
+              <div style={{ display: 'flex', gap: '3px', flexWrap: 'wrap', marginBottom: '4px' }}>
+                {['1', '2', '3', '4', 'Apretado'].map(opt => (
+                  <button
+                    key={opt}
+                    type="button"
+                    onClick={() => setPad(pad === opt ? '' : opt)}
+                    style={{
+                      padding: '3px 6px',
+                      borderRadius: '6px',
+                      border: pad === opt ? '1.5px solid #16a34a' : '1px solid #cbd5e1',
+                      background: pad === opt ? '#dcfce7' : '#ffffff',
+                      color: pad === opt ? '#166534' : '#475569',
+                      fontSize: '10px',
+                      fontWeight: '800',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    {opt}
+                  </button>
+                ))}
+              </div>
+              <input
+                type="text"
+                placeholder="Ej. Posición 3"
+                value={pad}
+                onChange={(e) => setPad(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '5px 8px',
+                  borderRadius: '6px',
+                  border: '1px solid #cbd5e1',
+                  fontSize: '11px',
+                  fontWeight: '700',
+                  boxSizing: 'border-box'
+                }}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* 3. UBICACIÓN Y ESTACIÓN EN EL GIMNASIO */}
         <div style={{ background: '#f8fafc', border: '1.5px solid #e2e8f0', borderRadius: '14px', padding: '12px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
             <Building2 size={15} color="#7c3aed" />
             <label style={{ fontSize: '11px', fontWeight: '900', color: '#334155', textTransform: 'uppercase' }}>
-              Piso / Ubicación en el Gimnasio:
+              Piso / Estación:
             </label>
           </div>
-          <p style={{ margin: '0 0 8px 0', fontSize: '10.5px', color: '#64748b', lineHeight: '1.3' }}>
-            Si la misma máquina existe en dos pisos, los cables o poleas se sienten distintos. Selecciona dónde estás entrenando:
-          </p>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', marginBottom: '8px' }}>
             {[
               { id: 'Planta Baja', label: '🏢 Planta Baja' },
@@ -208,7 +629,7 @@ export default function MachineConfigModal({
                 type="button"
                 onClick={() => setFloor(floor === fl.id ? '' : fl.id)}
                 style={{
-                  padding: '8px 6px',
+                  padding: '7px 6px',
                   borderRadius: '10px',
                   border: floor === fl.id ? '2px solid #7c3aed' : '1px solid #cbd5e1',
                   background: floor === fl.id ? '#f5f3ff' : '#ffffff',
@@ -224,20 +645,8 @@ export default function MachineConfigModal({
             ))}
           </div>
 
-          {/* MÁQUINA / POLEA ESPECÍFICA */}
-          <label style={{ display: 'block', fontSize: '10.5px', fontWeight: '800', color: '#475569', marginBottom: '4px' }}>
-            Estación o Polea:
-          </label>
           <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginBottom: '6px' }}>
-            {[
-              '🔼 Polea Alta (Superior)',
-              '🔽 Polea Baja (Inferior)',
-              '↔️ Polea Media',
-              'Torre 1',
-              'Torre 2',
-              'Máquina #1',
-              'Máquina #2'
-            ].map(st => (
+            {['Máquina #1', 'Máquina #2', 'Torre 1', 'Torre 2', 'Polea Alta', 'Polea Baja'].map(st => (
               <button
                 key={st}
                 type="button"
@@ -260,7 +669,7 @@ export default function MachineConfigModal({
 
           <input
             type="text"
-            placeholder="O escribe detalle (ej. Planta baja junto a mancuernas)"
+            placeholder="Detalle de estación (ej. Al lado de mancuernas)"
             value={station}
             onChange={(e) => setStation(e.target.value)}
             style={{
@@ -276,10 +685,10 @@ export default function MachineConfigModal({
           />
         </div>
 
-        {/* 2. TIPO DE RESISTENCIA */}
+        {/* 4. TIPO DE RESISTENCIA Y CARGAS */}
         <div>
           <label style={{ display: 'block', fontSize: '11px', fontWeight: '900', color: '#334155', textTransform: 'uppercase', marginBottom: '6px' }}>
-            Tipo de Resistencia / Aparato:
+            Tipo de Resistencia / Cargas:
           </label>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px' }}>
             {[
@@ -313,64 +722,19 @@ export default function MachineConfigModal({
           </div>
         </div>
 
-        {/* 3. PARÁMETROS SEGÚN TIPO */}
+        {/* PARÁMETROS SEGÚN TIPO */}
         {type === 'stack' && (
           <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '12px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
             <div>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: '800', color: '#1e293b', marginBottom: '4px' }}>
-                Progresión de la Torre de Placas:
-              </label>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '6px', marginBottom: '6px' }}>
-                <button
-                  type="button"
-                  onClick={() => setStackPreset('two_tens_then_twenty')}
-                  style={{
-                    padding: '8px 6px',
-                    borderRadius: '10px',
-                    border: stackPreset === 'two_tens_then_twenty' ? '2px solid #0066ff' : '1px solid #cbd5e1',
-                    background: stackPreset === 'two_tens_then_twenty' ? '#eff6ff' : '#ffffff',
-                    color: stackPreset === 'two_tens_then_twenty' ? '#0066ff' : '#334155',
-                    fontSize: '10.5px',
-                    fontWeight: '900',
-                    cursor: 'pointer',
-                    textAlign: 'center'
-                  }}
-                >
-                  ⚡ 2 de 10 lb, luego +20 lb
-                  <span style={{ display: 'block', fontSize: '9px', color: '#64748b', fontWeight: '600' }}>(10, 20, 40, 60... lbs)</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setStackPreset('linear')}
-                  style={{
-                    padding: '8px 6px',
-                    borderRadius: '10px',
-                    border: stackPreset === 'linear' ? '2px solid #0066ff' : '1px solid #cbd5e1',
-                    background: stackPreset === 'linear' ? '#eff6ff' : '#ffffff',
-                    color: stackPreset === 'linear' ? '#0066ff' : '#334155',
-                    fontSize: '10.5px',
-                    fontWeight: '900',
-                    cursor: 'pointer',
-                    textAlign: 'center'
-                  }}
-                >
-                  📏 Incremento Fijo / Manual
-                  <span style={{ display: 'block', fontSize: '9px', color: '#64748b', fontWeight: '600' }}>(Personalizable por placa)</span>
-                </button>
-              </div>
-            </div>
-
-            {/* CABEZAL INICIAL (PLACA #1) */}
-            <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                <label style={{ fontSize: '11px', fontWeight: '800', color: '#1e293b' }}>
-                  Placa #1 (Cabezal inicial / Peso mínimo):
-                </label>
+                <span style={{ fontSize: '11px', fontWeight: '800', color: '#1e293b' }}>
+                  Placa #1 (Cabezal inicial):
+                </span>
                 <span style={{ fontSize: '11px', fontWeight: '900', color: '#0066ff' }}>
-                  {firstPlate} lbs/kg
+                  {firstPlate} lbs
                 </span>
               </div>
-              <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginBottom: '6px' }}>
+              <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
                 {[5, 7.5, 10, 12.5, 15, 20].map(fp => (
                   <button
                     key={fp}
@@ -388,49 +752,23 @@ export default function MachineConfigModal({
                       cursor: 'pointer'
                     }}
                   >
-                    {fp}
+                    {fp}#
                   </button>
                 ))}
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span style={{ fontSize: '10.5px', color: '#64748b', fontWeight: '700' }}>✏️ O cabezal manual:</span>
-                <input
-                  type="number"
-                  inputMode="decimal"
-                  step="any"
-                  placeholder="Ej. 15"
-                  value={firstPlate}
-                  onChange={(e) => setFirstPlate(parseFloat(e.target.value) || 0)}
-                  style={{
-                    width: '75px',
-                    padding: '4px 8px',
-                    borderRadius: '8px',
-                    border: '1.5px solid #0066ff',
-                    fontSize: '12px',
-                    fontWeight: '900',
-                    textAlign: 'center',
-                    background: '#ffffff',
-                    color: '#0f172a'
-                  }}
-                />
-                <span style={{ fontSize: '11px', fontWeight: '800', color: '#475569' }}>lbs / kg</span>
-              </div>
             </div>
 
-            {/* SALTOS DE PESO POR PLACA */}
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                <label style={{ fontSize: '11px', fontWeight: '800', color: '#1e293b' }}>
-                  {stackPreset === 'two_tens_then_twenty' 
-                    ? 'Salto a partir de Placa #3 (tras 2 iniciales):' 
-                    : 'Salto de peso por placa en esta torre:'}
-                </label>
+                <span style={{ fontSize: '11px', fontWeight: '800', color: '#1e293b' }}>
+                  Salto por placa:
+                </span>
                 <span style={{ fontSize: '11px', fontWeight: '900', color: '#0066ff' }}>
-                  +{plateStep} lbs/kg
+                  +{plateStep} lbs
                 </span>
               </div>
-              <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginBottom: '6px' }}>
-                {(stackPreset === 'two_tens_then_twenty' ? [15, 20, 25, 30] : [5, 7.5, 10, 12.5, 15, 20]).map(step => (
+              <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                {[5, 7.5, 10, 12.5, 15, 20].map(step => (
                   <button
                     key={step}
                     type="button"
@@ -447,46 +785,22 @@ export default function MachineConfigModal({
                       cursor: 'pointer'
                     }}
                   >
-                    +{step}
+                    +{step}#
                   </button>
                 ))}
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span style={{ fontSize: '10.5px', color: '#64748b', fontWeight: '700' }}>✏️ O salto manual:</span>
-                <input
-                  type="number"
-                  inputMode="decimal"
-                  step="any"
-                  placeholder="Ej. 12.5"
-                  value={plateStep}
-                  onChange={(e) => setPlateStep(parseFloat(e.target.value) || 0)}
-                  style={{
-                    width: '75px',
-                    padding: '4px 8px',
-                    borderRadius: '8px',
-                    border: '1.5px solid #0066ff',
-                    fontSize: '12px',
-                    fontWeight: '900',
-                    textAlign: 'center',
-                    background: '#ffffff',
-                    color: '#0f172a'
-                  }}
-                />
-                <span style={{ fontSize: '11px', fontWeight: '800', color: '#475569' }}>lbs / kg por placa</span>
-              </div>
             </div>
 
-            {/* MICRO-CARGAS EXTRA */}
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                <label style={{ fontSize: '11px', fontWeight: '800', color: '#1e293b' }}>
-                  Micro-cargas o pesitas selectoras extra:
-                </label>
+                <span style={{ fontSize: '11px', fontWeight: '800', color: '#1e293b' }}>
+                  Micro-cargas extra:
+                </span>
                 <span style={{ fontSize: '11px', fontWeight: '900', color: '#10b981' }}>
-                  {microWeight > 0 ? `+${microWeight}` : 'Ninguna'}
+                  {microWeight > 0 ? `+${microWeight} lbs` : 'Ninguna'}
                 </span>
               </div>
-              <div style={{ display: 'flex', gap: '6px', marginBottom: '6px' }}>
+              <div style={{ display: 'flex', gap: '6px' }}>
                 {[
                   { val: 0, label: 'Ninguna' },
                   { val: 2.5, label: '+2.5 lbs' },
@@ -512,29 +826,6 @@ export default function MachineConfigModal({
                   </button>
                 ))}
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span style={{ fontSize: '10.5px', color: '#64748b', fontWeight: '700' }}>✏️ O valor manual:</span>
-                <input
-                  type="number"
-                  inputMode="decimal"
-                  step="any"
-                  placeholder="0"
-                  value={microWeight}
-                  onChange={(e) => setMicroWeight(parseFloat(e.target.value) || 0)}
-                  style={{
-                    width: '75px',
-                    padding: '4px 8px',
-                    borderRadius: '8px',
-                    border: '1.5px solid #10b981',
-                    fontSize: '12px',
-                    fontWeight: '900',
-                    textAlign: 'center',
-                    background: '#ffffff',
-                    color: '#065f46'
-                  }}
-                />
-                <span style={{ fontSize: '11px', fontWeight: '800', color: '#475569' }}>lbs / kg</span>
-              </div>
             </div>
           </div>
         )}
@@ -543,14 +834,14 @@ export default function MachineConfigModal({
           <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '12px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                <label style={{ fontSize: '11px', fontWeight: '800', color: '#1e293b' }}>
-                  Peso base del trineo / máquina vacía:
-                </label>
+                <span style={{ fontSize: '11px', fontWeight: '800', color: '#1e293b' }}>
+                  Peso base trineo / máquina vacía:
+                </span>
                 <span style={{ fontSize: '11px', fontWeight: '900', color: '#0066ff' }}>
-                  {baseWeight} lbs/kg
+                  {baseWeight} lbs
                 </span>
               </div>
-              <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginBottom: '6px' }}>
+              <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
                 {[0, 20, 45, 75, 100, 118].map(bw => (
                   <button
                     key={bw}
@@ -568,39 +859,16 @@ export default function MachineConfigModal({
                       cursor: 'pointer'
                     }}
                   >
-                    {bw}
+                    {bw}#
                   </button>
                 ))}
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span style={{ fontSize: '10.5px', color: '#64748b', fontWeight: '700' }}>✏️ O peso base manual:</span>
-                <input
-                  type="number"
-                  inputMode="decimal"
-                  step="any"
-                  placeholder="Ej. 105"
-                  value={baseWeight}
-                  onChange={(e) => setBaseWeight(parseFloat(e.target.value) || 0)}
-                  style={{
-                    width: '75px',
-                    padding: '4px 8px',
-                    borderRadius: '8px',
-                    border: '1.5px solid #0066ff',
-                    fontSize: '12px',
-                    fontWeight: '900',
-                    textAlign: 'center',
-                    background: '#ffffff',
-                    color: '#0f172a'
-                  }}
-                />
-                <span style={{ fontSize: '11px', fontWeight: '800', color: '#475569' }}>lbs / kg</span>
               </div>
             </div>
 
             <div>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: '800', color: '#1e293b', marginBottom: '4px' }}>
-                Discos disponibles en tu gym:
-              </label>
+              <span style={{ display: 'block', fontSize: '11px', fontWeight: '800', color: '#1e293b', marginBottom: '4px' }}>
+                Discos disponibles:
+              </span>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '4px' }}>
                 {[45, 35, 25, 10, 5, 2.5].map(p => {
                   const isChecked = availablePlates.includes(p);
@@ -626,22 +894,19 @@ export default function MachineConfigModal({
                   );
                 })}
               </div>
-              <div style={{ marginTop: '6px', fontSize: '10.5px', color: '#0369a1', fontWeight: '700' }}>
-                💡 Disco menor disponible: <strong>{smallestPlate} lbs</strong> ➔ Progresión mínima: <strong>+{minPlateIncrement} lbs</strong> (por lado).
-              </div>
             </div>
           </div>
         )}
 
         {type === 'dumbbells' && (
           <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '12px' }}>
-            <label style={{ display: 'block', fontSize: '11px', fontWeight: '800', color: '#1e293b', marginBottom: '4px' }}>
+            <span style={{ display: 'block', fontSize: '11px', fontWeight: '800', color: '#1e293b', marginBottom: '4px' }}>
               Salto disponible de mancuernas:
-            </label>
+            </span>
             <div style={{ display: 'flex', gap: '8px' }}>
               {[
-                { val: 2.5, label: 'De 2.5 en 2.5 lbs (ej. 17.5, 20, 22.5...)' },
-                { val: 5, label: 'De 5 en 5 lbs (ej. 20, 25, 30...)' }
+                { val: 2.5, label: 'De 2.5 en 2.5 lbs (17.5, 20, 22.5...)' },
+                { val: 5, label: 'De 5 en 5 lbs (20, 25, 30...)' }
               ].map(item => (
                 <button
                   key={item.val}
@@ -656,8 +921,7 @@ export default function MachineConfigModal({
                     color: dumbbellStep === item.val ? '#0066ff' : '#334155',
                     fontWeight: '900',
                     fontSize: '10.5px',
-                    cursor: 'pointer',
-                    textAlign: 'center'
+                    cursor: 'pointer'
                   }}
                 >
                   {item.label}
@@ -666,6 +930,37 @@ export default function MachineConfigModal({
             </div>
           </div>
         )}
+
+        {/* NOTAS Y DEFAULT */}
+        <div>
+          <input
+            type="text"
+            placeholder="Notas de esta máquina (ej. Poner toalla, fricción en cable...)"
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            style={{
+              width: '100%',
+              padding: '6px 10px',
+              borderRadius: '8px',
+              border: '1.5px solid #cbd5e1',
+              fontSize: '11px',
+              fontWeight: '700',
+              boxSizing: 'border-box',
+              background: '#ffffff',
+              marginBottom: '8px'
+            }}
+          />
+
+          <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11.5px', fontWeight: '800', color: '#334155', cursor: 'pointer' }}>
+            <input
+              type="checkbox"
+              checked={isDefault}
+              onChange={(e) => setIsDefault(e.target.checked)}
+              style={{ width: '16px', height: '16px', accentColor: '#0066ff' }}
+            />
+            ⭐ Usar siempre como máquina predeterminada para este ejercicio
+          </label>
+        </div>
 
         {/* ACCIONES */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '6px' }}>
@@ -687,7 +982,7 @@ export default function MachineConfigModal({
                   alignItems: 'center',
                   gap: '4px'
                 }}
-                title="Restablecer a valores por defecto"
+                title="Restablecer calibración"
               >
                 <RotateCcw size={14} /> Reset
               </button>
@@ -713,7 +1008,7 @@ export default function MachineConfigModal({
                 boxShadow: '0 4px 12px rgba(0, 102, 255, 0.25)'
               }}
             >
-              <Check size={16} strokeWidth={3} /> Guardar Calibración
+              <Check size={16} strokeWidth={3} /> Guardar y Usar Máquina
             </button>
           </div>
 

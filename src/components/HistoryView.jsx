@@ -9,7 +9,7 @@ import HistorySessionCard from './history/HistorySessionCard';
 import DataBackupModal from './history/DataBackupModal';
 import HistoryProgressionView from './history/HistoryProgressionView';
 import HistoryChartsView from './history/HistoryChartsView';
-import { getHistoricalRecordsForExercise } from '../utils/exerciseMatcher';
+import { getHistoricalRecordsForExercise, formatSessionDate } from '../utils/exerciseMatcher';
 import { calculate1RM } from '../hooks/useWorkoutCalculations';
 import { 
   exportFullDatabase, 
@@ -179,7 +179,7 @@ export default function HistoryView() {
 
           if (matches) {
             progData.push({
-              date: ses.dateString ? ses.dateString.split(',')[0] : 'Fecha',
+              date: formatSessionDate(ses),
               maxWeight: Math.round(maxGroupWeight),
               est1RM: Math.round(totalGroupVolume),
               reps: '-',
