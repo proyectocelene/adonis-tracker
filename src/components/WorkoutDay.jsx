@@ -1043,7 +1043,7 @@ export default function WorkoutDay() {
 
       currentDay.exercises.forEach(ex => {
         const todayLogs = todayWorkoutData[ex.id] || {};
-        const prevLogs = previousExercisesData[ex.id] || {};
+        const prevLogs = getPreviousDataForExercise(ex, currentDay.id, currentWeek, workoutHistory) || {};
         
         let todayMaxWeight = 0;
         let todayMaxReps = 0;
@@ -1213,6 +1213,7 @@ export default function WorkoutDay() {
       currentDay,
       todayWorkoutData,
       previousExercisesData,
+      workoutHistory,
       currentWeek,
       selectedDateKey,
       completedSets,

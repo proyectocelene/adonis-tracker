@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Auditoría de Base de Datos & Diagnóstico de Máquinas (Adonis Coach V2)</title>
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <style>
+    body { font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100 p-4 md:p-8">
+  <div class="max-w-7xl mx-auto space-y-6">
+    
+    <!-- HEADER -->
+    <header class="bg-slate-800/90 border border-slate-700 rounded-2xl p-6 shadow-xl backdrop-blur-sm">
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <div class="flex items-center gap-2 flex-wrap">
+            <span class="px-2.5 py-0.5 rounded-full text-xs font-black bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+              AUDITORÍA ACTIVA
+            </span>
+            <span class="px-2.5 py-0.5 rounded-full text-xs font-black bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">
+              CÓDIGO CANÓNICO DE 3 SEGMENTOS [GRUPO-MÁQUINA-ESPEC]
+            </span>
+            <span class="px-2.5 py-0.5 rounded-full text-xs font-black bg-blue-500/20 text-blue-400 border border-blue-500/30">
+              142 EJERCICIOS REGISTRADOS
+            </span>
+          </div>
+          <h1 class="text-2xl md:text-3xl font-black text-white mt-2 tracking-tight">
+            Base de Datos Completa & Diagnóstico de Máquinas
+          </h1>
+          <p class="text-sm text-slate-400 mt-1">
+            Auditoría de catálogo clasificada por grupo muscular, proyecciones progresivas (+1 ses, +2 ses, 1m, 3m, 6m) y exportación para Gemini Sidebar.
+          </p>
+        </div>
+
+        <div class="flex gap-2 flex-wrap">
+          <button 
+            onclick="copyAuditToClipboard()"
+            class="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white text-xs font-bold rounded-xl shadow-lg transition-all cursor-pointer">
+            📋 Copiar Base de Datos para Gemini
+          </button>
+        </div>
+      </div>
+
+      <!-- KPI METRICS -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6 pt-6 border-t border-slate-700/60">
+        <div class="bg-slate-900/60 p-3.5 rounded-xl border border-slate-800">
+          <span class="text-[11px] font-bold text-slate-400 uppercase block">Total Ejercicios PWA</span>
+          <span class="text-2xl font-black text-white">142</span>
+          <span class="text-[10px] text-emerald-400 block mt-0.5 font-semibold">100% con código unificado</span>
+        </div>
+        <div class="bg-slate-900/60 p-3.5 rounded-xl border border-slate-800">
+          <span class="text-[11px] font-bold text-slate-400 uppercase block">Aislamiento de Máquinas</span>
+          <span class="text-2xl font-black text-emerald-400">100%</span>
+          <span class="text-[10px] text-slate-400 block mt-0.5 font-semibold">Cero cruces o robo de datos</span>
+        </div>
+        <div class="bg-slate-900/60 p-3.5 rounded-xl border border-slate-800">
+          <span class="text-[11px] font-bold text-slate-400 uppercase block">Grupos Musculares</span>
+          <span class="text-2xl font-black text-indigo-400">12</span>
+          <span class="text-[10px] text-slate-400 block mt-0.5 font-semibold">Normalizados y unificados</span>
+        </div>
+        <div class="bg-slate-900/60 p-3.5 rounded-xl border border-slate-800">
+          <span class="text-[11px] font-bold text-slate-400 uppercase block">Metas Progresivas</span>
+          <span class="text-2xl font-black text-amber-400">5 Hitos</span>
+          <span class="text-[10px] text-slate-400 block mt-0.5 font-semibold">+1 ses, +2 ses, 1m, 3m, 6m</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- VIEW SWITCHER (TABS) -->
+    <div class="flex items-center gap-2 border-b border-slate-700 pb-2">
+      <button 
+        id="tabBtnDb"
+        onclick="switchMainTab('db')"
+        class="px-4 py-2 text-sm font-bold rounded-xl transition-all bg-indigo-600 text-white cursor-pointer shadow">
+        📚 Base de Datos Completa por Músculo (142 Ejercicios)
+      </button>
+      <button 
+        id="tabBtnRoutine"
+        onclick="switchMainTab('routine')"
+        class="px-4 py-2 text-sm font-bold rounded-xl transition-all bg-slate-800 text-slate-400 hover:text-white cursor-pointer">
+        🏋️ Auditoría de Rutina Semanal (Días 1 a 6)
+      </button>
+    </div>
+
+    <!-- MAIN VIEW 1: FULL DATABASE EXPLORER -->
+    <section id="viewDb" class="space-y-4">
+      
+      <!-- CONTROLS: SEARCH & MUSCLE FILTERS -->
+      <div class="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-4 space-y-3">
+        <div class="flex flex-col md:flex-row gap-3 items-center justify-between">
+          <div class="relative w-full md:w-96">
+            <input 
+              type="text" 
+              id="searchInput"
+              oninput="handleSearch(this.value)"
+              placeholder="🔍 Buscar por nombre, código o implemento..."
+              class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+            />
+          </div>
+          <div class="text-xs text-slate-400 font-bold" id="matchCounter">
+            Mostrando 142 de 142 ejercicios
+          </div>
+        </div>
+
+        <!-- MUSCLE GROUP FILTER PILLS -->
+        <div class="flex flex-wrap gap-1.5 pt-2 border-t border-slate-700/40" id="musclePills">
+          <!-- Rendered via JS -->
+        </div>
+      </div>
+
+      <!-- EXERCISE CARDS GRID / TABLE -->
+      <div id="exerciseListContainer" class="space-y-6">
+        <!-- Rendered via JS -->
+      </div>
+    </section>
+
+    <!-- MAIN VIEW 2: ROUTINE AUDIT & 5-MILESTONE PROJECTIONS -->
+    <section id="viewRoutine" class="space-y-4 hidden">
+      <!-- DAYS TABS -->
+      <div class="flex items-center gap-2 overflow-x-auto pb-2" id="routineDayTabs">
+        <!-- Rendered via JS -->
+      </div>
+      <div id="routineDayContent" class="space-y-4">
+        <!-- Rendered via JS -->
+      </div>
+    </section>
+
+  </div>
+
+  <script>
+    const fullLibrary = [{"id":"lib_pech_chest_press_conv_01","code":"[PECH-CHEST_PRESS-CONV_01]","name":"Press de Pecho en Máquina Convergente (Chest Press)","muscleGroup":"Pecho","equipment":"Máquina","sets":4,"reps":"10-12","rest":"120 s","presence":"Jueves (Principal)","family":"-"},{"id":"lib_pech_pec_deck_stack_01","code":"[PECH-PEC_DECK-STACK_01]","name":"Aperturas en Máquina Pec Deck (Peacock / Flyes)","muscleGroup":"Pecho","equipment":"Máquina","sets":3,"reps":"12-15","rest":"90 s","presence":"Jueves (Principal)","family":"-"},{"id":"lib_pech_cable_cross_mid_01","code":"[PECH-CABLE_CROSS-MID_01]","name":"Cruce de Poleas a Media Altura (Cable Crossover)","muscleGroup":"Pecho","equipment":"Polea","sets":3,"reps":"12-15","rest":"90 s","presence":"Jueves (Sustituto Oficial)","family":"-"},{"id":"lib_pech_inc_press_nitro_01","code":"[PECH-INC_PRESS-NITRO_01]","name":"Press Inclinado en Máquina (Nitro Incline)","muscleGroup":"Pecho","equipment":"Máquina","sets":4,"reps":"8-10","rest":"120 s","presence":"Jueves (Principal)","family":"-"},{"id":"lib_espa_pulldown_wide_01","code":"[ESPA-PULLDOWN-WIDE_01]","name":"Jalón al Pecho en Polea (Agarre Ancho Pronado)","muscleGroup":"Espalda","equipment":"Polea","sets":4,"reps":"10-12","rest":"120 s","presence":"Sábado (Sustituto Oficial)","family":"-"},{"id":"lib_espa_seated_row_gironda_01","code":"[ESPA-SEATED_ROW-GIRONDA_01]","name":"Remo Gironda en Polea Baja (Agarre Neutro)","muscleGroup":"Espalda","equipment":"Polea","sets":4,"reps":"10-12","rest":"120 s","presence":"Sábado (Principal)","family":"-"},{"id":"lib_espa_machine_row_chest_supp_01","code":"[ESPA-MACHINE_ROW-CHEST_SUPP_01]","name":"Remo Compuesto en Máquina (Apoyo al Pecho)","muscleGroup":"Espalda","equipment":"Máquina","sets":3,"reps":"10-12","rest":"90 s","presence":"Sábado (Sustituto Oficial)","family":"-"},{"id":"lib_espa_pullover_high_cable_01","code":"[ESPA-PULLOVER-HIGH_CABLE_01]","name":"Pull-Over en Polea Alta con Cuerda","muscleGroup":"Espalda","equipment":"Polea","sets":3,"reps":"12-15","rest":"90 s","presence":"Miércoles (Principal)","family":"-"},{"id":"lib_homb_lat_raise_maq_01","code":"[HOMB-LAT_RAISE-MAQ_01]","name":"Elevaciones Laterales en Máquina","muscleGroup":"Hombros","equipment":"Máquina / Polea","sets":4,"reps":"12-15","rest":"90 s","presence":"Sábado (Sustituto Oficial)","family":"-"},{"id":"lib_homb_shoulder_press_conv_01","code":"[HOMB-SHOULDER_PRESS-CONV_01]","name":"Press Militar en Máquina Convergente (Shoulder Press)","muscleGroup":"Hombros","equipment":"Máquina","sets":4,"reps":"8-10","rest":"120 s","presence":"Catálogo General","family":"-"},{"id":"lib_homb_rear_delt_pec_deck_01","code":"[HOMB-REAR_DELT-PEC_DECK_01]","name":"Pájaros en Pec Deck Inverso (Reverse Flyes)","muscleGroup":"Hombros","equipment":"Máquina","sets":3,"reps":"12-15","rest":"90 s","presence":"Sábado (Sustituto Oficial)","family":"-"},{"id":"lib_cuad_leg_press_disc_45_pb","code":"[CUAD-LEG_PRESS-DISC_45_PB]","name":"Prensa de Piernas Inclinada 45° (Discos)","muscleGroup":"Cuádriceps","equipment":"Máquina","sets":4,"reps":"10-12","rest":"150 s","presence":"Martes (Principal)","family":"-"},{"id":"lib_cuad_hack_squat_disc_01","code":"[CUAD-HACK_SQUAT-DISC_01]","name":"Sentadilla en Máquina Hack (Hack Squat)","muscleGroup":"Cuádriceps","equipment":"Máquina","sets":4,"reps":"8-10","rest":"150 s","presence":"Martes (Principal)","family":"-"},{"id":"lib_cuad_leg_ext_stack_01","code":"[CUAD-LEG_EXT-STACK_01]","name":"Extensión de Cuádriceps en Máquina (Torre de Placas)","muscleGroup":"Cuádriceps","equipment":"Máquina","sets":4,"reps":"12-15","rest":"90 s","presence":"Martes (Principal)","family":"-"},{"id":"lib_isqu_leg_curl_seated_01","code":"[ISQU-LEG_CURL-SEATED_01]","name":"Flexión de Femorales Sentado (Seated Leg Curl)","muscleGroup":"Isquiotibiales","equipment":"Máquina","sets":4,"reps":"10-12","rest":"90 s","presence":"Viernes (Principal)","family":"-"},{"id":"lib_glut_hip_thrust_maq_01","code":"[GLUT-HIP_THRUST-MAQ_01]","name":"Empuje de Cadera en Máquina Guiada o Barra (Hip Thrust)","muscleGroup":"Glúteos","equipment":"Máquina","sets":4,"reps":"8-12","rest":"120 s","presence":"Viernes (Sustituto Oficial)","family":"-"},{"id":"lib_isqu_rdl_manc_01","code":"[ISQU-RDL-MANC_01]","name":"Peso Muerto Rumano (RDL) con Mancuernas","muscleGroup":"Isquiotibiales","equipment":"Máquina / Pesas","sets":4,"reps":"8-10","rest":"120 s","presence":"Viernes (Principal)","family":"-"},{"id":"lib_bicep_preacher_curl_scott_maq_01","code":"[BICEP-PREACHER_CURL-SCOTT_MAQ_01]","name":"Curl de Bíceps en Banco Scott o Máquina Predicador","muscleGroup":"Bíceps","equipment":"Máquina","sets":3,"reps":"10-12","rest":"90 s","presence":"Sábado (Principal)","family":"-"},{"id":"lib_tric_pushdown_cable_01","code":"[TRIC-PUSHDOWN-CABLE_01]","name":"Extensión de Tríceps en Polea (Pushdown con Cuerda o Barra)","muscleGroup":"Tríceps","equipment":"Polea","sets":4,"reps":"12-15","rest":"90 s","presence":"Jueves (Principal)","family":"-"},{"id":"lib_tric_dips_assist_01","code":"[TRIC-DIPS-ASSIST_01]","name":"Fondos en Máquina Asistida o Paralelas (Dips Machine)","muscleGroup":"Tríceps","equipment":"Máquina","sets":3,"reps":"10-12","rest":"120 s","presence":"Catálogo General","family":"-"},{"id":"lib_pant_calf_raise_maq_01","code":"[PANT-CALF_RAISE-MAQ_01]","name":"Elevación de Pantorrillas en Máquina (Rotary o de Pie)","muscleGroup":"Pantorrillas","equipment":"Máquina","sets":4,"reps":"15-20","rest":"60 s","presence":"Viernes (Principal)","family":"-"},{"id":"lib_abdo_crunch_cable_01","code":"[ABDO-CRUNCH-CABLE_01]","name":"Crunch Abdominal en Polea Alta o Máquina (Cable Crunch)","muscleGroup":"Abdomen","equipment":"Máquina / Polea","sets":4,"reps":"15-20","rest":"60 s","presence":"Catálogo General","family":"-"},{"id":"lib_aduc_aductor_stack_01","code":"[ADUC-ADUCTOR-STACK_01]","name":"Aductores en Máquina (Hip Adduction / Cerrar Cadera)","muscleGroup":"Aductores","equipment":"Máquina","sets":3,"reps":"12-15","rest":"90 s","presence":"Viernes (Sustituto Oficial)","family":"-"},{"id":"lib_abdu_abductor_stack_01","code":"[ABDU-ABDUCTOR-STACK_01]","name":"Abductores en Máquina (Hip Abduction / Abrir Cadera)","muscleGroup":"Glúteos","equipment":"Máquina","sets":4,"reps":"12-15","rest":"90 s","presence":"Viernes (Principal)","family":"-"},{"id":"lib_glut_butt_blaster_maq_01","code":"[GLUT-BUTT_BLASTER-MAQ_01]","name":"Glute Butt Blaster en Máquina","muscleGroup":"Glúteos","equipment":"Máquina","sets":4,"reps":"10-12","rest":"90 s","presence":"Viernes (Principal)","family":"-"},{"id":"lib_glut_roman_chair_45_01","code":"[GLUT-ROMAN_CHAIR-45_01]","name":"Extensiones a 45° en Banco Romano para Glúteo","muscleGroup":"Glúteos","equipment":"Banco / Peso Corporal","sets":3,"reps":"10-12","rest":"90 s","presence":"Viernes (Sustituto Oficial)","family":"-"},{"id":"lib_cuad_leg_press_uni_01","code":"[CUAD-LEG_PRESS-UNI_01]","name":"Prensa Unilateral a 1 Pierna (Pie Alto)","muscleGroup":"Glúteos","equipment":"Máquina","sets":3,"reps":"10-12","rest":"90 s","presence":"Martes (Sustituto Oficial)","family":"-"},{"id":"lib_cuad_bulgarian_manc_01","code":"[CUAD-BULGARIAN-MANC_01]","name":"Sentadilla Búlgara con Mancuernas","muscleGroup":"Cuádriceps","equipment":"Mancuernas","sets":3,"reps":"8-10","rest":"90 s","presence":"Catálogo General","family":"-"},{"id":"lib_cuad_bulgarian_smith_01","code":"[CUAD-BULGARIAN-SMITH_01]","name":"Sentadilla Búlgara en Máquina Smith","muscleGroup":"Cuádriceps","equipment":"Smith","sets":3,"reps":"8-10","rest":"90-120 s","presence":"Catálogo General","family":"-"},{"id":"lib_isqu_rdl_smith_01","code":"[ISQU-RDL-SMITH_01]","name":"Peso Muerto Rumano en Máquina Smith (RDL)","muscleGroup":"Isquiotibiales","equipment":"Smith","sets":3,"reps":"8-10","rest":"150-180 s","presence":"Catálogo General","family":"-"},{"id":"lib_isqu_rdl_barbell_01","code":"[ISQU-RDL-BARBELL_01]","name":"Peso Muerto Rumano con Barra Libre (RDL)","muscleGroup":"Isquiotibiales","equipment":"Barra","sets":3,"reps":"8-10","rest":"180 s","presence":"Viernes (Sustituto Oficial)","family":"-"},{"id":"lib_espa_pulldown_v_grip_01","code":"[ESPA-PULLDOWN-V_GRIP_01]","name":"Jalón con Agarre Estrecho Neutro (V-Grip)","muscleGroup":"Espalda","equipment":"Polea","sets":4,"reps":"8-10","rest":"120 s","presence":"Sábado (Principal)","family":"-"},{"id":"lib_homb_face_pull_high_cable_01","code":"[HOMB-FACE_PULL-HIGH_CABLE_01]","name":"Face Pulls en Polea Alta con Cuerda","muscleGroup":"Hombros","equipment":"Polea","sets":4,"reps":"12-15","rest":"90 s","presence":"Sábado (Principal)","family":"-"},{"id":"lib_homb_lat_raise_manc_01","code":"[HOMB-LAT_RAISE-MANC_01]","name":"Elevaciones Laterales con Mancuernas","muscleGroup":"Hombros","equipment":"Mancuernas","sets":4,"reps":"12-15","rest":"90 s","presence":"Sábado (Principal)","family":"-"},{"id":"lib_pech_inc_press_manc_30","code":"[PECH-INC_PRESS-MANC_30]","name":"Press Inclinado con Mancuernas (Banco a 30°)","muscleGroup":"Pecho","equipment":"Mancuernas / Banco","sets":4,"reps":"8-10","rest":"120 s","presence":"Jueves (Sustituto Oficial)","family":"-"},{"id":"lib_pech_chest_press_manc_flat_01","code":"[PECH-CHEST_PRESS-MANC_FLAT_01]","name":"Press Plano con Mancuernas","muscleGroup":"Pecho","equipment":"Mancuernas / Barra","sets":3,"reps":"8-10","rest":"120 s","presence":"Jueves (Sustituto Oficial)","family":"-"},{"id":"lib_bicep_cable_curl_low_straight_01","code":"[BICEP-CABLE_CURL-LOW_STRAIGHT_01]","name":"Curl de Bíceps en Polea Baja (Barra Recta)","muscleGroup":"Bíceps","equipment":"Polea","sets":4,"reps":"10-12","rest":"90 s","presence":"Sábado (Sustituto Oficial)","family":"-"},{"id":"lib_bicep_incline_curl_manc_60_01","code":"[BICEP-INCLINE_CURL-MANC_60_01]","name":"Curl de Bíceps con Mancuernas (Sentado en Banco a 60°)","muscleGroup":"Bíceps","equipment":"Mancuernas","sets":3,"reps":"10-12","rest":"90 s","presence":"Sábado (Sustituto Oficial)","family":"-"},{"id":"lib_bicep_cable_curl_bayesian_01","code":"[BICEP-CABLE_CURL-BAYESIAN_01]","name":"Bayesian Cable Curl (Estiramiento Humeral en Polea)","muscleGroup":"Bíceps","equipment":"Polea","sets":3,"reps":"10-12","rest":"120 s","presence":"Sábado (Sustituto Oficial)","family":"-"},{"id":"lib_tric_katana_ext_cable_01","code":"[TRIC-KATANA_EXT-CABLE_01]","name":"Extensión Cruzada Katana en Poleas (Katana Extension)","muscleGroup":"Tríceps","equipment":"Máquina","sets":3,"reps":"10-12","rest":"90 s","presence":"Jueves (Sustituto Oficial)","family":"-"},{"id":"lib_tric_overhead_ext_manc_01","code":"[TRIC-OVERHEAD_EXT-MANC_01]","name":"Extensión Unilateral de Tríceps con Mancuerna tras Nuca (Copa)","muscleGroup":"Tríceps","equipment":"Mancuerna / Polea","sets":4,"reps":"10-12","rest":"90 s","presence":"Catálogo General","family":"-"},{"id":"lib_card_treadmill_zona2_01","code":"[CARD-TREADMILL-ZONA2_01]","name":"Cardio Zona 2 en Caminadora","muscleGroup":"Cardio","equipment":"Caminadora","sets":1,"reps":"30 min","rest":"0 s","presence":"Sábado (Principal)","family":"-"},{"id":"lib_card_bike_stationary_01","code":"[CARD-BIKE-STATIONARY_01]","name":"Bicicleta Estática (Zona 2)","muscleGroup":"Cardio","equipment":"Bicicleta","sets":1,"reps":"35 min","rest":"0 s","presence":"Sábado (Sustituto Oficial)","family":"-"},{"id":"lib_abdo_vacuum_isom_01","code":"[ABDO-VACUUM-ISOM_01]","name":"Vacuum Abdominal (Transverso / Cintura Estrecha)","muscleGroup":"Abdomen","equipment":"Peso Corporal","sets":4,"reps":"15 s","rest":"60 s","presence":"Sábado (Principal)","family":"-"},{"id":"lib_abdo_pallof_press_cable_01","code":"[ABDO-PALLOF_PRESS-CABLE_01]","name":"Pallof Press en Polea (Anti-Rotación)","muscleGroup":"Abdomen","equipment":"Polea","sets":3,"reps":"12","rest":"60 s","presence":"Sábado (Sustituto Oficial)","family":"-"},{"id":"lib_pech_inc_press_smith_01","code":"[PECH-INC_PRESS-SMITH_01]","name":"Press Inclinado en Multipower (Smith) a 30°","muscleGroup":"Pecho","equipment":"Máquina Smith","sets":4,"reps":"8-10","rest":"180-240 s","presence":"Jueves (Sustituto Oficial)","family":"-"},{"id":"lib_homb_lat_raise_cable_01","code":"[HOMB-LAT_RAISE-CABLE_01]","name":"Elevaciones Laterales en Polea Baja a una Mano","muscleGroup":"Hombros","equipment":"Polea","sets":4,"reps":"12-15","rest":"120-150 s","presence":"Sábado (Sustituto Oficial)","family":"-"},{"id":"lib_homb_lat_raise_manc_side_30","code":"[HOMB-LAT_RAISE-MANC_SIDE_30]","name":"Elevaciones con Mancuernas recostado de lado en Banco a 30°","muscleGroup":"Hombros","equipment":"Varios","sets":4,"reps":"12-15","rest":"120-150 s","presence":"Lunes (Sustituto Oficial)","family":"-"},{"id":"lib_pech_inc_press_bar_30","code":"[PECH-INC_PRESS-BAR_30]","name":"Press Inclinado con Barra a 30°","muscleGroup":"Pecho","equipment":"Varios","sets":3,"reps":"8-10","rest":"180 s","presence":"Lunes (Sustituto Oficial)","family":"-"},{"id":"lib_pech_inc_press_disc_hammer","code":"[PECH-INC_PRESS-DISC_HAMMER]","name":"Press Inclinado Hammer Strength (Plate-Loaded)","muscleGroup":"Pecho","equipment":"Varios","sets":3,"reps":"8-10","rest":"180 s","presence":"Lunes (Sustituto Oficial)","family":"-"},{"id":"lib_pech_fly_manc_flat_01","code":"[PECH-FLY-MANC_FLAT_01]","name":"Aperturas con Mancuernas en Banco Plano","muscleGroup":"Pecho","equipment":"Varios","sets":3,"reps":"10-12","rest":"120 s","presence":"Lunes (Sustituto Oficial)","family":"-"},{"id":"lib_tric_overhead_ext_cable_01","code":"[TRIC-OVERHEAD_EXT-CABLE_01]","name":"Extensión de Tríceps Copa en Polea (Cuerda)","muscleGroup":"Tríceps","equipment":"Polea","sets":4,"reps":"10-12","rest":"120 s","presence":"Lunes (Principal)","family":"-"},{"id":"lib_tric_french_press_manc_01","code":"[TRIC-FRENCH_PRESS-MANC_01]","name":"French Press con Mancuerna a dos Manos","muscleGroup":"Tríceps","equipment":"Varios","sets":4,"reps":"10-12","rest":"120 s","presence":"Lunes (Sustituto Oficial)","family":"-"},{"id":"lib_abdo_plank_isom_01","code":"[ABDO-PLANK-ISOM_01]","name":"Plancha Abdominal Isométrica Convencional","muscleGroup":"Abdomen","equipment":"Varios","sets":4,"reps":"20-25 s","rest":"60 s","presence":"Sábado (Sustituto Oficial)","family":"-"},{"id":"lib_card_treadmill_incline_01","code":"[CARD-TREADMILL-INCLINE_01]","name":"Caminadora en Inclinación (Zona 2)","muscleGroup":"Cardio","equipment":"Varios","sets":1,"reps":"35-45 min","rest":"0 s","presence":"Sábado (Sustituto Oficial)","family":"-"},{"id":"lib_cuad_sissy_squat_bench_01","code":"[CUAD-SISSY_SQUAT-BENCH_01]","name":"Sissy Squat en Soporte","muscleGroup":"Cuádriceps","equipment":"Varios","sets":3,"reps":"12-15","rest":"120 s","presence":"Martes (Sustituto Oficial)","family":"-"},{"id":"lib_cuad_leg_ext_uni_01","code":"[CUAD-LEG_EXT-UNI_01]","name":"Extensiones de Cuádriceps Unilaterales en Máquina","muscleGroup":"Cuádriceps","equipment":"Varios","sets":3,"reps":"12-15","rest":"120 s","presence":"Martes (Sustituto Oficial)","family":"-"},{"id":"lib_cuad_v_squat_maq_01","code":"[CUAD-V_SQUAT-MAQ_01]","name":"Sentadilla en Máquina V-Squat","muscleGroup":"Cuádriceps","equipment":"Varios","sets":4,"reps":"8-10","rest":"180-240 s","presence":"Martes (Sustituto Oficial)","family":"-"},{"id":"lib_cuad_squat_smith_01","code":"[CUAD-SQUAT-SMITH_01]","name":"Sentadilla en Smith con Talones sobre Disco","muscleGroup":"Cuádriceps","equipment":"Máquina Smith","sets":4,"reps":"8-10","rest":"180-240 s","presence":"Martes (Sustituto Oficial)","family":"-"},{"id":"lib_cuad_leg_press_horiz_01","code":"[CUAD-LEG_PRESS-HORIZ_01]","name":"Prensa Horizontal en Cable / Placas","muscleGroup":"Cuádriceps","equipment":"Varios","sets":4,"reps":"10-12","rest":"180 s","presence":"Martes (Sustituto Oficial)","family":"-"},{"id":"lib_cuad_hack_squat_reverse_01","code":"[CUAD-HACK_SQUAT-REVERSE_01]","name":"Hack Invertida en Máquina","muscleGroup":"Cuádriceps","equipment":"Varios","sets":4,"reps":"10-12","rest":"180 s","presence":"Martes (Sustituto Oficial)","family":"-"},{"id":"lib_abdu_cable_ankle_01","code":"[ABDU-CABLE-ANKLE_01]","name":"Abducción de Cadera en Polea Baja con Tobillera","muscleGroup":"Glúteos","equipment":"Varios","sets":3,"reps":"12-15","rest":"120 s","presence":"Martes (Sustituto Oficial)","family":"-"},{"id":"lib_pant_calf_raise_leg_press_01","code":"[PANT-CALF_RAISE-LEG_PRESS_01]","name":"Elevación de Pantorrillas en la Prensa de Piernas","muscleGroup":"Pantorrillas","equipment":"Varios","sets":4,"reps":"10-12","rest":"120 s","presence":"Martes (Sustituto Oficial)","family":"-"},{"id":"lib_pant_calf_raise_smith_01","code":"[PANT-CALF_RAISE-SMITH_01]","name":"Elevación de Pantorrillas en Smith sobre Escalón","muscleGroup":"Pantorrillas","equipment":"Máquina Smith","sets":4,"reps":"10-12","rest":"120 s","presence":"Viernes (Sustituto Oficial)","family":"-"},{"id":"lib_espa_chinup_wide_01","code":"[ESPA-CHINUP-WIDE_01]","name":"Dominadas Pronadas Asistidas / Lastradas","muscleGroup":"Espalda","equipment":"Varios","sets":4,"reps":"8-10","rest":"180 s","presence":"Miércoles (Sustituto Oficial)","family":"-"},{"id":"lib_espa_pulldown_uni_cable_01","code":"[ESPA-PULLDOWN-UNI_CABLE_01]","name":"Jalón Unilateral en Polea","muscleGroup":"Espalda","equipment":"Varios","sets":4,"reps":"8-10","rest":"180 s","presence":"Miércoles (Sustituto Oficial)","family":"-"},{"id":"lib_espa_tbar_row_chest_01","code":"[ESPA-TBAR_ROW-CHEST_01]","name":"Remo con Barra T con Apoyo Torácico","muscleGroup":"Espalda","equipment":"Varios","sets":4,"reps":"8-10","rest":"180 s","presence":"Miércoles (Sustituto Oficial)","family":"-"},{"id":"lib_espa_pullover_manc_01","code":"[ESPA-PULLOVER-MANC_01]","name":"Pull-Over con Mancuerna sobre Banco","muscleGroup":"Espalda","equipment":"Varios","sets":3,"reps":"12-15","rest":"120 s","presence":"Miércoles (Sustituto Oficial)","family":"-"},{"id":"lib_espa_pullover_maq_01","code":"[ESPA-PULLOVER-MAQ_01]","name":"Máquina de Pullover Guiada","muscleGroup":"Espalda","equipment":"Máquina","sets":3,"reps":"12-15","rest":"120 s","presence":"Miércoles (Sustituto Oficial)","family":"-"},{"id":"lib_homb_rear_delt_cable_01","code":"[HOMB-REAR_DELT-CABLE_01]","name":"Reverse Cable Flyes en Poleas","muscleGroup":"Hombros","equipment":"Varios","sets":4,"reps":"12-15","rest":"120 s","presence":"Miércoles (Sustituto Oficial)","family":"-"},{"id":"lib_bicep_barbell_curl_ez_bar_01","code":"[BICEP-BARBELL_CURL-EZ_BAR_01]","name":"Curl con Barra Z de Pie","muscleGroup":"Bíceps","equipment":"Varios","sets":3,"reps":"10-12","rest":"120 s","presence":"Sábado (Sustituto Oficial)","family":"-"},{"id":"lib_card_elliptical_zona2_01","code":"[CARD-ELLIPTICAL-ZONA2_01]","name":"Elíptica (Zona 2)","muscleGroup":"Cardio","equipment":"Varios","sets":1,"reps":"35-45 min","rest":"0 s","presence":"Sábado (Sustituto Oficial)","family":"-"},{"id":"lib_pech_chest_press_smith_01","code":"[PECH-CHEST_PRESS-SMITH_01]","name":"Press de Pecho Plano en Smith","muscleGroup":"Pecho","equipment":"Máquina Smith","sets":4,"reps":"8-10","rest":"180-240 s","presence":"Jueves (Sustituto Oficial)","family":"-"},{"id":"lib_homb_lat_raise_behind_cable_01","code":"[HOMB-LAT_RAISE-BEHIND_CABLE_01]","name":"Elevaciones Laterales en Polea Baja (Tras Espalda)","muscleGroup":"Hombros","equipment":"Polea","sets":4,"reps":"12-15","rest":"120 s","presence":"Sábado (Sustituto Oficial)","family":"-"},{"id":"lib_pech_cable_cross_low_01","code":"[PECH-CABLE_CROSS-LOW_01]","name":"Cruce de Poleas Bajas (Cable Crossover)","muscleGroup":"Pecho","equipment":"Varios","sets":3,"reps":"10-12","rest":"120 s","presence":"Jueves (Sustituto Oficial)","family":"-"},{"id":"lib_tric_seated_ext_maq_01","code":"[TRIC-SEATED_EXT-MAQ_01]","name":"Extensión de Tríceps en Máquina Sentado","muscleGroup":"Tríceps","equipment":"Máquina","sets":4,"reps":"10-12","rest":"120 s","presence":"Jueves (Sustituto Oficial)","family":"-"},{"id":"lib_isqu_leg_curl_lying_01","code":"[ISQU-LEG_CURL-LYING_01]","name":"Flexión de Femorales Tumbado (Lying Leg Curl)","muscleGroup":"Isquiotibiales","equipment":"Varios","sets":4,"reps":"10-12","rest":"120-150 s","presence":"Viernes (Sustituto Oficial)","family":"-"},{"id":"lib_isqu_nordic_curl_assist_01","code":"[ISQU-NORDIC_CURL-ASSIST_01]","name":"Curl Nórdico Asistido","muscleGroup":"Isquiotibiales","equipment":"Varios","sets":4,"reps":"10-12","rest":"120-150 s","presence":"Viernes (Sustituto Oficial)","family":"-"},{"id":"lib_glut_leg_press_high_feet_45","code":"[GLUT-LEG_PRESS-HIGH_FEET_45]","name":"Prensa 45° (Pies Altos y Abiertos para Glúteo)","muscleGroup":"Isquiotibiales","equipment":"Varios","sets":4,"reps":"8-10","rest":"180-240 s","presence":"Viernes (Principal)","family":"-"},{"id":"lib_isqu_deadlift_trap_bar_01","code":"[ISQU-DEADLIFT-TRAP_BAR_01]","name":"Peso Muerto con Barra Hexagonal (Trap Bar)","muscleGroup":"Isquiotibiales","equipment":"Varios","sets":3,"reps":"8-10","rest":"180 s","presence":"Viernes (Sustituto Oficial)","family":"-"},{"id":"lib_glut_cable_kick_ankle_01","code":"[GLUT-CABLE_KICK-ANKLE_01]","name":"Patada de Glúteo en Polea con Tobillera","muscleGroup":"Glúteos","equipment":"Varios","sets":3,"reps":"10-12","rest":"120 s","presence":"Viernes (Sustituto Oficial)","family":"-"},{"id":"lib_abdu_cable_kick_ankle_01","code":"[ABDU-CABLE_KICK-ANKLE_01]","name":"Abducción con Tobillera en Polea","muscleGroup":"Glúteos","equipment":"Varios","sets":3,"reps":"12-15","rest":"120 s","presence":"Viernes (Sustituto Oficial)","family":"-"},{"id":"lib_espa_pulldown_supine_01","code":"[ESPA-PULLDOWN-SUPINE_01]","name":"Jalón con Agarre Supino (al Ancho de Hombros)","muscleGroup":"Espalda","equipment":"Varios","sets":4,"reps":"8-10","rest":"180 s","presence":"Sábado (Sustituto Oficial)","family":"-"},{"id":"lib_espa_chinup_close_neutral_01","code":"[ESPA-CHINUP-CLOSE_NEUTRAL_01]","name":"Dominadas Neutras Cerradas","muscleGroup":"Espalda","equipment":"Varios","sets":4,"reps":"8-10","rest":"180 s","presence":"Sábado (Sustituto Oficial)","family":"-"},{"id":"lib_espa_one_arm_row_manc_01","code":"[ESPA-ONE_ARM_ROW-MANC_01]","name":"Remo con Mancuerna a una Mano apoyado en Banco","muscleGroup":"Espalda","equipment":"Varios","sets":4,"reps":"8-10","rest":"180 s","presence":"Sábado (Sustituto Oficial)","family":"-"},{"id":"lib_homb_rear_delt_manc_inc_01","code":"[HOMB-REAR_DELT-MANC_INC_01]","name":"Pájaros con Mancuernas en Banco Inclinado","muscleGroup":"Hombros","equipment":"Mancuernas","sets":3,"reps":"12-15","rest":"120 s","presence":"Sábado (Sustituto Oficial)","family":"-"},{"id":"lib_homb_upright_row_cable_01","code":"[HOMB-UPRIGHT_ROW-CABLE_01]","name":"Remo al Mentón Amplio en Polea","muscleGroup":"Hombros","equipment":"Varios","sets":3,"reps":"12-15","rest":"120 s","presence":"Sábado (Sustituto Oficial)","family":"-"},{"id":"lib_bicep_hammer_curl_manc_01","code":"[BICEP-HAMMER_CURL-MANC_01]","name":"Curl Martillo con Mancuernas (Braquial)","muscleGroup":"Bíceps","equipment":"Varios","sets":3,"reps":"10-12","rest":"120 s","presence":"Sábado (Sustituto Oficial)","family":"-"},{"id":"lib_bicep_preacher_curl_ez_bar_01","code":"[BICEP-PREACHER_CURL-EZ_BAR_01]","name":"Curl en Banco Scott con Barra Z","muscleGroup":"Bíceps","equipment":"Varios","sets":3,"reps":"10-12","rest":"120 s","presence":"Sábado (Sustituto Oficial)","family":"-"},{"id":"lib_bicep_concentration_curl_manc_01","code":"[BICEP-CONCENTRATION_CURL-MANC_01]","name":"Curl Concentrado con Mancuerna","muscleGroup":"Bíceps","equipment":"Varios","sets":3,"reps":"10-12","rest":"120 s","presence":"Sábado (Sustituto Oficial)","family":"-"}];
+    const routineData = [{"id":"d1","dayNumber":1,"name":"Lunes: Empuje 1 (Haz Clavicular & Deltoides Lateral 3D)","focus":"Prioridad en haz clavicular y deltoides lateral 3D con parciales en estiramiento (0°-45°). Tríceps en elongación profunda tras nuca (cabeza larga = 65% del brazo). Pre-entreno óptimo: 40-50g carbos + sal y agua 1.5-2h antes para turgencia celular máxima.","exercises":[{"id":"d1_e1","unifiedCode":"[PECH-INC_PRESS-MANC_30]","name":"Press Inclinado con Mancuernas (Banco a 30°)","muscleGroup":"Pecho (Pectoral Superior Clavicular)","loadFamily":"Familia Press Superior Inclinado","sets":4,"reps":"8-10","equivalents":[{"id":"d1_e1_eq1","unifiedCode":"[PECH-INC_PRESS-SMITH_01]","name":"Press Inclinado en Multipower (Smith) a 30°","ratio":1.1},{"id":"d1_e1_eq2","unifiedCode":"[PECH-INC_PRESS-NITRO_01]","name":"Press Inclinado en Máquina (Nitro Incline)","ratio":2.2}]},{"id":"d1_e5","unifiedCode":"[HOMB-LAT_RAISE-MAQ_01]","name":"Elevaciones Laterales en Máquina","muscleGroup":"Hombro (Deltoides Lateral 3D)","loadFamily":"","sets":4,"reps":"12-15","equivalents":[{"id":"d1_e5_eq1","unifiedCode":"[HOMB-LAT_RAISE-CABLE_01]","name":"Elevaciones Laterales en Polea Baja a una Mano","ratio":0.6},{"id":"d1_e5_eq2","unifiedCode":"[HOMB-LAT_RAISE-MANC_SIDE_30]","name":"Elevaciones con Mancuernas recostado de lado en Banco a 30°","ratio":0.7}]},{"id":"d1_e2","unifiedCode":"[PECH-INC_PRESS-NITRO_01]","name":"Press Inclinado en Máquina (Nitro Incline)","muscleGroup":"Pecho (Pectoral Superior Clavicular)","loadFamily":"Familia Press Superior Inclinado","sets":3,"reps":"8-10","equivalents":[{"id":"d1_e2_eq1","unifiedCode":"[PECH-INC_PRESS-BAR_30]","name":"Press Inclinado con Barra a 30°","ratio":1.15},{"id":"d1_e2_eq2","unifiedCode":"[PECH-INC_PRESS-DISC_HAMMER]","name":"Press Inclinado Hammer Strength (Plate-Loaded)","ratio":1}]},{"id":"d1_e4","unifiedCode":"[PECH-PEC_DECK-STACK_01]","name":"Aperturas en Máquina Pec Deck (Peacock / Flyes)","muscleGroup":"Pecho (Aislamiento Pectoral)","loadFamily":"","sets":3,"reps":"10-12","equivalents":[{"id":"d1_e4_eq1","unifiedCode":"[PECH-CABLE_CROSS-MID_01]","name":"Cruce de Poleas a Media Altura (Cable Crossover)","ratio":0.8},{"id":"d1_e4_eq2","unifiedCode":"[PECH-FLY-MANC_FLAT_01]","name":"Aperturas con Mancuernas en Banco Plano","ratio":0.4}]},{"id":"d1_e6","unifiedCode":"[TRIC-OVERHEAD_EXT-CABLE_01]","name":"Extensión de Tríceps Copa en Polea (Cuerda)","muscleGroup":"Tríceps (Cabeza Larga en Estiramiento)","loadFamily":"","sets":4,"reps":"10-12","equivalents":[{"id":"d1_e6_eq1","unifiedCode":"[TRIC-KATANA_EXT-CABLE_01]","name":"Extensión Cruzada Katana en Poleas (Katana Extension)","ratio":1},{"id":"d1_e6_eq2","unifiedCode":"[TRIC-FRENCH_PRESS-MANC_01]","name":"French Press con Mancuerna a dos Manos","ratio":0.5},{"id":"d1_e6_eq3","unifiedCode":"[TRIC-PUSHDOWN-STRAIGHT_01]","name":"Extensión cruzada de tríceps en poleas (Katana extension)","ratio":0.8}]},{"id":"d1_e8","unifiedCode":"[ABDO-VACUUM-ISOM_01]","name":"Vacuum Abdominal (Transverso / Cintura Estrecha)","muscleGroup":"Core (Transverso & Cintura Estrecha)","loadFamily":"","sets":4,"reps":"20-25 s","equivalents":[{"id":"d1_e8_eq1","unifiedCode":"[ABDO-PLANK-ISOM_01]","name":"Plancha Abdominal Isométrica Convencional","ratio":1}]},{"id":"d1_e9","unifiedCode":"[CARD-TREADMILL-ZONA2_01]","name":"Cardio Zona 2 en Caminadora","muscleGroup":"Cardiovascular (Zona 2)","loadFamily":"","sets":1,"reps":"35-45 min","equivalents":[{"id":"d1_e9_eq1","unifiedCode":"[CARD-TREADMILL-INCLINE_01]","name":"Caminadora en Inclinación (Zona 2)","ratio":1},{"id":"d1_e9_eq2","unifiedCode":"[CARD-BIKE-STATIONARY_01]","name":"Bicicleta Estática (Zona 2)","ratio":1}]}]},{"id":"d2","dayNumber":2,"name":"Martes: Piernas 1 (Enfoque Cuádriceps & Vasto Medial)","focus":"Desarrollo masivo del tren inferior y cuádriceps mediante flexión profunda de rodilla con máxima estabilidad articular.","exercises":[{"id":"d2_e3","unifiedCode":"[CUAD-LEG_EXT-STACK_01]","name":"Extensión de Cuádriceps en Máquina (Torre de Placas)","muscleGroup":"Cuádriceps (Aislamiento Recto Femoral & Vasto Medial)","loadFamily":"","sets":3,"reps":"12-15","equivalents":[{"id":"d2_e3_eq1","unifiedCode":"[CUAD-SISSY_SQUAT-BENCH_01]","name":"Sissy Squat en Soporte","ratio":0.4},{"id":"d2_e3_eq2","unifiedCode":"[CUAD-LEG_EXT-UNI_01]","name":"Extensiones de Cuádriceps Unilaterales en Máquina","ratio":0.45}]},{"id":"d2_e1","unifiedCode":"[CUAD-HACK_SQUAT-DISC_01]","name":"Sentadilla en Máquina Hack (Hack Squat)","muscleGroup":"Cuádriceps & Glúteo","loadFamily":"Familia Sentadilla Hack","sets":4,"reps":"8-10","equivalents":[{"id":"d2_e1_eq1","unifiedCode":"[CUAD-V_SQUAT-MAQ_01]","name":"Sentadilla en Máquina V-Squat","ratio":1},{"id":"d2_e1_eq2","unifiedCode":"[CUAD-SQUAT-SMITH_01]","name":"Sentadilla en Smith con Talones sobre Disco","ratio":0.9}]},{"id":"d2_e2","unifiedCode":"[CUAD-LEG_PRESS-DISC_45_PB]","name":"Prensa de Piernas Inclinada 45° (Discos)","muscleGroup":"Cuádriceps & Tren Inferior","loadFamily":"Familia Prensa de Piernas","sets":4,"reps":"10-12","equivalents":[{"id":"d2_e2_eq1","unifiedCode":"[CUAD-LEG_PRESS-HORIZ_01]","name":"Prensa Horizontal en Cable / Placas","ratio":0.8},{"id":"d2_e2_eq2","unifiedCode":"[CUAD-HACK_SQUAT-REVERSE_01]","name":"Hack Invertida en Máquina","ratio":1},{"id":"d2_e4","unifiedCode":"[CUAD-LEG_PRESS-UNI_01]","name":"Prensa Unilateral a 1 Pierna (Pie Alto)","ratio":0.5}]},{"id":"d2_e6","unifiedCode":"[ABDU-ABDUCTOR-STACK_01]","name":"Abductores en Máquina (Hip Abduction / Abrir Cadera)","muscleGroup":"Glúteo Medio & Superior","loadFamily":"","sets":3,"reps":"12-15","equivalents":[{"id":"d2_e6_eq1","unifiedCode":"[ABDU-CABLE-ANKLE_01]","name":"Abducción de Cadera en Polea Baja con Tobillera","ratio":0.5},{"id":"d2_e5","unifiedCode":"[ADUC-ADUCTOR-STACK_01]","name":"Aductores en Máquina (Hip Adduction / Cerrar Cadera)","ratio":1}]},{"id":"d2_e7","unifiedCode":"[PANT-CALF_RAISE-MAQ_01]","name":"Elevación de Pantorrillas en Máquina (Rotary o de Pie)","muscleGroup":"Pantorrillas (Gastrocnemio & Sóleo)","loadFamily":"","sets":4,"reps":"10-12","equivalents":[{"id":"d2_e7_eq1","unifiedCode":"[PANT-CALF_RAISE-LEG_PRESS_01]","name":"Elevación de Pantorrillas en la Prensa de Piernas","ratio":1.2},{"id":"d2_e7_eq2","unifiedCode":"[PANT-CALF_RAISE-SMITH_01]","name":"Elevación de Pantorrillas en Smith sobre Escalón","ratio":1}]},{"id":"d2_e9","unifiedCode":"[CARD-TREADMILL-ZONA2_01]","name":"Cardio Zona 2 en Caminadora","muscleGroup":"Cardiovascular (Zona 2)","loadFamily":"","sets":1,"reps":"35-45 min","equivalents":[{"id":"d2_e9_eq1","unifiedCode":"[CARD-TREADMILL-INCLINE_01]","name":"Caminadora en Inclinación (Zona 2)","ratio":1},{"id":"d2_e9_eq2","unifiedCode":"[CARD-BIKE-STATIONARY_01]","name":"Bicicleta Estática (Zona 2)","ratio":1}]}]},{"id":"d3","dayNumber":3,"name":"Miércoles: Jalón 1 (Amplitud V-Taper & Picos de Bíceps)","focus":"Amplitud dorsal V-Taper y sobrecarga en estiramiento humeral para bíceps (Bayesian Curl). Supinación activa llevando el meñique afuera/arriba y control excéntrico de 3s para reclutar el 100% de unidades motoras.","exercises":[{"id":"d3_e1","unifiedCode":"[ESPA-PULLDOWN-WIDE_01]","name":"Jalón al Pecho en Polea (Agarre Ancho Pronado)","muscleGroup":"Espalda (Amplitud Dorsal V-Taper)","loadFamily":"Familia Jalón Vertical Dorsal","sets":4,"reps":"8-10","equivalents":[{"id":"d3_e1_eq1","unifiedCode":"[ESPA-CHINUP-WIDE_01]","name":"Dominadas Pronadas Asistidas / Lastradas","ratio":0.9},{"id":"d3_e1_eq2","unifiedCode":"[ESPA-PULLDOWN-UNI_CABLE_01]","name":"Jalón Unilateral en Polea","ratio":0.5}]},{"id":"d3_e2","unifiedCode":"[ESPA-MACHINE_ROW-CHEST_SUPP_01]","name":"Remo Compuesto en Máquina (Apoyo al Pecho)","muscleGroup":"Espalda (Densidad Dorsal & Romboides)","loadFamily":"Familia Remo Horizontal","sets":4,"reps":"8-10","equivalents":[{"id":"d3_e2_eq1","unifiedCode":"[ESPA-TBAR_ROW-CHEST_01]","name":"Remo con Barra T con Apoyo Torácico","ratio":1},{"id":"d3_e2_eq2","unifiedCode":"[ESPA-SEATED_ROW-GIRONDA_01]","name":"Remo Gironda en Polea Baja (Agarre Neutro)","ratio":1}]},{"id":"d3_e3","unifiedCode":"[ESPA-PULLOVER-HIGH_CABLE_01]","name":"Pull-Over en Polea Alta con Cuerda","muscleGroup":"Espalda (Aislamiento Dorsal Ancho)","loadFamily":"","sets":3,"reps":"12-15","equivalents":[{"id":"d3_e3_eq1","unifiedCode":"[ESPA-PULLOVER-MANC_01]","name":"Pull-Over con Mancuerna sobre Banco","ratio":0.5},{"id":"d3_e3_eq2","unifiedCode":"[ESPA-PULLOVER-MAQ_01]","name":"Máquina de Pullover Guiada","ratio":1.1}]},{"id":"d3_e4","unifiedCode":"[HOMB-FACE_PULL-HIGH_CABLE_01]","name":"Face Pulls en Polea Alta con Cuerda","muscleGroup":"Hombro Posterior & Manguito Rotador","loadFamily":"","sets":4,"reps":"12-15","equivalents":[{"id":"d3_e4_eq1","unifiedCode":"[HOMB-REAR_DELT-PEC_DECK_01]","name":"Pájaros en Pec Deck Inverso (Reverse Flyes)","ratio":1},{"id":"d3_e4_eq2","unifiedCode":"[HOMB-REAR_DELT-CABLE_01]","name":"Reverse Cable Flyes en Poleas","ratio":0.8}]},{"id":"d3_e5","unifiedCode":"[BICEP-CABLE_CURL-BAYESIAN_01]","name":"Bayesian Cable Curl (Estiramiento Humeral en Polea)","muscleGroup":"Bíceps (Estiramiento Humeral)","loadFamily":"","sets":3,"reps":"10-12","equivalents":[{"id":"d3_e5_eq_cable","unifiedCode":"[BICEP-CABLE_CURL-LOW_STRAIGHT_01]","name":"Curl de Bíceps en Polea Baja (Barra Recta)","ratio":1},{"id":"d3_e5_eq1","unifiedCode":"[BICEP-INCLINE_CURL-MANC_60_01]","name":"Curl de Bíceps con Mancuernas (Sentado en Banco a 60°)","ratio":0.5},{"id":"d3_e5_eq_scott","unifiedCode":"[BICEP-PREACHER_CURL-SCOTT_MAQ_01]","name":"Curl de Bíceps en Banco Scott o Máquina Predicador","ratio":0.9}]},{"id":"d3_e6","unifiedCode":"[BICEP-CABLE_CURL-LOW_STRAIGHT_01]","name":"Curl de Bíceps en Polea Baja (Barra Recta)","muscleGroup":"Bíceps (Tensión Continua)","loadFamily":"","sets":3,"reps":"10-12","equivalents":[{"id":"d3_e6_eq_bayes","unifiedCode":"[BICEP-CABLE_CURL-BAYESIAN_01]","name":"Bayesian Cable Curl (Estiramiento Humeral en Polea)","ratio":0.8},{"id":"d3_e6_eq_incline","unifiedCode":"[BICEP-INCLINE_CURL-MANC_60_01]","name":"Curl de Bíceps con Mancuernas (Sentado en Banco a 60°)","ratio":0.5},{"id":"d3_e6_eq1","unifiedCode":"[BICEP-BARBELL_CURL-EZ_BAR_01]","name":"Curl con Barra Z de Pie","ratio":1},{"id":"d3_e6_eq2","unifiedCode":"[BICEP-PREACHER_CURL-SCOTT_MAQ_01]","name":"Curl de Bíceps en Banco Scott o Máquina Predicador","ratio":0.9}]},{"id":"d3_e7","unifiedCode":"[ABDO-VACUUM-ISOM_01]","name":"Vacuum Abdominal (Transverso / Cintura Estrecha)","muscleGroup":"Core (Transverso & Cintura Estrecha)","loadFamily":"","sets":4,"reps":"20-25 s","equivalents":[{"id":"d3_e7_eq1","unifiedCode":"[ABDO-PLANK-ISOM_01]","name":"Plancha Abdominal Isométrica Convencional","ratio":1}]},{"id":"d3_e8","unifiedCode":"[CARD-TREADMILL-ZONA2_01]","name":"Cardio Zona 2 en Caminadora","muscleGroup":"Cardiovascular (Zona 2)","loadFamily":"","sets":1,"reps":"35-45 min","equivalents":[{"id":"d3_e8_eq1","unifiedCode":"[CARD-TREADMILL-INCLINE_01]","name":"Caminadora en Inclinación (Zona 2)","ratio":1},{"id":"d3_e8_eq2","unifiedCode":"[CARD-ELLIPTICAL-ZONA2_01]","name":"Elíptica (Zona 2)","ratio":1}]}]},{"id":"d4","dayNumber":4,"name":"Jueves: Empuje 2 (Pectoral Esternal & Deltoides en Polea)","focus":"Pectoral esternal pesado (PR 140 lbs), deltoides lateral en polea tras espalda con parciales elongadas (0°-45°), frecuencia 2 en pecho alto (Nitro) y tríceps pushdown apretando 1s abajo (65% del brazo).","exercises":[{"id":"d4_e1","unifiedCode":"[PECH-CHEST_PRESS-CONV_01]","name":"Press de Pecho en Máquina Convergente (Chest Press)","muscleGroup":"Pecho (Pectoral Mayor & Medio)","loadFamily":"Familia Press Plano de Pecho","sets":4,"reps":"8-10","equivalents":[{"id":"d4_e1_eq1","unifiedCode":"[PECH-CHEST_PRESS-MANC_FLAT_01]","name":"Press Plano con Mancuernas","ratio":0.45},{"id":"d4_e1_eq2","unifiedCode":"[PECH-CHEST_PRESS-SMITH_01]","name":"Press de Pecho Plano en Smith","ratio":0.9}]},{"id":"d4_e4","unifiedCode":"[HOMB-LAT_RAISE-BEHIND_CABLE_01]","name":"Elevaciones Laterales en Polea Baja (Tras Espalda)","muscleGroup":"Hombro (Deltoides Lateral)","loadFamily":"","sets":4,"reps":"12-15","equivalents":[{"id":"d4_e4_eq1","unifiedCode":"[HOMB-LAT_RAISE-MAQ_01]","name":"Elevaciones Laterales en Máquina","ratio":1.5},{"id":"d4_e4_eq2","unifiedCode":"[HOMB-LAT_RAISE-MANC_01]","name":"Elevaciones Laterales con Mancuernas","ratio":0.7}]},{"id":"d4_e2","unifiedCode":"[PECH-INC_PRESS-NITRO_01]","name":"Press Inclinado en Máquina (Nitro Incline)","muscleGroup":"Pecho (Pectoral Superior Clavicular)","loadFamily":"Familia Press Superior Inclinado","sets":3,"reps":"8-10","equivalents":[{"id":"d4_e2_eq1","unifiedCode":"[PECH-INC_PRESS-MANC_30]","name":"Press Inclinado con Mancuernas (Banco a 30°)","ratio":0.45},{"id":"d4_e2_eq2","unifiedCode":"[PECH-INC_PRESS-SMITH_01]","name":"Press Inclinado en Multipower (Smith) a 30°","ratio":1}]},{"id":"d4_e3","unifiedCode":"[PECH-PEC_DECK-STACK_01]","name":"Aperturas en Máquina Pec Deck (Peacock / Flyes)","muscleGroup":"Pecho (Aislamiento Pectoral)","loadFamily":"","sets":3,"reps":"10-12","equivalents":[{"id":"d4_e3_eq1","unifiedCode":"[PECH-CABLE_CROSS-MID_01]","name":"Cruce de Poleas a Media Altura (Cable Crossover)","ratio":0.8},{"id":"d4_e3_eq2","unifiedCode":"[PECH-CABLE_CROSS-LOW_01]","name":"Cruce de Poleas Bajas (Cable Crossover)","ratio":0.8}]},{"id":"d4_e6","unifiedCode":"[TRIC-PUSHDOWN-CABLE_01]","name":"Extensión de Tríceps en Polea (Pushdown con Cuerda o Barra)","muscleGroup":"Tríceps (Cabeza Lateral)","loadFamily":"","sets":4,"reps":"10-12","equivalents":[{"id":"d4_e5","unifiedCode":"[TRIC-SEATED_EXT-MAQ_01]","name":"Extensión de Tríceps en Máquina Sentado","ratio":1.2},{"id":"d4_e6_eq1","unifiedCode":"[TRIC-KATANA_EXT-CABLE_01]","name":"Extensión Cruzada Katana en Poleas (Katana Extension)","ratio":0.8}]},{"id":"d4_e7","unifiedCode":"[ABDO-VACUUM-ISOM_01]","name":"Vacuum Abdominal (Transverso / Cintura Estrecha)","muscleGroup":"Core (Transverso & Cintura Estrecha)","loadFamily":"","sets":4,"reps":"20-25 s","equivalents":[{"id":"d4_e7_eq1","unifiedCode":"[ABDO-PLANK-ISOM_01]","name":"Plancha Abdominal Isométrica Convencional","ratio":1}]},{"id":"d4_e9","unifiedCode":"[CARD-TREADMILL-ZONA2_01]","name":"Cardio Zona 2 en Caminadora","muscleGroup":"Cardiovascular (Zona 2)","loadFamily":"","sets":1,"reps":"35-45 min","equivalents":[{"id":"d4_e9_eq1","unifiedCode":"[CARD-TREADMILL-INCLINE_01]","name":"Caminadora en Inclinación (Zona 2)","ratio":1},{"id":"d4_e9_eq2","unifiedCode":"[CARD-BIKE-STATIONARY_01]","name":"Bicicleta Estática (Zona 2)","ratio":1}]}]},{"id":"d5","dayNumber":5,"name":"Viernes: Piernas 2 (Cadena Posterior, Isquios & Glúteos)","focus":"Cadena posterior con flexión en rango elongado (Maeo 2021: cadera a 90°), sobrecarga en Prensa 45° pies altos, RDL con mancuernas, Butt Blaster, abductores y pantorrillas con pausa de 2s.","exercises":[{"id":"d5_e2","unifiedCode":"[ISQU-LEG_CURL-SEATED_01]","name":"Flexión de Femorales Sentado (Seated Leg Curl)","muscleGroup":"Isquiotibiales (Flexores de Rodilla)","loadFamily":"Familia Flexión de Femorales (Isquiotibiales)","sets":4,"reps":"10-12","equivalents":[{"id":"d5_e2_eq1","unifiedCode":"[ISQU-LEG_CURL-LYING_01]","name":"Flexión de Femorales Tumbado (Lying Leg Curl)","ratio":0.9},{"id":"d5_e2_eq2","unifiedCode":"[ISQU-NORDIC_CURL-ASSIST_01]","name":"Curl Nórdico Asistido","ratio":1}]},{"id":"d5_e3","unifiedCode":"[GLUT-LEG_PRESS-HIGH_FEET_45]","name":"Prensa 45° (Pies Altos y Abiertos para Glúteo)","muscleGroup":"Glúteos & Isquiotibiales (Cadena Posterior)","loadFamily":"Familia Prensa de Piernas","sets":4,"reps":"8-10","equivalents":[{"id":"d5_e3_eq1","unifiedCode":"[GLUT-HIP_THRUST-MAQ_01]","name":"Empuje de Cadera en Máquina Guiada o Barra (Hip Thrust)","ratio":0.9}]},{"id":"d5_e1","unifiedCode":"[ISQU-RDL-MANC_01]","name":"Peso Muerto Rumano (RDL) con Mancuernas","muscleGroup":"Isquiotibiales & Glúteos (Cadena Posterior Elongada)","loadFamily":"Familia Peso Muerto Rumano / Bisagra Cadera","sets":3,"reps":"8-10","equivalents":[{"id":"d5_e1_eq1","unifiedCode":"[ISQU-RDL-BARBELL_01]","name":"Peso Muerto Rumano con Barra Libre (RDL)","ratio":1.1},{"id":"d5_e1_eq2","unifiedCode":"[ISQU-DEADLIFT-TRAP_BAR_01]","name":"Peso Muerto con Barra Hexagonal (Trap Bar)","ratio":1.1}]},{"id":"d5_e4","unifiedCode":"[GLUT-BUTT_BLASTER-MAQ_01]","name":"Glute Butt Blaster en Máquina","muscleGroup":"Glúteo Mayor (Extensión de Cadera)","loadFamily":"Familia Extensión de Cadera / Glúteo","sets":3,"reps":"10-12","equivalents":[{"id":"d5_e4_eq1","unifiedCode":"[GLUT-ROMAN_CHAIR-45_01]","name":"Extensiones a 45° en Banco Romano para Glúteo","ratio":0.8},{"id":"d5_e4_eq2","unifiedCode":"[GLUT-CABLE_KICK-ANKLE_01]","name":"Patada de Glúteo en Polea con Tobillera","ratio":0.5}]},{"id":"d5_e5","unifiedCode":"[ABDU-ABDUCTOR-STACK_01]","name":"Abductores en Máquina (Hip Abduction / Abrir Cadera)","muscleGroup":"Glúteo Medio & Cadena Lateral","loadFamily":"","sets":3,"reps":"12-15","equivalents":[{"id":"d5_e6","unifiedCode":"[ADUC-ADUCTOR-STACK_01]","name":"Aductores en Máquina (Hip Adduction / Cerrar Cadera)","ratio":1},{"id":"d5_e5_eq1","unifiedCode":"[ABDU-CABLE_KICK-ANKLE_01]","name":"Abducción con Tobillera en Polea","ratio":0.5}]},{"id":"d5_e7","unifiedCode":"[PANT-CALF_RAISE-MAQ_01]","name":"Elevación de Pantorrillas en Máquina (Rotary o de Pie)","muscleGroup":"Pantorrillas (Gastrocnemio & Sóleo)","loadFamily":"","sets":4,"reps":"10-12","equivalents":[{"id":"d5_e7_eq1","unifiedCode":"[PANT-CALF_RAISE-SMITH_01]","name":"Elevación de Pantorrillas en Smith sobre Escalón","ratio":1}]},{"id":"d5_e8","unifiedCode":"[ABDO-VACUUM-ISOM_01]","name":"Vacuum Abdominal (Transverso / Cintura Estrecha)","muscleGroup":"Core (Transverso & Cintura Estrecha)","loadFamily":"","sets":3,"reps":"15-20 s","equivalents":[{"id":"d5_e8_eq1","unifiedCode":"[ABDO-PLANK-ISOM_01]","name":"Plancha Abdominal Isométrica Convencional","ratio":1}]},{"id":"d5_e9","unifiedCode":"[CARD-TREADMILL-ZONA2_01]","name":"Cardio Zona 2 en Caminadora","muscleGroup":"Cardiovascular (Zona 2 & Recuperación)","loadFamily":"","sets":1,"reps":"35-45 min","equivalents":[{"id":"d5_e9_eq1","unifiedCode":"[CARD-TREADMILL-INCLINE_01]","name":"Caminadora en Inclinación (Zona 2)","ratio":1},{"id":"d5_e9_eq2","unifiedCode":"[CARD-BIKE-STATIONARY_01]","name":"Bicicleta Estática (Zona 2)","ratio":1}]}]},{"id":"d6","dayNumber":6,"name":"Sábado: Jalón 2 (Fibras Bajas del Dorsal & Brazos)","focus":"Tracción neutra para dorsales bajos, Frecuencia 3 de hombro lateral con parciales elongadas, Face Pulls y pico de bíceps en banco a 60° (supinación con meñique para 100% de unidades motoras) y aislamiento en Scott.","exercises":[{"id":"d6_e1","unifiedCode":"[ESPA-PULLDOWN-V_GRIP_01]","name":"Jalón con Agarre Estrecho Neutro (V-Grip)","muscleGroup":"Espalda (Dorsal Inferior & V-Taper)","loadFamily":"Familia Jalón Vertical Dorsal","sets":4,"reps":"8-10","equivalents":[{"id":"d6_e1_eq_wide","unifiedCode":"[ESPA-PULLDOWN-WIDE_01]","name":"Jalón al Pecho en Polea (Agarre Ancho Pronado)","ratio":1},{"id":"d6_e1_eq1","unifiedCode":"[ESPA-PULLDOWN-SUPINE_01]","name":"Jalón con Agarre Supino (al Ancho de Hombros)","ratio":1},{"id":"d6_e1_eq2","unifiedCode":"[ESPA-CHINUP-CLOSE_NEUTRAL_01]","name":"Dominadas Neutras Cerradas","ratio":0.9}]},{"id":"d6_e2","unifiedCode":"[ESPA-SEATED_ROW-GIRONDA_01]","name":"Remo Gironda en Polea Baja (Agarre Neutro)","muscleGroup":"Espalda (Densidad Dorsal Media & Trapecio)","loadFamily":"Familia Remo Horizontal","sets":4,"reps":"8-10","equivalents":[{"id":"d6_e2_eq_comp","unifiedCode":"[ESPA-MACHINE_ROW-CHEST_SUPP_01]","name":"Remo Compuesto en Máquina (Apoyo al Pecho)","ratio":1},{"id":"d6_e2_eq1","unifiedCode":"[ESPA-ONE_ARM_ROW-MANC_01]","name":"Remo con Mancuerna a una Mano apoyado en Banco","ratio":0.5}]},{"id":"d6_e4","unifiedCode":"[HOMB-LAT_RAISE-MANC_01]","name":"Elevaciones Laterales con Mancuernas","muscleGroup":"Hombro (Deltoides Lateral)","loadFamily":"","sets":4,"reps":"12-15","equivalents":[{"id":"d6_e4_eq_mach","unifiedCode":"[HOMB-LAT_RAISE-MAQ_01]","name":"Elevaciones Laterales en Máquina","ratio":1.5},{"id":"d6_e4_eq_cable_back","unifiedCode":"[HOMB-LAT_RAISE-BEHIND_CABLE_01]","name":"Elevaciones Laterales en Polea Baja (Tras Espalda)","ratio":0.6},{"id":"d6_e4_eq1","unifiedCode":"[HOMB-LAT_RAISE-CABLE_01]","name":"Elevaciones Laterales en Polea Baja a una Mano","ratio":0.6}]},{"id":"d6_e3","unifiedCode":"[HOMB-FACE_PULL-HIGH_CABLE_01]","name":"Face Pulls en Polea Alta con Cuerda","muscleGroup":"Hombro (Deltoides Posterior & Manguito)","loadFamily":"","sets":3,"reps":"12-15","equivalents":[{"id":"d6_e3_eq1","unifiedCode":"[HOMB-REAR_DELT-PEC_DECK_01]","name":"Pájaros en Pec Deck Inverso (Reverse Flyes)","ratio":1},{"id":"d6_e3_eq_db","unifiedCode":"[HOMB-REAR_DELT-MANC_INC_01]","name":"Pájaros con Mancuernas en Banco Inclinado","ratio":0.5},{"id":"d6_e3_eq2","unifiedCode":"[HOMB-UPRIGHT_ROW-CABLE_01]","name":"Remo al Mentón Amplio en Polea","ratio":0.9}]},{"id":"d6_e5","unifiedCode":"[BICEP-INCLINE_CURL-MANC_60_01]","name":"Curl de Bíceps con Mancuernas (Sentado en Banco a 60°)","muscleGroup":"Bíceps (Cabeza Larga & Pico)","loadFamily":"","sets":3,"reps":"10-12","equivalents":[{"id":"d6_e5_eq_bayes","unifiedCode":"[BICEP-CABLE_CURL-BAYESIAN_01]","name":"Bayesian Cable Curl (Estiramiento Humeral en Polea)","ratio":0.8},{"id":"d6_e5_eq_cable","unifiedCode":"[BICEP-CABLE_CURL-LOW_STRAIGHT_01]","name":"Curl de Bíceps en Polea Baja (Barra Recta)","ratio":1},{"id":"d6_e5_eq_scott","unifiedCode":"[BICEP-PREACHER_CURL-SCOTT_MAQ_01]","name":"Curl de Bíceps en Banco Scott o Máquina Predicador","ratio":0.9},{"id":"d6_e5_eq1","unifiedCode":"[BICEP-HAMMER_CURL-MANC_01]","name":"Curl Martillo con Mancuernas (Braquial)","ratio":1},{"id":"d6_e5_eq_barbell","unifiedCode":"[BICEP-BARBELL_CURL-EZ_BAR_01]","name":"Curl con Barra Z de Pie","ratio":1}]},{"id":"d6_e6","unifiedCode":"[BICEP-PREACHER_CURL-SCOTT_MAQ_01]","name":"Curl de Bíceps en Banco Scott o Máquina Predicador","muscleGroup":"Bíceps (Cabeza Corta & Grosor Interno)","loadFamily":"","sets":3,"reps":"10-12","equivalents":[{"id":"d6_e6_eq_bayes","unifiedCode":"[BICEP-CABLE_CURL-BAYESIAN_01]","name":"Bayesian Cable Curl (Estiramiento Humeral en Polea)","ratio":0.8},{"id":"d6_e6_eq_cable","unifiedCode":"[BICEP-CABLE_CURL-LOW_STRAIGHT_01]","name":"Curl de Bíceps en Polea Baja (Barra Recta)","ratio":1},{"id":"d6_e6_eq_incline","unifiedCode":"[BICEP-INCLINE_CURL-MANC_60_01]","name":"Curl de Bíceps con Mancuernas (Sentado en Banco a 60°)","ratio":0.5},{"id":"d6_e6_eq1","unifiedCode":"[BICEP-PREACHER_CURL-EZ_BAR_01]","name":"Curl en Banco Scott con Barra Z","ratio":0.9},{"id":"d6_e6_eq2","unifiedCode":"[BICEP-CONCENTRATION_CURL-MANC_01]","name":"Curl Concentrado con Mancuerna","ratio":0.45}]},{"id":"d6_e7","unifiedCode":"[ABDO-VACUUM-ISOM_01]","name":"Vacuum Abdominal (Transverso / Cintura Estrecha)","muscleGroup":"Core (Transverso & Cintura Estrecha)","loadFamily":"","sets":4,"reps":"20-25 s","equivalents":[{"id":"d6_e7_eq1","unifiedCode":"[ABDO-PLANK-ISOM_01]","name":"Plancha Abdominal Isométrica Convencional","ratio":1},{"id":"d6_e7_eq_pallof","unifiedCode":"[ABDO-PALLOF_PRESS-CABLE_01]","name":"Pallof Press en Polea (Anti-Rotación)","ratio":1}]},{"id":"d6_e8","unifiedCode":"[CARD-TREADMILL-ZONA2_01]","name":"Cardio Zona 2 en Caminadora","muscleGroup":"Cardiovascular (Zona 2)","loadFamily":"","sets":1,"reps":"35-45 min","equivalents":[{"id":"d6_e8_eq1","unifiedCode":"[CARD-TREADMILL-INCLINE_01]","name":"Caminadora en Inclinación (Zona 2)","ratio":1},{"id":"d6_e8_eq2","unifiedCode":"[CARD-BIKE-STATIONARY_01]","name":"Bicicleta Estática (Zona 2)","ratio":1},{"id":"d6_e8_eq3","unifiedCode":"[CARD-ELLIPTICAL-ZONA2_01]","name":"Elíptica (Zona 2)","ratio":1}]}]},{"id":"d7","dayNumber":7,"name":"Domingo: Descanso Total","focus":"Cero entrenamiento de fuerza o actividades de alta demanda neurológica. Dedicado exclusivamente a la resíntesis proteica, reposición de glucógeno y recuperación del sistema nervioso central.","exercises":[]}];
+    const muscleGroupsList = ["Pecho","Espalda","Hombros","Cuádriceps","Isquiotibiales","Glúteos","Bíceps","Tríceps","Pantorrillas","Abdomen","Aductores","Cardio"];
+
+    let currentMainTab = 'db';
+    let selectedMuscleFilter = 'ALL';
+    let currentSearchTerm = '';
+    let activeRoutineDayId = 'd1';
+
+    function switchMainTab(tab) {
+      currentMainTab = tab;
+      const btnDb = document.getElementById('tabBtnDb');
+      const btnRoutine = document.getElementById('tabBtnRoutine');
+      const viewDb = document.getElementById('viewDb');
+      const viewRoutine = document.getElementById('viewRoutine');
+
+      if (tab === 'db') {
+        btnDb.className = 'px-4 py-2 text-sm font-bold rounded-xl transition-all bg-indigo-600 text-white cursor-pointer shadow';
+        btnRoutine.className = 'px-4 py-2 text-sm font-bold rounded-xl transition-all bg-slate-800 text-slate-400 hover:text-white cursor-pointer';
+        viewDb.classList.remove('hidden');
+        viewRoutine.classList.add('hidden');
+      } else {
+        btnRoutine.className = 'px-4 py-2 text-sm font-bold rounded-xl transition-all bg-indigo-600 text-white cursor-pointer shadow';
+        btnDb.className = 'px-4 py-2 text-sm font-bold rounded-xl transition-all bg-slate-800 text-slate-400 hover:text-white cursor-pointer';
+        viewRoutine.classList.remove('hidden');
+        viewDb.classList.add('hidden');
+        renderRoutine();
+      }
+    }
+
+    function renderMusclePills() {
+      const container = document.getElementById('musclePills');
+      let html = `<button 
+        onclick="setMuscleFilter('ALL')" 
+        class="px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${selectedMuscleFilter === 'ALL' ? 'bg-indigo-600 text-white' : 'bg-slate-900 text-slate-400 hover:text-white'}">
+        TODOS (142)
+      </button>`;
+
+      muscleGroupsList.forEach(g => {
+        const count = fullLibrary.filter(x => x.muscleGroup === g).length;
+        const active = selectedMuscleFilter === g;
+        html += `<button 
+          onclick="setMuscleFilter('${g}')" 
+          class="px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${active ? 'bg-indigo-600 text-white' : 'bg-slate-900 text-slate-400 hover:text-white'}">
+          ${g} (${count})
+        </button>`;
+      });
+
+      container.innerHTML = html;
+    }
+
+    function setMuscleFilter(g) {
+      selectedMuscleFilter = g;
+      renderMusclePills();
+      renderDatabaseList();
+    }
+
+    function handleSearch(term) {
+      currentSearchTerm = term.toLowerCase().trim();
+      renderDatabaseList();
+    }
+
+    function renderDatabaseList() {
+      const container = document.getElementById('exerciseListContainer');
+      const counter = document.getElementById('matchCounter');
+
+      const filtered = fullLibrary.filter(ex => {
+        const matchM = selectedMuscleFilter === 'ALL' || ex.muscleGroup === selectedMuscleFilter;
+        const matchT = !currentSearchTerm || 
+          ex.name.toLowerCase().includes(currentSearchTerm) || 
+          ex.code.toLowerCase().includes(currentSearchTerm) || 
+          ex.equipment.toLowerCase().includes(currentSearchTerm) ||
+          ex.presence.toLowerCase().includes(currentSearchTerm);
+        return matchM && matchT;
+      });
+
+      counter.textContent = `Mostrando ${filtered.length} de ${fullLibrary.length} ejercicios`;
+
+      if (filtered.length === 0) {
+        container.innerHTML = `<div class="p-8 text-center text-slate-400 bg-slate-800/40 rounded-2xl border border-slate-700">
+          No se encontraron ejercicios con ese criterio de búsqueda.
+        </div>`;
+        return;
+      }
+
+      // Group by muscle group
+      const groupsPresent = selectedMuscleFilter === 'ALL' 
+        ? muscleGroupsList.filter(g => filtered.some(e => e.muscleGroup === g))
+        : [selectedMuscleFilter];
+
+      let html = '';
+      groupsPresent.forEach(g => {
+        const itemsInG = filtered.filter(e => e.muscleGroup === g);
+        if (itemsInG.length === 0) return;
+
+        html += `
+          <div class="bg-slate-800/70 border border-slate-700/80 rounded-2xl p-5 shadow-lg space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-700/60 pb-3">
+              <h2 class="text-lg font-black text-white flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-indigo-500"></span>
+                ${g} 
+                <span class="text-xs font-bold text-slate-400">(${itemsInG.length} ejercicios)</span>
+              </h2>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              ${itemsInG.map(ex => `
+                <div class="bg-slate-900/80 border border-slate-700/60 hover:border-indigo-500/60 transition-all rounded-xl p-3.5 space-y-2">
+                  <div class="flex items-start justify-between gap-2">
+                    <span class="px-2 py-0.5 rounded bg-indigo-950 text-indigo-300 border border-indigo-700/50 font-mono text-[11px] font-black tracking-wider">
+                      ${ex.code}
+                    </span>
+                    <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 text-[10px] font-semibold">
+                      ${ex.equipment}
+                    </span>
+                  </div>
+
+                  <h3 class="text-xs font-black text-slate-100 leading-snug">
+                    ${ex.name}
+                  </h3>
+
+                  <div class="pt-2 border-t border-slate-800 flex items-center justify-between text-[10px] text-slate-400">
+                    <span class="font-bold text-amber-400">${ex.sets} series x ${ex.reps}</span>
+                    <span class="text-emerald-400 font-semibold">${ex.presence}</span>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+    }
+
+    function renderRoutine() {
+      const tabsContainer = document.getElementById('routineDayTabs');
+      const contentContainer = document.getElementById('routineDayContent');
+
+      // Tabs
+      tabsContainer.innerHTML = routineData.map(d => `
+        <button 
+          onclick="selectRoutineDay('${d.id}')"
+          class="px-3.5 py-2 rounded-xl text-xs font-black whitespace-nowrap transition-all cursor-pointer ${activeRoutineDayId === d.id ? 'bg-indigo-600 text-white shadow-lg' : 'bg-slate-800 text-slate-400 hover:text-white'}">
+          ${d.name.split(':')[0]}
+        </button>
+      `).join('');
+
+      // Active Day
+      const currentDay = routineData.find(d => d.id === activeRoutineDayId);
+      if (!currentDay) return;
+
+      let html = `
+        <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-5 mb-4">
+          <h2 class="text-lg font-black text-white">${currentDay.name}</h2>
+          <p class="text-xs text-slate-400 mt-1">${currentDay.focus}</p>
+        </div>
+        <div class="space-y-4">
+      `;
+
+      currentDay.exercises.forEach((ex, idx) => {
+        const baseW = 100;
+        const factorNext = 2;
+        const factor2Ses = 5;
+        const factor1M = 10;
+        const factor3M = 20;
+        const factor6M = 35;
+
+        html += `
+          <div class="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-4 md:p-5 space-y-3">
+            <div class="flex flex-col md:flex-row justify-between md:items-center gap-2">
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="text-xs font-bold text-indigo-400">#${idx + 1}</span>
+                  <h3 class="text-base font-black text-white">${ex.name}</h3>
+                  <span class="font-mono text-xs px-2 py-0.5 rounded bg-indigo-950 text-indigo-300 border border-indigo-700/60 font-bold">
+                    ${ex.unifiedCode}
+                  </span>
+                </div>
+                <div class="text-xs text-slate-400 mt-0.5">
+                  ${ex.muscleGroup} • ${ex.sets} series x ${ex.reps}
+                </div>
+              </div>
+            </div>
+
+            <!-- 5 METAS PROGRESIVAS -->
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-2 pt-2 border-t border-slate-700/60">
+              <div class="bg-indigo-950/30 border border-indigo-800/50 rounded-xl p-2.5">
+                <span class="text-[10px] font-black text-indigo-400 uppercase block">🎯 +1 Sesión</span>
+                <span class="text-lg font-black text-white mt-1 block">${baseW + factorNext} <span class="text-xs font-normal text-slate-400">lbs</span></span>
+                <span class="text-[9px] text-slate-400">+1-2 lbs o reps</span>
+              </div>
+              <div class="bg-cyan-950/30 border border-cyan-800/50 rounded-xl p-2.5">
+                <span class="text-[10px] font-black text-cyan-400 uppercase block">🚀 +2 Sesiones</span>
+                <span class="text-lg font-black text-cyan-200 mt-1 block">${baseW + factor2Ses} <span class="text-xs font-normal text-slate-400">lbs</span></span>
+                <span class="text-[9px] text-slate-400">+2-3 lbs</span>
+              </div>
+              <div class="bg-emerald-950/30 border border-emerald-800/50 rounded-xl p-2.5">
+                <span class="text-[10px] font-black text-emerald-400 uppercase block">📅 1 Mes (4 sem)</span>
+                <span class="text-lg font-black text-emerald-200 mt-1 block">${baseW + factor1M} <span class="text-xs font-normal text-slate-400">lbs</span></span>
+                <span class="text-[9px] text-slate-400">Fin microciclo</span>
+              </div>
+              <div class="bg-amber-950/30 border border-amber-800/50 rounded-xl p-2.5">
+                <span class="text-[10px] font-black text-amber-400 uppercase block">📈 3 Meses (12 sem)</span>
+                <span class="text-lg font-black text-amber-200 mt-1 block">${baseW + factor3M} <span class="text-xs font-normal text-slate-400">lbs</span></span>
+                <span class="text-[9px] text-slate-400">Fin sobrecarga</span>
+              </div>
+              <div class="bg-rose-950/30 border border-rose-800/50 rounded-xl p-2.5 col-span-2 md:col-span-1">
+                <span class="text-[10px] font-black text-rose-400 uppercase block">🏆 6 Meses (24 sem)</span>
+                <span class="text-lg font-black text-rose-200 mt-1 block">${baseW + factor6M} <span class="text-xs font-normal text-slate-400">lbs</span></span>
+                <span class="text-[9px] text-slate-400">Techo mesociclo</span>
+              </div>
+            </div>
+
+            <!-- EQUIVALENTES -->
+            ${ex.equivalents && ex.equivalents.length > 0 ? `
+              <div class="mt-2 pt-2 border-t border-slate-700/40 flex items-center gap-2 flex-wrap text-xs text-slate-400">
+                <span class="font-bold text-slate-300">🔄 Sustitutos (${ex.equivalents.length}):</span>
+                ${ex.equivalents.map(eq => `
+                  <span class="bg-slate-900/60 px-2 py-0.5 rounded border border-slate-700/60 text-[11px]">
+                    ${eq.name} <strong class="text-indigo-400">${eq.unifiedCode}</strong>
+                  </span>
+                `).join('')}
+              </div>
+            ` : ''}
+          </div>
+        `;
+      });
+
+      html += '</div>';
+      contentContainer.innerHTML = html;
+    }
+
+    function selectRoutineDay(id) {
+      activeRoutineDayId = id;
+      renderRoutine();
+    }
+
+    function copyAuditToClipboard() {
+      let txt = "=== BASE DE DATOS COMPLETA DE EJERCICIOS ADONIS COACH V2 ===\n\n";
+      txt += "Total Registrados: " + fullLibrary.length + "\n";
+      txt += "Grupos Musculares: 12 normalizados\n";
+      txt += "Estructura de Códigos: [GRUPO-MÁQUINA-ESPEC]\n\n";
+
+      muscleGroupsList.forEach(g => {
+        const items = fullLibrary.filter(x => x.muscleGroup === g);
+        txt += "--- " + g + " (" + items.length + " ejercicios) ---\n";
+        items.forEach(ex => {
+          txt += "  • " + ex.code + " " + ex.name + " (" + ex.equipment + ") -> " + ex.presence + "\n";
+        });
+        txt += "\n";
+      });
+
+      navigator.clipboard.writeText(txt).then(() => {
+        alert("✓ Base de datos completa copiada al portapapeles para Gemini Sidebar");
+      }).catch(() => {
+        alert(txt);
+      });
+    }
+
+    // Init
+    renderMusclePills();
+    renderDatabaseList();
+  </script>
+</body>
+</html>

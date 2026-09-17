@@ -4,7 +4,7 @@ import {
   Calendar, Award, Brain, Dumbbell, ShieldCheck, Clock, Zap
 } from 'lucide-react';
 import { calculate1RM } from '../../hooks/useWorkoutCalculations';
-import { matchExercise, getHistoricalRecordsForExercise } from '../../utils/exerciseMatcher';
+import { matchExercise, getHistoricalRecordsForExercise, getUnifiedCodeForExercise } from '../../utils/exerciseMatcher';
 import ExerciseProgressionChart from './ExerciseProgressionChart';
 
 export default function ExerciseStrengthProgressModal({
@@ -155,16 +155,25 @@ export default function ExerciseStrengthProgressModal({
       };
     }
 
-    // Proyecciones a 4 y 8 semanas basadas en tasa fisiológica y el verdadero récord de fuerza (no series ligeras)
+    // Proyecciones científicas: Siguiente sesión, 2 sesiones, 1 mes, 3 meses y 6 meses
     const baselineWeight = Math.max(peakWeight, currentWeight) || 100;
     const baseline1RM = Math.max(peak1RM, current1RM) || 100;
     const safeWeeklyGain = Math.max(1.5, Math.min(5.0, weeklyRateLbs > 0 ? weeklyRateLbs : baselineWeight * 0.015));
 
-    const proj4WeeksWeight = Math.round(baselineWeight + (safeWeeklyGain * 4));
-    const proj8WeeksWeight = Math.round(baselineWeight + (safeWeeklyGain * 8));
+    const projNextSessionWeight = Math.round(baselineWeight + Math.max(1, safeWeeklyGain * 0.65));
+    const projNextSession1RM = Math.round(baseline1RM + Math.max(1, safeWeeklyGain * 0.65 * 1.1));
 
-    const proj4Weeks1RM = Math.round(baseline1RM + (safeWeeklyGain * 4 * 1.1));
-    const proj8Weeks1RM = Math.round(baseline1RM + (safeWeeklyGain * 8 * 1.1));
+    const proj2SessionsWeight = Math.round(baselineWeight + Math.max(2, safeWeeklyGain * 1.3));
+    const proj2Sessions1RM = Math.round(baseline1RM + Math.max(2, safeWeeklyGain * 1.3 * 1.1));
+
+    const proj1MonthWeight = Math.round(baselineWeight + (safeWeeklyGain * 4));
+    const proj1Month1RM = Math.round(baseline1RM + (safeWeeklyGain * 4 * 1.1));
+
+    const proj3MonthsWeight = Math.round(baselineWeight + (safeWeeklyGain * 12 * 0.85));
+    const proj3Months1RM = Math.round(baseline1RM + (safeWeeklyGain * 12 * 0.85 * 1.1));
+
+    const proj6MonthsWeight = Math.round(baselineWeight + (safeWeeklyGain * 24 * 0.7));
+    const proj6Months1RM = Math.round(baseline1RM + (safeWeeklyGain * 24 * 0.7 * 1.1));
 
     return {
       totalSessions: sessionHistory.length + (todaySets ? 1 : 0),
@@ -178,10 +187,16 @@ export default function ExerciseStrengthProgressModal({
       delta1RM,
       weeklyRateLbs,
       status,
-      proj4WeeksWeight,
-      proj8WeeksWeight,
-      proj4Weeks1RM,
-      proj8Weeks1RM
+      projNextSessionWeight,
+      projNextSession1RM,
+      proj2SessionsWeight,
+      proj2Sessions1RM,
+      proj1MonthWeight,
+      proj1Month1RM,
+      proj3MonthsWeight,
+      proj3Months1RM,
+      proj6MonthsWeight,
+      proj6Months1RM
     };
   }, [sessionHistory, todaySets]);
 
@@ -230,9 +245,16 @@ export default function ExerciseStrengthProgressModal({
               <TrendingUp size={22} />
             </div>
             <div>
-              <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '900', color: '#0f172a' }}>
-                {exName}
-              </h3>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '900', color: '#0f172a' }}>
+                  {exName}
+                </h3>
+                {getUnifiedCodeForExercise(exercise) && (
+                  <span style={{ fontSize: '9.5px', background: '#f5f3ff', color: '#7c3aed', padding: '1px 6px', borderRadius: '6px', fontWeight: '800', border: '1px solid #ddd6fe' }}>
+                    {getUnifiedCodeForExercise(exercise).canonical}
+                  </span>
+                )}
+              </div>
               <span style={{ fontSize: '11px', color: '#64748b', fontWeight: '700' }}>
                 {exercise.muscleGroup || 'General'} • Analítica & Proyección de Fuerza
               </span>
@@ -332,29 +354,74 @@ export default function ExerciseStrengthProgressModal({
                 Basadas en tu tasa actual de adaptación miofibrilar y sobrecarga progresiva sin fallar la técnica:
               </p>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                <div style={{ background: '#ffffff', padding: '10px 12px', borderRadius: '14px', border: '1px solid #ddd6fe' }}>
-                  <span style={{ fontSize: '10px', color: '#7c3aed', fontWeight: '800', display: 'block', textTransform: 'uppercase' }}>
-                    🎯 Meta a 4 Semanas
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '8px' }}>
+                {/* 1. Siguiente Sesión */}
+                <div style={{ background: '#ffffff', padding: '9px 10px', borderRadius: '12px', border: '1.5px solid #a7f3d0' }}>
+                  <span style={{ fontSize: '9.5px', color: '#059669', fontWeight: '900', display: 'block', textTransform: 'uppercase' }}>
+                    ⚡ Próxima Sesión
                   </span>
-                  <div style={{ fontSize: '18px', fontWeight: '900', color: '#1e1b4b', margin: '2px 0' }}>
-                    ~{stats.proj4WeeksWeight} lbs
+                  <div style={{ fontSize: '16px', fontWeight: '900', color: '#064e3b', margin: '2px 0' }}>
+                    ~{stats.projNextSessionWeight} lbs
                   </div>
-                  <span style={{ fontSize: '10px', color: '#64748b' }}>
-                    1RM Est: ~{stats.proj4Weeks1RM} lbs
+                  <span style={{ fontSize: '9px', color: '#64748b' }}>
+                    1RM Est: ~{stats.projNextSession1RM} lbs
                   </span>
                 </div>
 
-                <div style={{ background: '#ffffff', padding: '10px 12px', borderRadius: '14px', border: '1px solid #ddd6fe' }}>
-                  <span style={{ fontSize: '10px', color: '#7c3aed', fontWeight: '800', display: 'block', textTransform: 'uppercase' }}>
-                    🚀 Meta a 8 Semanas
+                {/* 2. Siguientes 2 Sesiones */}
+                <div style={{ background: '#ffffff', padding: '9px 10px', borderRadius: '12px', border: '1.5px solid #bae6fd' }}>
+                  <span style={{ fontSize: '9.5px', color: '#0284c7', fontWeight: '900', display: 'block', textTransform: 'uppercase' }}>
+                    🎯 Siguientes 2 Ses
                   </span>
-                  <div style={{ fontSize: '18px', fontWeight: '900', color: '#1e1b4b', margin: '2px 0' }}>
-                    ~{stats.proj8WeeksWeight} lbs
+                  <div style={{ fontSize: '16px', fontWeight: '900', color: '#0c4a6e', margin: '2px 0' }}>
+                    ~{stats.proj2SessionsWeight} lbs
                   </div>
-                  <span style={{ fontSize: '10px', color: '#64748b' }}>
-                    1RM Est: ~{stats.proj8Weeks1RM} lbs
+                  <span style={{ fontSize: '9px', color: '#64748b' }}>
+                    1RM Est: ~{stats.proj2Sessions1RM} lbs
                   </span>
+                </div>
+
+                {/* 3. 1 Mes */}
+                <div style={{ background: '#ffffff', padding: '9px 10px', borderRadius: '12px', border: '1px solid #ddd6fe' }}>
+                  <span style={{ fontSize: '9.5px', color: '#7c3aed', fontWeight: '900', display: 'block', textTransform: 'uppercase' }}>
+                    🚀 Meta a 1 Mes
+                  </span>
+                  <div style={{ fontSize: '16px', fontWeight: '900', color: '#1e1b4b', margin: '2px 0' }}>
+                    ~{stats.proj1MonthWeight} lbs
+                  </div>
+                  <span style={{ fontSize: '9px', color: '#64748b' }}>
+                    1RM Est: ~{stats.proj1Month1RM} lbs
+                  </span>
+                </div>
+
+                {/* 4. 3 Meses */}
+                <div style={{ background: '#ffffff', padding: '9px 10px', borderRadius: '12px', border: '1px solid #fde68a' }}>
+                  <span style={{ fontSize: '9.5px', color: '#d97706', fontWeight: '900', display: 'block', textTransform: 'uppercase' }}>
+                    🏔️ Meta a 3 Meses
+                  </span>
+                  <div style={{ fontSize: '16px', fontWeight: '900', color: '#78350f', margin: '2px 0' }}>
+                    ~{stats.proj3MonthsWeight} lbs
+                  </div>
+                  <span style={{ fontSize: '9px', color: '#64748b' }}>
+                    1RM Est: ~{stats.proj3Months1RM} lbs
+                  </span>
+                </div>
+
+                {/* 5. 6 Meses */}
+                <div style={{ background: '#ffffff', padding: '9px 10px', borderRadius: '12px', border: '1.5px solid #fed7aa', gridColumn: 'span 2' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <span style={{ fontSize: '9.5px', color: '#ea580c', fontWeight: '900', display: 'block', textTransform: 'uppercase' }}>
+                        🏆 Techo Mesociclo a 6 Meses (24 sem)
+                      </span>
+                      <div style={{ fontSize: '17px', fontWeight: '900', color: '#7c2d12', margin: '2px 0' }}>
+                        ~{stats.proj6MonthsWeight} lbs
+                      </div>
+                    </div>
+                    <span style={{ fontSize: '10px', color: '#9a3412', fontWeight: '800', background: '#ffedd5', padding: '2px 8px', borderRadius: '6px' }}>
+                      1RM Est: ~{stats.proj6Months1RM} lbs
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>

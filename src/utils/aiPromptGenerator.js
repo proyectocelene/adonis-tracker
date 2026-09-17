@@ -1,9 +1,11 @@
 import { calculate1RM } from '../hooks/useWorkoutCalculations.js';
+import { getPreviousDataForExercise, getUnifiedCodeForExercise } from './exerciseMatcher.js';
 
 export function generateAISessionPrompt({
   currentDay = {},
   todayWorkoutData = {},
   previousExercisesData = {},
+  workoutHistory = [],
   currentWeek = 1,
   selectedDateKey = '',
   completedSets = 0,
@@ -93,7 +95,10 @@ ${bodyComposition?.metabolicAge ? `• Edad Metabólica: ${bodyComposition.metab
     const isSkipped = !!skippedExercises[ex.id];
     const skipReason = skippedExercises[ex.id]?.reason || 'Omitido voluntariamente';
     const logs = todayWorkoutData[ex.id] || {};
-    const prevLogs = previousExercisesData[ex.id] || {};
+    const uCode = getUnifiedCodeForExercise(ex);
+    const prevLogs = (workoutHistory && workoutHistory.length > 0) 
+      ? getPreviousDataForExercise(ex, currentDay.id, currentWeek, workoutHistory) 
+      : (previousExercisesData[ex.id] || {});
     const mConfig = machineConfigs[ex.id] || logs.machineConfig || (() => {
       try {
         return typeof window !== 'undefined' ? JSON.parse(localStorage.getItem(`coachv2_machine_${ex.id}`) || 'null') : null;
@@ -104,7 +109,7 @@ ${bodyComposition?.metabolicAge ? `• Edad Metabólica: ${bodyComposition.metab
 
     const isStrictlyBilateral = /barra|smith|prensa|leg press|squat con barra|bench press con barra/i.test(ex.name || '');
 
-    prompt += `\n${idx + 1}. ${ex.name} [Grupo: ${ex.muscleGroup || 'General'}]`;
+    prompt += `\n${idx + 1}. ${ex.name} ${uCode ? `${uCode.canonical} ` : ''}[Grupo: ${ex.muscleGroup || 'General'}]`;
     prompt += `\n   • Meta programada: ${ex.sets || 3} series × ${ex.reps || '10-12'} reps | Descanso: ${ex.rest || '90 s'}`;
 
     if (mConfig) {

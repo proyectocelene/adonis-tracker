@@ -11,7 +11,7 @@ import {
   ReferenceArea
 } from 'recharts';
 import { TrendingUp, Sparkles, Filter, Info, Scale, Dumbbell } from 'lucide-react';
-import { getHistoricalRecordsForExercise, matchExercise } from '../../utils/exerciseMatcher.js';
+import { getHistoricalRecordsForExercise, matchExercise, parseUnifiedCode } from '../../utils/exerciseMatcher.js';
 import { calculate1RM } from '../../hooks/useWorkoutCalculations.js';
 
 export default function ExerciseProgressionChart({
@@ -21,6 +21,8 @@ export default function ExerciseProgressionChart({
   compact = false,
   height = 220
 }) {
+  // Modo de Alcance: 'station' (Solo esta máquina exacta) o 'family' (Toda la familia biomecánica)
+  const [scopeMode, setScopeMode] = useState('station');
   // Modo de Carga: 'peak' (Carga Máxima / Top Set), 'avg' (Carga Promedio Efectiva), 'both' (Ambas curvas)
   const [weightMode, setWeightMode] = useState('both');
   const [showWeight, setShowWeight] = useState(true);
@@ -56,12 +58,16 @@ export default function ExerciseProgressionChart({
     return { min, max, label: raw };
   }, [exercise?.reps, exercise?.targetReps]);
 
+  // Información del código unificado y familia biomecánica inteligente
+  const parsedCode = useMemo(() => parseUnifiedCode(exercise?.unifiedCode), [exercise?.unifiedCode]);
+  const machineKey = parsedCode?.machineKey || '';
+
   // Procesar puntos reales + proyecciones matemáticas
   const { chartData, transitionDate, lastProjectedDate, hasHistory, peakWeight, avgPeakWeight, currentWeight, currentAvgWeight, lastRealPoint } = useMemo(() => {
     if (!exercise) return { chartData: [], transitionDate: null, lastProjectedDate: null, hasHistory: false, peakWeight: 0, avgPeakWeight: 0, currentWeight: 0, currentAvgWeight: 0, lastRealPoint: null };
 
     // 1. Extraer historial real usando el motor de matching tolerante a alias y familias
-    const records = getHistoricalRecordsForExercise(exercise, workoutHistory);
+    const records = getHistoricalRecordsForExercise(exercise, workoutHistory, { matchFamily: scopeMode === 'family' });
     const rawOccurrences = records.sessionOccurrences || [];
 
     const dateCounts = {};
@@ -265,34 +271,48 @@ export default function ExerciseProgressionChart({
     lastRealPoint.projected1RM = lastRealPoint.est1RM;
     lastRealPoint.projectedTonnage = lastRealPoint.tonnage;
 
-    // 🔮 3. Generar proyecciones científicas a 1 mes, 2 meses, 3 meses y 6 meses
+    // 🔮 3. Generar proyecciones científicas: Siguiente sesión, 2 sesiones, 1 mes, 3 meses y 6 meses
+    const factor1Ses = Math.max(1, Math.round(weeklyRate * 0.65));
+    const factor2Ses = Math.max(factor1Ses + 1, Math.round(weeklyRate * 1.3));
+    const factor1M = Math.max(factor2Ses + 1, Math.round(Math.log1p(4 * 0.35) * weeklyRate * 2.2));
+    const factor3M = Math.max(factor1M + 2, Math.round(Math.log1p(12 * 0.35) * weeklyRate * 2.2));
+    const factor6M = Math.max(factor3M + 3, Math.round(Math.log1p(24 * 0.35) * weeklyRate * 2.2));
+
     const projections = [
       {
+        label: '+1 ses',
+        dateFull: 'Siguiente Sesión (+1 ses)',
+        factor: factor1Ses,
+        note: 'Sobrecarga inmediata / microcarga'
+      },
+      {
+        label: '+2 ses',
+        dateFull: 'Siguientes 2 Sesiones (+2 ses)',
+        factor: factor2Ses,
+        note: 'Consolidación de repeticiones'
+      },
+      {
         label: '+1m',
-        weeks: 4,
+        dateFull: 'Proyección a 1 Mes (4 sem)',
+        factor: factor1M,
         note: 'Adaptación neural & reclutamiento'
       },
       {
-        label: '+2m',
-        weeks: 8,
-        note: 'Hipertrofia miofibrilar consolidada'
-      },
-      {
         label: '+3m',
-        weeks: 12,
+        dateFull: 'Proyección a 3 Meses (12 sem)',
+        factor: factor3M,
         note: 'Fin de bloque de sobrecarga'
       },
       {
         label: '+6m',
-        weeks: 24,
+        dateFull: 'Proyección a 6 Meses (24 sem)',
+        factor: factor6M,
         note: 'Techo biomecánico del meso-ciclo'
       }
     ];
 
     const projectedPoints = projections.map(proj => {
-      // Progresión logarítmica para respetar los rendimientos decrecientes
-      const effectiveWeeks = proj.weeks;
-      const factor = Math.log1p(effectiveWeeks * 0.35) * weeklyRate * 2.2;
+      const factor = proj.factor;
       const projectedW = Math.round(baselineWeight + factor);
       const projectedAvgW = Math.round((baselineAvgWeight + factor * 0.95) * 10) / 10;
       const projectedRM = Math.round(baseline1RM + (factor * 1.15));
@@ -300,7 +320,7 @@ export default function ExerciseProgressionChart({
 
       return {
         date: proj.label,
-        dateFull: `Proyección a ${proj.weeks} sem (${proj.label})`,
+        dateFull: proj.dateFull,
         weight: null,
         avgWeight: null,
         minWeight: null,
@@ -336,7 +356,7 @@ export default function ExerciseProgressionChart({
       currentAvgWeight: lastRealPoint.avgWeight,
       lastRealPoint: lastRealPoint || null
     };
-  }, [exercise, workoutHistory, todayWorkoutData]);
+  }, [exercise, workoutHistory, todayWorkoutData, scopeMode]);
 
   // Sincronizador de punto activo para la Caja de Auditoría inferior (elimina tooltips flotantes que tapen la curva)
   const CustomTooltipReceiver = ({ active, payload }) => {
@@ -364,7 +384,7 @@ export default function ExerciseProgressionChart({
           Sin Historial de Sobrecarga Aún
         </h4>
         <p style={{ margin: 0, fontSize: '11px', lineHeight: '1.4' }}>
-          Registra tus series en <strong>{exercise.name}</strong> para desbloquear la gráfica de carga pico, carga promedio, tonelaje y proyección matemática a 6 meses.
+          Registra tus series en <strong>{exercise.name}</strong> para desbloquear la gráfica de carga pico, carga promedio, tonelaje y proyección progresiva (próxima sesión, 2 sesiones, 1m, 3m y 6 meses).
         </p>
       </div>
     );
@@ -421,6 +441,48 @@ export default function ExerciseProgressionChart({
 
         {/* BOTONERA DE FILTROS Y MODOS */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap' }}>
+          {/* Selector de Alcance: Esta Máquina vs Toda la Familia */}
+          {machineKey && (
+            <div style={{ display: 'inline-flex', background: '#e0e7ff', borderRadius: '8px', padding: '2px', border: '1px solid #c7d2fe' }}>
+              <button
+                type="button"
+                onClick={() => setScopeMode('station')}
+                style={{
+                  padding: '3px 7px',
+                  borderRadius: '6px',
+                  border: 'none',
+                  background: scopeMode === 'station' ? '#4f46e5' : 'transparent',
+                  color: scopeMode === 'station' ? '#ffffff' : '#4338ca',
+                  fontWeight: '900',
+                  fontSize: '9.5px',
+                  cursor: 'pointer',
+                  boxShadow: scopeMode === 'station' ? '0 1px 3px rgba(79,70,229,0.3)' : 'none'
+                }}
+                title="Filtrar datos exclusivamente para esta máquina física específica"
+              >
+                🎯 Esta Máquina
+              </button>
+              <button
+                type="button"
+                onClick={() => setScopeMode('family')}
+                style={{
+                  padding: '3px 7px',
+                  borderRadius: '6px',
+                  border: 'none',
+                  background: scopeMode === 'family' ? '#4f46e5' : 'transparent',
+                  color: scopeMode === 'family' ? '#ffffff' : '#4338ca',
+                  fontWeight: '900',
+                  fontSize: '9.5px',
+                  cursor: 'pointer',
+                  boxShadow: scopeMode === 'family' ? '0 1px 3px rgba(79,70,229,0.3)' : 'none'
+                }}
+                title={`Ver progreso agrupado de toda la estación biomecánica (${machineKey})`}
+              >
+                🌐 Toda la Familia ({machineKey})
+              </button>
+            </div>
+          )}
+
           {/* Toggle Métrica: Cargas vs Tonelaje */}
           <div style={{ display: 'inline-flex', background: '#f1f5f9', borderRadius: '8px', padding: '2px' }}>
             <button
@@ -579,7 +641,7 @@ export default function ExerciseProgressionChart({
               alignItems: 'center',
               gap: '3px'
             }}
-            title="Mostrar u ocultar proyecciones científicas a 1, 2, 3 y 6 meses"
+            title="Mostrar u ocultar proyecciones científicas (próxima sesión, 2 sesiones, 1m, 3m y 6 meses)"
           >
             <Sparkles size={11} color={showProjections ? '#7c3aed' : '#94a3b8'} />
             Metas

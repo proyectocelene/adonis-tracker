@@ -24,6 +24,7 @@ export const scientificProtocol = [
     "exercises": [
       {
         "id": "d1_e1",
+        "unifiedCode": "[PECH-INC_PRESS-MANC_30]",
         "name": "Press Inclinado con Mancuernas (Banco a 30°)",
         "muscleGroup": "Pecho (Pectoral Superior Clavicular)",
         "loadFamily": "Familia Press Superior Inclinado",
@@ -37,6 +38,7 @@ export const scientificProtocol = [
         "equivalents": [
           {
             "id": "d1_e1_eq1",
+            "unifiedCode": "[PECH-INC_PRESS-SMITH_01]",
             "name": "Press Inclinado en Multipower (Smith) a 30°",
             "desc": "Estabilidad guiada para ir al fallo con seguridad.",
             "ratio": 1.1,
@@ -52,6 +54,7 @@ export const scientificProtocol = [
           },
           {
             "id": "d1_e1_eq2",
+            "unifiedCode": "[PECH-INC_PRESS-NITRO_01]",
             "name": "Press Inclinado en Máquina (Nitro Incline)",
             "desc": "Tensión constante en recorrido convergente.",
             "ratio": 2.2,
@@ -75,7 +78,8 @@ export const scientificProtocol = [
       },
       {
         "id": "d1_e5",
-        "name": "Elevaciones Laterales en Máquina (¡Prioridad!)",
+        "unifiedCode": "[HOMB-LAT_RAISE-MAQ_01]",
+        "name": "Elevaciones Laterales en Máquina",
         "muscleGroup": "Hombro (Deltoides Lateral 3D)",
         "sets": 4,
         "reps": "12-15",
@@ -87,7 +91,8 @@ export const scientificProtocol = [
         "equivalents": [
           {
             "id": "d1_e5_eq1",
-            "name": "Elevaciones Laterales en Polea Baja a una mano",
+            "unifiedCode": "[HOMB-LAT_RAISE-CABLE_01]",
+            "name": "Elevaciones Laterales en Polea Baja a una Mano",
             "desc": "Tensión continua desde el inicio.",
             "ratio": 0.6,
             "biomechanics": "Polea a la altura de la rodilla o muñeca. Cable pasando por detrás del torso. Agarre con una mano mientras la otra sostiene el poste para estabilidad total.",
@@ -102,7 +107,8 @@ export const scientificProtocol = [
           },
           {
             "id": "d1_e5_eq2",
-            "name": "Elevaciones con mancuernas recostado de lado en banco a 30°",
+            "unifiedCode": "[HOMB-LAT_RAISE-MANC_SIDE_30]",
+            "name": "Elevaciones con Mancuernas recostado de lado en Banco a 30°",
             "desc": "Sobrecarga en ángulo estirado.",
             "ratio": 0.7,
             "biomechanics": "Acostado de costado sobre un banco inclinado a 30-45°. El brazo libre sostiene la mancuerna. Esta inclinación sobrecarga el tercio inicial del recorrido (fase elongada).",
@@ -125,6 +131,7 @@ export const scientificProtocol = [
       },
       {
         "id": "d1_e2",
+        "unifiedCode": "[PECH-INC_PRESS-NITRO_01]",
         "name": "Press Inclinado en Máquina (Nitro Incline)",
         "muscleGroup": "Pecho (Pectoral Superior Clavicular)",
         "loadFamily": "Familia Press Superior Inclinado",
@@ -138,7 +145,8 @@ export const scientificProtocol = [
         "equivalents": [
           {
             "id": "d1_e2_eq1",
-            "name": "Press Inclinado con Barra",
+            "unifiedCode": "[PECH-INC_PRESS-BAR_30]",
+            "name": "Press Inclinado con Barra a 30°",
             "desc": "Sobrecarga axial máxima.",
             "ratio": 1.15,
             "biomechanics": "Banco inclinado a 30°, agarre a 1.5 anchos de hombros con muñecas neutras sobre el antebrazo. La barra desciende controlada hacia la parte media-alta del esternón. Retracción escapular firme.",
@@ -153,7 +161,8 @@ export const scientificProtocol = [
           },
           {
             "id": "d1_e2_eq2",
-            "name": "Hammer Strength Incline",
+            "unifiedCode": "[PECH-INC_PRESS-DISC_HAMMER]",
+            "name": "Press Inclinado Hammer Strength (Plate-Loaded)",
             "desc": "Carga unilateral convergente.",
             "ratio": 1,
             "biomechanics": "Máquina con brazos independientes y carga por discos. Asiento colocado de modo que las manijas queden a nivel de las clavículas al iniciar.",
@@ -176,7 +185,8 @@ export const scientificProtocol = [
       },
       {
         "id": "d1_e4",
-        "name": "Cristos en Máquina (Pec Deck)",
+        "unifiedCode": "[PECH-PEC_DECK-STACK_01]",
+        "name": "Aperturas en Máquina Pec Deck (Peacock / Flyes)",
         "muscleGroup": "Pecho (Aislamiento Pectoral)",
         "sets": 3,
         "reps": "10-12",
@@ -188,7 +198,8 @@ export const scientificProtocol = [
         "equivalents": [
           {
             "id": "d1_e4_eq1",
-            "name": "Cruce de poleas a media altura (Cable Crossover)",
+            "unifiedCode": "[PECH-CABLE_CROSS-MID_01]",
+            "name": "Cruce de Poleas a Media Altura (Cable Crossover)",
             "desc": "Tensión continua en todo el rango.",
             "ratio": 0.8,
             "biomechanics": "Poleas a la altura del pecho medio. Paso al frente con torso ligeramente inclinado a 10° y abdomen firme.",
@@ -203,7 +214,8 @@ export const scientificProtocol = [
           },
           {
             "id": "d1_e4_eq2",
-            "name": "Aperturas con mancuernas en banco plano",
+            "unifiedCode": "[PECH-FLY-MANC_FLAT_01]",
+            "name": "Aperturas con Mancuernas en Banco Plano",
             "desc": "Gran tensión en máximo estiramiento.",
             "ratio": 0.4,
             "biomechanics": "Banco horizontal, mancuernas neutras. Codos flexionados a 15-20°. Descenso controlado hasta que los codos alcancen la altura del torso.",
@@ -226,6 +238,7 @@ export const scientificProtocol = [
       },
       {
         "id": "d1_e6",
+        "unifiedCode": "[TRIC-OVERHEAD_EXT-CABLE_01]",
         "name": "Extensión de Tríceps Copa en Polea (Cuerda)",
         "muscleGroup": "Tríceps (Cabeza Larga en Estiramiento)",
         "sets": 4,
@@ -238,7 +251,8 @@ export const scientificProtocol = [
         "equivalents": [
           {
             "id": "d1_e6_eq1",
-            "name": "Extensión de Tríceps en Máquina sentado",
+            "unifiedCode": "[TRIC-KATANA_EXT-CABLE_01]",
+            "name": "Extensión Cruzada Katana en Poleas (Katana Extension)",
             "desc": "Recorrido guiado con apoyo de codos y estabilidad total.",
             "ratio": 1,
             "biomechanics": "Sentado con codos apoyados y alineados al eje de rotación. Empuje vertical controlado hacia abajo.",
@@ -253,7 +267,8 @@ export const scientificProtocol = [
           },
           {
             "id": "d1_e6_eq2",
-            "name": "French Press con mancuerna a dos manos",
+            "unifiedCode": "[TRIC-FRENCH_PRESS-MANC_01]",
+            "name": "French Press con Mancuerna a dos Manos",
             "desc": "Variante clásica con mancuerna sobre cabeza.",
             "ratio": 0.5,
             "biomechanics": "Banco a 30-45°. Dos mancuernas neutras o una pesada a dos manos. Codos inclinados hacia atrás para mantener tensión continua.",
@@ -268,6 +283,7 @@ export const scientificProtocol = [
           },
           {
             "id": "d1_e6_eq3",
+            "unifiedCode": "[TRIC-PUSHDOWN-STRAIGHT_01]",
             "name": "Extensión cruzada de tríceps en poleas (Katana extension)",
             "desc": "Alineación biomecánica perfecta con la cabeza larga.",
             "ratio": 0.8,
@@ -291,7 +307,8 @@ export const scientificProtocol = [
       },
       {
         "id": "d1_e8",
-        "name": "Vacuum Abdominal (Transverso)",
+        "unifiedCode": "[ABDO-VACUUM-ISOM_01]",
+        "name": "Vacuum Abdominal (Transverso / Cintura Estrecha)",
         "muscleGroup": "Core (Transverso & Cintura Estrecha)",
         "sets": 4,
         "reps": "20-25 s",
@@ -304,7 +321,8 @@ export const scientificProtocol = [
         "equivalents": [
           {
             "id": "d1_e8_eq1",
-            "name": "Plancha abdominal isométrica convencional (45 s)",
+            "unifiedCode": "[ABDO-PLANK-ISOM_01]",
+            "name": "Plancha Abdominal Isométrica Convencional",
             "desc": "Estabilidad y tensión global del core.",
             "ratio": 1,
             "biomechanics": "Tumbado supino, retroversión pélvica pegando la zona lumbar al suelo, piernas y brazos extendidos flotando a 15 cm.",
@@ -327,6 +345,7 @@ export const scientificProtocol = [
       },
       {
         "id": "d1_e9",
+        "unifiedCode": "[CARD-TREADMILL-ZONA2_01]",
         "name": "Cardio Zona 2 en Caminadora",
         "muscleGroup": "Cardiovascular (Zona 2)",
         "sets": 1,
@@ -340,7 +359,8 @@ export const scientificProtocol = [
         "equivalents": [
           {
             "id": "d1_e9_eq1",
-            "name": "Caminadora en Inclinación",
+            "unifiedCode": "[CARD-TREADMILL-INCLINE_01]",
+            "name": "Caminadora en Inclinación (Zona 2)",
             "desc": "Bajo impacto articular y alto gasto calórico.",
             "ratio": 1,
             "biomechanics": "Caminadora a 3.8-4.2 km/h con inclinación del 11-12%.",
@@ -355,7 +375,8 @@ export const scientificProtocol = [
           },
           {
             "id": "d1_e9_eq2",
-            "name": "Bicicleta Estática",
+            "unifiedCode": "[CARD-BIKE-STATIONARY_01]",
+            "name": "Bicicleta Estática (Zona 2)",
             "desc": "Cadencia fluida sin estrés plantar.",
             "ratio": 1,
             "biomechanics": "Bicicleta estática con resistencia moderada a 80-90 RPM. Cadencia constante con frecuencia cardíaca estable.",
@@ -387,7 +408,8 @@ export const scientificProtocol = [
     "exercises": [
       {
         "id": "d2_e3",
-        "name": "Extensión de Cuádriceps (Pre-activación)",
+        "unifiedCode": "[CUAD-LEG_EXT-STACK_01]",
+        "name": "Extensión de Cuádriceps en Máquina (Torre de Placas)",
         "muscleGroup": "Cuádriceps (Aislamiento Recto Femoral & Vasto Medial)",
         "sets": 3,
         "reps": "12-15",
@@ -399,7 +421,8 @@ export const scientificProtocol = [
         "equivalents": [
           {
             "id": "d2_e3_eq1",
-            "name": "Sissy Squat en soporte",
+            "unifiedCode": "[CUAD-SISSY_SQUAT-BENCH_01]",
+            "name": "Sissy Squat en Soporte",
             "desc": "Tensión extrema en máxima elongación del recto femoral.",
             "ratio": 0.4,
             "biomechanics": "Pies fijados en banco sissy, torso y muslos formando una línea recta. Descenso echando el cuerpo hacia atrás mediante flexión pura de rodilla.",
@@ -414,7 +437,8 @@ export const scientificProtocol = [
           },
           {
             "id": "d2_e3_eq2",
-            "name": "Extensiones unilaterales en máquina",
+            "unifiedCode": "[CUAD-LEG_EXT-UNI_01]",
+            "name": "Extensiones de Cuádriceps Unilaterales en Máquina",
             "desc": "Equilibrio bilateral de cuádriceps.",
             "ratio": 0.45,
             "biomechanics": "Sentado en banco alto con tobillera conectada a polea baja. Tensión constante durante todo el arco de extensión.",
@@ -437,6 +461,7 @@ export const scientificProtocol = [
       },
       {
         "id": "d2_e1",
+        "unifiedCode": "[CUAD-HACK_SQUAT-DISC_01]",
         "name": "Sentadilla en Máquina Hack (Hack Squat)",
         "muscleGroup": "Cuádriceps & Glúteo",
         "loadFamily": "Familia Sentadilla Hack",
@@ -450,7 +475,8 @@ export const scientificProtocol = [
         "equivalents": [
           {
             "id": "d2_e1_eq1",
-            "name": "V-Squat Machine",
+            "unifiedCode": "[CUAD-V_SQUAT-MAQ_01]",
+            "name": "Sentadilla en Máquina V-Squat",
             "desc": "Excelente distribución de carga lumbar.",
             "ratio": 1,
             "biomechanics": "V-Squat mirando hacia afuera con respaldo acolchado. Curva de resistencia más suave en el fondo. Mayor profundidad de flexión de rodilla con menor compresión en la rótula.",
@@ -465,7 +491,8 @@ export const scientificProtocol = [
           },
           {
             "id": "d2_e1_eq2",
-            "name": "Sentadilla en Smith con talones sobre disco",
+            "unifiedCode": "[CUAD-SQUAT-SMITH_01]",
+            "name": "Sentadilla en Smith con Talones sobre Disco",
             "desc": "Estabilidad guiada con cuádriceps aislado.",
             "ratio": 0.9,
             "biomechanics": "Pies sobre cuña o disco elevador de talón para eliminar la restricción de dorsiflexión de tobillo. Mancuerna sostenida contra el pecho. Torso vertical.",
@@ -488,7 +515,8 @@ export const scientificProtocol = [
       },
       {
         "id": "d2_e2",
-        "name": "Prensa de Piernas 45° (Posición Central)",
+        "unifiedCode": "[CUAD-LEG_PRESS-DISC_45_PB]",
+        "name": "Prensa de Piernas Inclinada 45° (Discos)",
         "muscleGroup": "Cuádriceps & Tren Inferior",
         "loadFamily": "Familia Prensa de Piernas",
         "sets": 4,
@@ -501,7 +529,8 @@ export const scientificProtocol = [
         "equivalents": [
           {
             "id": "d2_e2_eq1",
-            "name": "Prensa Horizontal en cable",
+            "unifiedCode": "[CUAD-LEG_PRESS-HORIZ_01]",
+            "name": "Prensa Horizontal en Cable / Placas",
             "desc": "Tensión lineal continua.",
             "ratio": 0.8,
             "biomechanics": "Prensa de discos a 45°. El vector de carga tiene componente vertical y horizontal. Máxima capacidad de sobrecarga en masa.",
@@ -516,7 +545,8 @@ export const scientificProtocol = [
           },
           {
             "id": "d2_e2_eq2",
-            "name": "Hack invertida",
+            "unifiedCode": "[CUAD-HACK_SQUAT-REVERSE_01]",
+            "name": "Hack Invertida en Máquina",
             "desc": "Gran demanda de extensión de cadera y rodilla.",
             "ratio": 1,
             "biomechanics": "Prensa horizontal con torre de placas. Menor carga compresiva espinal, ideal para altas repeticiones al fallo metabólico.",
@@ -531,6 +561,7 @@ export const scientificProtocol = [
           },
           {
             "id": "d2_e4",
+            "unifiedCode": "[CUAD-LEG_PRESS-UNI_01]",
             "name": "Prensa Unilateral a 1 Pierna (Pie Alto)",
             "desc": "Enfoque unilateral para corregir desbalances.",
             "ratio": 0.5,
@@ -554,7 +585,8 @@ export const scientificProtocol = [
       },
       {
         "id": "d2_e6",
-        "name": "Abductores en Máquina (Abrir Cadera)",
+        "unifiedCode": "[ABDU-ABDUCTOR-STACK_01]",
+        "name": "Abductores en Máquina (Hip Abduction / Abrir Cadera)",
         "muscleGroup": "Glúteo Medio & Superior",
         "sets": 3,
         "reps": "12-15",
@@ -566,7 +598,8 @@ export const scientificProtocol = [
         "equivalents": [
           {
             "id": "d2_e6_eq1",
-            "name": "Abducción de cadera en polea baja con tobillera",
+            "unifiedCode": "[ABDU-CABLE-ANKLE_01]",
+            "name": "Abducción de Cadera en Polea Baja con Tobillera",
             "desc": "Aislamiento libre con cable.",
             "ratio": 0.5,
             "biomechanics": "De pie con tobillera en polea baja. Abducción lateral de cadera manteniendo el torso estable y la pelvis neutra.",
@@ -581,7 +614,8 @@ export const scientificProtocol = [
           },
           {
             "id": "d2_e5",
-            "name": "Aductores en Máquina (Cerrar Cadera)",
+            "unifiedCode": "[ADUC-ADUCTOR-STACK_01]",
+            "name": "Aductores en Máquina (Hip Adduction / Cerrar Cadera)",
             "desc": "Aislamiento de cara interna del muslo.",
             "ratio": 1,
             "biomechanics": "Sentado con espalda erguida. Cierra las piernas con fuerza uniforme y mantén 1s al centro.",
@@ -604,7 +638,8 @@ export const scientificProtocol = [
       },
       {
         "id": "d2_e7",
-        "name": "Elevación de Pantorrillas (Rotary o de Pie)",
+        "unifiedCode": "[PANT-CALF_RAISE-MAQ_01]",
+        "name": "Elevación de Pantorrillas en Máquina (Rotary o de Pie)",
         "muscleGroup": "Pantorrillas (Gastrocnemio & Sóleo)",
         "sets": 4,
         "reps": "10-12",
@@ -616,7 +651,8 @@ export const scientificProtocol = [
         "equivalents": [
           {
             "id": "d2_e7_eq1",
-            "name": "Elevación de pantorrillas en la Prensa de piernas",
+            "unifiedCode": "[PANT-CALF_RAISE-LEG_PRESS_01]",
+            "name": "Elevación de Pantorrillas en la Prensa de Piernas",
             "desc": "Apoyo lumbar cómodo y sobrecarga.",
             "ratio": 1.2,
             "biomechanics": "Puntas de los pies en el borde inferior de la prensa de piernas. Empuje de flexión plantar.",
@@ -631,7 +667,8 @@ export const scientificProtocol = [
           },
           {
             "id": "d2_e7_eq2",
-            "name": "Elevación en Smith de pie sobre plataforma",
+            "unifiedCode": "[PANT-CALF_RAISE-SMITH_01]",
+            "name": "Elevación de Pantorrillas en Smith sobre Escalón",
             "desc": "Carga axial vertical completa.",
             "ratio": 1,
             "biomechanics": "De pie sobre escalón con barra Smith sobre hombros. Pausa de 2s abajo.",
@@ -654,6 +691,7 @@ export const scientificProtocol = [
       },
       {
         "id": "d2_e9",
+        "unifiedCode": "[CARD-TREADMILL-ZONA2_01]",
         "name": "Cardio Zona 2 en Caminadora",
         "muscleGroup": "Cardiovascular (Zona 2)",
         "sets": 1,
@@ -667,7 +705,8 @@ export const scientificProtocol = [
         "equivalents": [
           {
             "id": "d2_e9_eq1",
-            "name": "Caminadora en Inclinación",
+            "unifiedCode": "[CARD-TREADMILL-INCLINE_01]",
+            "name": "Caminadora en Inclinación (Zona 2)",
             "desc": "Bajo impacto articular.",
             "ratio": 1,
             "biomechanics": "Caminadora a 3.5-3.8 km/h con inclinación del 10-11%.",
@@ -682,7 +721,8 @@ export const scientificProtocol = [
           },
           {
             "id": "d2_e9_eq2",
-            "name": "Bicicleta Estática",
+            "unifiedCode": "[CARD-BIKE-STATIONARY_01]",
+            "name": "Bicicleta Estática (Zona 2)",
             "desc": "Cadencia sin impacto articular.",
             "ratio": 1,
             "biomechanics": "Bicicleta estática a 80 RPM continua.",
@@ -714,6 +754,7 @@ export const scientificProtocol = [
     "exercises": [
       {
         "id": "d3_e1",
+        "unifiedCode": "[ESPA-PULLDOWN-WIDE_01]",
         "name": "Jalón al Pecho en Polea (Agarre Ancho Pronado)",
         "muscleGroup": "Espalda (Amplitud Dorsal V-Taper)",
         "loadFamily": "Familia Jalón Vertical Dorsal",
@@ -727,7 +768,8 @@ export const scientificProtocol = [
         "equivalents": [
           {
             "id": "d3_e1_eq1",
-            "name": "Dominadas pronadas asistidas/lastradas",
+            "unifiedCode": "[ESPA-CHINUP-WIDE_01]",
+            "name": "Dominadas Pronadas Asistidas / Lastradas",
             "desc": "Fuerza calisténica vertical.",
             "ratio": 0.9,
             "biomechanics": "Barra fija con agarre algo más amplio que los hombros. Depresión escapular antes de flexionar los brazos. Pecho erguido buscando la barra.",
@@ -742,7 +784,8 @@ export const scientificProtocol = [
           },
           {
             "id": "d3_e1_eq2",
-            "name": "Jalón unilateral en polea",
+            "unifiedCode": "[ESPA-PULLDOWN-UNI_CABLE_01]",
+            "name": "Jalón Unilateral en Polea",
             "desc": "Alineación en el plano sagital del dorsal.",
             "ratio": 0.5,
             "biomechanics": "Brazos convergentes o divergentes independientes. Trayectoria natural que respeta la articulación del hombro sin forzar rotación interna.",
@@ -765,6 +808,7 @@ export const scientificProtocol = [
       },
       {
         "id": "d3_e2",
+        "unifiedCode": "[ESPA-MACHINE_ROW-CHEST_SUPP_01]",
         "name": "Remo Compuesto en Máquina (Apoyo al Pecho)",
         "muscleGroup": "Espalda (Densidad Dorsal & Romboides)",
         "loadFamily": "Familia Remo Horizontal",
@@ -778,7 +822,8 @@ export const scientificProtocol = [
         "equivalents": [
           {
             "id": "d3_e2_eq1",
-            "name": "Remo con Barra T con apoyo torácico",
+            "unifiedCode": "[ESPA-TBAR_ROW-CHEST_01]",
+            "name": "Remo con Barra T con Apoyo Torácico",
             "desc": "Carga pesada con seguridad lumbar total.",
             "ratio": 1,
             "biomechanics": "Banco inclinado con barra T. Pies firmes. Tracción horizontal sin usar impulso de piernas ni de cadera.",
@@ -793,7 +838,8 @@ export const scientificProtocol = [
           },
           {
             "id": "d3_e2_eq2",
-            "name": "Remo Gironda agarre neutro",
+            "unifiedCode": "[ESPA-SEATED_ROW-GIRONDA_01]",
+            "name": "Remo Gironda en Polea Baja (Agarre Neutro)",
             "desc": "Tensión horizontal con cable.",
             "ratio": 1,
             "biomechanics": "Sentado en polea baja con barra de agarre neutro ancho. Torso erguido a 90°. Tracción al ombligo sin balanceo.",
@@ -816,6 +862,7 @@ export const scientificProtocol = [
       },
       {
         "id": "d3_e3",
+        "unifiedCode": "[ESPA-PULLOVER-HIGH_CABLE_01]",
         "name": "Pull-Over en Polea Alta con Cuerda",
         "muscleGroup": "Espalda (Aislamiento Dorsal Ancho)",
         "sets": 3,
@@ -828,7 +875,8 @@ export const scientificProtocol = [
         "equivalents": [
           {
             "id": "d3_e3_eq1",
-            "name": "Pull-over con mancuerna sobre banco",
+            "unifiedCode": "[ESPA-PULLOVER-MANC_01]",
+            "name": "Pull-Over con Mancuerna sobre Banco",
             "desc": "Estiramiento torácico en banco plano.",
             "ratio": 0.5,
             "biomechanics": "Agarre a la anchura de los hombros con barra recta en polea alta. Mantiene la trayectoria rígida en un solo plano.",
@@ -843,7 +891,8 @@ export const scientificProtocol = [
           },
           {
             "id": "d3_e3_eq2",
-            "name": "Máquina de Pullover guiada",
+            "unifiedCode": "[ESPA-PULLOVER-MAQ_01]",
+            "name": "Máquina de Pullover Guiada",
             "desc": "Tensión uniforme guiada en todo el arco.",
             "ratio": 1.1,
             "biomechanics": "Apoyado transversalmente sobre un banco con escápulas en el cojín y cadera ligeramente baja. Mancuerna sostenida con ambas palmas bajo el plato superior.",
@@ -866,7 +915,8 @@ export const scientificProtocol = [
       },
       {
         "id": "d3_e4",
-        "name": "Face Pulls en Polea Alta",
+        "unifiedCode": "[HOMB-FACE_PULL-HIGH_CABLE_01]",
+        "name": "Face Pulls en Polea Alta con Cuerda",
         "muscleGroup": "Hombro Posterior & Manguito Rotador",
         "sets": 4,
         "reps": "12-15",
@@ -878,7 +928,8 @@ export const scientificProtocol = [
         "equivalents": [
           {
             "id": "d3_e4_eq1",
-            "name": "Pájaros en Pec Deck Inverso",
+            "unifiedCode": "[HOMB-REAR_DELT-PEC_DECK_01]",
+            "name": "Pájaros en Pec Deck Inverso (Reverse Flyes)",
             "desc": "Aislamiento guiado de deltoides posterior.",
             "ratio": 1,
             "biomechanics": "Sentado de frente a la máquina Pec Deck con pecho apoyado. Brazos casi rectos abriendo en cruz horizontal.",
@@ -893,7 +944,8 @@ export const scientificProtocol = [
           },
           {
             "id": "d3_e4_eq2",
-            "name": "Reverse Cable Flyes",
+            "unifiedCode": "[HOMB-REAR_DELT-CABLE_01]",
+            "name": "Reverse Cable Flyes en Poleas",
             "desc": "Cruce posterior con cables a media altura.",
             "ratio": 0.8,
             "biomechanics": "Suspensión corporal con pies adelantados. Tracción hacia la frente abriendo los codos en rotación externa.",
@@ -916,7 +968,8 @@ export const scientificProtocol = [
       },
       {
         "id": "d3_e5",
-        "name": "Bayesian Cable Curl (Estiramiento Humeral)",
+        "unifiedCode": "[BICEP-CABLE_CURL-BAYESIAN_01]",
+        "name": "Bayesian Cable Curl (Estiramiento Humeral en Polea)",
         "muscleGroup": "Bíceps (Estiramiento Humeral)",
         "isUnilateral": true,
         "sets": 3,
@@ -929,6 +982,7 @@ export const scientificProtocol = [
         "equivalents": [
           {
             "id": "d3_e5_eq_cable",
+            "unifiedCode": "[BICEP-CABLE_CURL-LOW_STRAIGHT_01]",
             "name": "Curl de Bíceps en Polea Baja (Barra Recta)",
             "desc": "Tensión mecánica continua con codos pegados al torso.",
             "ratio": 1,
@@ -944,6 +998,7 @@ export const scientificProtocol = [
           },
           {
             "id": "d3_e5_eq1",
+            "unifiedCode": "[BICEP-INCLINE_CURL-MANC_60_01]",
             "name": "Curl de Bíceps con Mancuernas (Sentado en Banco a 60°)",
             "desc": "Estiramiento humeral clásico con mancuernas.",
             "ratio": 0.5,
@@ -959,7 +1014,8 @@ export const scientificProtocol = [
           },
           {
             "id": "d3_e5_eq_scott",
-            "name": "Curl en Banco Predicador (Scott) o Máquina",
+            "unifiedCode": "[BICEP-PREACHER_CURL-SCOTT_MAQ_01]",
+            "name": "Curl de Bíceps en Banco Scott o Máquina Predicador",
             "desc": "Aislamiento estricto de cabeza corta y pico.",
             "ratio": 0.9,
             "biomechanics": "Tríceps y axilas firmemente apoyados sobre la almohadilla inclinada a 45°. Aislamiento puro sin inercia.",
@@ -982,6 +1038,7 @@ export const scientificProtocol = [
       },
       {
         "id": "d3_e6",
+        "unifiedCode": "[BICEP-CABLE_CURL-LOW_STRAIGHT_01]",
         "name": "Curl de Bíceps en Polea Baja (Barra Recta)",
         "muscleGroup": "Bíceps (Tensión Continua)",
         "sets": 3,
@@ -994,7 +1051,8 @@ export const scientificProtocol = [
         "equivalents": [
           {
             "id": "d3_e6_eq_bayes",
-            "name": "Bayesian Cable Curl (Estiramiento Humeral)",
+            "unifiedCode": "[BICEP-CABLE_CURL-BAYESIAN_01]",
+            "name": "Bayesian Cable Curl (Estiramiento Humeral en Polea)",
             "desc": "De espaldas a la polea baja, máxima tensión en estiramiento.",
             "ratio": 0.8,
             "biomechanics": "De espaldas a la polea baja, codo por detrás del cuerpo. Pone la cabeza larga del bíceps en tensión máxima elongada. Pausa de 1s arriba.",
@@ -1009,6 +1067,7 @@ export const scientificProtocol = [
           },
           {
             "id": "d3_e6_eq_incline",
+            "unifiedCode": "[BICEP-INCLINE_CURL-MANC_60_01]",
             "name": "Curl de Bíceps con Mancuernas (Sentado en Banco a 60°)",
             "desc": "La inclinación hacia atrás elonga la cabeza larga del bíceps.",
             "ratio": 0.5,
@@ -1024,7 +1083,8 @@ export const scientificProtocol = [
           },
           {
             "id": "d3_e6_eq1",
-            "name": "Curl con barra Z de pie",
+            "unifiedCode": "[BICEP-BARBELL_CURL-EZ_BAR_01]",
+            "name": "Curl con Barra Z de Pie",
             "desc": "Sobrecarga con barra libre.",
             "ratio": 1,
             "biomechanics": "Agarre en las curvas de la barra Z para comodidad de muñecas. Cero balanceo de espalda lumbar.",
@@ -1039,7 +1099,8 @@ export const scientificProtocol = [
           },
           {
             "id": "d3_e6_eq2",
-            "name": "Curl en Banco Predicador (Scott) o Máquina",
+            "unifiedCode": "[BICEP-PREACHER_CURL-SCOTT_MAQ_01]",
+            "name": "Curl de Bíceps en Banco Scott o Máquina Predicador",
             "desc": "Aislamiento estricto de pico.",
             "ratio": 0.9,
             "biomechanics": "Tríceps apoyados en almohadilla a 45°. Aislamiento puro de cabeza corta.",
@@ -1062,7 +1123,8 @@ export const scientificProtocol = [
       },
       {
         "id": "d3_e7",
-        "name": "Vacuum Abdominal",
+        "unifiedCode": "[ABDO-VACUUM-ISOM_01]",
+        "name": "Vacuum Abdominal (Transverso / Cintura Estrecha)",
         "muscleGroup": "Core (Transverso & Cintura Estrecha)",
         "sets": 4,
         "reps": "20-25 s",
@@ -1075,7 +1137,8 @@ export const scientificProtocol = [
         "equivalents": [
           {
             "id": "d3_e7_eq1",
-            "name": "Plancha Isométrica",
+            "unifiedCode": "[ABDO-PLANK-ISOM_01]",
+            "name": "Plancha Abdominal Isométrica Convencional",
             "desc": "Tensión estabilizadora.",
             "ratio": 1,
             "biomechanics": "Posición de cuatro apoyos en colchoneta. Exhalación completa y aspiración abdominal manteniendo la columna neutra por 15 segundos.",
@@ -1098,6 +1161,7 @@ export const scientificProtocol = [
       },
       {
         "id": "d3_e8",
+        "unifiedCode": "[CARD-TREADMILL-ZONA2_01]",
         "name": "Cardio Zona 2 en Caminadora",
         "muscleGroup": "Cardiovascular (Zona 2)",
         "sets": 1,
@@ -1111,7 +1175,8 @@ export const scientificProtocol = [
         "equivalents": [
           {
             "id": "d3_e8_eq1",
-            "name": "Caminadora en Inclinación",
+            "unifiedCode": "[CARD-TREADMILL-INCLINE_01]",
+            "name": "Caminadora en Inclinación (Zona 2)",
             "desc": "Bajo impacto articular.",
             "ratio": 1,
             "biomechanics": "Caminadora a 3.8-4.2 km/h con inclinación del 11-12%.",
@@ -1126,7 +1191,8 @@ export const scientificProtocol = [
           },
           {
             "id": "d3_e8_eq2",
-            "name": "Elíptica",
+            "unifiedCode": "[CARD-ELLIPTICAL-ZONA2_01]",
+            "name": "Elíptica (Zona 2)",
             "desc": "Cadencia sin impacto articular.",
             "ratio": 1,
             "biomechanics": "Elíptica con resistencia moderada. Cero impacto.",
@@ -1158,7 +1224,8 @@ export const scientificProtocol = [
     "exercises": [
       {
         "id": "d4_e1",
-        "name": "Machine Chest Press (Prensa Pecho Plano)",
+        "unifiedCode": "[PECH-CHEST_PRESS-CONV_01]",
+        "name": "Press de Pecho en Máquina Convergente (Chest Press)",
         "muscleGroup": "Pecho (Pectoral Mayor & Medio)",
         "loadFamily": "Familia Press Plano de Pecho",
         "sets": 4,
@@ -1171,6 +1238,7 @@ export const scientificProtocol = [
         "equivalents": [
           {
             "id": "d4_e1_eq1",
+            "unifiedCode": "[PECH-CHEST_PRESS-MANC_FLAT_01]",
             "name": "Press Plano con Mancuernas",
             "desc": "Gran rango de estiramiento esternal.",
             "ratio": 0.45,
@@ -1186,6 +1254,7 @@ export const scientificProtocol = [
           },
           {
             "id": "d4_e1_eq2",
+            "unifiedCode": "[PECH-CHEST_PRESS-SMITH_01]",
             "name": "Press de Pecho Plano en Smith",
             "desc": "Estabilidad guiada con barra fija.",
             "ratio": 0.9,
@@ -1209,6 +1278,7 @@ export const scientificProtocol = [
       },
       {
         "id": "d4_e4",
+        "unifiedCode": "[HOMB-LAT_RAISE-BEHIND_CABLE_01]",
         "name": "Elevaciones Laterales en Polea Baja (Tras Espalda)",
         "muscleGroup": "Hombro (Deltoides Lateral)",
         "isUnilateral": true,
@@ -1222,6 +1292,7 @@ export const scientificProtocol = [
         "equivalents": [
           {
             "id": "d4_e4_eq1",
+            "unifiedCode": "[HOMB-LAT_RAISE-MAQ_01]",
             "name": "Elevaciones Laterales en Máquina",
             "desc": "Guía fija para aislar el húmero.",
             "ratio": 1.5,
@@ -1237,7 +1308,8 @@ export const scientificProtocol = [
           },
           {
             "id": "d4_e4_eq2",
-            "name": "Elevaciones con mancuernas de pie",
+            "unifiedCode": "[HOMB-LAT_RAISE-MANC_01]",
+            "name": "Elevaciones Laterales con Mancuernas",
             "desc": "Variante clásica con mancuernas.",
             "ratio": 0.7,
             "biomechanics": "Torso apoyado de lado sobre banco inclinado a 60° con mancuerna en mano externa.",
@@ -1260,6 +1332,7 @@ export const scientificProtocol = [
       },
       {
         "id": "d4_e2",
+        "unifiedCode": "[PECH-INC_PRESS-NITRO_01]",
         "name": "Press Inclinado en Máquina (Nitro Incline)",
         "muscleGroup": "Pecho (Pectoral Superior Clavicular)",
         "loadFamily": "Familia Press Superior Inclinado",
@@ -1273,7 +1346,8 @@ export const scientificProtocol = [
         "equivalents": [
           {
             "id": "d4_e2_eq1",
-            "name": "Press Inclinado con mancuernas a 30°",
+            "unifiedCode": "[PECH-INC_PRESS-MANC_30]",
+            "name": "Press Inclinado con Mancuernas (Banco a 30°)",
             "desc": "Libertad de rotación con peso libre.",
             "ratio": 0.45,
             "biomechanics": "Banco a 30° con mancuernas pesadas en agarre semi-neutro. Libertad rotacional de hombro.",
@@ -1288,7 +1362,8 @@ export const scientificProtocol = [
           },
           {
             "id": "d4_e2_eq2",
-            "name": "Smith Inclinado a 30°",
+            "unifiedCode": "[PECH-INC_PRESS-SMITH_01]",
+            "name": "Press Inclinado en Multipower (Smith) a 30°",
             "desc": "Estabilidad axial para sobrecarga.",
             "ratio": 1,
             "biomechanics": "Guía vertical Smith con banco a 30°. Permite forzar el fallo muscular con los seguros listos.",
@@ -1311,7 +1386,8 @@ export const scientificProtocol = [
       },
       {
         "id": "d4_e3",
-        "name": "Cristos en Máquina (Pec Deck)",
+        "unifiedCode": "[PECH-PEC_DECK-STACK_01]",
+        "name": "Aperturas en Máquina Pec Deck (Peacock / Flyes)",
         "muscleGroup": "Pecho (Aislamiento Pectoral)",
         "sets": 3,
         "reps": "10-12",
@@ -1323,7 +1399,8 @@ export const scientificProtocol = [
         "equivalents": [
           {
             "id": "d4_e3_eq1",
-            "name": "Aperturas en polea media",
+            "unifiedCode": "[PECH-CABLE_CROSS-MID_01]",
+            "name": "Cruce de Poleas a Media Altura (Cable Crossover)",
             "desc": "Tensión constante en línea de fibras.",
             "ratio": 0.8,
             "biomechanics": "Banco inclinado a 30° colocado entre dos poleas bajas. Cruce en diagonal ascendente.",
@@ -1338,7 +1415,8 @@ export const scientificProtocol = [
           },
           {
             "id": "d4_e3_eq2",
-            "name": "Cruces de polea",
+            "unifiedCode": "[PECH-CABLE_CROSS-LOW_01]",
+            "name": "Cruce de Poleas Bajas (Cable Crossover)",
             "desc": "Cruce al frente para máxima contracción esternal.",
             "ratio": 0.8,
             "biomechanics": "Poleas a la altura media de los hombros con un paso al frente.",
@@ -1361,7 +1439,8 @@ export const scientificProtocol = [
       },
       {
         "id": "d4_e6",
-        "name": "Extensión de Tríceps en Polea (Pushdown)",
+        "unifiedCode": "[TRIC-PUSHDOWN-CABLE_01]",
+        "name": "Extensión de Tríceps en Polea (Pushdown con Cuerda o Barra)",
         "muscleGroup": "Tríceps (Cabeza Lateral)",
         "sets": 4,
         "reps": "10-12",
@@ -1373,7 +1452,8 @@ export const scientificProtocol = [
         "equivalents": [
           {
             "id": "d4_e5",
-            "name": "Extensión de Tríceps en Máquina (Sentado)",
+            "unifiedCode": "[TRIC-SEATED_EXT-MAQ_01]",
+            "name": "Extensión de Tríceps en Máquina Sentado",
             "desc": "Aislamiento guiado con apoyo de codos.",
             "ratio": 1.2,
             "biomechanics": "Sentado con codos fijados sobre el rodillo de apoyo alineados con el eje de rotación. Empuja hacia abajo con contracción estricta de 1s.",
@@ -1388,7 +1468,8 @@ export const scientificProtocol = [
           },
           {
             "id": "d4_e6_eq1",
-            "name": "Extensión cruzada de tríceps en poleas (Katana extension)",
+            "unifiedCode": "[TRIC-KATANA_EXT-CABLE_01]",
+            "name": "Extensión Cruzada Katana en Poleas (Katana Extension)",
             "desc": "Alineación perfecta con la cabeza larga.",
             "ratio": 0.8,
             "biomechanics": "Polea alta con barra en V o cuerdas cruzadas. Agarre firme con empuje continuo.",
@@ -1411,7 +1492,8 @@ export const scientificProtocol = [
       },
       {
         "id": "d4_e7",
-        "name": "Vacuum Abdominal (Transverso)",
+        "unifiedCode": "[ABDO-VACUUM-ISOM_01]",
+        "name": "Vacuum Abdominal (Transverso / Cintura Estrecha)",
         "muscleGroup": "Core (Transverso & Cintura Estrecha)",
         "sets": 4,
         "reps": "20-25 s",
@@ -1424,7 +1506,8 @@ export const scientificProtocol = [
         "equivalents": [
           {
             "id": "d4_e7_eq1",
-            "name": "Plancha Abdominal Isométrica",
+            "unifiedCode": "[ABDO-PLANK-ISOM_01]",
+            "name": "Plancha Abdominal Isométrica Convencional",
             "desc": "Estabilidad del core.",
             "ratio": 1,
             "biomechanics": "Tumbado supino, retroversión pélvica pegando la zona lumbar al suelo.",
@@ -1447,6 +1530,7 @@ export const scientificProtocol = [
       },
       {
         "id": "d4_e9",
+        "unifiedCode": "[CARD-TREADMILL-ZONA2_01]",
         "name": "Cardio Zona 2 en Caminadora",
         "muscleGroup": "Cardiovascular (Zona 2)",
         "sets": 1,
@@ -1460,7 +1544,8 @@ export const scientificProtocol = [
         "equivalents": [
           {
             "id": "d4_e9_eq1",
-            "name": "Caminadora en Inclinación",
+            "unifiedCode": "[CARD-TREADMILL-INCLINE_01]",
+            "name": "Caminadora en Inclinación (Zona 2)",
             "desc": "Bajo impacto articular y alto gasto calórico.",
             "ratio": 1,
             "biomechanics": "Caminadora a 3.8-4.2 km/h con inclinación del 11-12%.",
@@ -1475,7 +1560,8 @@ export const scientificProtocol = [
           },
           {
             "id": "d4_e9_eq2",
-            "name": "Bicicleta Estática",
+            "unifiedCode": "[CARD-BIKE-STATIONARY_01]",
+            "name": "Bicicleta Estática (Zona 2)",
             "desc": "Cadencia fluida sin estrés plantar.",
             "ratio": 1,
             "biomechanics": "Bicicleta estática con resistencia moderada a 80-90 RPM. Cadencia constante con frecuencia cardíaca estable.",
@@ -1507,6 +1593,7 @@ export const scientificProtocol = [
     "exercises": [
       {
         "id": "d5_e2",
+        "unifiedCode": "[ISQU-LEG_CURL-SEATED_01]",
         "name": "Flexión de Femorales Sentado (Seated Leg Curl)",
         "muscleGroup": "Isquiotibiales (Flexores de Rodilla)",
         "loadFamily": "Familia Flexión de Femorales (Isquiotibiales)",
@@ -1520,7 +1607,8 @@ export const scientificProtocol = [
         "equivalents": [
           {
             "id": "d5_e2_eq1",
-            "name": "Flexión de femorales tumbado (Lying Leg Curl)",
+            "unifiedCode": "[ISQU-LEG_CURL-LYING_01]",
+            "name": "Flexión de Femorales Tumbado (Lying Leg Curl)",
             "desc": "Aislamiento en posición prona.",
             "ratio": 0.9,
             "biomechanics": "Tumbado prono con almohadilla en tobillos. Aprieta la pelvis contra el banco para no arquear la zona lumbar.",
@@ -1535,7 +1623,8 @@ export const scientificProtocol = [
           },
           {
             "id": "d5_e2_eq2",
-            "name": "Curl nórdico asistido",
+            "unifiedCode": "[ISQU-NORDIC_CURL-ASSIST_01]",
+            "name": "Curl Nórdico Asistido",
             "desc": "Fuerza excéntrica pura.",
             "ratio": 1,
             "biomechanics": "Tobillos anclados, cuerpo recto como una tabla. Descenso excéntrico resistiendo la gravedad con los isquiotibiales.",
@@ -1558,7 +1647,8 @@ export const scientificProtocol = [
       },
       {
         "id": "d5_e3",
-        "name": "Prensa 45° (Pies Altos y Abiertos)",
+        "unifiedCode": "[GLUT-LEG_PRESS-HIGH_FEET_45]",
+        "name": "Prensa 45° (Pies Altos y Abiertos para Glúteo)",
         "muscleGroup": "Glúteos & Isquiotibiales (Cadena Posterior)",
         "loadFamily": "Familia Prensa de Piernas",
         "sets": 4,
@@ -1571,7 +1661,8 @@ export const scientificProtocol = [
         "equivalents": [
           {
             "id": "d5_e3_eq1",
-            "name": "Hip Thrust en máquina o con barra libre (3x8-10)",
+            "unifiedCode": "[GLUT-HIP_THRUST-MAQ_01]",
+            "name": "Empuje de Cadera en Máquina Guiada o Barra (Hip Thrust)",
             "desc": "Máxima tensión en acortamiento de glúteo.",
             "ratio": 0.9,
             "biomechanics": "Espalda apoyada en banco a la altura de escápulas o en máquina específica. Empuje pélvico con retroversión en la cima.",
@@ -1594,6 +1685,7 @@ export const scientificProtocol = [
       },
       {
         "id": "d5_e1",
+        "unifiedCode": "[ISQU-RDL-MANC_01]",
         "name": "Peso Muerto Rumano (RDL) con Mancuernas",
         "muscleGroup": "Isquiotibiales & Glúteos (Cadena Posterior Elongada)",
         "loadFamily": "Familia Peso Muerto Rumano / Bisagra Cadera",
@@ -1607,7 +1699,8 @@ export const scientificProtocol = [
         "equivalents": [
           {
             "id": "d5_e1_eq1",
-            "name": "Peso Muerto Rumano con Barra",
+            "unifiedCode": "[ISQU-RDL-BARBELL_01]",
+            "name": "Peso Muerto Rumano con Barra Libre (RDL)",
             "desc": "Sobrecarga pesada con barra libre.",
             "ratio": 1.1,
             "biomechanics": "Agarre a la anchura de hombros sobre barra olímpica. Barra rozando muslos y espinillas. Bisagra profunda con espalda neutra.",
@@ -1622,6 +1715,7 @@ export const scientificProtocol = [
           },
           {
             "id": "d5_e1_eq2",
+            "unifiedCode": "[ISQU-DEADLIFT-TRAP_BAR_01]",
             "name": "Peso Muerto con Barra Hexagonal (Trap Bar)",
             "desc": "Distribución neutral de la carga axial.",
             "ratio": 1.1,
@@ -1645,6 +1739,7 @@ export const scientificProtocol = [
       },
       {
         "id": "d5_e4",
+        "unifiedCode": "[GLUT-BUTT_BLASTER-MAQ_01]",
         "name": "Glute Butt Blaster en Máquina",
         "muscleGroup": "Glúteo Mayor (Extensión de Cadera)",
         "isUnilateral": true,
@@ -1659,7 +1754,8 @@ export const scientificProtocol = [
         "equivalents": [
           {
             "id": "d5_e4_eq1",
-            "name": "Extensiones a 45° en Banco Romano (espalda alta redondeada)",
+            "unifiedCode": "[GLUT-ROMAN_CHAIR-45_01]",
+            "name": "Extensiones a 45° en Banco Romano para Glúteo",
             "desc": "Estiramiento y contracción de glúteo mayor.",
             "ratio": 0.8,
             "biomechanics": "De pie frente a polea baja con tobillera o en banco romano 45°. Extensión focalizada en glúteos.",
@@ -1674,7 +1770,8 @@ export const scientificProtocol = [
           },
           {
             "id": "d5_e4_eq2",
-            "name": "Patada de glúteo en polea",
+            "unifiedCode": "[GLUT-CABLE_KICK-ANKLE_01]",
+            "name": "Patada de Glúteo en Polea con Tobillera",
             "desc": "Tensión continua con cable y tobillera.",
             "ratio": 0.5,
             "biomechanics": "Máquina de Hip Thrust o polea baja. Elevación de pelvis o patada con pausa isométrica arriba.",
@@ -1697,7 +1794,8 @@ export const scientificProtocol = [
       },
       {
         "id": "d5_e5",
-        "name": "Abductores en Máquina (Abrir Cadera)",
+        "unifiedCode": "[ABDU-ABDUCTOR-STACK_01]",
+        "name": "Abductores en Máquina (Hip Abduction / Abrir Cadera)",
         "muscleGroup": "Glúteo Medio & Cadena Lateral",
         "sets": 3,
         "reps": "12-15",
@@ -1709,7 +1807,8 @@ export const scientificProtocol = [
         "equivalents": [
           {
             "id": "d5_e6",
-            "name": "Aductores en Máquina (Hip Adduction)",
+            "unifiedCode": "[ADUC-ADUCTOR-STACK_01]",
+            "name": "Aductores en Máquina (Hip Adduction / Cerrar Cadera)",
             "desc": "Trabajo de la cara interna del muslo (aductor mayor).",
             "ratio": 1,
             "biomechanics": "Sentado con espalda erguida. Junta con fuerza contrayendo los muslos internos y aguanta 1-2s apretando al centro.",
@@ -1724,7 +1823,8 @@ export const scientificProtocol = [
           },
           {
             "id": "d5_e5_eq1",
-            "name": "Abducción con tobillera en polea",
+            "unifiedCode": "[ABDU-CABLE_KICK-ANKLE_01]",
+            "name": "Abducción con Tobillera en Polea",
             "desc": "Tensión constante en recorrido libre.",
             "ratio": 0.5,
             "biomechanics": "De pie de costado a polea baja con tobillera en pierna externa. Abducción controlada.",
@@ -1747,7 +1847,8 @@ export const scientificProtocol = [
       },
       {
         "id": "d5_e7",
-        "name": "Elevación de Pantorrillas",
+        "unifiedCode": "[PANT-CALF_RAISE-MAQ_01]",
+        "name": "Elevación de Pantorrillas en Máquina (Rotary o de Pie)",
         "muscleGroup": "Pantorrillas (Gastrocnemio & Sóleo)",
         "sets": 4,
         "reps": "10-12",
@@ -1758,23 +1859,9 @@ export const scientificProtocol = [
         "searchQuery": "calf raises stretch pause high reps",
         "equivalents": [
           {
-            "id": "d5_e8",
-            "name": "Vacuum Abdominal (Transverso) o Pallof Press",
-            "desc": "Core profundo y estabilidad lumbar.",
-            "ratio": 1,
-            "biomechanics": "Exhala todo el aire vaciando completamente los pulmones. Sin volver a inhalar, mete el ombligo lo más adentro posible por 15-20 segundos.",
-            "mindMuscle": {
-              "title": "Transverso Abdominal (Vacuum)",
-              "internalCue": "Succiona el abdomen hacia adentro y arriba.",
-              "externalCue": "Pega el ombligo a la columna vaciando todo el aire.",
-              "eccentricCue": "Inhala pausado al terminar la apnea."
-            },
-            "searchQuery": "stomach vacuum transverse abdominis form",
-            "warmup": "🔥 No ocupa."
-          },
-          {
             "id": "d5_e7_eq1",
-            "name": "Elevación en Smith sobre escalón o en Prensa",
+            "unifiedCode": "[PANT-CALF_RAISE-SMITH_01]",
+            "name": "Elevación de Pantorrillas en Smith sobre Escalón",
             "desc": "Carga axial de pie o en trineo.",
             "ratio": 1,
             "biomechanics": "Máquina de gemelo de pie con hombreras acolchadas. Rodillas con microflexión fija.",
@@ -1796,7 +1883,45 @@ export const scientificProtocol = [
         }
       },
       {
+        "id": "d5_e8",
+        "unifiedCode": "[ABDO-VACUUM-ISOM_01]",
+        "name": "Vacuum Abdominal (Transverso / Cintura Estrecha)",
+        "muscleGroup": "Core (Transverso & Cintura Estrecha)",
+        "sets": 3,
+        "reps": "15-20 s",
+        "restTime": "60 s",
+        "defaultUnit": "s",
+        "biomechanics": "Exhala todo el aire vaciando completamente los pulmones. Sin volver a inhalar, mete el ombligo lo más adentro posible por 15-20 segundos.",
+        "mindMuscle": {
+          "title": "Transverso Abdominal (Vacuum)",
+          "internalCue": "Succiona el abdomen hacia adentro y arriba.",
+          "externalCue": "Pega el ombligo a la columna vaciando todo el aire.",
+          "eccentricCue": "Inhala pausado al terminar la apnea."
+        },
+        "warmup": "🔥 No ocupa.",
+        "searchQuery": "stomach vacuum transverse abdominis form",
+        "equivalents": [
+          {
+            "id": "d5_e8_eq1",
+            "unifiedCode": "[ABDO-PLANK-ISOM_01]",
+            "name": "Plancha Abdominal Isométrica Convencional",
+            "desc": "Resistencia isométrica del núcleo abdominal.",
+            "ratio": 1,
+            "biomechanics": "Apoyo en antebrazos y puntas de pies manteniendo columna neutral.",
+            "mindMuscle": {
+              "title": "Plancha Abdominal",
+              "internalCue": "Aprieta glúteos y abdomen como si recibieras un golpe.",
+              "externalCue": "Mantén el cuerpo como una tabla rígida.",
+              "eccentricCue": "Respira de forma controlada."
+            },
+            "searchQuery": "Plancha isométrica tecnica",
+            "warmup": "🔥 No ocupa."
+          }
+        ]
+      },
+      {
         "id": "d5_e9",
+        "unifiedCode": "[CARD-TREADMILL-ZONA2_01]",
         "name": "Cardio Zona 2 en Caminadora",
         "muscleGroup": "Cardiovascular (Zona 2 & Recuperación)",
         "sets": 1,
@@ -1810,7 +1935,8 @@ export const scientificProtocol = [
         "equivalents": [
           {
             "id": "d5_e9_eq1",
-            "name": "Caminadora en Inclinación",
+            "unifiedCode": "[CARD-TREADMILL-INCLINE_01]",
+            "name": "Caminadora en Inclinación (Zona 2)",
             "desc": "Bajo impacto articular y alto gasto calórico.",
             "ratio": 1,
             "biomechanics": "Caminadora a 3.5-3.8 km/h con inclinación del 10-11%. Cero impacto articular en rodillas, activación sostenida de gemelos y glúteos.",
@@ -1825,7 +1951,8 @@ export const scientificProtocol = [
           },
           {
             "id": "d5_e9_eq2",
-            "name": "Bicicleta Estática",
+            "unifiedCode": "[CARD-BIKE-STATIONARY_01]",
+            "name": "Bicicleta Estática (Zona 2)",
             "desc": "Alternativa de nulo impacto articular.",
             "ratio": 1,
             "biomechanics": "Cadencia sostenida de 75-85 RPM con resistencia moderada manteniendo FC en 120-135 BPM.",
@@ -1851,6 +1978,7 @@ export const scientificProtocol = [
     "exercises": [
       {
         "id": "d6_e1",
+        "unifiedCode": "[ESPA-PULLDOWN-V_GRIP_01]",
         "name": "Jalón con Agarre Estrecho Neutro (V-Grip)",
         "muscleGroup": "Espalda (Dorsal Inferior & V-Taper)",
         "loadFamily": "Familia Jalón Vertical Dorsal",
@@ -1864,6 +1992,7 @@ export const scientificProtocol = [
         "equivalents": [
           {
             "id": "d6_e1_eq_wide",
+            "unifiedCode": "[ESPA-PULLDOWN-WIDE_01]",
             "name": "Jalón al Pecho en Polea (Agarre Ancho Pronado)",
             "desc": "Constructor de amplitud con agarre amplio thumbless.",
             "ratio": 1,
@@ -1879,7 +2008,8 @@ export const scientificProtocol = [
           },
           {
             "id": "d6_e1_eq1",
-            "name": "Jalón con agarre supino (al ancho de hombros)",
+            "unifiedCode": "[ESPA-PULLDOWN-SUPINE_01]",
+            "name": "Jalón con Agarre Supino (al Ancho de Hombros)",
             "desc": "Mayor ayuda de flexores para sobrecarga dorsal.",
             "ratio": 1,
             "biomechanics": "Polea alta con agarre supino o maneral individual. Tracción unilateral pegando el codo a la cadera con ligera flexión lateral de torso.",
@@ -1894,7 +2024,8 @@ export const scientificProtocol = [
           },
           {
             "id": "d6_e1_eq2",
-            "name": "Dominadas neutras cerradas",
+            "unifiedCode": "[ESPA-CHINUP-CLOSE_NEUTRAL_01]",
+            "name": "Dominadas Neutras Cerradas",
             "desc": "Fuerza calisténica en barra cerrada.",
             "ratio": 0.9,
             "biomechanics": "Dominadas con agarre neutro cerrado en barra con paralelas. Elevación con pecho al frente.",
@@ -1917,7 +2048,8 @@ export const scientificProtocol = [
       },
       {
         "id": "d6_e2",
-        "name": "Remo en Máquina o Gironda (Agarre Neutro)",
+        "unifiedCode": "[ESPA-SEATED_ROW-GIRONDA_01]",
+        "name": "Remo Gironda en Polea Baja (Agarre Neutro)",
         "muscleGroup": "Espalda (Densidad Dorsal Media & Trapecio)",
         "loadFamily": "Familia Remo Horizontal",
         "sets": 4,
@@ -1930,6 +2062,7 @@ export const scientificProtocol = [
         "equivalents": [
           {
             "id": "d6_e2_eq_comp",
+            "unifiedCode": "[ESPA-MACHINE_ROW-CHEST_SUPP_01]",
             "name": "Remo Compuesto en Máquina (Apoyo al Pecho)",
             "desc": "Cero estrés lumbar, tracción horizontal retrayendo escápulas.",
             "ratio": 1,
@@ -1945,7 +2078,8 @@ export const scientificProtocol = [
           },
           {
             "id": "d6_e2_eq1",
-            "name": "Remo con mancuerna a una mano apoyado en banco",
+            "unifiedCode": "[ESPA-ONE_ARM_ROW-MANC_01]",
+            "name": "Remo con Mancuerna a una Mano apoyado en Banco",
             "desc": "Independencia unilateral de brazos.",
             "ratio": 0.5,
             "biomechanics": "Mano y rodilla apoyadas en banco plano. Torso paralelo al suelo. Tracción de la mancuerna hacia la cadera en arco.",
@@ -1968,7 +2102,8 @@ export const scientificProtocol = [
       },
       {
         "id": "d6_e4",
-        "name": "Elevaciones Laterales con Mancuernas (o Máquina)",
+        "unifiedCode": "[HOMB-LAT_RAISE-MANC_01]",
+        "name": "Elevaciones Laterales con Mancuernas",
         "muscleGroup": "Hombro (Deltoides Lateral)",
         "sets": 4,
         "reps": "12-15",
@@ -1980,6 +2115,7 @@ export const scientificProtocol = [
         "equivalents": [
           {
             "id": "d6_e4_eq_mach",
+            "unifiedCode": "[HOMB-LAT_RAISE-MAQ_01]",
             "name": "Elevaciones Laterales en Máquina",
             "desc": "Guía fija para aislar el húmero sin fatiga de trapecios.",
             "ratio": 1.5,
@@ -1995,6 +2131,7 @@ export const scientificProtocol = [
           },
           {
             "id": "d6_e4_eq_cable_back",
+            "unifiedCode": "[HOMB-LAT_RAISE-BEHIND_CABLE_01]",
             "name": "Elevaciones Laterales en Polea Baja (Tras Espalda)",
             "desc": "Tensión continua ininterrumpida desde los 0° de abducción.",
             "ratio": 0.6,
@@ -2010,7 +2147,8 @@ export const scientificProtocol = [
           },
           {
             "id": "d6_e4_eq1",
-            "name": "Elevaciones laterales en polea",
+            "unifiedCode": "[HOMB-LAT_RAISE-CABLE_01]",
+            "name": "Elevaciones Laterales en Polea Baja a una Mano",
             "desc": "Tensión uniforme en todo el arco articular.",
             "ratio": 0.6,
             "biomechanics": "Polea baja a la altura de la rodilla con un paso lateral. Tensión continua.",
@@ -2033,7 +2171,8 @@ export const scientificProtocol = [
       },
       {
         "id": "d6_e3",
-        "name": "Face Pulls en Polea Alta",
+        "unifiedCode": "[HOMB-FACE_PULL-HIGH_CABLE_01]",
+        "name": "Face Pulls en Polea Alta con Cuerda",
         "muscleGroup": "Hombro (Deltoides Posterior & Manguito)",
         "sets": 3,
         "reps": "12-15",
@@ -2045,7 +2184,8 @@ export const scientificProtocol = [
         "equivalents": [
           {
             "id": "d6_e3_eq1",
-            "name": "Pájaros en Pec Deck Inverso",
+            "unifiedCode": "[HOMB-REAR_DELT-PEC_DECK_01]",
+            "name": "Pájaros en Pec Deck Inverso (Reverse Flyes)",
             "desc": "Aislamiento directo en máquina deltoides posterior.",
             "ratio": 1,
             "biomechanics": "Torso inclinado o sentado de frente en Pec Deck abriendo los brazos con codos a la altura de los hombros.",
@@ -2060,6 +2200,7 @@ export const scientificProtocol = [
           },
           {
             "id": "d6_e3_eq_db",
+            "unifiedCode": "[HOMB-REAR_DELT-MANC_INC_01]",
             "name": "Pájaros con Mancuernas en Banco Inclinado",
             "desc": "Aislamiento libre para deltoides posterior.",
             "ratio": 0.5,
@@ -2075,7 +2216,8 @@ export const scientificProtocol = [
           },
           {
             "id": "d6_e3_eq2",
-            "name": "Remo al mentón amplio en polea",
+            "unifiedCode": "[HOMB-UPRIGHT_ROW-CABLE_01]",
+            "name": "Remo al Mentón Amplio en Polea",
             "desc": "Énfasis en deltoides lateral y posterior.",
             "ratio": 0.9,
             "biomechanics": "Poleas cruzadas bajas elevando los brazos en 'Y' a 45° de abducción.",
@@ -2098,6 +2240,7 @@ export const scientificProtocol = [
       },
       {
         "id": "d6_e5",
+        "unifiedCode": "[BICEP-INCLINE_CURL-MANC_60_01]",
         "name": "Curl de Bíceps con Mancuernas (Sentado en Banco a 60°)",
         "muscleGroup": "Bíceps (Cabeza Larga & Pico)",
         "sets": 3,
@@ -2110,7 +2253,8 @@ export const scientificProtocol = [
         "equivalents": [
           {
             "id": "d6_e5_eq_bayes",
-            "name": "Bayesian Cable Curl (Estiramiento Humeral)",
+            "unifiedCode": "[BICEP-CABLE_CURL-BAYESIAN_01]",
+            "name": "Bayesian Cable Curl (Estiramiento Humeral en Polea)",
             "desc": "De espaldas a la polea baja, máxima tensión en estiramiento.",
             "ratio": 0.8,
             "biomechanics": "De espaldas a la polea baja, codo por detrás del cuerpo. Pone la cabeza larga del bíceps en tensión máxima elongada. Da un paso al frente de modo que el brazo quede extendido detrás del torso. Con el codo bloqueado detrás de la cadera, flexiona el antebrazo sin adelantar el codo. Pausa de 1s arriba.",
@@ -2125,6 +2269,7 @@ export const scientificProtocol = [
           },
           {
             "id": "d6_e5_eq_cable",
+            "unifiedCode": "[BICEP-CABLE_CURL-LOW_STRAIGHT_01]",
             "name": "Curl de Bíceps en Polea Baja (Barra Recta)",
             "desc": "Tensión mecánica continua con codos pegados al torso.",
             "ratio": 1,
@@ -2140,7 +2285,8 @@ export const scientificProtocol = [
           },
           {
             "id": "d6_e5_eq_scott",
-            "name": "Curl en Banco Predicador (Scott) o Máquina",
+            "unifiedCode": "[BICEP-PREACHER_CURL-SCOTT_MAQ_01]",
+            "name": "Curl de Bíceps en Banco Scott o Máquina Predicador",
             "desc": "Aislamiento estricto de cabeza corta y pico.",
             "ratio": 0.9,
             "biomechanics": "Tríceps y axilas firmemente apoyados sobre la almohadilla inclinada a 45°. Asiento ajustado para no encorvar la espalda. El apoyo del brazo elimina cualquier impulso del hombro o balanceo del torso.",
@@ -2155,7 +2301,8 @@ export const scientificProtocol = [
           },
           {
             "id": "d6_e5_eq1",
-            "name": "Curl martillo con mancuernas (enfoque en braquial y braquiorradial)",
+            "unifiedCode": "[BICEP-HAMMER_CURL-MANC_01]",
+            "name": "Curl Martillo con Mancuernas (Braquial)",
             "desc": "Desarrollo del braquial anterior y antebrazo.",
             "ratio": 1,
             "biomechanics": "Banco inclinado a 60°, brazos colgando detrás del torso con agarre neutro estricto.",
@@ -2170,7 +2317,8 @@ export const scientificProtocol = [
           },
           {
             "id": "d6_e5_eq_barbell",
-            "name": "Curl con barra Z de pie",
+            "unifiedCode": "[BICEP-BARBELL_CURL-EZ_BAR_01]",
+            "name": "Curl con Barra Z de Pie",
             "desc": "Sobrecarga con barra libre para bíceps.",
             "ratio": 1,
             "biomechanics": "Agarre en las curvas de la barra Z para comodidad de muñecas. Cero balanceo de espalda lumbar.",
@@ -2193,7 +2341,8 @@ export const scientificProtocol = [
       },
       {
         "id": "d6_e6",
-        "name": "Curl en Banco Predicador (Scott) o Máquina",
+        "unifiedCode": "[BICEP-PREACHER_CURL-SCOTT_MAQ_01]",
+        "name": "Curl de Bíceps en Banco Scott o Máquina Predicador",
         "muscleGroup": "Bíceps (Cabeza Corta & Grosor Interno)",
         "sets": 3,
         "reps": "10-12",
@@ -2205,7 +2354,8 @@ export const scientificProtocol = [
         "equivalents": [
           {
             "id": "d6_e6_eq_bayes",
-            "name": "Bayesian Cable Curl (Estiramiento Humeral)",
+            "unifiedCode": "[BICEP-CABLE_CURL-BAYESIAN_01]",
+            "name": "Bayesian Cable Curl (Estiramiento Humeral en Polea)",
             "desc": "De espaldas a la polea baja, máxima tensión en estiramiento.",
             "ratio": 0.8,
             "biomechanics": "De espaldas a la polea baja, codo por detrás del cuerpo. Pone la cabeza larga del bíceps en tensión máxima elongada. Da un paso al frente de modo que el brazo quede extendido detrás del torso. Con el codo bloqueado detrás de la cadera, flexiona el antebrazo sin adelantar el codo. Pausa de 1s arriba.",
@@ -2220,6 +2370,7 @@ export const scientificProtocol = [
           },
           {
             "id": "d6_e6_eq_cable",
+            "unifiedCode": "[BICEP-CABLE_CURL-LOW_STRAIGHT_01]",
             "name": "Curl de Bíceps en Polea Baja (Barra Recta)",
             "desc": "Tensión mecánica continua con codos pegados al torso.",
             "ratio": 1,
@@ -2235,6 +2386,7 @@ export const scientificProtocol = [
           },
           {
             "id": "d6_e6_eq_incline",
+            "unifiedCode": "[BICEP-INCLINE_CURL-MANC_60_01]",
             "name": "Curl de Bíceps con Mancuernas (Sentado en Banco a 60°)",
             "desc": "La inclinación hacia atrás elonga la cabeza larga del bíceps.",
             "ratio": 0.5,
@@ -2250,7 +2402,8 @@ export const scientificProtocol = [
           },
           {
             "id": "d6_e6_eq1",
-            "name": "Curl en banco Scott con barra Z",
+            "unifiedCode": "[BICEP-PREACHER_CURL-EZ_BAR_01]",
+            "name": "Curl en Banco Scott con Barra Z",
             "desc": "Variante con barra libre y apoyo predicador.",
             "ratio": 0.9,
             "biomechanics": "Pecho apoyado en banco inclinado a 45°, brazos colgando verticalmente con barra Z. Gran sobrecarga en contracción pico.",
@@ -2265,7 +2418,8 @@ export const scientificProtocol = [
           },
           {
             "id": "d6_e6_eq2",
-            "name": "Curl concentrado con mancuerna",
+            "unifiedCode": "[BICEP-CONCENTRATION_CURL-MANC_01]",
+            "name": "Curl Concentrado con Mancuerna",
             "desc": "Aislamiento individual apoyado en muslo.",
             "ratio": 0.45,
             "biomechanics": "Sentado con codo apoyado en la cara interna del muslo. Curl estricto a una mano con mancuerna.",
@@ -2288,7 +2442,8 @@ export const scientificProtocol = [
       },
       {
         "id": "d6_e7",
-        "name": "Vacuum Abdominal",
+        "unifiedCode": "[ABDO-VACUUM-ISOM_01]",
+        "name": "Vacuum Abdominal (Transverso / Cintura Estrecha)",
         "muscleGroup": "Core (Transverso & Cintura Estrecha)",
         "sets": 4,
         "reps": "20-25 s",
@@ -2301,7 +2456,8 @@ export const scientificProtocol = [
         "equivalents": [
           {
             "id": "d6_e7_eq1",
-            "name": "Plancha Isométrica",
+            "unifiedCode": "[ABDO-PLANK-ISOM_01]",
+            "name": "Plancha Abdominal Isométrica Convencional",
             "desc": "Estabilidad y contracción del core.",
             "ratio": 1,
             "biomechanics": "Posición de cuatro apoyos en colchoneta. Aspiración diafragmática de 15 a 20 segundos.",
@@ -2316,7 +2472,8 @@ export const scientificProtocol = [
           },
           {
             "id": "d6_e7_eq_pallof",
-            "name": "Pallof Press en Polea",
+            "unifiedCode": "[ABDO-PALLOF_PRESS-CABLE_01]",
+            "name": "Pallof Press en Polea (Anti-Rotación)",
             "desc": "Fuerza y control anti-rotacional de core.",
             "ratio": 1,
             "biomechanics": "Polea a la altura del esternón. De pie perpendicular a la polea con agarre doble frente al pecho. Extiende los brazos al frente en línea recta resistiendo el torque rotacional del cable.",
@@ -2339,7 +2496,8 @@ export const scientificProtocol = [
       },
       {
         "id": "d6_e8",
-        "name": "Cardio Zona 2",
+        "unifiedCode": "[CARD-TREADMILL-ZONA2_01]",
+        "name": "Cardio Zona 2 en Caminadora",
         "muscleGroup": "Cardiovascular (Zona 2)",
         "sets": 1,
         "reps": "35-45 min",
@@ -2352,7 +2510,8 @@ export const scientificProtocol = [
         "equivalents": [
           {
             "id": "d6_e8_eq1",
-            "name": "Caminadora en Inclinación",
+            "unifiedCode": "[CARD-TREADMILL-INCLINE_01]",
+            "name": "Caminadora en Inclinación (Zona 2)",
             "desc": "Bajo impacto articular y alto gasto calórico.",
             "ratio": 1,
             "biomechanics": "Caminadora en inclinación de 8-10% a ritmo moderado continuo.",
@@ -2367,7 +2526,8 @@ export const scientificProtocol = [
           },
           {
             "id": "d6_e8_eq2",
-            "name": "Bicicleta Estática",
+            "unifiedCode": "[CARD-BIKE-STATIONARY_01]",
+            "name": "Bicicleta Estática (Zona 2)",
             "desc": "Cadencia continua fluida sin impacto.",
             "ratio": 1,
             "biomechanics": "Bicicleta estática a 80 RPM continua.",
@@ -2382,7 +2542,8 @@ export const scientificProtocol = [
           },
           {
             "id": "d6_e8_eq3",
-            "name": "Elíptica en Zona 2",
+            "unifiedCode": "[CARD-ELLIPTICAL-ZONA2_01]",
+            "name": "Elíptica (Zona 2)",
             "desc": "Cero impacto articular con activación de cuerpo completo.",
             "ratio": 1,
             "biomechanics": "Elíptica a ritmo moderado constante manteniendo 120-135 BPM.",

@@ -1,13 +1,13 @@
 // SERVICIO DE SINCRONIZACIÓN MAESTRA: FIRESTORE (NUBE) ➔ INDEXEDDB (LOCAL)
 // Garantiza que el 100% del historial y las configuraciones residan localmente para análisis sin fallos offline.
 
-import { db } from './firebase.js';
-import { collection, getDocs } from 'firebase/firestore';
+import { db, sanitizeForFirestore } from './firebase.js';
+import { collection, getDocs, doc, setDoc } from 'firebase/firestore';
 import { get, set } from 'idb-keyval';
 
 /**
  * Descarga y consolida TODO el historial de sesiones y TODAS las configuraciones
- * desde Firestore hacia la base de datos local IndexedDB.
+ * entre Firestore y la base de datos local IndexedDB (Sincronización Bidireccional).
  */
 export async function syncAllCloudDataToIndexedDB(currentUser) {
   if (!currentUser || !currentUser.uid) {
@@ -21,7 +21,6 @@ export async function syncAllCloudDataToIndexedDB(currentUser) {
     // 1. DESCARGA Y CONSOLIDACIÓN DEL 100% DEL HISTORIAL DE SESIONES
     // =========================================================================
     const historyColRef = collection(db, 'users', currentUser.uid, 'history');
-    // Consulta directa sin orderBy('timestamp') para NO omitir documentos antiguos o con fecha en formato alternativo
     const historySnapshot = await getDocs(historyColRef);
     const firestoreSessions = historySnapshot.docs.map(docSnap => docSnap.data());
 
@@ -31,18 +30,44 @@ export async function syncAllCloudDataToIndexedDB(currentUser) {
 
     // Fusión estricta sin pérdida de datos
     const sessionMap = new Map();
+    const firestoreKeys = new Set();
+
     // Primero agregar sesiones de Firestore
     firestoreSessions.forEach(s => {
       const key = s.id || s.timestamp || s.date;
-      if (key) sessionMap.set(key, s);
-    });
-    // Luego incorporar sesiones locales que aún no hayan subido
-    localCache.forEach(s => {
-      const key = s.id || s.timestamp || s.date;
-      if (key && !sessionMap.has(key)) {
+      if (key) {
         sessionMap.set(key, s);
+        firestoreKeys.add(key);
       }
     });
+
+    // Luego incorporar sesiones locales que aún no estén en Firestore
+    const localOnlySessions = [];
+    localCache.forEach(s => {
+      const key = s.id || s.timestamp || s.date;
+      if (key) {
+        if (!sessionMap.has(key)) {
+          sessionMap.set(key, s);
+        }
+        if (!firestoreKeys.has(key)) {
+          localOnlySessions.push(s);
+        }
+      }
+    });
+
+    // Sincronizar hacia la nube (Local ➔ Firestore) las sesiones que faltaban en Firebase
+    if (localOnlySessions.length > 0) {
+      console.log(`[Adonis Sync] 💾 ➔ ☁️ Subiendo ${localOnlySessions.length} sesiones locales a Firestore...`);
+      for (const s of localOnlySessions) {
+        const id = s.id || `ses_${s.timestamp || s.date || Date.now()}`;
+        try {
+          const docRef = doc(db, 'users', currentUser.uid, 'history', id);
+          await setDoc(docRef, sanitizeForFirestore(s), { merge: true });
+        } catch (uploadErr) {
+          console.warn(`[Adonis Sync] Error subiendo sesión local ${id}:`, uploadErr);
+        }
+      }
+    }
 
     // Ordenar cronológicamente ascendente
     const allSessions = Array.from(sessionMap.values()).sort((a, b) => {
@@ -74,14 +99,19 @@ export async function syncAllCloudDataToIndexedDB(currentUser) {
       }
     }
 
-    console.log(`[Adonis Sync] ☁️ ➔ 💾 Sincronización exitosa: ${allSessions.length} sesiones y ${storeCount} configuraciones respaldadas en IndexedDB.`);
+    console.log(
+      `[Adonis Sync] 👤 Usuario: ${currentUser.email || currentUser.uid}\n` +
+      `[Adonis Sync] ☁️ Firestore: ${firestoreSessions.length} sesiones, ${storeCount} configuraciones\n` +
+      `[Adonis Sync] 💾 IndexedDB Local: ${localCache.length} sesiones previas ➔ Total consolidado: ${allSessions.length} sesiones.`
+    );
 
     // Notificar a la app de la sincronización completada
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('adonis_cloud_synced', {
         detail: {
           sessionsCount: allSessions.length,
-          storeCount
+          storeCount,
+          allSessions
         }
       }));
     }

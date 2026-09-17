@@ -23,4 +23,6 @@ dist-ssr
 *.sln
 *.sw?
 RESPALDOS PRUEBA JSON/
+base de datos pruebas/
 *.backup.json
+*Backup*.json
