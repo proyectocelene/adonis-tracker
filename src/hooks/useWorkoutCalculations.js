@@ -18,6 +18,49 @@ export function calculate1RM(weight, reps) {
 }
 
 /**
+ * Motor Biomecánico Inteligente para Clasificación de Unilateral vs Bilateral.
+ * Analiza la naturaleza del ejercicio para evitar que ejercicios bilaterales
+ * (como Lateral Raises en máquina, press banca, jalón, poleas simultáneas, etc.)
+ * se muestren erróneamente con formato de extremidades independientes ("I:15 D:15").
+ *
+ * @param {Object} exercise - Definición del ejercicio
+ * @param {Object} exerciseLogs - Registro actual de la sesión (para respetar toggles del usuario)
+ * @returns {boolean} true si es estrictamente unilateral por lado, false si es bilateral
+ */
+export function isExerciseUnilateral(exercise, exerciseLogs = {}) {
+  if (!exercise) return false;
+
+  // 1. Decisión explícita del usuario en el toggle de la tarjeta actual
+  if (exerciseLogs && typeof exerciseLogs.isUnilateral === 'boolean') {
+    return exerciseLogs.isUnilateral;
+  }
+
+  // 2. Definición explícita en la biblioteca o protocolo
+  if (exercise.isUnilateral !== undefined) {
+    return !!exercise.isUnilateral;
+  }
+
+  const name = (exercise.name || exercise.exerciseName || exercise.canonicalName || '').toLowerCase();
+  const notes = (exercise.biomechanics || exercise.notes || '').toLowerCase();
+
+  // 3. Patrones semánticos que SIEMPRE denotan ejecución UNILATERAL por extremidad:
+  const unilateralRegex = /\b(unilateral|unilaterales)\b|a un brazo|a una pierna|a una mano|un solo brazo|una sola pierna|single[ -]arm|single[ -]leg|one[ -]arm|one[ -]leg|tras espalda|bayesian|b[uú]lgara|bulgarian|step[ -]?up|patada de gl[uú]teo|kickback en polea|curl concentrado/i;
+  
+  if (unilateralRegex.test(name) || unilateralRegex.test(notes)) {
+    return true;
+  }
+
+  // 4. Ejercicios estrictamente bilaterales de musculación (prensas, presses de pecho, barras, sentadillas)
+  const strictlyBilateralRegex = /\b(chest press|press de pecho|press banca|bench press|incline press|press inclinado|press militar|militar|overhead press|squat|sentadilla|prensa|leg press|hack|pulldown|jal[oó]n|chin[ -]?up|pull[ -]?up|remo con barra|tbar|t-bar|peso muerto|deadlift)\b/i;
+  if (strictlyBilateralRegex.test(name)) {
+    return false;
+  }
+
+  // 5. Por defecto en musculación/hipertrofia, todo ejercicio (barras, máquinas, mancuernas simultáneas, poleas dobles) es BILATERAL
+  return false;
+}
+
+/**
  * Calcula el volumen total acumulado en una sesión o ejercicio con soporte para conversión de unidades
  * @param {Array<{weight: number|string, reps: number|string, completed?: boolean, unit?: string}>} sets
  * @returns {number} Volumen total en lbs-reps
@@ -316,12 +359,21 @@ export function getUnifiedExerciseTarget(previousData = {}, targetRepsStr = "10-
     ? (validSets.reduce((sum, s) => sum + s.reps, 0) / validSets.length)
     : 0;
 
-  const anchorWeight = roundToAttainableWeight(
-    heavySets.length > 0
-      ? Math.round(heavySets.reduce((a, b) => a + b.weight, 0) / heavySets.length)
-      : maxW,
-    machineConfig
-  );
+  // El peso ancla real debe ser un peso real ejecutado por el usuario en sus series de trabajo,
+  // nunca un promedio sintético (ej. promediar 125 y 140 dando 132.5 -> 135 lbs, peso que nunca se cargó).
+  const topWeightSets = sets.filter(s => s.weight === maxW && s.weight > 0);
+  let effectiveAnchor = maxW;
+
+  // Si maxW solo fue 1 serie y cayó muy por debajo del rango mínimo (< minReps * 0.6),
+  // buscar el peso de trabajo anterior más consistente:
+  if (topWeightSets.length === 1 && topWeightSets[0].reps < Math.max(3, Math.round(minReps * 0.6))) {
+    const subTopSets = sets.filter(s => s.weight < maxW && s.weight > 0);
+    if (subTopSets.length > 0) {
+      effectiveAnchor = Math.max(...subTopSets.map(s => s.weight));
+    }
+  }
+
+  const anchorWeight = roundToAttainableWeight(effectiveAnchor, machineConfig);
 
   // 1. Detectar si la carga fue EXCESIVA para hipertrofia en la sesión previa
   const severelyLowRepsThreshold = Math.max(3, minReps - 2);
@@ -355,8 +407,12 @@ export function getUnifiedExerciseTarget(previousData = {}, targetRepsStr = "10-
   }
 
   // 2. Evaluar si dominó el rango para SOBRECARGA PROGRESIVA
-  const passedCount = heavySets.filter(s => s.reps >= maxReps && s.rpe <= 8.5).length;
-  const canProgressWeight = passedCount >= Math.ceil(heavySets.length * 0.6) && heavySets.length > 0;
+  // Para subir peso, debe haber dominado el techo de repeticiones (maxReps) en las series DE ESE PESO ANCLA.
+  const anchorSets = sets.filter(s => s.weight === anchorWeight && s.reps > 0);
+  const passedAnchorSets = anchorSets.filter(s => s.reps >= maxReps && s.rpe <= 8.5);
+  const canProgressWeight = anchorSets.length >= 2 
+    ? (passedAnchorSets.length >= Math.ceil(anchorSets.length * 0.6))
+    : (passedAnchorSets.length === 1 && anchorSets[0].reps >= maxReps + 2 && anchorSets[0].rpe <= 7.5);
 
   if (canProgressWeight) {
     const nextW = roundToAttainableWeight(anchorWeight + increment, machineConfig);
@@ -379,20 +435,30 @@ export function getUnifiedExerciseTarget(previousData = {}, targetRepsStr = "10-
     };
   }
 
-  // 3. Detectar si S1 anterior fue un calentamiento accidental
-  const isS1RampUp = sets.length >= 2 && sets[0].weight > 0 && sets[0].weight <= anchorWeight * 0.80;
+  // 3. Detectar si hubo series de aproximación/calentamiento o variación alta
+  const isS1RampUp = sets.length >= 2 && sets[0].weight > 0 && sets[0].weight <= anchorWeight * 0.85;
+  const lastSet = sets[sets.length - 1];
+  const isFatigueDrop = sets.length >= 3 && lastSet && lastSet.reps > 0 && lastSet.reps <= minReps * 0.75;
 
   // 4. Progresión en repeticiones / Consolidación de peso ancla
   let targetRepsDisplay = `${minReps}-${maxReps}`;
-  if (minReps === maxReps) {
-    targetRepsDisplay = `${maxReps}`;
-  } else {
-    const nextTargetMin = Math.min(maxReps, Math.max(minReps, Math.round(avgReps) + 1));
-    if (nextTargetMin >= maxReps) {
-      targetRepsDisplay = `${maxReps}`;
-    } else {
-      targetRepsDisplay = `${nextTargetMin}-${maxReps}`;
-    }
+
+  let noteText = `Consolida ${anchorWeight} lbs en rango de hipertrofia (${minReps}-${maxReps} reps) buscando RPE 8.`;
+  let strategyType = 'consolidation';
+  let badgeText = '🎯 Consolidar';
+
+  if (isS1RampUp && isFatigueDrop) {
+    strategyType = 'unify_ramp';
+    badgeText = '🎯 Unificar';
+    noteText = `En la sesión previa S1/S2 fueron a menor carga (${sets[0].weight} lbs) y S${sets.length} cayó a ${lastSet.reps} reps por fatiga. Hoy unificamos a ${anchorWeight} lbs buscando ${minReps}-${maxReps} reps consistentes con buen descanso.`;
+  } else if (isS1RampUp) {
+    strategyType = 'unify_ramp';
+    badgeText = '🎯 Unificar';
+    noteText = `En la sesión anterior las series iniciales fueron ligeras (${sets[0].weight} lbs). Hoy unificamos todas las series a tu peso ancla de ${anchorWeight} lbs.`;
+  } else if (isFatigueDrop) {
+    strategyType = 'fatigue_management';
+    badgeText = '⏱️ +Descanso';
+    noteText = `Mantén ${anchorWeight} lbs. En la serie final previa caíste a ${lastSet.reps} reps; añade 45-60s de descanso para mantener repeticiones en ${minReps}-${maxReps}.`;
   }
 
   return {
@@ -401,16 +467,17 @@ export function getUnifiedExerciseTarget(previousData = {}, targetRepsStr = "10-
     targetReps: targetRepsDisplay,
     minReps,
     maxReps,
-    strategyType: isS1RampUp ? 'unify_ramp' : 'consolidation',
-    headline: `Meta Hoy: ${anchorWeight} lbs × ${targetRepsDisplay} reps`,
-    badgeText: isS1RampUp ? '🎯 Unificar' : '🎯 Consolidar',
-    note: isS1RampUp 
-      ? `En la sesión anterior S1 fue ligera (${sets[0].weight} lbs). Hoy unificamos todas las series a tu peso ancla de ${anchorWeight} lbs.`
-      : `Consolida ${anchorWeight} lbs en rango de hipertrofia (${minReps}-${maxReps} reps) buscando RPE 8.`,
+    strategyType,
+    headline: strategyType === 'unify_ramp' 
+      ? `Unificar Carga: ${anchorWeight} lbs × ${targetRepsDisplay} reps`
+      : `Meta Hoy: ${anchorWeight} lbs × ${targetRepsDisplay} reps`,
+    badgeText,
+    note: noteText,
     anchorWeight,
     canProgressWeight: false,
     isExcessiveLoad: false,
     isS1RampUp,
+    isFatigueDrop,
     spread,
     isSpreadHigh: spread >= 15 && (spread / (anchorWeight || 1)) > 0.15,
     increment
@@ -679,22 +746,13 @@ export function calculateRelativeStrength(estimated1RM, bodyWeight) {
   return parseFloat((rm / bw).toFixed(2));
 }
 
-/**
- * Genera una clave de almacenamiento normalizada para la máquina basada en el nombre del ejercicio.
- * Evita la pérdida de calibraciones entre semanas, días o reemplazos de ejercicio.
- */
-export function getMachineStorageKey(exerciseOrName) {
-  if (!exerciseOrName) return 'adonis_machine_default';
-  const raw = typeof exerciseOrName === 'string'
-    ? exerciseOrName
-    : (exerciseOrName.name || exerciseOrName.id || 'default');
-  const cleanName = raw
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "") // remover acentos
-    .replace(/[^a-z0-9]/g, '_')
-    .replace(/_+/g, '_')
-    .replace(/^_|_$/g, '');
-  return `adonis_machine_${cleanName || 'default'}`;
-}
+// Re-exportar gestor maestro de máquinas y calibraciones (Planta Alta / Planta Baja / Multi-Perfiles)
+export {
+  getMachineStorageKey,
+  getExerciseMachineKeys,
+  sanitizeMachineProfile,
+  loadMachineProfilesForExercise,
+  getActiveMachineConfig,
+  saveMachineConfigAndProfiles
+} from '../utils/machineManager.js';
 

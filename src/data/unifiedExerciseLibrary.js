@@ -1150,7 +1150,7 @@ export const UNIFIED_EXERCISE_LIBRARY = [
   },
   {
     "id": "lib_card_treadmill_zona2_01",
-    "name": "Cardio Zona 2 en Caminadora",
+    "name": "Cardio Zona 2 en Caminadora (Bifásico)",
     "muscleGroup": "Cardio",
     "equipment": "Caminadora",
     "unifiedCode": "[CARD-TREADMILL-ZONA2_01]",
@@ -1158,21 +1158,22 @@ export const UNIFIED_EXERCISE_LIBRARY = [
     "muscleGroupCode": "CARD",
     "machineCode": "TREADMILL",
     "specCode": "ZONA2_01",
-    "defaultSets": 1,
-    "defaultReps": "30 min",
+    "defaultSets": 2,
+    "defaultReps": "60 min (30m Inclinado + 30m Plano)",
     "defaultRest": "0 s",
     "ratio": 1,
-    "biomechanics": "Inclinación 11-12% a 3.8-4.2 km/h (120-135 BPM). Directo a oxidar ácidos grasos libres tras depletar glucógeno en el pecho. Cero impacto articular en rodillas, activación sostenida de gemelos y glúteos.",
+    "biomechanics": "Protocolo Bifásico de 60 min:\n• Fase A (30 min al 11-12% Inclinación, 3.8-4.2 km/h, 120-135 BPM): Zona 2 Lipolítica Pura (mitocondrias oxidan ácidos grasos libres sin agotar glucógeno requerido para el estudio) y Cero Impacto Articular.\n• Fase B (30 min Planos a 0% Inclinación, 4.5-5.0 km/h): Descarga del Tendón de Aquiles & Sóleo (previene sobrecarga excéntrica en fascia y tendón de Aquiles, normaliza ángulo tibio-tarsiano y promueve retorno venoso y aclaramiento de lactato).",
     "mindMuscle": {
-      "title": "Caminadora Inclinada (Zona 2 / Quema de Grasa)",
-      "internalCue": "Concéntrate en la contracción voluntaria del músculo objetivo durante cada repetición sin recurrir a balanceos.",
-      "externalCue": "Empuja o tracciona contra la resistencia con aceleración uniforme y trayectoria controlada.",
-      "eccentricCue": "Desciende o retorna en 2 a 3 segundos sintiendo el estiramiento bajo tensión antes de la siguiente repetición."
+      "title": "Caminadora Bifásica Zona 2 (Inclinada + Plana)",
+      "internalCue": "Fase A: postura erguida sin colgarse de pasamanos; Fase B: zancada fluida y relajación de pantorrillas.",
+      "externalCue": "Mantén pulsaciones sostenidas en 120-135 BPM (Zona 2 metabólica).",
+      "eccentricCue": "Controla el flujo respiratorio continuo."
     },
     "warmup": "",
     "searchQuery": "",
     "aliases": [
       "Caminadora Inclinada (Zona 2 / Quema de Grasa)",
+      "Cardio Zona 2 en Caminadora (Bifásico)",
       "Cardio Zona 2 en Caminadora",
       "Cardio Zona 2"
     ]

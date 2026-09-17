@@ -19,10 +19,11 @@ export default function ExerciseProgressionChart({
   workoutHistory = [],
   todayWorkoutData = {},
   compact = false,
-  height = 220
+  height = 220,
+  defaultScope = 'family'
 }) {
-  // Modo de Alcance: 'station' (Solo esta máquina exacta) o 'family' (Toda la familia biomecánica)
-  const [scopeMode, setScopeMode] = useState('station');
+  // Modo de Alcance: 'family' (Toda la familia biomecánica, predeterminada) o 'station' (Solo esta máquina exacta)
+  const [scopeMode, setScopeMode] = useState(defaultScope);
   // Modo de Carga: 'peak' (Carga Máxima / Top Set), 'avg' (Carga Promedio Efectiva), 'both' (Ambas curvas)
   const [weightMode, setWeightMode] = useState('both');
   const [showWeight, setShowWeight] = useState(true);
@@ -33,6 +34,69 @@ export default function ExerciseProgressionChart({
   const [repsMode, setRepsMode] = useState('both');
   // Modo métrica: 'weights' (Cargas y Repeticiones) o 'tonnage' (Tonelaje de Volumen en lbs)
   const [metricMode, setMetricMode] = useState('weights');
+  // Modo de escala del Eje Y: 'dynamic' (Rango de trabajo enfocado) o 'zero' (Desde 0 / Escala real completa)
+  const [yAxisScale, setYAxisScale] = useState(() => {
+    try {
+      return localStorage.getItem('coachv2_chart_yaxis_scale') || 'dynamic';
+    } catch (e) {
+      return 'dynamic';
+    }
+  });
+
+  const handleSetYAxisScale = (scale) => {
+    setYAxisScale(scale);
+    try {
+      localStorage.setItem('coachv2_chart_yaxis_scale', scale);
+    } catch (e) {}
+  };
+
+  // Dominios dinámicos según la escala vertical seleccionada
+  const weightYDomain = useMemo(() => {
+    if (yAxisScale === 'zero') {
+      return [
+        0,
+        (dataMax) => {
+          const maxVal = isFinite(dataMax) && dataMax > 0 ? dataMax : 100;
+          return Math.ceil((maxVal * 1.08) / 5) * 5;
+        }
+      ];
+    }
+    return [
+      (dataMin) => {
+        if (!isFinite(dataMin) || dataMin <= 0) return 0;
+        // Dar un 15% de holgura inferior para evitar que pequeñas variaciones se vean hiper-drásticas
+        const pad = Math.floor((dataMin * 0.85) / 5) * 5;
+        return Math.max(0, pad);
+      },
+      (dataMax) => {
+        if (!isFinite(dataMax) || dataMax <= 0) return 50;
+        return Math.ceil((dataMax * 1.08) / 5) * 5;
+      }
+    ];
+  }, [yAxisScale]);
+
+  const tonnageYDomain = useMemo(() => {
+    if (yAxisScale === 'zero') {
+      return [
+        0,
+        (dataMax) => {
+          const maxVal = isFinite(dataMax) && dataMax > 0 ? dataMax : 1000;
+          return Math.ceil((maxVal * 1.1) / 100) * 100;
+        }
+      ];
+    }
+    return [
+      (dataMin) => {
+        if (!isFinite(dataMin) || dataMin <= 0) return 0;
+        const pad = Math.floor((dataMin * 0.80) / 100) * 100;
+        return Math.max(0, pad);
+      },
+      (dataMax) => {
+        if (!isFinite(dataMax) || dataMax <= 0) return 1000;
+        return Math.ceil((dataMax * 1.1) / 100) * 100;
+      }
+    ];
+  }, [yAxisScale]);
 
   // Estado para la Caja de Inspección Inferior (evita que popups flotantes tapen la gráfica)
   const [hoveredPoint, setHoveredPoint] = useState(null);
@@ -62,13 +126,26 @@ export default function ExerciseProgressionChart({
   const parsedCode = useMemo(() => parseUnifiedCode(exercise?.unifiedCode), [exercise?.unifiedCode]);
   const machineKey = parsedCode?.machineKey || '';
 
+  // Determinar si la estación exacta tiene datos o si se está usando fallback de familia
+  const stationStats = useMemo(() => {
+    if (!exercise || !workoutHistory || workoutHistory.length === 0) return { count: 0 };
+    const res = getHistoricalRecordsForExercise(exercise, workoutHistory, { autoFallback: false });
+    return { count: res.sessionOccurrences.length };
+  }, [exercise, workoutHistory]);
+
+  const isAutoFamily = stationStats.count === 0 && scopeMode === 'station';
+
   // Procesar puntos reales + proyecciones matemáticas
-  const { chartData, transitionDate, lastProjectedDate, hasHistory, peakWeight, avgPeakWeight, currentWeight, currentAvgWeight, lastRealPoint } = useMemo(() => {
-    if (!exercise) return { chartData: [], transitionDate: null, lastProjectedDate: null, hasHistory: false, peakWeight: 0, avgPeakWeight: 0, currentWeight: 0, currentAvgWeight: 0, lastRealPoint: null };
+  const { chartData, transitionDate, lastProjectedDate, hasHistory, realPointsCount, peakWeight, avgPeakWeight, currentWeight, currentAvgWeight, lastRealPoint, isFamilyView } = useMemo(() => {
+    if (!exercise) return { chartData: [], transitionDate: null, lastProjectedDate: null, hasHistory: false, realPointsCount: 0, peakWeight: 0, avgPeakWeight: 0, currentWeight: 0, currentAvgWeight: 0, lastRealPoint: null, isFamilyView: false };
 
     // 1. Extraer historial real usando el motor de matching tolerante a alias y familias
-    const records = getHistoricalRecordsForExercise(exercise, workoutHistory, { matchFamily: scopeMode === 'family' });
+    const records = getHistoricalRecordsForExercise(exercise, workoutHistory, { 
+      matchFamily: scopeMode === 'family',
+      autoFallback: true 
+    });
     const rawOccurrences = records.sessionOccurrences || [];
+    const isFamilyView = scopeMode === 'family' || Boolean(records.isFamilyFallback);
 
     const dateCounts = {};
     const realPoints = rawOccurrences.map((occ, idx) => {
@@ -100,6 +177,7 @@ export default function ExerciseProgressionChart({
         displayDate: baseLabel,
         sessionIndex: idx + 1,
         dateFull: occ.dateFull || occ.dateStr || `Sesión ${idx + 1}`,
+        sourceName: occ.sourceName || occ.matchedName || '',
         weight: peakW, // Carga Pico
         avgWeight: avgW, // Carga Promedio Efectiva (sin calentamientos)
         minWeight: Math.round(occ.minWeight || peakW),
@@ -350,11 +428,13 @@ export default function ExerciseProgressionChart({
       transitionDate: transDate,
       lastProjectedDate: lastProj,
       hasHistory: realPoints.length > 0,
+      realPointsCount: realPoints.length,
       peakWeight: maxHistorical,
       avgPeakWeight: maxAvgHistorical,
       currentWeight: lastRealPoint.weight,
       currentAvgWeight: lastRealPoint.avgWeight,
-      lastRealPoint: lastRealPoint || null
+      lastRealPoint: lastRealPoint || null,
+      isFamilyView
     };
   }, [exercise, workoutHistory, todayWorkoutData, scopeMode]);
 
@@ -441,27 +521,9 @@ export default function ExerciseProgressionChart({
 
         {/* BOTONERA DE FILTROS Y MODOS */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap' }}>
-          {/* Selector de Alcance: Esta Máquina vs Toda la Familia */}
+          {/* Selector de Alcance: Toda la Familia vs Esta Máquina */}
           {machineKey && (
             <div style={{ display: 'inline-flex', background: '#e0e7ff', borderRadius: '8px', padding: '2px', border: '1px solid #c7d2fe' }}>
-              <button
-                type="button"
-                onClick={() => setScopeMode('station')}
-                style={{
-                  padding: '3px 7px',
-                  borderRadius: '6px',
-                  border: 'none',
-                  background: scopeMode === 'station' ? '#4f46e5' : 'transparent',
-                  color: scopeMode === 'station' ? '#ffffff' : '#4338ca',
-                  fontWeight: '900',
-                  fontSize: '9.5px',
-                  cursor: 'pointer',
-                  boxShadow: scopeMode === 'station' ? '0 1px 3px rgba(79,70,229,0.3)' : 'none'
-                }}
-                title="Filtrar datos exclusivamente para esta máquina física específica"
-              >
-                🎯 Esta Máquina
-              </button>
               <button
                 type="button"
                 onClick={() => setScopeMode('family')}
@@ -479,6 +541,24 @@ export default function ExerciseProgressionChart({
                 title={`Ver progreso agrupado de toda la estación biomecánica (${machineKey})`}
               >
                 🌐 Toda la Familia ({machineKey})
+              </button>
+              <button
+                type="button"
+                onClick={() => setScopeMode('station')}
+                style={{
+                  padding: '3px 7px',
+                  borderRadius: '6px',
+                  border: 'none',
+                  background: scopeMode === 'station' ? '#4f46e5' : 'transparent',
+                  color: scopeMode === 'station' ? '#ffffff' : '#4338ca',
+                  fontWeight: '900',
+                  fontSize: '9.5px',
+                  cursor: 'pointer',
+                  boxShadow: scopeMode === 'station' ? '0 1px 3px rgba(79,70,229,0.3)' : 'none'
+                }}
+                title="Filtrar datos exclusivamente para esta máquina física específica"
+              >
+                🎯 Esta Máquina {stationStats.count > 0 ? `(${stationStats.count})` : ''}
               </button>
             </div>
           )}
@@ -646,8 +726,75 @@ export default function ExerciseProgressionChart({
             <Sparkles size={11} color={showProjections ? '#7c3aed' : '#94a3b8'} />
             Metas
           </button>
+
+          {/* Selector de Escala Vertical Eje Y: Rango de trabajo vs Desde 0 */}
+          <div style={{ display: 'inline-flex', background: '#f1f5f9', borderRadius: '8px', padding: '2px', border: '1px solid #cbd5e1' }}>
+            <button
+              type="button"
+              onClick={() => handleSetYAxisScale('dynamic')}
+              style={{
+                padding: '3px 7px',
+                borderRadius: '6px',
+                border: 'none',
+                background: yAxisScale === 'dynamic' ? '#ffffff' : 'transparent',
+                color: yAxisScale === 'dynamic' ? '#0f172a' : '#64748b',
+                fontWeight: '900',
+                fontSize: '9.5px',
+                cursor: 'pointer',
+                boxShadow: yAxisScale === 'dynamic' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'
+              }}
+              title="Escala Rango: Enfoca la gráfica en tus pesos de trabajo reales con holgura fisiológica"
+            >
+              🎯 Rango
+            </button>
+            <button
+              type="button"
+              onClick={() => handleSetYAxisScale('zero')}
+              style={{
+                padding: '3px 7px',
+                borderRadius: '6px',
+                border: 'none',
+                background: yAxisScale === 'zero' ? '#0f172a' : 'transparent',
+                color: yAxisScale === 'zero' ? '#ffffff' : '#64748b',
+                fontWeight: '900',
+                fontSize: '9.5px',
+                cursor: 'pointer',
+                boxShadow: yAxisScale === 'zero' ? '0 1px 3px rgba(15,23,42,0.2)' : 'none'
+              }}
+              title="Escala Completa: Inicia el eje vertical desde 0 para ver la proporción real de los cambios sin dramatismo visual"
+            >
+              0️⃣ Desde 0
+            </button>
+          </div>
         </div>
       </div>
+
+      {/* AVISO INTELIGENTE DE MOTOR CANÓNICO / FAMILIA BIOMECÁNICA */}
+      {isFamilyView && (
+        <div style={{
+          background: '#f5f3ff',
+          border: '1px solid #ddd6fe',
+          borderRadius: '10px',
+          padding: '5px 10px',
+          marginBottom: '8px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          fontSize: '10px',
+          color: '#6d28d9',
+          fontWeight: '700'
+        }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+            <Sparkles size={12} color="#7c3aed" />
+            {isAutoFamily 
+              ? `Motor Inteligente: Sin registros en esta estación física. Graficando historial de la familia ${machineKey || 'biomecánica'}`
+              : `Modo Familia Activo: Historial consolidado de la estación ${machineKey || ''}`}
+          </span>
+          <span style={{ fontSize: '9px', background: '#ede9fe', padding: '1px 6px', borderRadius: '5px', color: '#5b21b6', fontWeight: '800' }}>
+            {realPointsCount} sesiones
+          </span>
+        </div>
+      )}
 
       {/* GUÍAS VISUALES: BANDA VERDE HIPERTROFIA Y ZONA PROYECTADA */}
       <div style={{
@@ -765,7 +912,7 @@ export default function ExerciseProgressionChart({
                 {/* Eje Y Izquierdo: Carga en lbs */}
                 <YAxis
                   yAxisId="weight"
-                  domain={['auto', 'auto']}
+                  domain={weightYDomain}
                   tick={{ fontSize: 10, fontWeight: '700', fill: '#0066ff' }}
                   axisLine={{ stroke: '#93c5fd' }}
                   tickLine={false}
@@ -798,7 +945,7 @@ export default function ExerciseProgressionChart({
               /* Eje Y para Tonelaje */
               <YAxis
                 yAxisId="tonnage"
-                domain={['auto', 'auto']}
+                domain={tonnageYDomain}
                 tick={{ fontSize: 10, fontWeight: '700', fill: '#f59e0b' }}
                 axisLine={{ stroke: '#fcd34d' }}
                 tickLine={false}
@@ -982,6 +1129,19 @@ export default function ExerciseProgressionChart({
               {!isProj && activeData.sessionIndex && (
                 <span style={{ fontSize: '9.5px', color: '#94a3b8', fontWeight: '700' }}>
                   • Sesión #{activeData.sessionIndex}
+                </span>
+              )}
+              {!isProj && activeData.sourceName && (
+                <span style={{
+                  fontSize: '9.5px',
+                  color: '#c084fc',
+                  fontWeight: '800',
+                  background: 'rgba(192, 132, 252, 0.15)',
+                  border: '1px solid rgba(192, 132, 252, 0.3)',
+                  padding: '1px 6px',
+                  borderRadius: '6px'
+                }}>
+                  🏷️ {activeData.sourceName}
                 </span>
               )}
             </div>

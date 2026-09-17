@@ -216,7 +216,7 @@ export default function CompactExerciseRow({
                 <input
                   type="number"
                   placeholder="-"
-                  value={setVal.weight ?? ''}
+                  value={setVal.weight === null || setVal.weight === undefined || setVal.weight === 'null' ? '' : setVal.weight}
                   onChange={(e) => {
                     onUpdateSet(setNum, { ...setVal, weight: e.target.value });
                   }}
@@ -232,7 +232,7 @@ export default function CompactExerciseRow({
                 <input
                   type="number"
                   placeholder="-"
-                  value={setVal.reps ?? ''}
+                  value={setVal.reps === null || setVal.reps === undefined || setVal.reps === 'null' ? '' : setVal.reps}
                   onChange={(e) => {
                     onUpdateSet(setNum, { ...setVal, reps: e.target.value });
                   }}

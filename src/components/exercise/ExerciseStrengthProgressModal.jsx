@@ -18,13 +18,13 @@ export default function ExerciseStrengthProgressModal({
   const exId = exercise?.id;
   const exName = exercise?.name || '';
 
-  // Extraer todas las sesiones donde se realizó este ejercicio usando el motor universal unificado
-  const sessionHistory = useMemo(() => {
-    if (!isOpen || !exercise || !exId) return [];
-    const records = getHistoricalRecordsForExercise(exercise, workoutHistory);
+  // Extraer todas las sesiones donde se realizó este ejercicio usando el motor universal unificado con fallback inteligente
+  const { sessionHistory, isFamilyFallback } = useMemo(() => {
+    if (!isOpen || !exercise || !exId) return { sessionHistory: [], isFamilyFallback: false };
+    const records = getHistoricalRecordsForExercise(exercise, workoutHistory, { matchFamily: true, autoFallback: true });
     const rawOccurrences = records.sessionOccurrences || [];
 
-    return rawOccurrences.map(occ => {
+    const history = rawOccurrences.map(occ => {
       let max1RM = 0;
       let sessionVol = 0;
 
@@ -48,6 +48,11 @@ export default function ExerciseStrengthProgressModal({
         sets: occ.detailedSets || []
       };
     });
+
+    return {
+      sessionHistory: history,
+      isFamilyFallback: Boolean(records.isFamilyFallback)
+    };
   }, [workoutHistory, exId, exercise, isOpen]);
 
   // Sesión actual en progreso si tiene series marcadas hoy
@@ -258,6 +263,24 @@ export default function ExerciseStrengthProgressModal({
               <span style={{ fontSize: '11px', color: '#64748b', fontWeight: '700' }}>
                 {exercise.muscleGroup || 'General'} • Analítica & Proyección de Fuerza
               </span>
+              {getUnifiedCodeForExercise(exercise)?.machineKey && (
+                <div style={{
+                  marginTop: '4px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  background: '#f5f3ff',
+                  border: '1px solid #ddd6fe',
+                  borderRadius: '6px',
+                  padding: '2px 6px',
+                  fontSize: '9.5px',
+                  color: '#6d28d9',
+                  fontWeight: '800'
+                }}>
+                  <Sparkles size={11} color="#7c3aed" />
+                  Motor inteligente: Mostrando progreso consolidado de la familia {getUnifiedCodeForExercise(exercise)?.machineKey}
+                </div>
+              )}
             </div>
           </div>
 

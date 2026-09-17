@@ -36,29 +36,34 @@ export default function WorkoutFooterControls({
   const showWatchModal = isWatchModalOpen !== undefined ? isWatchModalOpen : internalWatchModal;
   const setShowWatchModal = setIsWatchModalOpen || setInternalWatchModal;
 
+  const cleanStr = (val) => {
+    if (val === null || val === undefined || val === 'null' || val === 'undefined') return '';
+    return String(val);
+  };
+
   const [watchInput, setWatchInput] = useState(() => {
-    if (typeof userSmartwatchKcal === 'object') return userSmartwatchKcal?.watchKcal ? String(userSmartwatchKcal.watchKcal) : '';
-    return userSmartwatchKcal ? String(userSmartwatchKcal) : '';
+    if (typeof userSmartwatchKcal === 'object') return cleanStr(userSmartwatchKcal?.watchKcal);
+    return cleanStr(userSmartwatchKcal);
   });
   const [watchHrAvgInput, setWatchHrAvgInput] = useState(() => {
-    return typeof userSmartwatchKcal === 'object' && userSmartwatchKcal?.hrAvg ? String(userSmartwatchKcal.hrAvg) : '';
+    return typeof userSmartwatchKcal === 'object' ? cleanStr(userSmartwatchKcal?.hrAvg) : '';
   });
   const [watchHrMaxInput, setWatchHrMaxInput] = useState(() => {
-    return typeof userSmartwatchKcal === 'object' && userSmartwatchKcal?.hrMax ? String(userSmartwatchKcal.hrMax) : '';
+    return typeof userSmartwatchKcal === 'object' ? cleanStr(userSmartwatchKcal?.hrMax) : '';
   });
   const [watchHrRestInput, setWatchHrRestInput] = useState(() => {
-    return typeof userSmartwatchKcal === 'object' && userSmartwatchKcal?.hrRest ? String(userSmartwatchKcal.hrRest) : '';
+    return typeof userSmartwatchKcal === 'object' ? cleanStr(userSmartwatchKcal?.hrRest) : '';
   });
 
   useEffect(() => {
     if (showWatchModal) {
       if (typeof userSmartwatchKcal === 'object') {
-        setWatchInput(userSmartwatchKcal?.watchKcal ? String(userSmartwatchKcal.watchKcal) : '');
-        setWatchHrAvgInput(userSmartwatchKcal?.hrAvg ? String(userSmartwatchKcal.hrAvg) : '');
-        setWatchHrMaxInput(userSmartwatchKcal?.hrMax ? String(userSmartwatchKcal.hrMax) : '');
-        setWatchHrRestInput(userSmartwatchKcal?.hrRest ? String(userSmartwatchKcal.hrRest) : '');
+        setWatchInput(cleanStr(userSmartwatchKcal?.watchKcal));
+        setWatchHrAvgInput(cleanStr(userSmartwatchKcal?.hrAvg));
+        setWatchHrMaxInput(cleanStr(userSmartwatchKcal?.hrMax));
+        setWatchHrRestInput(cleanStr(userSmartwatchKcal?.hrRest));
       } else {
-        setWatchInput(userSmartwatchKcal ? String(userSmartwatchKcal) : '');
+        setWatchInput(cleanStr(userSmartwatchKcal));
       }
     }
   }, [showWatchModal, userSmartwatchKcal]);
@@ -449,7 +454,7 @@ export default function WorkoutFooterControls({
                 </label>
                 <input
                   type="number"
-                  value={watchHrAvgInput}
+                  value={cleanStr(watchHrAvgInput)}
                   onChange={e => setWatchHrAvgInput(e.target.value)}
                   placeholder="Ej. 125"
                   style={{
@@ -470,7 +475,7 @@ export default function WorkoutFooterControls({
                 </label>
                 <input
                   type="number"
-                  value={watchHrMaxInput}
+                  value={cleanStr(watchHrMaxInput)}
                   onChange={e => setWatchHrMaxInput(e.target.value)}
                   placeholder="Ej. 165"
                   style={{
@@ -493,7 +498,7 @@ export default function WorkoutFooterControls({
                 </label>
                 <input
                   type="number"
-                  value={watchHrRestInput}
+                  value={cleanStr(watchHrRestInput)}
                   onChange={e => setWatchHrRestInput(e.target.value)}
                   placeholder="Ej. 60"
                   style={{
@@ -514,7 +519,7 @@ export default function WorkoutFooterControls({
                 </label>
                 <input
                   type="number"
-                  value={watchInput}
+                  value={cleanStr(watchInput)}
                   onChange={e => setWatchInput(e.target.value)}
                   placeholder="Ej. 320"
                   style={{

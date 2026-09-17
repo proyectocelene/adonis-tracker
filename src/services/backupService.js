@@ -110,6 +110,7 @@ export async function exportFullDatabase(currentUser) {
   const bodyComposition = storeData['coachv2_body_composition_data'] || localDbDump['coachv2_body_composition_data'] || {};
   const physiqueGoal = storeData['coachv2_physique_goal'] || localDbDump['coachv2_physique_goal'] || {};
   const machineConfigs = storeData['coachv2_machine_configs'] || localDbDump['coachv2_machine_configs'] || {};
+  const machineProfiles = storeData['coachv2_machine_profiles'] || localDbDump['coachv2_machine_profiles'] || {};
   const smartwatchKcal = storeData['coachv2_smartwatch_kcal'] || localDbDump['coachv2_smartwatch_kcal'] || {};
   const customRoutine = storeData['coachv2_custom_routine'] || localDbDump['coachv2_custom_routine'] || null;
   const mesocycleStartDate = storeData['coachv2_mesocycle_start'] || localDbDump['coachv2_mesocycle_start'] || null;
@@ -129,6 +130,7 @@ export async function exportFullDatabase(currentUser) {
     bodyComposition,
     physiqueGoal,
     machineConfigs,
+    machineProfiles,
     currentActiveSessions,
     customExercises,
     swappedExercises,
@@ -516,6 +518,7 @@ export async function restoreFullDatabase(currentUser, jsonData, onProgress) {
   if (jsonData.bodyComposition) storeEntries['coachv2_body_composition_data'] = jsonData.bodyComposition;
   if (jsonData.physiqueGoal) storeEntries['coachv2_physique_goal'] = jsonData.physiqueGoal;
   if (jsonData.machineConfigs) storeEntries['coachv2_machine_configs'] = jsonData.machineConfigs;
+  if (jsonData.machineProfiles) storeEntries['coachv2_machine_profiles'] = jsonData.machineProfiles;
   if (jsonData.smartwatchKcal) storeEntries['coachv2_smartwatch_kcal'] = jsonData.smartwatchKcal;
   if (jsonData.customRoutine) storeEntries['coachv2_custom_routine'] = jsonData.customRoutine;
   if (jsonData.mesocycleStartDate) storeEntries['coachv2_mesocycle_start'] = jsonData.mesocycleStartDate;

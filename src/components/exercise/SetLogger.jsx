@@ -4,7 +4,17 @@ import PlateCalculatorModal from './PlateCalculatorModal';
 import OverloadScienceModal from './OverloadScienceModal';
 import ExerciseFeedbackModal from './ExerciseFeedbackModal';
 import MachineConfigModal from './MachineConfigModal';
-import { calculate1RM, getOverloadTarget, analyzeExercisePerformance, getMachineStorageKey, getUnifiedExerciseTarget } from '../../hooks/useWorkoutCalculations';
+import { 
+  calculate1RM, 
+  getOverloadTarget, 
+  analyzeExercisePerformance, 
+  getMachineStorageKey, 
+  getUnifiedExerciseTarget, 
+  isExerciseUnilateral,
+  loadMachineProfilesForExercise,
+  getActiveMachineConfig,
+  saveMachineConfigAndProfiles
+} from '../../hooks/useWorkoutCalculations';
 import { useIndexedDB as useLocalStorage } from '../../hooks/useIndexedDB';
 
 // Analizador fisiológico de calentamiento según prescripción oficial
@@ -28,18 +38,22 @@ function getWarmupPlan(exercise, previousData, exerciseData, machineConfig, coac
     }
   }
 
-  // Si aún no se determina, extraer el máximo peso real de las series previas
+  // 2. Fallback a series previas si hoy está vacío
   if (!workingWeight || workingWeight <= 0) {
-    const prevValidWeights = Object.keys(previousData || {})
-      .filter(k => !isNaN(parseInt(k, 10)) && parseInt(k, 10) > 0)
-      .map(k => parseFloat(previousData[k]?.weight))
-      .filter(w => !isNaN(w) && w > 0);
-    if (prevValidWeights.length > 0) {
-      workingWeight = Math.max(...prevValidWeights);
+    const prevSets = Object.keys(previousData || {})
+      .map(k => parseInt(k, 10))
+      .filter(n => !isNaN(n) && n > 0)
+      .sort((a, b) => a - b);
+    if (prevSets.length > 0) {
+      workingWeight = parseFloat(previousData[prevSets[0]]?.weight || 0);
     }
   }
 
   if (warmupStr.includes('no ocupa')) {
+    return { requiresWarmup: false, series: [] };
+  }
+
+  if (!workingWeight || workingWeight <= 0) {
     return { requiresWarmup: false, series: [] };
   }
 
@@ -108,68 +122,54 @@ export default function SetLogger({
   toggleSetComplete,
   handleAddSet,
   handleRemoveSet,
-  onUpdateExerciseMeta
+  onUpdateExerciseMeta,
+  workoutHistory = []
 }) {
+  // Clasificación biomecánica inteligente (unilateral vs bilateral)
+  const isUnilateral = useMemo(() => {
+    return isExerciseUnilateral(exercise, exerciseData);
+  }, [exercise, exerciseData?.isUnilateral]);
+
   // Biomecánicamente bilateral rígido (barra recta, barra Z, smith, prensa, etc.)
   const isStrictlyBilateral = useMemo(() => {
     const name = (exercise?.name || '').toLowerCase();
     return /barra|smith|prensa|leg press|squat con barra|bench press con barra|press militar con barra/i.test(name);
   }, [exercise?.name]);
-
-  const isUnilateral = !isStrictlyBilateral && (exerciseData.isUnilateral !== undefined ? !!exerciseData.isUnilateral : !!exercise.isUnilateral);
   const prescribedReps = exercise?.reps || exercise?.targetReps || '10-12';
   
   const slugKey = useMemo(() => getMachineStorageKey(exercise), [exercise]);
   const [globalMachineConfigs, setGlobalMachineConfigs] = useLocalStorage('coachv2_machine_configs', {});
   const [globalMachineProfiles, setGlobalMachineProfiles] = useLocalStorage('coachv2_machine_profiles', {});
 
-  // Extraer perfiles guardados para este ejercicio
+  // Extraer de forma exhaustiva todos los perfiles de máquina guardados (Planta Alta / Planta Baja / etc.)
   const exerciseProfiles = useMemo(() => {
-    let list = globalMachineProfiles?.[slugKey] || globalMachineProfiles?.[exercise?.id];
-    if (Array.isArray(list) && list.length > 0) return list;
-    try {
-      const raw = localStorage.getItem(`coachv2_profiles_${slugKey}`);
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-      }
-    } catch (e) {}
-    return [];
-  }, [globalMachineProfiles, slugKey, exercise?.id]);
+    return loadMachineProfilesForExercise(exercise, {
+      globalMachineProfiles,
+      globalMachineConfigs,
+      previousData,
+      exerciseData,
+      workoutHistory
+    });
+  }, [exercise, globalMachineProfiles, globalMachineConfigs, previousData, exerciseData?.machineConfig, workoutHistory]);
 
-  // Machine Config: Prioridad a exerciseData, luego al perfil predeterminado o al almacén sincronizado
-  const [machineConfig, setMachineConfig] = useState(() => {
-    if (exerciseData?.machineConfig) return exerciseData.machineConfig;
-    const savedList = globalMachineProfiles?.[slugKey] || globalMachineProfiles?.[exercise?.id];
-    if (Array.isArray(savedList) && savedList.length > 0) {
-      const def = savedList.find(p => p.isDefault) || savedList[0];
-      if (def) return def;
-    }
-    if (globalMachineConfigs && typeof globalMachineConfigs === 'object') {
-      const stored = globalMachineConfigs[exercise?.id] || globalMachineConfigs[slugKey];
-      if (stored) return stored;
-    }
-    try {
-      const saved = localStorage.getItem(slugKey) || localStorage.getItem(`adonis_machine_${exercise.id}`);
-      return saved ? JSON.parse(saved) : null;
-    } catch (e) {
-      return null;
-    }
-  });
+  // Resuelve la máquina activa (hoy > default > match de piso previo > primer perfil)
+  const activeResolvedConfig = useMemo(() => {
+    return getActiveMachineConfig(exerciseProfiles, exerciseData, previousData);
+  }, [exerciseProfiles, exerciseData?.machineConfig, previousData]);
 
+  const [machineConfig, setMachineConfig] = useState(() => activeResolvedConfig);
+
+  // Mantener sincronizado y propagar a todayWorkoutData para que NUNCA se guarde la sesión sin máquina
   useEffect(() => {
     if (exerciseData?.machineConfig) {
       setMachineConfig(exerciseData.machineConfig);
-    } else if (exerciseProfiles.length > 0 && !machineConfig) {
-      const def = exerciseProfiles.find(p => p.isDefault) || exerciseProfiles[0];
-      if (def) setMachineConfig(def);
-    } else if (globalMachineConfigs && typeof globalMachineConfigs === 'object') {
-      const stored = globalMachineConfigs[exercise?.id] || globalMachineConfigs[slugKey];
-      if (stored && !machineConfig) {
-        setMachineConfig(stored);
+    } else if (activeResolvedConfig) {
+      setMachineConfig(activeResolvedConfig);
+      if (onUpdateExerciseMeta && !exerciseData?.machineConfig) {
+        onUpdateExerciseMeta({ machineConfig: activeResolvedConfig });
       }
     }
-  }, [exerciseData?.machineConfig, exerciseProfiles, globalMachineConfigs, exercise?.id, slugKey]);
+  }, [activeResolvedConfig, exerciseData?.machineConfig]);
 
   const [plateModal, setPlateModal] = useState({ isOpen: false, setNum: null, currentWeight: 0 });
   const [isScienceModalOpen, setIsScienceModalOpen] = useState(false);
@@ -222,61 +222,14 @@ export default function SetLogger({
 
   const handleSaveMachineConfig = (configData, updatedProfiles) => {
     setMachineConfig(configData);
-    if (onUpdateExerciseMeta) {
-      onUpdateExerciseMeta({ machineConfig: configData });
-    }
-
-    // Sincronizar perfiles de máquina en coachv2_machine_profiles
-    if (Array.isArray(updatedProfiles)) {
-      setGlobalMachineProfiles(prev => ({
-        ...(prev || {}),
-        [slugKey]: updatedProfiles,
-        [exercise.id]: updatedProfiles
-      }));
-      try {
-        localStorage.setItem(`coachv2_profiles_${slugKey}`, JSON.stringify(updatedProfiles));
-      } catch (e) {}
-    } else if (configData) {
-      setGlobalMachineProfiles(prev => {
-        const existing = prev?.[slugKey] || [];
-        const next = existing.filter(p => p.id !== configData.id);
-        next.push(configData);
-        return {
-          ...(prev || {}),
-          [slugKey]: next,
-          [exercise.id]: next
-        };
-      });
-    }
-
-    // Sincronizar en Firestore / IndexedDB en la colección legacy coachv2_machine_configs
-    setGlobalMachineConfigs(prev => {
-      const next = { ...(prev || {}) };
-      if (configData) {
-        next[exercise.id] = configData;
-        next[slugKey] = configData;
-        if (configData.station) {
-          const stationSlug = `${exercise.id}_${configData.station.toLowerCase().replace(/[^a-z0-9]/g, '_')}`;
-          next[stationSlug] = configData;
-        }
-      } else {
-        delete next[exercise.id];
-        delete next[slugKey];
-      }
-      return next;
+    saveMachineConfigAndProfiles({
+      exercise,
+      configData,
+      updatedProfiles: updatedProfiles || (configData ? [configData] : []),
+      setGlobalMachineProfiles,
+      setGlobalMachineConfigs,
+      onUpdateExerciseMeta
     });
-
-    // Respaldo de compatibilidad en localStorage
-    try {
-      if (configData) {
-        const serialized = JSON.stringify(configData);
-        localStorage.setItem(slugKey, serialized);
-        localStorage.setItem(`adonis_machine_${exercise.id}`, serialized);
-      } else {
-        localStorage.removeItem(slugKey);
-        localStorage.removeItem(`adonis_machine_${exercise.id}`);
-      }
-    } catch (e) {}
   };
 
   const handleSelectMachineProfile = (profId) => {
@@ -392,7 +345,7 @@ export default function SetLogger({
           </button>
 
           <select
-            value={machineConfig?.id || ''}
+            value={machineConfig?.id || (exerciseProfiles[0]?.id) || ''}
             onChange={(e) => handleSelectMachineProfile(e.target.value)}
             style={{
               background: machineConfig ? '#f5f3ff' : '#ffffff',
@@ -402,27 +355,29 @@ export default function SetLogger({
               fontSize: '10px',
               fontWeight: '800',
               color: machineConfig ? '#7c3aed' : '#475569',
-              maxWidth: '130px',
+              maxWidth: '145px',
               cursor: 'pointer',
               outline: 'none',
               textOverflow: 'ellipsis',
               whiteSpace: 'nowrap',
               overflow: 'hidden'
             }}
-            title="Selecciona qué máquina estás usando o añade una nueva"
+            title="Selecciona qué máquina estás usando (Planta Alta o Planta Baja) o añade una nueva"
           >
-            <option value="">⚙️ Máquina...</option>
+            {exerciseProfiles.length === 0 && !machineConfig && (
+              <option value="">⚙️ Sin calibrar</option>
+            )}
             {exerciseProfiles.map(prof => (
               <option key={prof.id} value={prof.id}>
-                {prof.name || prof.station || 'Máquina'}
+                {prof.floor === 'Planta Alta' ? '🏢 P. Alta: ' : (prof.floor === 'Planta Baja' ? '🏢 P. Baja: ' : '⚙️ ')}{prof.name || prof.station || 'Máquina'}{prof.seat ? ` (As. ${prof.seat})` : ''}
               </option>
             ))}
             {(!exerciseProfiles.some(p => p.id === machineConfig?.id) && (machineConfig?.name || machineConfig?.station)) && (
               <option value={machineConfig.id || 'curr'}>
-                {machineConfig.name || machineConfig.station}
+                {machineConfig.floor ? `🏢 ${machineConfig.floor}: ` : '⚙️ '}{machineConfig.name || machineConfig.station}
               </option>
             )}
-            <option value="__NEW__">➕ Añadir nueva máquina...</option>
+            <option value="__NEW__">➕ Añadir máquina (P. Alta / P. Baja)...</option>
           </select>
 
           {/* Chip de calibración biomecánica activa si existe asiento/respaldo/muesca */}
@@ -740,13 +695,17 @@ export default function SetLogger({
             (weightNum > prevWeightNum * 1.6 || weightNum < prevWeightNum * 0.5) &&
             (!setVal.rpe || rpeNum >= 9.5);
 
-          const prevRepsNum = Number(prevVal.reps) || (prevVal.repsL !== undefined || prevVal.repsR !== undefined ? Math.max(Number(prevVal.repsL) || 0, Number(prevVal.repsR) || 0) : 0);
+          const prevRepsNum = isUnilateral
+            ? ((prevVal.repsL !== undefined || prevVal.repsR !== undefined)
+                ? Math.max(Number(prevVal.repsL) || 0, Number(prevVal.repsR) || 0, Number(prevVal.reps) || 0)
+                : Number(prevVal.reps) || 0)
+            : Number(prevVal.reps || prevVal.repsR || prevVal.repsL || 0);
           const deltaWeight = (prevWeightNum > 0 && weightNum > 0) ? (weightNum - prevWeightNum) : 0;
           const deltaReps = (prevRepsNum > 0 && repsNum > 0) ? (repsNum - prevRepsNum) : 0;
           const isExtraSet = !prevWeightNum && !prevRepsNum;
 
           // Pasa machineConfig y lo realizado hoy (exerciseData) para cálculo con incrementos reales y estabilidad
-          const overloadTarget = getOverloadTarget(setNum, previousData, exercise.targetReps || '10-12', machineConfig, prevVal.weight, prevVal.reps, exerciseData);
+          const overloadTarget = getOverloadTarget(setNum, previousData, prescribedReps, machineConfig, prevVal.weight, prevVal.reps, exerciseData);
           const current1RM = calculate1RM(setVal.weight, setVal.reps);
           const prev1RM = calculate1RM(prevVal.weight, prevVal.reps);
           const isPr = isDone && current1RM > 0 && prev1RM > 0 && current1RM > prev1RM;
@@ -814,16 +773,17 @@ export default function SetLogger({
                 flexDirection: 'column',
                 gap: '5px',
                 background: isDone ? '#f0fdf4' : '#ffffff',
+                border: isDone ? '1.5px solid #86efac' : '1.5px solid #cbd5e1',
+                borderRadius: '12px',
                 padding: '8px 10px',
-                borderRadius: '14px',
-                border: isDone 
-                  ? '2px solid #22c55e' 
-                  : (isRepsHighAlert ? '2px solid #ef4444' : (isWeightJumpAlert ? '2px solid #f59e0b' : '1.5px solid #cbd5e1')),
-                width: '100%',
-                boxSizing: 'border-box'
+                boxShadow: isDone ? '0 2px 6px rgba(34, 197, 94, 0.12)' : '0 1px 3px rgba(0,0,0,0.03)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '8px',
+                position: 'relative'
               }}
             >
-              {/* LÍNEA SUPERIOR COMPACTA: GUÍA PASADA Y META DE HOY (NUNCA SE CORTA) */}
+              {/* LÍNEA SUPERIOR: NÚMERO DE SERIE, HISTORIAL ANTERIOR Y META */}
               <div style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -848,7 +808,11 @@ export default function SetLogger({
                     <span>Anterior:</span>
                     <strong style={{ color: '#1e293b' }}>
                       {prevVal.weight 
-                        ? `${prevVal.weight} lbs × ${prevVal.repsL !== undefined || prevVal.repsR !== undefined ? `I:${prevVal.repsL || prevVal.reps} D:${prevVal.repsR || prevVal.reps}` : `${prevVal.reps} reps`}` 
+                        ? `${prevVal.weight} lbs × ${
+                            isUnilateral && ((prevVal.repsL && prevVal.repsL !== 'null') || (prevVal.repsR && prevVal.repsR !== 'null'))
+                              ? `I:${prevVal.repsL || prevVal.reps} D:${prevVal.repsR || prevVal.reps}`
+                              : `${prevVal.reps || prevVal.repsR || prevVal.repsL || '—'} reps`
+                          }` 
                         : '—'}
                     </strong>
                     {prevLocation && (
@@ -914,7 +878,7 @@ export default function SetLogger({
                     type="text"
                     inputMode="decimal"
                     placeholder="Peso"
-                    value={setVal.weight ?? ''}
+                    value={setVal.weight === null || setVal.weight === undefined || setVal.weight === 'null' ? '' : setVal.weight}
                     onChange={(e) => {
                       const raw = e.target.value.replace(',', '.');
                       if (raw === '' || /^[0-9]*\.?[0-9]*$/.test(raw)) {
@@ -963,7 +927,7 @@ export default function SetLogger({
                         inputMode="numeric"
                         pattern="[0-9]*"
                         placeholder="Izq"
-                        value={setVal.repsL !== undefined ? setVal.repsL : ''}
+                        value={setVal.repsL !== undefined && setVal.repsL !== null && setVal.repsL !== 'null' ? setVal.repsL : ''}
                         onChange={(e) => {
                           const val = e.target.value;
                           if (val === '' || /^[0-9]+$/.test(val)) {
@@ -1003,7 +967,7 @@ export default function SetLogger({
                         inputMode="numeric"
                         pattern="[0-9]*"
                         placeholder="Der"
-                        value={setVal.repsR !== undefined ? setVal.repsR : ''}
+                        value={setVal.repsR !== undefined && setVal.repsR !== null && setVal.repsR !== 'null' ? setVal.repsR : ''}
                         onChange={(e) => {
                           const val = e.target.value;
                           if (val === '' || /^[0-9]+$/.test(val)) {
@@ -1014,7 +978,7 @@ export default function SetLogger({
                               if (rL === 1 && rR >= 5) avgR = String(rR);
                               else if (rR === 1 && rL >= 5) avgR = String(rL);
                               else avgR = String(Math.round((Number(rL) + Number(rR)) / 2));
-                            } else if (rR !== '') {
+                            } else if (rL !== '') {
                               avgR = String(rR);
                             }
                             handleSanitizedChange(setNum, {
@@ -1044,7 +1008,7 @@ export default function SetLogger({
                       inputMode="numeric"
                       pattern="[0-9]*"
                       placeholder="Reps"
-                      value={setVal.reps ?? ''}
+                      value={setVal.reps === null || setVal.reps === undefined || setVal.reps === 'null' ? '' : setVal.reps}
                       onChange={(e) => {
                         const val = e.target.value;
                         if (val === '' || /^[0-9]+$/.test(val)) {

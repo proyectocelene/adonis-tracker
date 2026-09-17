@@ -7,6 +7,11 @@ import {
 } from 'lucide-react';
 import { calculateCardioCalories } from '../utils/calorieCalculations';
 
+const cleanInputVal = (val, fallback = '') => {
+  if (val === null || val === undefined || val === 'null' || val === 'undefined') return fallback;
+  return String(val);
+};
+
 export default function CardioLogger({ 
   exercise, 
   exerciseData = {}, 
@@ -28,38 +33,52 @@ export default function CardioLogger({
      exerciseData.machine?.toLowerCase().includes('elíptica') || exerciseData.machine?.toLowerCase().includes('eliptica') ? 'elliptical' : 'bike');
   
   const [machineType, setMachineType] = useState(initialMachineType);
-  const [duration, setDuration] = useState(exerciseData.duration !== undefined ? String(exerciseData.duration) : '35');
+  
+  // Parámetros específicos Protocolo Bifásico Adonis (Fase A Inclinada + Fase B Plana)
+  const [isDualPhase, setIsDualPhase] = useState(exerciseData.isDualPhase !== undefined ? !!exerciseData.isDualPhase : true);
+  const [phaseMinutesA, setPhaseMinutesA] = useState(cleanInputVal(exerciseData.phaseMinutesA, '30'));
+  const [phaseInclineA, setPhaseInclineA] = useState(cleanInputVal(exerciseData.phaseInclineA, '11.5'));
+  const [phaseSpeedA, setPhaseSpeedA] = useState(cleanInputVal(exerciseData.phaseSpeedA, '4.0'));
+
+  const [phaseMinutesB, setPhaseMinutesB] = useState(cleanInputVal(exerciseData.phaseMinutesB, '30'));
+  const [phaseInclineB, setPhaseInclineB] = useState(cleanInputVal(exerciseData.phaseInclineB, '0'));
+  const [phaseSpeedB, setPhaseSpeedB] = useState(cleanInputVal(exerciseData.phaseSpeedB, '4.8'));
+
+  const initialDuration = exerciseData.duration !== undefined && exerciseData.duration !== null && exerciseData.duration !== 'null'
+    ? String(exerciseData.duration) 
+    : (exerciseData.isDualPhase !== false ? '60' : '35');
+  const [duration, setDuration] = useState(initialDuration);
   const [completed, setCompleted] = useState(!!exerciseData.completed);
 
-  // Parámetros específicos Caminadora Inclinada
-  const [treadmillIncline, setTreadmillIncline] = useState(exerciseData.inclinePct !== undefined ? String(exerciseData.inclinePct) : (exerciseData.incline || '10'));
-  const [treadmillSpeed, setTreadmillSpeed] = useState(exerciseData.speedKmh !== undefined ? String(exerciseData.speedKmh) : (exerciseData.speed || '4.5'));
-  const [treadmillDistance, setTreadmillDistance] = useState(exerciseData.distanceKm !== undefined ? String(exerciseData.distanceKm) : '');
+  // Parámetros específicos Caminadora Inclinada (Modo Simple)
+  const [treadmillIncline, setTreadmillIncline] = useState(cleanInputVal(exerciseData.inclinePct ?? exerciseData.incline, '11.5'));
+  const [treadmillSpeed, setTreadmillSpeed] = useState(cleanInputVal(exerciseData.speedKmh ?? exerciseData.speed, '4.0'));
+  const [treadmillDistance, setTreadmillDistance] = useState(cleanInputVal(exerciseData.distanceKm, ''));
 
   // Parámetros específicos Bicicleta Estática Ergómetro
-  const [bikeResistance, setBikeResistance] = useState(exerciseData.resistanceLevel !== undefined ? String(exerciseData.resistanceLevel) : '6');
-  const [bikeSpeed, setBikeSpeed] = useState(exerciseData.avgSpeedKmh !== undefined ? String(exerciseData.avgSpeedKmh) : '22');
-  const [bikeDistance, setBikeDistance] = useState(exerciseData.distanceKm !== undefined ? String(exerciseData.distanceKm) : '');
-  const [bikeCadence, setBikeCadence] = useState(exerciseData.cadenceRpm !== undefined ? String(exerciseData.cadenceRpm) : '75');
-  const [bikeWatts, setBikeWatts] = useState(exerciseData.watts !== undefined ? String(exerciseData.watts) : '');
+  const [bikeResistance, setBikeResistance] = useState(cleanInputVal(exerciseData.resistanceLevel, '6'));
+  const [bikeSpeed, setBikeSpeed] = useState(cleanInputVal(exerciseData.avgSpeedKmh, '22'));
+  const [bikeDistance, setBikeDistance] = useState(cleanInputVal(exerciseData.distanceKm, ''));
+  const [bikeCadence, setBikeCadence] = useState(cleanInputVal(exerciseData.cadenceRpm, '75'));
+  const [bikeWatts, setBikeWatts] = useState(cleanInputVal(exerciseData.watts, ''));
 
   // Parámetros específicos Elíptica Sólo Piernas
-  const [ellipticalResistance, setEllipticalResistance] = useState(exerciseData.resistanceLevel !== undefined ? String(exerciseData.resistanceLevel) : '5');
-  const [ellipticalSpm, setEllipticalSpm] = useState(exerciseData.stridesPerMin !== undefined ? String(exerciseData.stridesPerMin) : '60');
-  const [ellipticalDistance, setEllipticalDistance] = useState(exerciseData.distanceKm !== undefined ? String(exerciseData.distanceKm) : '');
+  const [ellipticalResistance, setEllipticalResistance] = useState(cleanInputVal(exerciseData.resistanceLevel, '5'));
+  const [ellipticalSpm, setEllipticalSpm] = useState(cleanInputVal(exerciseData.stridesPerMin, '60'));
+  const [ellipticalDistance, setEllipticalDistance] = useState(cleanInputVal(exerciseData.distanceKm, ''));
 
   // Sesión de Cardio del Smartwatch
-  const [watchHrAvg, setWatchHrAvg] = useState(exerciseData.heartRate !== undefined ? String(exerciseData.heartRate) : (exerciseData.watch?.avgHeartRate || '125'));
-  const [watchHrMax, setWatchHrMax] = useState(exerciseData.watch?.maxHeartRate ? String(exerciseData.watch.maxHeartRate) : '');
-  const [watchKcal, setWatchKcal] = useState(exerciseData.watchCalories !== undefined ? String(exerciseData.watchCalories) : (exerciseData.watch?.watchCalories || ''));
+  const [watchHrAvg, setWatchHrAvg] = useState(cleanInputVal(exerciseData.heartRate ?? exerciseData.watch?.avgHeartRate, '125'));
+  const [watchHrMax, setWatchHrMax] = useState(cleanInputVal(exerciseData.watch?.maxHeartRate, ''));
+  const [watchKcal, setWatchKcal] = useState(cleanInputVal(exerciseData.watchCalories ?? exerciseData.watch?.watchCalories, ''));
 
   // Consola de la Máquina
-  const [machineKcal, setMachineKcal] = useState(exerciseData.machineCalories !== undefined ? String(exerciseData.machineCalories) : '');
+  const [machineKcal, setMachineKcal] = useState(cleanInputVal(exerciseData.machineCalories, ''));
   const [calibrationMode, setCalibrationMode] = useState(exerciseData.calibrationMode || 'consensus');
 
   // Ajustes de máquina y notas
-  const [machineSetup, setMachineSetup] = useState(exerciseData.machineSetup || '');
-  const [cardioNotesInput, setCardioNotesInput] = useState(exerciseData.notes || '');
+  const [machineSetup, setMachineSetup] = useState(cleanInputVal(exerciseData.machineSetup, ''));
+  const [cardioNotesInput, setCardioNotesInput] = useState(cleanInputVal(exerciseData.notes, ''));
 
   // Cronómetro Integrado
   const [timerRunning, setTimerRunning] = useState(false);
@@ -83,34 +102,65 @@ export default function CardioLogger({
       (exerciseData.machine?.toLowerCase().includes('caminadora') ? 'treadmill' :
        exerciseData.machine?.toLowerCase().includes('elíptica') || exerciseData.machine?.toLowerCase().includes('eliptica') ? 'elliptical' : 'bike');
     setMachineType(rawMType);
-    setDuration(exerciseData.duration !== undefined ? String(exerciseData.duration) : '35');
+    if (exerciseData.isDualPhase !== undefined) setIsDualPhase(!!exerciseData.isDualPhase);
+    setPhaseMinutesA(cleanInputVal(exerciseData.phaseMinutesA, '30'));
+    setPhaseInclineA(cleanInputVal(exerciseData.phaseInclineA, '11.5'));
+    setPhaseSpeedA(cleanInputVal(exerciseData.phaseSpeedA, '4.0'));
+    setPhaseMinutesB(cleanInputVal(exerciseData.phaseMinutesB, '30'));
+    setPhaseInclineB(cleanInputVal(exerciseData.phaseInclineB, '0'));
+    setPhaseSpeedB(cleanInputVal(exerciseData.phaseSpeedB, '4.8'));
+
+    setDuration(cleanInputVal(exerciseData.duration, exerciseData.isDualPhase !== false ? '60' : '35'));
     setCompleted(!!exerciseData.completed);
-    if (exerciseData.inclinePct !== undefined) setTreadmillIncline(String(exerciseData.inclinePct));
-    if (exerciseData.speedKmh !== undefined) setTreadmillSpeed(String(exerciseData.speedKmh));
+    setTreadmillIncline(cleanInputVal(exerciseData.inclinePct ?? exerciseData.incline, '11.5'));
+    setTreadmillSpeed(cleanInputVal(exerciseData.speedKmh ?? exerciseData.speed, '4.0'));
+    setTreadmillDistance(cleanInputVal(exerciseData.distanceKm, ''));
+    
     if (exerciseData.resistanceLevel !== undefined) {
-      setBikeResistance(String(exerciseData.resistanceLevel));
-      setEllipticalResistance(String(exerciseData.resistanceLevel));
+      setBikeResistance(cleanInputVal(exerciseData.resistanceLevel, '6'));
+      setEllipticalResistance(cleanInputVal(exerciseData.resistanceLevel, '5'));
     }
-    if (exerciseData.heartRate !== undefined) setWatchHrAvg(String(exerciseData.heartRate));
-    if (exerciseData.watchCalories !== undefined) setWatchKcal(String(exerciseData.watchCalories));
-    if (exerciseData.machineCalories !== undefined) setMachineKcal(String(exerciseData.machineCalories));
+    if (exerciseData.avgSpeedKmh !== undefined) setBikeSpeed(cleanInputVal(exerciseData.avgSpeedKmh, '22'));
+    if (exerciseData.cadenceRpm !== undefined) setBikeCadence(cleanInputVal(exerciseData.cadenceRpm, '75'));
+    if (exerciseData.watts !== undefined) setBikeWatts(cleanInputVal(exerciseData.watts, ''));
+    if (exerciseData.stridesPerMin !== undefined) setEllipticalSpm(cleanInputVal(exerciseData.stridesPerMin, '60'));
+    if (exerciseData.distanceKm !== undefined) {
+      setBikeDistance(cleanInputVal(exerciseData.distanceKm, ''));
+      setEllipticalDistance(cleanInputVal(exerciseData.distanceKm, ''));
+    }
+
+    setWatchHrAvg(cleanInputVal(exerciseData.heartRate ?? exerciseData.watch?.avgHeartRate, '125'));
+    setWatchHrMax(cleanInputVal(exerciseData.watch?.maxHeartRate, ''));
+    setWatchKcal(cleanInputVal(exerciseData.watchCalories ?? exerciseData.watch?.watchCalories, ''));
+    setMachineKcal(cleanInputVal(exerciseData.machineCalories, ''));
     if (exerciseData.calibrationMode) setCalibrationMode(exerciseData.calibrationMode);
-    if (exerciseData.machineSetup !== undefined) setMachineSetup(exerciseData.machineSetup);
-    if (exerciseData.notes !== undefined) setCardioNotesInput(exerciseData.notes);
+    setMachineSetup(cleanInputVal(exerciseData.machineSetup, ''));
+    setCardioNotesInput(cleanInputVal(exerciseData.notes, ''));
   }, [exerciseData]);
 
   // Nombre legible de la máquina
   const machineLabel = machineType === 'treadmill' 
-    ? '🏃‍♀️ Caminadora Inclinada' 
+    ? (isDualPhase ? '🏃‍♀️ Caminadora Inclinada (Bifásico 60m)' : '🏃‍♀️ Caminadora Inclinada')
     : machineType === 'bike' 
     ? '🚴‍♂️ Bicicleta Estática Ergómetro' 
     : '🚶‍♀️ Elíptica de Bajo Impacto (Solo Piernas)';
+
+  const calculatedDuration = machineType === 'treadmill' && isDualPhase
+    ? (parseFloat(phaseMinutesA) || 0) + (parseFloat(phaseMinutesB) || 0)
+    : (parseFloat(duration) || 0);
 
   // Empaquetar estado actual para calcular calorías reactivas
   const currentCardioState = {
     machineType,
     machine: machineLabel,
-    duration: parseFloat(duration) || 0,
+    duration: calculatedDuration,
+    isDualPhase: machineType === 'treadmill' ? isDualPhase : false,
+    phaseMinutesA: parseFloat(phaseMinutesA) || 0,
+    phaseInclineA: parseFloat(phaseInclineA) || 0,
+    phaseSpeedA: parseFloat(phaseSpeedA) || 0,
+    phaseMinutesB: parseFloat(phaseMinutesB) || 0,
+    phaseInclineB: parseFloat(phaseInclineB) || 0,
+    phaseSpeedB: parseFloat(phaseSpeedB) || 0,
     speedKmh: parseFloat(treadmillSpeed) || 0,
     inclinePct: parseFloat(treadmillIncline) || 0,
     distanceKm: parseFloat(machineType === 'treadmill' ? treadmillDistance : machineType === 'bike' ? bikeDistance : ellipticalDistance) || 0,
@@ -140,15 +190,26 @@ export default function CardioLogger({
       ...currentCardioState,
       ...patch
     };
+    const liveMetrics = calculateCardioCalories(merged, userWeightKg);
+
     onUpdateCardio({
       machineType: merged.machineType,
-      machine: merged.machineType === 'treadmill' ? 'Caminadora Inclinada (Zona 2)' : merged.machineType === 'bike' ? 'Bicicleta Estática Ergómetro' : 'Elíptica de Bajo Impacto',
+      machine: merged.machineType === 'treadmill' 
+        ? (merged.isDualPhase ? 'Caminadora Inclinada (Bifásico 60 min)' : 'Caminadora Inclinada (Zona 2)')
+        : merged.machineType === 'bike' ? 'Bicicleta Estática Ergómetro' : 'Elíptica de Bajo Impacto',
       duration: merged.duration,
+      isDualPhase: merged.isDualPhase,
+      phaseMinutesA: merged.phaseMinutesA,
+      phaseInclineA: merged.phaseInclineA,
+      phaseSpeedA: merged.phaseSpeedA,
+      phaseMinutesB: merged.phaseMinutesB,
+      phaseInclineB: merged.phaseInclineB,
+      phaseSpeedB: merged.phaseSpeedB,
       inclinePct: merged.inclinePct,
       speedKmh: merged.speedKmh,
       resistanceLevel: merged.resistanceLevel,
       avgSpeedKmh: merged.avgSpeedKmh,
-      distanceKm: merged.distanceKm,
+      distanceKm: merged.distanceKm || liveMetrics.distanceKm,
       cadenceRpm: merged.cadenceRpm,
       watts: merged.watts,
       stridesPerMin: merged.stridesPerMin,
@@ -160,8 +221,9 @@ export default function CardioLogger({
       machineSetup: patch.machineSetup !== undefined ? patch.machineSetup : machineSetup,
       notes: patch.notes !== undefined ? patch.notes : cardioNotesInput,
       completed: patch.completed !== undefined ? patch.completed : completed,
-      calculatedKcal: metrics.cardioKcal,
-      acsmKcal: metrics.acsmKcal
+      calculatedKcal: liveMetrics.cardioKcal,
+      acsmKcal: liveMetrics.acsmKcal,
+      elevationMeters: liveMetrics.elevationMeters
     });
   };
 
@@ -428,105 +490,450 @@ export default function CardioLogger({
 
                 {/* 1. CAMPOS PARA CAMINADORA INCLINADA */}
                 {machineType === 'treadmill' && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '8px' }}>
-                      <div>
-                        <label style={{ display: 'block', fontSize: '10.5px', fontWeight: '800', color: '#334155', marginBottom: '3px' }}>
-                          ⏱️ Minutos:
-                        </label>
-                        <input
-                          type="number"
-                          value={duration}
-                          onChange={e => {
-                            setDuration(e.target.value);
-                            notifyChange({ duration: parseFloat(e.target.value) || 0 });
-                          }}
-                          style={{ width: '100%', padding: '7px', textAlign: 'center', borderRadius: '10px', border: '1.5px solid #0284c7', fontWeight: '900', fontSize: '13px' }}
-                        />
-                      </div>
-
-                      <div>
-                        <label style={{ display: 'block', fontSize: '10.5px', fontWeight: '800', color: '#334155', marginBottom: '3px' }}>
-                          📐 Inclinación %:
-                        </label>
-                        <input
-                          type="number"
-                          value={treadmillIncline}
-                          onChange={e => {
-                            setTreadmillIncline(e.target.value);
-                            notifyChange({ inclinePct: parseFloat(e.target.value) || 0 });
-                          }}
-                          placeholder="10"
-                          style={{ width: '100%', padding: '7px', textAlign: 'center', borderRadius: '10px', border: '1.5px solid #cbd5e1', fontWeight: '900', fontSize: '13px' }}
-                        />
-                      </div>
-
-                      <div>
-                        <label style={{ display: 'block', fontSize: '10.5px', fontWeight: '800', color: '#334155', marginBottom: '3px' }}>
-                          ⚡ Velocidad km/h:
-                        </label>
-                        <input
-                          type="number"
-                          step="0.1"
-                          value={treadmillSpeed}
-                          onChange={e => {
-                            setTreadmillSpeed(e.target.value);
-                            notifyChange({ speedKmh: parseFloat(e.target.value) || 0 });
-                          }}
-                          placeholder="4.5"
-                          style={{ width: '100%', padding: '7px', textAlign: 'center', borderRadius: '10px', border: '1.5px solid #cbd5e1', fontWeight: '900', fontSize: '13px' }}
-                        />
-                      </div>
-
-                      <div>
-                        <label style={{ display: 'block', fontSize: '10.5px', fontWeight: '800', color: '#334155', marginBottom: '3px' }}>
-                          📍 Distancia (km):
-                        </label>
-                        <input
-                          type="number"
-                          step="0.01"
-                          value={treadmillDistance}
-                          placeholder={metrics.distanceKm ? String(metrics.distanceKm) : '2.25'}
-                          onChange={e => {
-                            setTreadmillDistance(e.target.value);
-                            notifyChange({ distanceKm: parseFloat(e.target.value) || 0 });
-                          }}
-                          style={{ width: '100%', padding: '7px', textAlign: 'center', borderRadius: '10px', border: '1.5px solid #cbd5e1', fontWeight: '900', fontSize: '13px' }}
-                        />
-                      </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    {/* Selector de Modo: Bifásico (Oficial Adonis) vs Simple */}
+                    <div style={{ display: 'flex', gap: '6px', background: '#e2e8f0', padding: '3px', borderRadius: '12px' }}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsDualPhase(true);
+                          notifyChange({ 
+                            isDualPhase: true,
+                            duration: (parseFloat(phaseMinutesA) || 30) + (parseFloat(phaseMinutesB) || 30)
+                          });
+                        }}
+                        style={{
+                          flex: 1,
+                          padding: '7px 10px',
+                          borderRadius: '10px',
+                          border: 'none',
+                          background: isDualPhase ? 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)' : 'transparent',
+                          color: isDualPhase ? '#ffffff' : '#475569',
+                          fontWeight: '900',
+                          fontSize: '11px',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '5px',
+                          boxShadow: isDualPhase ? '0 2px 8px rgba(2, 132, 199, 0.3)' : 'none'
+                        }}
+                      >
+                        ⚡ Protocolo Bifásico Oficial (60 min)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsDualPhase(false);
+                          notifyChange({ 
+                            isDualPhase: false,
+                            duration: parseFloat(duration) || 35
+                          });
+                        }}
+                        style={{
+                          flex: 1,
+                          padding: '7px 10px',
+                          borderRadius: '10px',
+                          border: 'none',
+                          background: !isDualPhase ? 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)' : 'transparent',
+                          color: !isDualPhase ? '#ffffff' : '#475569',
+                          fontWeight: '900',
+                          fontSize: '11px',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '5px',
+                          boxShadow: !isDualPhase ? '0 2px 8px rgba(2, 132, 199, 0.3)' : 'none'
+                        }}
+                      >
+                        ⏱️ Modo Simple (1 Inclinación)
+                      </button>
                     </div>
 
-                    {/* Accesos rápidos de inclinación */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '5px', flexWrap: 'wrap' }}>
-                      <span style={{ fontSize: '10px', color: '#64748b', fontWeight: '800' }}>Inclinación:</span>
-                      {[0, 5, 8, 10, 12, 15].map(inc => (
-                        <button
-                          key={inc}
-                          type="button"
-                          onClick={() => {
-                            setTreadmillIncline(String(inc));
-                            notifyChange({ inclinePct: inc });
-                          }}
-                          style={{
-                            padding: '3px 8px',
-                            borderRadius: '8px',
-                            border: treadmillIncline === String(inc) ? '1.5px solid #0284c7' : '1px solid #cbd5e1',
-                            background: treadmillIncline === String(inc) ? '#e0f2fe' : '#ffffff',
-                            color: treadmillIncline === String(inc) ? '#0284c7' : '#475569',
-                            fontSize: '10.5px',
-                            fontWeight: '800',
-                            cursor: 'pointer'
-                          }}
-                        >
-                          {inc}%
-                        </button>
-                      ))}
-                      {metrics.elevationMeters > 0 && (
-                        <span style={{ fontSize: '10.5px', color: '#059669', fontWeight: '800', marginLeft: 'auto' }}>
-                          ⛰️ +{metrics.elevationMeters}m elevación ganada
-                        </span>
-                      )}
-                    </div>
+                    {/* MODO BIFÁSICO: FASE A + FASE B */}
+                    {isDualPhase ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                        {/* FASE A: 30 MIN INCLINADA */}
+                        <div style={{ background: '#f0f9ff', border: '1.5px solid #7dd3fc', borderRadius: '14px', padding: '10px 12px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px', flexWrap: 'wrap', gap: '4px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              <span style={{ fontSize: '12px' }}>🟢</span>
+                              <strong style={{ fontSize: '12px', fontWeight: '900', color: '#0369a1' }}>
+                                Fase A: Rampa Inclinada ({phaseMinutesA} min)
+                              </strong>
+                            </div>
+                            <span style={{ fontSize: '10px', background: '#e0f2fe', color: '#0284c7', padding: '2px 8px', borderRadius: '8px', fontWeight: '800' }}>
+                              Zona 2 Lipolítica & Cero Impacto
+                            </span>
+                          </div>
+                          <p style={{ fontSize: '10.5px', color: '#0369a1', margin: '0 0 8px 0', lineHeight: '1.3' }}>
+                            A 120-135 BPM, las mitocondrias oxidan ácidos grasos libres sin vaciar reservas glucolíticas requeridas para el estudio. La pendiente reduce drásticamente el impacto articular.
+                          </p>
+
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '6px' }}>
+                            <div>
+                              <label style={{ display: 'block', fontSize: '10px', fontWeight: '800', color: '#334155', marginBottom: '2px' }}>
+                                ⏱️ Minutos:
+                              </label>
+                              <input
+                                type="number"
+                                value={cleanInputVal(phaseMinutesA, '30')}
+                                onChange={e => {
+                                  setPhaseMinutesA(e.target.value);
+                                  const totalM = (parseFloat(e.target.value) || 0) + (parseFloat(phaseMinutesB) || 0);
+                                  notifyChange({ 
+                                    phaseMinutesA: parseFloat(e.target.value) || 0,
+                                    duration: totalM
+                                  });
+                                }}
+                                style={{ width: '100%', padding: '6px', textAlign: 'center', borderRadius: '8px', border: '1.5px solid #0284c7', fontWeight: '900', fontSize: '12px', background: '#ffffff' }}
+                              />
+                            </div>
+
+                            <div>
+                              <label style={{ display: 'block', fontSize: '10px', fontWeight: '800', color: '#334155', marginBottom: '2px' }}>
+                                📐 Inclinación %:
+                              </label>
+                              <input
+                                type="number"
+                                step="0.5"
+                                value={cleanInputVal(phaseInclineA, '11.5')}
+                                onChange={e => {
+                                  setPhaseInclineA(e.target.value);
+                                  notifyChange({ phaseInclineA: parseFloat(e.target.value) || 0 });
+                                }}
+                                style={{ width: '100%', padding: '6px', textAlign: 'center', borderRadius: '8px', border: '1.5px solid #0284c7', fontWeight: '900', fontSize: '12px', background: '#ffffff' }}
+                              />
+                            </div>
+
+                            <div>
+                              <label style={{ display: 'block', fontSize: '10px', fontWeight: '800', color: '#334155', marginBottom: '2px' }}>
+                                ⚡ Vel km/h:
+                              </label>
+                              <input
+                                type="number"
+                                step="0.1"
+                                value={cleanInputVal(phaseSpeedA, '4.0')}
+                                onChange={e => {
+                                  setPhaseSpeedA(e.target.value);
+                                  notifyChange({ phaseSpeedA: parseFloat(e.target.value) || 0 });
+                                }}
+                                style={{ width: '100%', padding: '6px', textAlign: 'center', borderRadius: '8px', border: '1.5px solid #0284c7', fontWeight: '900', fontSize: '12px', background: '#ffffff' }}
+                              />
+                            </div>
+                          </div>
+
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '6px', flexWrap: 'wrap' }}>
+                            <span style={{ fontSize: '9.5px', color: '#64748b', fontWeight: '800' }}>Inclinación Rápida:</span>
+                            {['10', '11', '11.5', '12'].map(inc => (
+                              <button
+                                key={inc}
+                                type="button"
+                                onClick={() => {
+                                  setPhaseInclineA(inc);
+                                  notifyChange({ phaseInclineA: parseFloat(inc) });
+                                }}
+                                style={{
+                                  padding: '2px 7px',
+                                  borderRadius: '6px',
+                                  border: phaseInclineA === inc ? '1.5px solid #0284c7' : '1px solid #cbd5e1',
+                                  background: phaseInclineA === inc ? '#e0f2fe' : '#ffffff',
+                                  color: phaseInclineA === inc ? '#0284c7' : '#475569',
+                                  fontSize: '10px',
+                                  fontWeight: '800',
+                                  cursor: 'pointer'
+                                }}
+                              >
+                                {inc}%
+                              </button>
+                            ))}
+                            <span style={{ fontSize: '9.5px', color: '#64748b', fontWeight: '800', marginLeft: '6px' }}>Vel:</span>
+                            {['3.8', '4.0', '4.2'].map(spd => (
+                              <button
+                                key={spd}
+                                type="button"
+                                onClick={() => {
+                                  setPhaseSpeedA(spd);
+                                  notifyChange({ phaseSpeedA: parseFloat(spd) });
+                                }}
+                                style={{
+                                  padding: '2px 7px',
+                                  borderRadius: '6px',
+                                  border: phaseSpeedA === spd ? '1.5px solid #0284c7' : '1px solid #cbd5e1',
+                                  background: phaseSpeedA === spd ? '#e0f2fe' : '#ffffff',
+                                  color: phaseSpeedA === spd ? '#0284c7' : '#475569',
+                                  fontSize: '10px',
+                                  fontWeight: '800',
+                                  cursor: 'pointer'
+                                }}
+                              >
+                                {spd}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* FASE B: 30 MIN PLANOS */}
+                        <div style={{ background: '#ecfdf5', border: '1.5px solid #6ee7b7', borderRadius: '14px', padding: '10px 12px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px', flexWrap: 'wrap', gap: '4px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              <span style={{ fontSize: '12px' }}>🔵</span>
+                              <strong style={{ fontSize: '12px', fontWeight: '900', color: '#047857' }}>
+                                Fase B: Terreno Plano ({phaseMinutesB} min)
+                              </strong>
+                            </div>
+                            <span style={{ fontSize: '10px', background: '#d1fae5', color: '#065f46', padding: '2px 8px', borderRadius: '8px', fontWeight: '800' }}>
+                              Descarga Aquiles & Sóleo
+                            </span>
+                          </div>
+                          <p style={{ fontSize: '10.5px', color: '#047857', margin: '0 0 8px 0', lineHeight: '1.3' }}>
+                            Evita sobrecarga excéntrica en tendón de Aquiles tras 30 min continuos en pendiente, normaliza el ángulo tibio-tarsiano y promueve el retorno venoso y aclaramiento de lactato.
+                          </p>
+
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '6px' }}>
+                            <div>
+                              <label style={{ display: 'block', fontSize: '10px', fontWeight: '800', color: '#334155', marginBottom: '2px' }}>
+                                ⏱️ Minutos:
+                              </label>
+                              <input
+                                type="number"
+                                value={cleanInputVal(phaseMinutesB, '30')}
+                                onChange={e => {
+                                  setPhaseMinutesB(e.target.value);
+                                  const totalM = (parseFloat(phaseMinutesA) || 0) + (parseFloat(e.target.value) || 0);
+                                  notifyChange({ 
+                                    phaseMinutesB: parseFloat(e.target.value) || 0,
+                                    duration: totalM
+                                  });
+                                }}
+                                style={{ width: '100%', padding: '6px', textAlign: 'center', borderRadius: '8px', border: '1.5px solid #059669', fontWeight: '900', fontSize: '12px', background: '#ffffff' }}
+                              />
+                            </div>
+
+                            <div>
+                              <label style={{ display: 'block', fontSize: '10px', fontWeight: '800', color: '#334155', marginBottom: '2px' }}>
+                                📐 Inclinación %:
+                              </label>
+                              <input
+                                type="number"
+                                step="0.5"
+                                value={cleanInputVal(phaseInclineB, '0')}
+                                onChange={e => {
+                                  setPhaseInclineB(e.target.value);
+                                  notifyChange({ phaseInclineB: parseFloat(e.target.value) || 0 });
+                                }}
+                                style={{ width: '100%', padding: '6px', textAlign: 'center', borderRadius: '8px', border: '1.5px solid #059669', fontWeight: '900', fontSize: '12px', background: '#ffffff' }}
+                              />
+                            </div>
+
+                            <div>
+                              <label style={{ display: 'block', fontSize: '10px', fontWeight: '800', color: '#334155', marginBottom: '2px' }}>
+                                ⚡ Vel km/h:
+                              </label>
+                              <input
+                                type="number"
+                                step="0.1"
+                                value={cleanInputVal(phaseSpeedB, '4.8')}
+                                onChange={e => {
+                                  setPhaseSpeedB(e.target.value);
+                                  notifyChange({ phaseSpeedB: parseFloat(e.target.value) || 0 });
+                                }}
+                                style={{ width: '100%', padding: '6px', textAlign: 'center', borderRadius: '8px', border: '1.5px solid #059669', fontWeight: '900', fontSize: '12px', background: '#ffffff' }}
+                              />
+                            </div>
+                          </div>
+
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '6px', flexWrap: 'wrap' }}>
+                            <span style={{ fontSize: '9.5px', color: '#64748b', fontWeight: '800' }}>Inclinación:</span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setPhaseInclineB('0');
+                                notifyChange({ phaseInclineB: 0 });
+                              }}
+                              style={{
+                                padding: '2px 7px',
+                                borderRadius: '6px',
+                                border: phaseInclineB === '0' ? '1.5px solid #059669' : '1px solid #cbd5e1',
+                                background: phaseInclineB === '0' ? '#d1fae5' : '#ffffff',
+                                color: phaseInclineB === '0' ? '#047857' : '#475569',
+                                fontSize: '10px',
+                                fontWeight: '800',
+                                cursor: 'pointer'
+                              }}
+                            >
+                              0% Plano (Oficial)
+                            </button>
+                            <span style={{ fontSize: '9.5px', color: '#64748b', fontWeight: '800', marginLeft: '6px' }}>Vel:</span>
+                            {['4.5', '4.8', '5.0', '5.2'].map(spd => (
+                              <button
+                                key={spd}
+                                type="button"
+                                onClick={() => {
+                                  setPhaseSpeedB(spd);
+                                  notifyChange({ phaseSpeedB: parseFloat(spd) });
+                                }}
+                                style={{
+                                  padding: '2px 7px',
+                                  borderRadius: '6px',
+                                  border: phaseSpeedB === spd ? '1.5px solid #059669' : '1px solid #cbd5e1',
+                                  background: phaseSpeedB === spd ? '#d1fae5' : '#ffffff',
+                                  color: phaseSpeedB === spd ? '#047857' : '#475569',
+                                  fontSize: '10px',
+                                  fontWeight: '800',
+                                  cursor: 'pointer'
+                                }}
+                              >
+                                {spd}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* RESUMEN CONSOLIDADO BIFÁSICO */}
+                        <div style={{ background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: '12px', padding: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '6px' }}>
+                            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                              <span style={{ fontSize: '11px', fontWeight: '900', color: '#0f172a' }}>
+                                ⏱️ Total: {(parseFloat(phaseMinutesA) || 0) + (parseFloat(phaseMinutesB) || 0)} min
+                              </span>
+                              <span style={{ fontSize: '11px', fontWeight: '800', color: '#0369a1' }}>
+                                📍 ~{metrics.distanceKm} km
+                              </span>
+                              {metrics.elevationMeters > 0 && (
+                                <span style={{ fontSize: '11px', fontWeight: '800', color: '#059669' }}>
+                                  ⛰️ +{metrics.elevationMeters}m desnivel
+                                </span>
+                              )}
+                              <span style={{ fontSize: '11px', fontWeight: '900', color: '#b45309' }}>
+                                🔥 {metrics.acsmKcal} kcal ACSM
+                              </span>
+                            </div>
+                          </div>
+
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <label style={{ fontSize: '10.5px', color: '#475569', fontWeight: '800', whiteSpace: 'nowrap' }}>
+                              📍 Distancia Pantalla Gym:
+                            </label>
+                            <input
+                              type="number"
+                              step="0.01"
+                              placeholder={metrics.distanceKm ? String(metrics.distanceKm) : '3.8'}
+                              value={cleanInputVal(treadmillDistance, '')}
+                              onChange={e => {
+                                setTreadmillDistance(e.target.value);
+                                notifyChange({ distanceKm: parseFloat(e.target.value) || 0 });
+                              }}
+                              style={{ width: '100px', padding: '5px 8px', borderRadius: '8px', border: '1.5px solid #cbd5e1', fontSize: '11px', fontWeight: '800', textAlign: 'center' }}
+                            />
+                            <span style={{ fontSize: '10px', color: '#64748b' }}>(Opcional, si difiere de la estimación)</span>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      /* MODO SIMPLE: 1 INCLINACIÓN CONTINUA */
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '8px' }}>
+                          <div>
+                            <label style={{ display: 'block', fontSize: '10.5px', fontWeight: '800', color: '#334155', marginBottom: '3px' }}>
+                              ⏱️ Minutos:
+                            </label>
+                            <input
+                              type="number"
+                              value={cleanInputVal(duration, '35')}
+                              onChange={e => {
+                                setDuration(e.target.value);
+                                notifyChange({ duration: parseFloat(e.target.value) || 0 });
+                              }}
+                              style={{ width: '100%', padding: '7px', textAlign: 'center', borderRadius: '10px', border: '1.5px solid #0284c7', fontWeight: '900', fontSize: '13px' }}
+                            />
+                          </div>
+
+                          <div>
+                            <label style={{ display: 'block', fontSize: '10.5px', fontWeight: '800', color: '#334155', marginBottom: '3px' }}>
+                              📐 Inclinación %:
+                            </label>
+                            <input
+                              type="number"
+                              value={cleanInputVal(treadmillIncline, '11.5')}
+                              onChange={e => {
+                                setTreadmillIncline(e.target.value);
+                                notifyChange({ inclinePct: parseFloat(e.target.value) || 0 });
+                              }}
+                              placeholder="11.5"
+                              style={{ width: '100%', padding: '7px', textAlign: 'center', borderRadius: '10px', border: '1.5px solid #cbd5e1', fontWeight: '900', fontSize: '13px' }}
+                            />
+                          </div>
+
+                          <div>
+                            <label style={{ display: 'block', fontSize: '10.5px', fontWeight: '800', color: '#334155', marginBottom: '3px' }}>
+                              ⚡ Velocidad km/h:
+                            </label>
+                            <input
+                              type="number"
+                              step="0.1"
+                              value={cleanInputVal(treadmillSpeed, '4.0')}
+                              onChange={e => {
+                                setTreadmillSpeed(e.target.value);
+                                notifyChange({ speedKmh: parseFloat(e.target.value) || 0 });
+                              }}
+                              placeholder="4.0"
+                              style={{ width: '100%', padding: '7px', textAlign: 'center', borderRadius: '10px', border: '1.5px solid #cbd5e1', fontWeight: '900', fontSize: '13px' }}
+                            />
+                          </div>
+
+                          <div>
+                            <label style={{ display: 'block', fontSize: '10.5px', fontWeight: '800', color: '#334155', marginBottom: '3px' }}>
+                              📍 Distancia (km):
+                            </label>
+                            <input
+                              type="number"
+                              step="0.01"
+                              value={cleanInputVal(treadmillDistance, '')}
+                              placeholder={metrics.distanceKm ? String(metrics.distanceKm) : '2.25'}
+                              onChange={e => {
+                                setTreadmillDistance(e.target.value);
+                                notifyChange({ distanceKm: parseFloat(e.target.value) || 0 });
+                              }}
+                              style={{ width: '100%', padding: '7px', textAlign: 'center', borderRadius: '10px', border: '1.5px solid #cbd5e1', fontWeight: '900', fontSize: '13px' }}
+                            />
+                          </div>
+                        </div>
+
+                        {/* Accesos rápidos de inclinación */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '5px', flexWrap: 'wrap' }}>
+                          <span style={{ fontSize: '10px', color: '#64748b', fontWeight: '800' }}>Inclinación:</span>
+                          {[0, 5, 8, 10, 11.5, 12, 15].map(inc => (
+                            <button
+                              key={inc}
+                              type="button"
+                              onClick={() => {
+                                setTreadmillIncline(String(inc));
+                                notifyChange({ inclinePct: inc });
+                              }}
+                              style={{
+                                padding: '3px 8px',
+                                borderRadius: '8px',
+                                border: treadmillIncline === String(inc) ? '1.5px solid #0284c7' : '1px solid #cbd5e1',
+                                background: treadmillIncline === String(inc) ? '#e0f2fe' : '#ffffff',
+                                color: treadmillIncline === String(inc) ? '#0284c7' : '#475569',
+                                fontSize: '10.5px',
+                                fontWeight: '800',
+                                cursor: 'pointer'
+                              }}
+                            >
+                              {inc}%
+                            </button>
+                          ))}
+                          {metrics.elevationMeters > 0 && (
+                            <span style={{ fontSize: '10.5px', color: '#059669', fontWeight: '800', marginLeft: 'auto' }}>
+                              ⛰️ +{metrics.elevationMeters}m elevación ganada
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -540,7 +947,7 @@ export default function CardioLogger({
                         </label>
                         <input
                           type="number"
-                          value={duration}
+                          value={cleanInputVal(duration, '35')}
                           onChange={e => {
                             setDuration(e.target.value);
                             notifyChange({ duration: parseFloat(e.target.value) || 0 });
@@ -555,7 +962,7 @@ export default function CardioLogger({
                         </label>
                         <input
                           type="number"
-                          value={bikeResistance}
+                          value={cleanInputVal(bikeResistance, '6')}
                           onChange={e => {
                             setBikeResistance(e.target.value);
                             notifyChange({ resistanceLevel: parseFloat(e.target.value) || 0 });
@@ -572,7 +979,7 @@ export default function CardioLogger({
                         <input
                           type="number"
                           step="0.5"
-                          value={bikeSpeed}
+                          value={cleanInputVal(bikeSpeed, '22')}
                           onChange={e => {
                             setBikeSpeed(e.target.value);
                             notifyChange({ avgSpeedKmh: parseFloat(e.target.value) || 0 });
@@ -589,7 +996,7 @@ export default function CardioLogger({
                         <input
                           type="number"
                           step="0.1"
-                          value={bikeDistance}
+                          value={cleanInputVal(bikeDistance, '')}
                           placeholder={metrics.distanceKm ? String(metrics.distanceKm) : '12.5'}
                           onChange={e => {
                             setBikeDistance(e.target.value);
@@ -605,7 +1012,7 @@ export default function CardioLogger({
                         </label>
                         <input
                           type="number"
-                          value={bikeCadence}
+                          value={cleanInputVal(bikeCadence, '75')}
                           onChange={e => {
                             setBikeCadence(e.target.value);
                             notifyChange({ cadenceRpm: parseFloat(e.target.value) || 0 });
@@ -674,7 +1081,7 @@ export default function CardioLogger({
                         </label>
                         <input
                           type="number"
-                          value={duration}
+                          value={cleanInputVal(duration, '35')}
                           onChange={e => {
                             setDuration(e.target.value);
                             notifyChange({ duration: parseFloat(e.target.value) || 0 });
@@ -689,7 +1096,7 @@ export default function CardioLogger({
                         </label>
                         <input
                           type="number"
-                          value={ellipticalResistance}
+                          value={cleanInputVal(ellipticalResistance, '5')}
                           onChange={e => {
                             setEllipticalResistance(e.target.value);
                             notifyChange({ resistanceLevel: parseFloat(e.target.value) || 0 });
@@ -705,7 +1112,7 @@ export default function CardioLogger({
                         </label>
                         <input
                           type="number"
-                          value={ellipticalSpm}
+                          value={cleanInputVal(ellipticalSpm, '60')}
                           onChange={e => {
                             setEllipticalSpm(e.target.value);
                             notifyChange({ stridesPerMin: parseFloat(e.target.value) || 0 });
@@ -722,7 +1129,7 @@ export default function CardioLogger({
                         <input
                           type="number"
                           step="0.1"
-                          value={ellipticalDistance}
+                          value={cleanInputVal(ellipticalDistance, '')}
                           placeholder={metrics.distanceKm ? String(metrics.distanceKm) : '2.0'}
                           onChange={e => {
                             setEllipticalDistance(e.target.value);
@@ -763,7 +1170,7 @@ export default function CardioLogger({
                     <input
                       type="number"
                       placeholder="125"
-                      value={watchHrAvg}
+                      value={cleanInputVal(watchHrAvg, '125')}
                       onChange={e => {
                         setWatchHrAvg(e.target.value);
                         notifyChange({ heartRate: parseInt(e.target.value, 10) || 0 });
@@ -779,7 +1186,7 @@ export default function CardioLogger({
                     <input
                       type="number"
                       placeholder="138"
-                      value={watchHrMax}
+                      value={cleanInputVal(watchHrMax, '')}
                       onChange={e => {
                         setWatchHrMax(e.target.value);
                         notifyChange({ watch: { ...currentCardioState.watch, maxHeartRate: parseInt(e.target.value, 10) || 0 } });
@@ -795,7 +1202,7 @@ export default function CardioLogger({
                     <input
                       type="number"
                       placeholder="Ej. 240"
-                      value={watchKcal}
+                      value={cleanInputVal(watchKcal, '')}
                       onChange={e => {
                         setWatchKcal(e.target.value);
                         notifyChange({ watchCalories: parseFloat(e.target.value) || null });
@@ -811,7 +1218,7 @@ export default function CardioLogger({
                     <input
                       type="number"
                       placeholder="Ej. 260"
-                      value={machineKcal}
+                      value={cleanInputVal(machineKcal, '')}
                       onChange={e => {
                         setMachineKcal(e.target.value);
                         notifyChange({ machineCalories: parseFloat(e.target.value) || null });
@@ -1119,31 +1526,60 @@ export default function CardioLogger({
               <div style={{ background: '#f0f9ff', border: '1.5px solid #bae6fd', borderRadius: '16px', padding: '14px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
                   <Flame size={18} color="#0284c7" />
-                  <strong style={{ color: '#0369a1', fontSize: '13px', fontWeight: '900' }}>
-                    Fundamentos Fisiológicos del Cardio Zona 2:
+                  <strong style={{ color: '#0369a1', fontSize: '13.5px', fontWeight: '900' }}>
+                    Prescripción Médica de Cardio Diario Adonis (Protocolo Bifásico de 60 Minutos):
                   </strong>
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '12px', color: '#0c4a6e', lineHeight: '1.4' }}>
-                  <div style={{ background: '#ffffff', padding: '8px 10px', borderRadius: '10px', border: '1px solid #bae6fd' }}>
-                    <strong style={{ color: '#0284c7', display: 'block', marginBottom: '2px' }}>1. Zona 2 Pura (RER 0.80 - 0.85):</strong>
-                    Intensidad donde la tasa de oxidación de ácidos grasos (FATmax) es máxima. Se recicla lactato sin acumularlo y sin fatigar el Sistema Nervioso Central (SNC).
+                  {/* FASE A */}
+                  <div style={{ background: '#ffffff', padding: '10px 12px', borderRadius: '12px', border: '1.5px solid #7dd3fc' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                      <span style={{ fontSize: '13px' }}>🟢</span>
+                      <strong style={{ color: '#0369a1', fontSize: '12.5px', fontWeight: '900' }}>
+                        1. Fase A (30 min al 11-12% de Inclinación):
+                      </strong>
+                    </div>
+                    <ul style={{ margin: '0', paddingLeft: '18px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <li>
+                        <strong style={{ color: '#0284c7' }}>Zona 2 Lipolítica Pura:</strong> A 120-135 BPM, las mitocondrias oxidan ácidos grasos libres sin agotar las reservas glucolíticas requeridas para el estudio.
+                      </li>
+                      <li>
+                        <strong style={{ color: '#0284c7' }}>Cero Impacto Articular:</strong> La pendiente reduce drásticamente las fuerzas de impacto sobre los meniscos y cartílago rotuliano en comparación con correr o trotar.
+                      </li>
+                    </ul>
                   </div>
 
-                  <div style={{ background: '#ffffff', padding: '8px 10px', borderRadius: '10px', border: '1px solid #bae6fd' }}>
-                    <strong style={{ color: '#0284c7', display: 'block', marginBottom: '2px' }}>2. Bajo Impacto Articular:</strong>
-                    Caminadora inclinada (cero rebote), bicicleta ergómetro o elíptica sin brazos protegen las articulaciones de rodilla y tobillo, permitiendo entrenar pierna pesada al día siguiente sin agujetas.
+                  {/* FASE B */}
+                  <div style={{ background: '#ffffff', padding: '10px 12px', borderRadius: '12px', border: '1.5px solid #6ee7b7' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                      <span style={{ fontSize: '13px' }}>🔵</span>
+                      <strong style={{ color: '#047857', fontSize: '12.5px', fontWeight: '900' }}>
+                        2. Fase B (30 min Planos a 0% de Inclinación):
+                      </strong>
+                    </div>
+                    <ul style={{ margin: '0', paddingLeft: '18px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <li>
+                        <strong style={{ color: '#059669' }}>Descarga del Tendón de Aquiles & Sóleo:</strong> Caminar inclinado más de 30-40 min continuos produce sobrecarga excéntrica en el tendón de Aquiles y la fascia plantar.
+                      </li>
+                      <li>
+                        <strong style={{ color: '#059669' }}>Retorno Venoso & Aclaramiento:</strong> Pasar a plano descarga la musculatura de la pantorrilla, normaliza el ángulo tibio-tarsiano y promueve el retorno venoso y aclaramiento de lactato.
+                      </li>
+                    </ul>
                   </div>
 
-                  <div style={{ background: '#ffffff', padding: '8px 10px', borderRadius: '10px', border: '1px solid #bae6fd' }}>
-                    <strong style={{ color: '#0284c7', display: 'block', marginBottom: '2px' }}>3. Ecuaciones Metabólicas ACSM:</strong>
-                    La app calcula el costo mecánico exacto por segundo según la física de la pendiente, potencia en Watts y peso corporal, evitando las sobreestimaciones de las pantallas de gimnasio.
+                  {/* ECUACIONES ACSM */}
+                  <div style={{ background: '#ffffff', padding: '10px 12px', borderRadius: '12px', border: '1px solid #bae6fd' }}>
+                    <strong style={{ color: '#0284c7', display: 'block', marginBottom: '2px', fontWeight: '900' }}>
+                      3. Ecuaciones Metabólicas ACSM Bi-Fásicas:
+                    </strong>
+                    El costo energético se computa independientemente para cada fase: VO₂ con pendiente fraccional en Fase A + VO₂ plano a mayor velocidad en Fase B, sumando kcal mecánicas reales y elevación ganada exacta.
                   </div>
                 </div>
 
-                <div style={{ background: '#fff1f2', border: '1px solid #fecdd3', padding: '8px 10px', borderRadius: '10px', color: '#be123c', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '6px', marginTop: '10px', fontSize: '11px' }}>
-                  <ShieldAlert size={16} color="#be123c" style={{ flexShrink: 0 }} />
-                  <span>Control de Fatiga: Si notas que tu fuerza en sentadilla o prensa se estanca, mantén el cardio en un máximo de 30-35 min a pulsos estables.</span>
+                <div style={{ background: '#f0fdf4', border: '1px solid #86efac', padding: '8px 10px', borderRadius: '10px', color: '#166534', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '6px', marginTop: '10px', fontSize: '11.5px' }}>
+                  <Check size={16} color="#166534" style={{ flexShrink: 0 }} />
+                  <span>Sin interferencia hipertrófica: Este formato bifásico de 60 minutos maximiza el déficit calórico diario protegiendo tus piernas pesadas y la energía cerebral de estudio.</span>
                 </div>
               </div>
             </div>

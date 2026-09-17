@@ -6,7 +6,7 @@ import SetLogger from './exercise/SetLogger';
 import ExerciseNotes from './exercise/ExerciseNotes';
 import ExerciseBiomechanics from './exercise/ExerciseBiomechanics';
 import ExerciseSwap from './exercise/ExerciseSwap';
-import { calculateSmartWarmup, getLoadRecommendation } from '../hooks/useWorkoutCalculations';
+import { calculateSmartWarmup, getLoadRecommendation, isExerciseUnilateral } from '../hooks/useWorkoutCalculations';
 import { UNIFIED_EXERCISE_LIBRARY } from '../data/unifiedExerciseLibrary';
 import { normalizeExerciseName } from '../utils/exerciseMatcher';
 
@@ -162,8 +162,7 @@ export default function ExerciseRow({
 
   const toggleSetComplete = (setIndex) => {
     ensureMeta();
-    const isStrictlyBilateral = /barra|smith|prensa|leg press|squat con barra|bench press con barra/i.test(exercise?.name || '');
-    const isUnilateral = !isStrictlyBilateral && (!!exerciseData.isUnilateral || !!exercise.isUnilateral);
+    const isUnilateral = isExerciseUnilateral(exercise, exerciseData);
     const currentSet = exerciseData[setIndex] || { 
       weight: previousData[setIndex]?.weight || '', 
       reps: previousData[setIndex]?.reps || '', 
@@ -501,6 +500,7 @@ export default function ExerciseRow({
                 handleAddSet={handleAddSet}
                 handleRemoveSet={handleRemoveSet}
                 onUpdateExerciseMeta={onUpdateExerciseMeta}
+                workoutHistory={workoutHistory}
               />
             </div>
           )}

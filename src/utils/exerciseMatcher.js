@@ -4,6 +4,7 @@
 
 import { LOAD_FAMILIES, scientificProtocol } from '../data/scientificProtocol.js';
 import { UNIFIED_EXERCISE_LIBRARY } from '../data/unifiedExerciseLibrary.js';
+import { isExerciseUnilateral } from '../hooks/useWorkoutCalculations.js';
 
 // Cache maestro de alias para resolución instantánea de variantes de nombres históricos
 export const CANONICAL_ALIAS_MAP = new Map();
@@ -1270,6 +1271,20 @@ export function getHistoricalRecordsForExercise(currentEx, workoutHistory = [], 
   const deltaPercent = (startWeight && startWeight > 0) ? ((delta / startWeight) * 100).toFixed(1) : 0;
   const matchedSources = Array.from(matchedNamesSet);
 
+  // Motor Inteligente: Si no hubo sesiones para la variante exacta pero existen variantes
+  // de la misma familia biomecánica (ej. HOMB-LAT_RAISE con Mancuerna, Polea o Máquina),
+  // hacer fallback automático para que nunca quede vacía la analítica ni la gráfica.
+  if (occurrences.length === 0 && options.autoFallback !== false && !options.matchFamily) {
+    const familyResult = getHistoricalRecordsForExercise(currentEx, workoutHistory, { ...options, matchFamily: true });
+    if (familyResult.sessionOccurrences.length > 0) {
+      return {
+        ...familyResult,
+        isFamilyFallback: true,
+        stationOccurrencesCount: 0
+      };
+    }
+  }
+
   return {
     sessionOccurrences: occurrences,
     startWeight,
@@ -1280,7 +1295,9 @@ export function getHistoricalRecordsForExercise(currentEx, workoutHistory = [], 
     deltaPercent,
     unit,
     matchedSources,
-    hasHistory: occurrences.length > 0
+    hasHistory: occurrences.length > 0,
+    isFamilyFallback: false,
+    stationOccurrencesCount: occurrences.length
   };
 }
 
@@ -1397,22 +1414,53 @@ export function getPreviousDataForExercise(currentEx, dayId, currentWeek, workou
   const normalizeResult = (matched) => {
     if (!matched) return {};
     const result = { ...matched };
+    const isUni = isExerciseUnilateral(currentEx, matched);
+    result.isUnilateral = isUni;
+
     if (Array.isArray(matched.sets)) {
       matched.sets.forEach((s, idx) => {
         const sNum = s.setNum !== undefined ? s.setNum : idx + 1;
         if (!result[sNum]) {
+          const validRepsL = isUni && s.repsL !== null && s.repsL !== undefined && s.repsL !== '' && s.repsL !== 'null' ? s.repsL : undefined;
+          const validRepsR = isUni && s.repsR !== null && s.repsR !== undefined && s.repsR !== '' && s.repsR !== 'null' ? s.repsR : undefined;
+          const resolvedReps = s.reps !== undefined && s.reps !== null && s.reps !== '' 
+            ? s.reps 
+            : (s.repsR || s.repsL || 0);
+
           result[sNum] = {
             weight: s.weight,
-            reps: s.reps,
-            repsL: s.repsL,
-            repsR: s.repsR,
+            reps: resolvedReps,
+            repsL: validRepsL,
+            repsR: validRepsR,
             rpe: s.rpe || '8',
             unit: s.unit || matched.unit || 'lbs',
-            completed: true
+            completed: true,
+            isUnilateral: isUni
           };
         }
       });
     }
+
+    // Normalizar y sanear todas las claves numéricas de series (ej. result["1"], result["2"])
+    Object.keys(result).forEach(key => {
+      if (/^\d+$/.test(key) && result[key] && typeof result[key] === 'object') {
+        const s = { ...result[key] };
+        if (!isUni) {
+          s.reps = (s.reps !== undefined && s.reps !== null && s.reps !== '' && s.reps !== 'null')
+            ? s.reps
+            : (s.repsR || s.repsL || 0);
+          delete s.repsL;
+          delete s.repsR;
+          s.isUnilateral = false;
+        } else {
+          s.isUnilateral = true;
+          if (s.repsL === 'null' || s.repsL === null) delete s.repsL;
+          if (s.repsR === 'null' || s.repsR === null) delete s.repsR;
+        }
+        result[key] = s;
+      }
+    });
+
     return result;
   };
 

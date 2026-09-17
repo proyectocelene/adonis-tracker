@@ -164,22 +164,55 @@ export function calculateCardioCalories(cardioData = {}, userWeightKg = 78.55) {
   let elevationMeters = 0;
 
   if (machineType === 'treadmill') {
-    const speedKmh = parseFloat(cardioData.speedKmh || cardioData.speed || 4.5) || 4.5;
-    const inclinePct = parseFloat(cardioData.inclinePct !== undefined ? cardioData.inclinePct : (cardioData.incline || 10)) || 10;
-    const speedMPerMin = (speedKmh * 1000) / 60;
-    const gradeDecimal = Math.max(0, inclinePct / 100);
+    // Soporte para Protocolo de 2 Fases (Fase A: Inclinada + Fase B: Plana)
+    const isDualPhase = cardioData.isDualPhase === true || (cardioData.phaseMinutesA !== undefined && cardioData.phaseMinutesB !== undefined);
     
-    // ACSM Walking Equation (Incline Treadmill)
-    // VO2 = 3.5 + (0.1 * S) + (1.8 * S * G)
-    const vo2 = 3.5 + (0.1 * speedMPerMin) + (1.8 * speedMPerMin * gradeDecimal);
-    met = vo2 / 3.5;
-    // Gasto por minuto: (VO2 * kg / 1000) * 4.95 kcal (RER 0.82-0.85 Zona 2)
-    acsmKcal = ((vo2 * userWeightKg) / 1000) * 4.95 * durationMinutes;
-    
-    if (distanceKm <= 0) {
-      distanceKm = Math.round((speedKmh * (durationMinutes / 60)) * 100) / 100;
+    if (isDualPhase) {
+      const durA = parseFloat(cardioData.phaseMinutesA !== undefined ? cardioData.phaseMinutesA : 30) || 0;
+      const incA = parseFloat(cardioData.phaseInclineA !== undefined ? cardioData.phaseInclineA : 11.5) || 11.5;
+      const spdA = parseFloat(cardioData.phaseSpeedA !== undefined ? cardioData.phaseSpeedA : 4.0) || 4.0;
+
+      const durB = parseFloat(cardioData.phaseMinutesB !== undefined ? cardioData.phaseMinutesB : 30) || 0;
+      const incB = parseFloat(cardioData.phaseInclineB !== undefined ? cardioData.phaseInclineB : 0) || 0;
+      const spdB = parseFloat(cardioData.phaseSpeedB !== undefined ? cardioData.phaseSpeedB : 4.8) || 4.8;
+
+      // Fase A: Inclinada
+      const speedMPerMinA = (spdA * 1000) / 60;
+      const gradeDecA = Math.max(0, incA / 100);
+      const vo2A = 3.5 + (0.1 * speedMPerMinA) + (1.8 * speedMPerMinA * gradeDecA);
+      const kcalA = ((vo2A * userWeightKg) / 1000) * 4.95 * durA;
+      const distA = (spdA * (durA / 60));
+
+      // Fase B: Plana
+      const speedMPerMinB = (spdB * 1000) / 60;
+      const gradeDecB = Math.max(0, incB / 100);
+      const vo2B = 3.5 + (0.1 * speedMPerMinB) + (1.8 * speedMPerMinB * gradeDecB);
+      const kcalB = ((vo2B * userWeightKg) / 1000) * 4.95 * durB;
+      const distB = (spdB * (durB / 60));
+
+      acsmKcal = kcalA + kcalB;
+      const totalDist = distA + distB;
+      distanceKm = distanceKm > 0 ? distanceKm : Math.round(totalDist * 100) / 100;
+      elevationMeters = Math.round(distA * 1000 * gradeDecA);
+      met = Math.round((((vo2A * durA) + (vo2B * durB)) / (Math.max(1, durA + durB) * 3.5)) * 10) / 10;
+    } else {
+      const speedKmh = parseFloat(cardioData.speedKmh || cardioData.speed || 4.5) || 4.5;
+      const inclinePct = parseFloat(cardioData.inclinePct !== undefined ? cardioData.inclinePct : (cardioData.incline || 10)) || 10;
+      const speedMPerMin = (speedKmh * 1000) / 60;
+      const gradeDecimal = Math.max(0, inclinePct / 100);
+      
+      // ACSM Walking Equation (Incline Treadmill)
+      // VO2 = 3.5 + (0.1 * S) + (1.8 * S * G)
+      const vo2 = 3.5 + (0.1 * speedMPerMin) + (1.8 * speedMPerMin * gradeDecimal);
+      met = vo2 / 3.5;
+      // Gasto por minuto: (VO2 * kg / 1000) * 4.95 kcal (RER 0.82-0.85 Zona 2)
+      acsmKcal = ((vo2 * userWeightKg) / 1000) * 4.95 * durationMinutes;
+      
+      if (distanceKm <= 0) {
+        distanceKm = Math.round((speedKmh * (durationMinutes / 60)) * 100) / 100;
+      }
+      elevationMeters = Math.round(distanceKm * 1000 * gradeDecimal);
     }
-    elevationMeters = Math.round(distanceKm * 1000 * gradeDecimal);
   } else if (machineType === 'bike') {
     const resistance = parseFloat(cardioData.resistanceLevel || 6) || 6;
     const rpm = parseFloat(cardioData.cadenceRpm || 72) || 72;

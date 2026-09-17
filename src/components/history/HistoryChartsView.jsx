@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { 
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend 
 } from 'recharts';
@@ -42,6 +42,43 @@ export default function HistoryChartsView({
     if (!selectedExId) return null;
     return (allAvailableExercises || []).find(e => e.id === selectedExId) || { id: selectedExId, name: selectedExId };
   }, [selectedExId, allAvailableExercises]);
+
+  const [yAxisScale, setYAxisScale] = useState(() => {
+    try {
+      return localStorage.getItem('coachv2_chart_yaxis_scale') || 'dynamic';
+    } catch (e) {
+      return 'dynamic';
+    }
+  });
+
+  const handleSetYAxisScale = (scale) => {
+    setYAxisScale(scale);
+    try {
+      localStorage.setItem('coachv2_chart_yaxis_scale', scale);
+    } catch (e) {}
+  };
+
+  const muscleYDomain = useMemo(() => {
+    if (yAxisScale === 'zero') {
+      return [
+        0,
+        (dataMax) => {
+          const maxVal = isFinite(dataMax) && dataMax > 0 ? dataMax : 100;
+          return Math.ceil((maxVal * 1.08) / 5) * 5;
+        }
+      ];
+    }
+    return [
+      (dataMin) => {
+        if (!isFinite(dataMin) || dataMin <= 0) return 0;
+        return Math.max(0, Math.floor((dataMin * 0.85) / 5) * 5);
+      },
+      (dataMax) => {
+        if (!isFinite(dataMax) || dataMax <= 0) return 50;
+        return Math.ceil((dataMax * 1.08) / 5) * 5;
+      }
+    ];
+  }, [yAxisScale]);
 
   return (
     <div className="animate-fade">
@@ -119,9 +156,50 @@ export default function HistoryChartsView({
             </div>
           ) : (
             <div style={{ marginBottom: '16px' }}>
-              <label style={{ display: 'block', marginBottom: '6px', fontSize: '11px', fontWeight: '800', color: '#475569' }}>
-                Selecciona Grupo Muscular Objetivo:
-              </label>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                <label style={{ fontSize: '11px', fontWeight: '800', color: '#475569' }}>
+                  Selecciona Grupo Muscular Objetivo:
+                </label>
+                {/* Selector de Escala Vertical Eje Y */}
+                <div style={{ display: 'inline-flex', background: '#f1f5f9', borderRadius: '8px', padding: '2px', border: '1px solid #cbd5e1' }}>
+                  <button
+                    type="button"
+                    onClick={() => handleSetYAxisScale('dynamic')}
+                    style={{
+                      padding: '3px 7px',
+                      borderRadius: '6px',
+                      border: 'none',
+                      background: yAxisScale === 'dynamic' ? '#ffffff' : 'transparent',
+                      color: yAxisScale === 'dynamic' ? '#0f172a' : '#64748b',
+                      fontWeight: '900',
+                      fontSize: '9.5px',
+                      cursor: 'pointer',
+                      boxShadow: yAxisScale === 'dynamic' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'
+                    }}
+                    title="Escala Rango: Enfoca la gráfica en tus cargas reales con holgura fisiológica"
+                  >
+                    🎯 Rango
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleSetYAxisScale('zero')}
+                    style={{
+                      padding: '3px 7px',
+                      borderRadius: '6px',
+                      border: 'none',
+                      background: yAxisScale === 'zero' ? '#0f172a' : 'transparent',
+                      color: yAxisScale === 'zero' ? '#ffffff' : '#64748b',
+                      fontWeight: '900',
+                      fontSize: '9.5px',
+                      cursor: 'pointer',
+                      boxShadow: yAxisScale === 'zero' ? '0 1px 3px rgba(15,23,42,0.2)' : 'none'
+                    }}
+                    title="Escala Completa: Inicia el eje vertical desde 0 para ver la proporción real de los cambios sin dramatismo visual"
+                  >
+                    0️⃣ Desde 0
+                  </button>
+                </div>
+              </div>
               <LiquidDropdown
                 options={muscleGroupOptions}
                 value={selectedMuscleGroup}
@@ -147,7 +225,7 @@ export default function HistoryChartsView({
                     <LineChart data={progData}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                       <XAxis dataKey="date" tick={{ fontSize: 11, fontWeight: '700', fill: '#64748b' }} />
-                      <YAxis domain={['auto', 'auto']} tick={{ fontSize: 11, fontWeight: '700', fill: '#64748b' }} />
+                      <YAxis domain={muscleYDomain} tick={{ fontSize: 11, fontWeight: '700', fill: '#64748b' }} />
                       <Tooltip contentStyle={{ borderRadius: '14px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
                       <Legend />
                       <Line type="monotone" dataKey="maxWeight" name="Carga Máxima" stroke="#0066ff" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />

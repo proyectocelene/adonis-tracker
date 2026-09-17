@@ -1,4 +1,4 @@
-import { calculate1RM } from '../hooks/useWorkoutCalculations.js';
+import { calculate1RM, isExerciseUnilateral } from '../hooks/useWorkoutCalculations.js';
 import { getPreviousDataForExercise, getUnifiedCodeForExercise } from './exerciseMatcher.js';
 
 export function generateAISessionPrompt({
@@ -107,7 +107,7 @@ ${bodyComposition?.metabolicAge ? `• Edad Metabólica: ${bodyComposition.metab
       }
     })();
 
-    const isStrictlyBilateral = /barra|smith|prensa|leg press|squat con barra|bench press con barra/i.test(ex.name || '');
+    const isUnilateralEx = isExerciseUnilateral(ex, logs);
 
     prompt += `\n${idx + 1}. ${ex.name} ${uCode ? `${uCode.canonical} ` : ''}[Grupo: ${ex.muscleGroup || 'General'}]`;
     prompt += `\n   • Meta programada: ${ex.sets || 3} series × ${ex.reps || '10-12'} reps | Descanso: ${ex.rest || '90 s'}`;
@@ -169,10 +169,10 @@ ${bodyComposition?.metabolicAge ? `• Edad Metabólica: ${bodyComposition.metab
     prompt += `\n   • Series Realizadas:`;
     setsArr.forEach(s => {
       const w = parseFloat(s.weight) || 0;
-      const isUnilateralEx = !isStrictlyBilateral && (logs.isUnilateral || s.isUnilateral || (s.repsL !== undefined && s.repsR !== undefined && s.repsL !== '' && s.repsR !== ''));
+      const hasValidSideReps = isUnilateralEx && ((s.repsL && s.repsL !== 'null') || (s.repsR && s.repsR !== 'null'));
       
       let r = 0;
-      if (isUnilateralEx) {
+      if (hasValidSideReps) {
         const rL = parseFloat(s.repsL) || 0;
         const rR = parseFloat(s.repsR) || 0;
         r = (rL > 0 && rR > 0) ? Math.min(rL, rR) : (rL > 0 ? rL : rR);
@@ -187,7 +187,7 @@ ${bodyComposition?.metabolicAge ? `• Edad Metabólica: ${bodyComposition.metab
       }
 
       const rpeStr = s.rpe ? ` | RPE: ${s.rpe}` : '';
-      const unilateralStr = isUnilateralEx
+      const unilateralStr = hasValidSideReps
         ? ` (Izq: ${s.repsL ?? s.reps} reps, Der: ${s.repsR ?? s.reps} reps)`
         : ` x ${r} reps`;
       const epleyStr = epley > 0 ? ` | 1RM est: ${epley} lbs` : '';

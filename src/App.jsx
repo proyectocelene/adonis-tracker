@@ -122,7 +122,8 @@ function AppContent() {
           'coachv2_active_workouts', 
           'coachv2_custom_day_exercises',
           'coachv2_swapped_exercises',
-          'coachv2_machine_configs'
+          'coachv2_machine_configs',
+          'coachv2_machine_profiles'
         ];
 
         // Migrar primero el historial (como documentos individuales en subcolección)

@@ -15,7 +15,7 @@ import WorkoutExerciseList from './workout/WorkoutExerciseList';
 import AddCustomExerciseModal from './workout/AddCustomExerciseModal';
 import WorkoutFooterControls from './workout/WorkoutFooterControls';
 import { getPreviousDataForExercise } from '../utils/exerciseMatcher';
-import { calculateVolume, calculate1RM, calculateAverageRPE } from '../hooks/useWorkoutCalculations';
+import { calculateVolume, calculate1RM, calculateAverageRPE, isExerciseUnilateral, getMachineStorageKey } from '../hooks/useWorkoutCalculations';
 import { calculateWorkoutCalories } from '../utils/calorieCalculations';
 import { shareOrExportWorkout, downloadWorkoutTCX, downloadWorkoutJSON } from '../services/workoutExportService';
 import { generateAISessionPrompt } from '../utils/aiPromptGenerator';
@@ -25,6 +25,7 @@ import { Target, Calendar as CalendarIcon, Clock, ArrowRight, Loader2, Dumbbell,
 import { useModal } from './common/UIComponents';
 
 export default function WorkoutDay() {
+  const [activeTab, setActiveTab] = useState('workout');
   const modal = useModal();
   const todayStr = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(new Date().getDate()).padStart(2, '0')}`;
   
@@ -41,6 +42,7 @@ export default function WorkoutDay() {
   const [bodyMetrics, , isMetricsLoading] = useLocalStorage('coachv2_body_metrics_history', []);
   const [bodyComposition] = useLocalStorage('coachv2_body_composition_data', {});
   const [globalMachineConfigs] = useLocalStorage('coachv2_machine_configs', {});
+  const [globalMachineProfiles] = useLocalStorage('coachv2_machine_profiles', {});
   const [workoutHistory, setWorkoutHistory, isHistoryLoading, saveSession, deleteSession] = useWorkoutHistory();
   const [apiKey] = useLocalStorage('coachv2_deepseek_apikey', '');
   const [googleSheetsUrl, setGoogleSheetsUrl] = useLocalStorage('coachv2_google_sheets_url', 'https://script.google.com/macros/s/AKfycbxA-KbUcEgWUq4jvjdSBxLw3tGsgPxXsF2Y7mX5JsNIpE2qslN1v7xW3NqdJ3-4b-RCwg/exec');
@@ -587,8 +589,7 @@ export default function WorkoutDay() {
         }
 
         const exDef = currentDay.exercises?.find(e => e.id === exId);
-        const isStrictlyBilateral = /barra|smith|prensa|leg press|squat con barra|bench press con barra/i.test(exDef?.name || '');
-        const isUnilateral = !isStrictlyBilateral && (exLogs.isUnilateral !== undefined ? !!exLogs.isUnilateral : !!exDef?.isUnilateral);
+        const isUnilateral = isExerciseUnilateral(exDef, exLogs);
 
         Object.keys(exLogs).forEach(key => {
           const num = parseInt(key, 10);
@@ -696,6 +697,7 @@ export default function WorkoutDay() {
       }
 
       const sets = [];
+      const isUni = isExerciseUnilateral(ex, logs);
       Object.keys(logs).forEach(k => {
         const num = parseInt(k, 10);
         if (!isNaN(num) && logs[k]?.completed) {
@@ -706,8 +708,9 @@ export default function WorkoutDay() {
             setNum: num,
             weight: w,
             reps: r,
-            repsL: s.repsL || null,
-            repsR: s.repsR || null,
+            repsL: isUni && s.repsL !== undefined && s.repsL !== '' && s.repsL !== null && s.repsL !== 'null' ? s.repsL : null,
+            repsR: isUni && s.repsR !== undefined && s.repsR !== '' && s.repsR !== null && s.repsR !== 'null' ? s.repsR : null,
+            isUnilateral: isUni,
             rpe: s.rpe || null,
             unit: s.unit || ex.defaultUnit || 'lbs',
             isWarmup: num === 0,
@@ -719,13 +722,21 @@ export default function WorkoutDay() {
 
       if (sets.length > 0) {
         sets.sort((a, b) => a.setNum - b.setNum);
-        const mConfig = logs.machineConfig || (() => {
-          try {
-            return JSON.parse(localStorage.getItem(`coachv2_machine_${ex.id}`) || 'null');
-          } catch (e) {
-            return null;
-          }
-        })();
+        const slug = getMachineStorageKey(ex);
+        const mConfig = logs.machineConfig || 
+          globalMachineConfigs?.[ex.id] || 
+          globalMachineConfigs?.[slug] || 
+          (() => {
+            const profs = globalMachineProfiles?.[slug] || globalMachineProfiles?.[ex.id];
+            if (Array.isArray(profs) && profs.length > 0) {
+              return profs.find(p => p.isDefault) || profs[0];
+            }
+            try {
+              return JSON.parse(localStorage.getItem(slug) || localStorage.getItem(`adonis_machine_${ex.id}`) || localStorage.getItem(`coachv2_machine_${ex.id}`) || 'null');
+            } catch (e) {
+              return null;
+            }
+          })();
 
         exercisesDetailed.push({
           id: ex.id,
@@ -1156,8 +1167,7 @@ export default function WorkoutDay() {
       if (setsArr.length > 0) {
         count++;
         card += `\n• ${ex.name}:\n`;
-        const isStrictlyBilateral = /barra|smith|prensa|leg press|squat con barra|bench press con barra/i.test(ex.name || '');
-        const isUnilateralEx = !isStrictlyBilateral && (logs.isUnilateral || setsArr.some(s => s.isUnilateral || (s.repsL !== undefined && s.repsR !== undefined && s.repsL !== '' && s.repsR !== '')));
+        const isUnilateralEx = isExerciseUnilateral(ex, logs);
 
         setsArr.sort((a, b) => a.num - b.num).forEach(s => {
           let r = 0;
@@ -1172,7 +1182,7 @@ export default function WorkoutDay() {
           const epley = calculate1RM(s.weight, r);
           const epleyStr = epley > 0 ? ` (1RM est: ${epley} lbs)` : '';
           const rpeStr = s.rpe ? ` @ RPE ${s.rpe}` : '';
-          if (isUnilateralEx) {
+          if (isUnilateralEx && ((s.repsL && s.repsL !== 'null') || (s.repsR && s.repsR !== 'null'))) {
             card += `  - S${s.num}: ${s.weight || 0} lbs × I:${s.repsL || s.reps} D:${s.repsR || s.reps}${rpeStr}${epleyStr}\n`;
           } else {
             card += `  - S${s.num}: ${s.weight || 0} lbs × ${r} reps${rpeStr}${epleyStr}\n`;

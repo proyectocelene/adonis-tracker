@@ -137,13 +137,49 @@ export default function MachineConfigModal({
     setDumbbellStep(prof.dumbbellStep || 5);
   };
 
+  const getCurrentFormSnapshot = () => {
+    const fp = parseFloat(firstPlate) || 10;
+    const st = parseFloat(plateStep) || (stackPreset === 'two_tens_then_twenty' ? 20 : 10);
+    return {
+      id: activeProfileId,
+      name: (name || station || `Máquina (${floor || 'Gym'})`).trim(),
+      floor: (floor || '').trim(),
+      station: (station || '').trim(),
+      seat: (seat || '').toString().trim(),
+      backrest: (backrest || '').toString().trim(),
+      notch: (notch || '').toString().trim(),
+      pad: (pad || '').toString().trim(),
+      notes: (notes || '').trim(),
+      isDefault: !!isDefault,
+      type,
+      stackPreset,
+      plateStep: st,
+      firstPlate: fp,
+      microWeight: parseFloat(microWeight) || 0,
+      baseWeight: parseFloat(baseWeight) || 0,
+      availablePlates,
+      smallestPlate,
+      dumbbellStep: parseFloat(dumbbellStep) || 5,
+      updatedAt: new Date().toISOString()
+    };
+  };
+
+  const handleSelectProfile = (targetProf) => {
+    if (!targetProf || targetProf.id === activeProfileId) return;
+    const currentSnap = getCurrentFormSnapshot();
+    setProfileList(prev => prev.map(p => p.id === activeProfileId ? { ...p, ...currentSnap } : p));
+    loadProfileIntoForm(targetProf);
+  };
+
   const handleCreateNewProfile = () => {
+    const currentSnap = getCurrentFormSnapshot();
     const newId = `prof_${Date.now()}`;
     const newNum = profileList.length + 1;
+    const targetFloor = floor === 'Planta Baja' ? 'Planta Alta' : (floor === 'Planta Alta' ? 'Planta Baja' : 'Planta Alta');
     const newProf = {
       id: newId,
-      name: `Máquina #${newNum} (${floor || 'Planta Alta'})`,
-      floor: floor === 'Planta Baja' ? 'Planta Alta' : 'Planta Baja',
+      name: `Máquina #${newNum} (${targetFloor})`,
+      floor: targetFloor,
       station: `Máquina #${newNum}`,
       seat: '',
       backrest: '',
@@ -160,8 +196,10 @@ export default function MachineConfigModal({
       availablePlates: [45, 35, 25, 10, 5, 2.5],
       dumbbellStep: 5
     };
-    const updatedList = [...profileList, newProf];
-    setProfileList(updatedList);
+    setProfileList(prev => [
+      ...prev.map(p => p.id === activeProfileId ? { ...p, ...currentSnap } : p),
+      newProf
+    ]);
     loadProfileIntoForm(newProf);
   };
 
@@ -185,10 +223,10 @@ export default function MachineConfigModal({
   const minPlateIncrement = smallestPlate * 2;
 
   const handleSave = () => {
-    // Generar lista física de pesos disponibles en la máquina
+    const currentProfileData = getCurrentFormSnapshot();
     let calculatedAvailableWeights = [];
-    const fp = parseFloat(firstPlate) || 10;
-    const st = parseFloat(plateStep) || (stackPreset === 'two_tens_then_twenty' ? 20 : 10);
+    const fp = currentProfileData.firstPlate;
+    const st = currentProfileData.plateStep;
 
     if (type === 'stack') {
       if (stackPreset === 'two_tens_then_twenty') {
@@ -201,32 +239,10 @@ export default function MachineConfigModal({
       }
     }
 
-    const currentProfileData = {
-      id: activeProfileId || `prof_${Date.now()}`,
-      name: (name || station || `Máquina (${floor || 'Gym'})`).trim(),
-      floor: (floor || '').trim(),
-      station: (station || '').trim(),
-      seat: (seat || '').toString().trim(),
-      backrest: (backrest || '').toString().trim(),
-      notch: (notch || '').toString().trim(),
-      pad: (pad || '').toString().trim(),
-      notes: (notes || '').trim(),
-      isDefault: !!isDefault,
-      type,
-      stackPreset,
-      plateStep: st,
-      firstPlate: fp,
-      microWeight: parseFloat(microWeight) || 0,
-      availableWeights: calculatedAvailableWeights,
-      baseWeight: parseFloat(baseWeight) || 0,
-      availablePlates,
-      smallestPlate,
-      dumbbellStep: parseFloat(dumbbellStep) || 5,
-      minIncrement: type === 'plates' 
-        ? minPlateIncrement 
-        : (type === 'stack' ? (microWeight > 0 ? microWeight : (stackPreset === 'two_tens_then_twenty' ? Math.min(fp, st) : st)) : parseFloat(dumbbellStep) || 5),
-      updatedAt: new Date().toISOString()
-    };
+    currentProfileData.availableWeights = calculatedAvailableWeights;
+    currentProfileData.minIncrement = type === 'plates' 
+      ? minPlateIncrement 
+      : (type === 'stack' ? (currentProfileData.microWeight > 0 ? currentProfileData.microWeight : (stackPreset === 'two_tens_then_twenty' ? Math.min(fp, st) : st)) : currentProfileData.dumbbellStep);
 
     // Actualizar lista de perfiles
     let updatedProfiles = profileList.map(p => {
@@ -369,7 +385,7 @@ export default function MachineConfigModal({
                 <button
                   key={prof.id}
                   type="button"
-                  onClick={() => loadProfileIntoForm(prof)}
+                  onClick={() => handleSelectProfile(prof)}
                   style={{
                     padding: '6px 10px',
                     borderRadius: '10px',
