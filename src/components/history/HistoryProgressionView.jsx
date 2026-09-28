@@ -256,6 +256,16 @@ export default function HistoryProgressionView({
                       >
                         <div style={{ fontSize: '9px', color: '#64748b' }}>{occ.dateStr}</div>
                         <div>{occ.maxWeight}{occ.unit} × {occ.bestReps}r</div>
+                        {occ.minWeight && occ.minWeight < occ.maxWeight && (
+                          <div style={{ fontSize: '8px', color: '#0369a1', fontWeight: '700' }}>
+                            Base: {occ.minWeight}{occ.unit}
+                          </div>
+                        )}
+                        {occ.rpeStart && (
+                          <div style={{ fontSize: '7.5px', color: '#64748b' }}>
+                            RPE {occ.rpeStart}{occ.rpeEnd && occ.rpeEnd !== occ.rpeStart ? `➔${occ.rpeEnd}` : ''}
+                          </div>
+                        )}
                         {occ.sourceName && occ.sourceName.toLowerCase() !== exercise.name.toLowerCase() && (
                           <div style={{ fontSize: '8px', color: '#7c3aed', maxWidth: '110px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                             {occ.sourceName}

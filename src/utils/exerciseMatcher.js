@@ -440,7 +440,47 @@ const REAL_DATABASE_ALIASES = [
 
   // Cardio & Core
   { name: 'Cardio Bicicleta', code: '[CARD-BIKE-STATIONARY_01]' },
-  { name: 'Vacuum Abdominal (Transverso)', code: '[ABDO-VACUUM-ISOM_01]' }
+  { name: 'Bicicleta Estática Ergómetro', code: '[CARD-BIKE-STATIONARY_01]' },
+  { name: 'Bicicleta Estática (Bajo Impacto)', code: '[CARD-BIKE-STATIONARY_01]' },
+  { name: 'Caminadora Inclinada (Zona 2)', code: '[CARD-TREADMILL-INCLINE_01]' },
+  { name: 'Caminadora Inclinada', code: '[CARD-TREADMILL-INCLINE_01]' },
+  { name: 'Vacuum Abdominal (Transverso)', code: '[ABDO-VACUUM-ISOM_01]' },
+
+  // Variantes Adicionales de la Base de Datos Real
+  { name: 'Prensa 45° (Pies Altos y Abiertos para Glúteo)', code: '[GLUT-LEG_PRESS-HIGH_FEET_45]' },
+  { name: 'Prensa de Piernas (Pies Altos y Abiertos para Glúteo)', code: '[GLUT-LEG_PRESS-HIGH_FEET_45]' },
+  { name: 'Prensa de Piernas Inclinada 45° (Discos)', code: '[CUAD-LEG_PRESS-DISC_45_PB]' },
+  { name: 'Press Inclinado en Máquina (Nitro Incline)', code: '[PECH-INC_PRESS-NITRO_01]' },
+  { name: 'Press Inclinado con Mancuernas (Banco a 30°)', code: '[PECH-INC_PRESS-MANC_30]' },
+  { name: 'Press de Pecho en Máquina Convergente (Chest Press)', code: '[PECH-CHEST_PRESS-CONV_01]' },
+  { name: 'Press Inclinado en Máquina o Multipower (Smith Machine)', code: '[PECH-INC_PRESS-NITRO_01]' },
+  { name: 'Aperturas en Máquina Pec Deck (Peacock / Flyes)', code: '[PECH-PEC_DECK-STACK_01]' },
+  { name: 'Jalón con Agarre Estrecho Neutro (V-Grip)', code: '[ESPA-PULLDOWN-V_GRIP_01]' },
+  { name: 'Jalón al Pecho con Agarre Estrecho Neutro (V-Grip)', code: '[ESPA-PULLDOWN-V_GRIP_01]' },
+  { name: 'Jalón al Pecho en Polea (Agarre Ancho Pronado)', code: '[ESPA-PULLDOWN-WIDE_01]' },
+  { name: 'Pull-Over en Polea Alta con Cuerda', code: '[ESPA-PULLOVER-HIGH_CABLE_01]' },
+  { name: 'Press Militar en Máquina Convergente o Smith (Shoulder Press)', code: '[HOMB-SHOULDER_PRESS-CONV_01]' },
+  { name: 'Elevaciones Laterales en Máquina (¡Prioridad!)', code: '[HOMB-LAT_RAISE-MAQ_01]' },
+  { name: 'Elevaciones Laterales en Máquina', code: '[HOMB-LAT_RAISE-MAQ_01]' },
+  { name: 'Face Pulls en Polea Alta con Cuerda', code: '[HOMB-FACE_PULL-HIGH_CABLE_01]' },
+  { name: 'Face Pulls en Polea Alta', code: '[HOMB-FACE_PULL-HIGH_CABLE_01]' },
+  { name: 'Extensión de Tríceps Copa en Polea (Cuerda)', code: '[TRIC-OVERHEAD_EXT-CABLE_01]' },
+  { name: 'Extensión de Tríceps en Polea (Pushdown con Cuerda)', code: '[TRIC-PUSHDOWN-CABLE_01]' },
+  { name: 'Extensión de Tríceps en Polea (Pushdown con Cuerda / Barra)', code: '[TRIC-PUSHDOWN-CABLE_01]' },
+  { name: 'Extensión de Tríceps en Polea Alta con Cuerda', code: '[TRIC-PUSHDOWN-CABLE_01]' },
+  { name: 'Bayesian Cable Curl (Estiramiento Humeral)', code: '[BICEP-CABLE_CURL-BAYESIAN_01]' },
+  { name: 'Bayesian Cable Curl (Estiramiento Humeral en Polea)', code: '[BICEP-CABLE_CURL-BAYESIAN_01]' },
+  { name: 'Curl de Bíceps en Polea Baja (Barra Recta)', code: '[BICEP-CABLE_CURL-LOW_STRAIGHT_01]' },
+  { name: 'Flexión de Femorales Sentado (Seated Leg Curl)', code: '[ISQU-LEG_CURL-SEATED_01]' },
+  { name: 'Seated Leg Curl (Flexión de Femorales Sentado)', code: '[ISQU-LEG_CURL-SEATED_01]' },
+  { name: 'Curl de Pechuga / Isquiotibiales en Máquina Tumbado', code: '[ISQU-LEG_CURL-LYING_01]' },
+  { name: 'Peso Muerto Rumano (RDL) con Mancuernas', code: '[ISQU-RDL-MANC_01]' },
+  { name: 'Peso Muerto Rumano con Mancuernas (RDL)', code: '[ISQU-RDL-MANC_01]' },
+  { name: 'Extensión de Cuádriceps en Máquina (Torre de Placas)', code: '[CUAD-LEG_EXT-STACK_01]' },
+  { name: 'Extensión de Cuádriceps', code: '[CUAD-LEG_EXT-STACK_01]' },
+  { name: 'Abductores en Máquina (Hip Abduction / Abrir Cadera)', code: '[ABDU-ABDUCTOR-STACK_01]' },
+  { name: 'Aductores en Máquina (Hip Adduction / Cerrar Cadera)', code: '[ADUC-ADUCTOR-STACK_01]' },
+  { name: 'Elevación de Pantorrillas en Máquina (Rotary o de Pie)', code: '[PANT-CALF_RAISE-MAQ_01]' }
 ];
 
 export function normalizeExerciseNameFull(str) {
@@ -994,8 +1034,20 @@ export function getExercisesFromSession(ses) {
 
   if (ses.exercises && typeof ses.exercises === 'object' && !Array.isArray(ses.exercises)) {
     return Object.entries(ses.exercises)
-      .filter(([key, data]) => data && typeof data === 'object' && key !== 'isWarmupDone')
-      .map(([key, data]) => ({ key, data }));
+      .filter(([key, data]) => {
+        if (!data || typeof data !== 'object' || key === 'isWarmupDone') return false;
+        const hasSets = Array.isArray(data.sets) && data.sets.length > 0;
+        const hasNumericKeys = Object.keys(data).some(k => !isNaN(parseInt(k, 10)));
+        const hasName = Boolean(data.name || data.exerciseName || data.machine);
+        return hasName || hasSets || hasNumericKeys;
+      })
+      .map(([key, data]) => {
+        const cleanData = { ...data };
+        if (!cleanData.name && cleanData.machine) {
+          cleanData.name = cleanData.machine;
+        }
+        return { key, data: cleanData };
+      });
   }
 
   if (Array.isArray(ses.exercises) && ses.exercises.length > 0) {
@@ -1012,8 +1064,20 @@ export function getExercisesFromSession(ses) {
 
   if (ses.rawWorkoutData && typeof ses.rawWorkoutData === 'object' && !Array.isArray(ses.rawWorkoutData)) {
     return Object.entries(ses.rawWorkoutData)
-      .filter(([key, data]) => data && typeof data === 'object' && key !== 'isWarmupDone')
-      .map(([key, data]) => ({ key, data }));
+      .filter(([key, data]) => {
+        if (!data || typeof data !== 'object' || key === 'isWarmupDone') return false;
+        const hasSets = Array.isArray(data.sets) && data.sets.length > 0;
+        const hasNumericKeys = Object.keys(data).some(k => !isNaN(parseInt(k, 10)));
+        const hasName = Boolean(data.name || data.exerciseName || data.machine);
+        return hasName || hasSets || hasNumericKeys;
+      })
+      .map(([key, data]) => {
+        const cleanData = { ...data };
+        if (!cleanData.name && cleanData.machine) {
+          cleanData.name = cleanData.machine;
+        }
+        return { key, data: cleanData };
+      });
   }
 
   return [];
@@ -1026,28 +1090,32 @@ export function extractExerciseSets(exData) {
   if (!exData) return [];
   const sets = [];
 
+  const processSet = (s, setNum) => {
+    if (!s) return;
+    const w = parseFloat(s.weight ?? s.kg) || 0;
+    const r = parseInt(s.reps, 10) || Math.max(parseInt(s.repsR, 10) || 0, parseInt(s.repsL, 10) || 0) || 0;
+    const isDone = s.completed !== false;
+    const label = (s.label || '').toLowerCase();
+    const isWarmup = s.isWarmup === true || setNum <= 0 || label.startsWith('c') || label.includes('calentamiento') || label.includes('aprox');
+    if (r > 0 && isDone && w >= 0) {
+      sets.push({
+        setNum,
+        weight: w,
+        reps: r,
+        repsL: s.repsL,
+        repsR: s.repsR,
+        rpe: s.rpe || s.rir || '8',
+        unit: s.unit || exData.unit || 'lbs',
+        isWarmup: !!isWarmup,
+        label: s.label || (setNum <= 0 ? 'C1' : `S${setNum}`)
+      });
+    }
+  };
+
   if (Array.isArray(exData.sets)) {
     exData.sets.forEach((s, idx) => {
-      if (!s) return;
-      const w = parseFloat(s.weight) || 0;
-      const r = parseInt(s.reps, 10) || Math.max(parseInt(s.repsR, 10) || 0, parseInt(s.repsL, 10) || 0) || 0;
-      const isDone = s.completed !== false;
-      const setNum = s.setNum !== undefined ? s.setNum : idx + 1;
-      const label = (s.label || '').toLowerCase();
-      const isWarmup = s.isWarmup === true || setNum <= 0 || label.startsWith('c') || label.includes('calentamiento') || label.includes('aprox');
-      if (w > 0 && isDone) {
-        sets.push({
-          setNum,
-          weight: w,
-          reps: r,
-          repsL: s.repsL,
-          repsR: s.repsR,
-          rpe: s.rpe || '8',
-          unit: s.unit || exData.unit || 'lbs',
-          isWarmup: !!isWarmup,
-          label: s.label || (setNum <= 0 ? 'C1' : `S${setNum}`)
-        });
-      }
+      const setNum = s?.setNum !== undefined ? s.setNum : idx + 1;
+      processSet(s, setNum);
     });
     return sets;
   }
@@ -1055,27 +1123,7 @@ export function extractExerciseSets(exData) {
   Object.keys(exData).forEach(k => {
     const num = parseInt(k, 10);
     if (!isNaN(num)) {
-      const s = exData[k];
-      if (s) {
-        const w = parseFloat(s.weight) || 0;
-        const r = parseInt(s.reps, 10) || Math.max(parseInt(s.repsR, 10) || 0, parseInt(s.repsL, 10) || 0) || 0;
-        const isDone = s.completed !== false;
-        const label = (s.label || '').toLowerCase();
-        const isWarmup = s.isWarmup === true || num <= 0 || label.startsWith('c') || label.includes('calentamiento') || label.includes('aprox');
-        if (w > 0 && isDone) {
-          sets.push({
-            setNum: num,
-            weight: w,
-            reps: r,
-            repsL: s.repsL,
-            repsR: s.repsR,
-            rpe: s.rpe || '8',
-            unit: s.unit || exData.unit || 'lbs',
-            isWarmup: !!isWarmup,
-            label: s.label || (num <= 0 ? 'C1' : `S${num}`)
-          });
-        }
-      }
+      processSet(exData[k], num);
     }
   });
 
@@ -1214,6 +1262,27 @@ export function getHistoricalRecordsForExercise(currentEx, workoutHistory = [], 
 
         const avgW = workingSets.length > 0 ? Math.round((weightSum / workingSets.length) * 10) / 10 : maxW;
         const avgR = workingSets.length > 0 ? Math.round((repsSum / workingSets.length) * 10) / 10 : 0;
+        const weightedAvgW = repsSum > 0 ? Math.round((effectiveTonnage / repsSum) * 10) / 10 : avgW;
+
+        // Métricas de Esfuerzo (RPE/RIR) y Fatiga Intraserie
+        let rpeStart = null;
+        let rpeEnd = null;
+        let deltaRPE = 0;
+        const validRPEs = workingSets.map(s => parseFloat(s.rpe)).filter(val => !isNaN(val) && val > 0);
+        if (validRPEs.length > 0) {
+          rpeStart = validRPEs[0];
+          rpeEnd = validRPEs[validRPEs.length - 1];
+          deltaRPE = Math.round((rpeEnd - rpeStart) * 10) / 10;
+        }
+
+        let repDropOffPct = 0;
+        if (workingSets.length >= 2 && workingSets[0].reps > 0) {
+          const rFirst = workingSets[0].reps;
+          const rLast = workingSets[workingSets.length - 1].reps;
+          if (workingSets[0].weight === workingSets[workingSets.length - 1].weight) {
+            repDropOffPct = Math.max(0, Math.round(((rFirst - rLast) / rFirst) * 100));
+          }
+        }
 
         const peakWeightSets = workingSets.filter(s => s.weight === maxW);
         const bestRepsAtPeakWeight = peakWeightSets.length > 0 ? Math.max(...peakWeightSets.map(s => s.reps)) : (topSet?.reps || maxR);
@@ -1230,12 +1299,17 @@ export function getHistoricalRecordsForExercise(currentEx, workoutHistory = [], 
             weekNumber: ses.weekNumber || 1,
             maxWeight: maxW,
             avgWeight: avgW,
+            weightedAvgWeight: weightedAvgW,
             minWeight: minW !== Infinity ? minW : maxW,
             bestReps: bestRepsAtPeakWeight,
             maxRepsSession: maxR,
             minRepsSession: minR !== Infinity ? minR : maxR,
             avgReps: avgR,
             est1RM: best1RM,
+            rpeStart,
+            rpeEnd,
+            deltaRPE,
+            repDropOffPct,
             totalVolume: effectiveTonnage,
             tonnage: effectiveTonnage,
             unit,

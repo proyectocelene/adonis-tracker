@@ -24,8 +24,8 @@ export default function ExerciseProgressionChart({
 }) {
   // Modo de Alcance: 'family' (Toda la familia biomecánica, predeterminada) o 'station' (Solo esta máquina exacta)
   const [scopeMode, setScopeMode] = useState(defaultScope);
-  // Modo de Carga: 'peak' (Carga Máxima / Top Set), 'avg' (Carga Promedio Efectiva), 'both' (Ambas curvas)
-  const [weightMode, setWeightMode] = useState('both');
+  // Modo de Carga: 'band' (Banda Min-Max con Promedio Ponderado en medio), 'peak' (Carga Máxima), 'avg' (Promedio), 'both' (Líneas)
+  const [weightMode, setWeightMode] = useState('band');
   const [showWeight, setShowWeight] = useState(true);
   const [showReps, setShowReps] = useState(true);
   const [show1RM, setShow1RM] = useState(false);
@@ -169,8 +169,11 @@ export default function ExerciseProgressionChart({
       }
 
       const peakW = Math.round(occ.maxWeight || 0);
+      const minW = Math.round(occ.minWeight !== undefined && occ.minWeight !== null && occ.minWeight !== Infinity ? occ.minWeight : peakW);
       const avgW = Math.round((occ.avgWeight || occ.maxWeight || 0) * 10) / 10;
+      const weightedAvgW = occ.weightedAvgWeight ? Math.round(occ.weightedAvgWeight * 10) / 10 : avgW;
       const effectiveTonnage = Math.round(occ.tonnage || occ.totalVolume || (peakW * (occ.bestReps || 0)));
+      const weightSpread = Math.max(0, peakW - minW);
 
       return {
         date: uniqueKey,
@@ -178,9 +181,16 @@ export default function ExerciseProgressionChart({
         sessionIndex: idx + 1,
         dateFull: occ.dateFull || occ.dateStr || `Sesión ${idx + 1}`,
         sourceName: occ.sourceName || occ.matchedName || '',
-        weight: peakW, // Carga Pico
-        avgWeight: avgW, // Carga Promedio Efectiva (sin calentamientos)
-        minWeight: Math.round(occ.minWeight || peakW),
+        weight: peakW, // Carga Pico (Top Set)
+        avgWeight: avgW, // Carga Promedio Efectiva
+        weightedAvgWeight: weightedAvgW, // Carga Promedio Ponderada por Reps
+        minWeight: minW, // Carga Mínima de Trabajo
+        weightRange: [minW, peakW], // Rango Min-Max para Banda Sombreada
+        weightSpread,
+        rpeStart: occ.rpeStart,
+        rpeEnd: occ.rpeEnd,
+        deltaRPE: occ.deltaRPE || 0,
+        repDropOffPct: occ.repDropOffPct || 0,
         tonnage: effectiveTonnage, // Tonelaje de volumen efectivo
         reps: occ.bestReps || 0, // Repeticiones en la serie pico (Top Set)
         avgReps: occ.avgReps || occ.bestReps || 0, // Promedio de reps en series de trabajo
@@ -278,14 +288,40 @@ export default function ExerciseProgressionChart({
         todayKey = `Hoy (#${dateCounts['Hoy']})`;
       }
 
+      const finalTodayPeak = Math.round(todayMaxW);
+      const finalTodayMin = Math.round(todayMinW !== Infinity ? todayMinW : todayMaxW);
+      const todayWeightedAvgW = todayRSum > 0 ? Math.round((todayTonnage / todayRSum) * 10) / 10 : avgWeightToday;
+
+      // Métricas de Esfuerzo de Hoy
+      const todayValidRPEs = workingTodaySets.map(s => parseFloat(s.rpe)).filter(v => !isNaN(v) && v > 0);
+      const todayRpeStart = todayValidRPEs.length > 0 ? todayValidRPEs[0] : null;
+      const todayRpeEnd = todayValidRPEs.length > 0 ? todayValidRPEs[todayValidRPEs.length - 1] : null;
+      const todayDeltaRPE = (todayRpeStart !== null && todayRpeEnd !== null) ? Math.round((todayRpeEnd - todayRpeStart) * 10) / 10 : 0;
+
+      let todayDropOff = 0;
+      if (workingTodaySets.length >= 2 && workingTodaySets[0].reps > 0) {
+        const r1 = workingTodaySets[0].reps;
+        const rL = workingTodaySets[workingTodaySets.length - 1].reps;
+        if (workingTodaySets[0].weight === workingTodaySets[workingTodaySets.length - 1].weight) {
+          todayDropOff = Math.max(0, Math.round(((r1 - rL) / r1) * 100));
+        }
+      }
+
       realPoints.push({
         date: todayKey,
         displayDate: 'Hoy',
         sessionIndex: realPoints.length + 1,
         dateFull: 'Sesión de Hoy (En curso)',
-        weight: Math.round(todayMaxW),
+        weight: finalTodayPeak,
         avgWeight: avgWeightToday,
-        minWeight: Math.round(todayMinW !== Infinity ? todayMinW : todayMaxW),
+        weightedAvgWeight: todayWeightedAvgW,
+        minWeight: finalTodayMin,
+        weightRange: [finalTodayMin, finalTodayPeak],
+        weightSpread: Math.max(0, finalTodayPeak - finalTodayMin),
+        rpeStart: todayRpeStart,
+        rpeEnd: todayRpeEnd,
+        deltaRPE: todayDeltaRPE,
+        repDropOffPct: todayDropOff,
         tonnage: Math.round(todayTonnage),
         reps: bestRepsAtPeakToday,
         avgReps: avgRepsToday,
@@ -605,12 +641,13 @@ export default function ExerciseProgressionChart({
 
           {metricMode === 'weights' && (
             <>
-              {/* Selector de Modo de Carga: Máx | Prom | Ambas */}
+              {/* Selector de Modo de Carga: Banda | Pico | Prom | Líneas */}
               <div style={{ display: 'inline-flex', background: '#eff6ff', borderRadius: '8px', padding: '2px', border: '1px solid #bfdbfe' }}>
                 {[
+                  { id: 'band', label: 'Banda', title: 'Ver área sombreada entre Carga Mínima y Pico con Promedio Ponderado en medio' },
                   { id: 'peak', label: 'Pico', title: 'Ver solo la Carga Máxima (Top Set)' },
-                  { id: 'avg', label: 'Prom', title: 'Ver la Carga Promedio de series efectivas' },
-                  { id: 'both', label: 'Ambas', title: 'Ver Carga Pico y Promedio a la vez' }
+                  { id: 'avg', label: 'Prom', title: 'Ver la Carga Promedio Efectiva' },
+                  { id: 'both', label: 'Líneas', title: 'Ver curvas de Pico y Promedio' }
                 ].map(wm => (
                   <button
                     key={wm.id}
@@ -815,10 +852,21 @@ export default function ExerciseProgressionChart({
               🟩 Rango Hipertrofia Prescrito: <strong style={{ color: '#047857' }}>{targetRange.label} reps</strong>
             </span>
 
-            {weightMode === 'both' && (
+            {(weightMode === 'band' || weightMode === 'both') && (
+              <span style={{ display: 'flex', alignItems: 'center', gap: '5px', color: '#1e40af' }}>
+                <span style={{ width: '12px', height: '8px', background: 'rgba(59, 130, 246, 0.25)', border: '1px solid #3b82f6', borderRadius: '2px' }} />
+                <span>Banda Min-Max</span>
+                <span style={{ width: '10px', height: '2.5px', background: '#0284c7' }} /> Prom Ponderado
+              </span>
+            )}
+            {weightMode === 'peak' && (
               <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#1e40af' }}>
-                <span style={{ width: '12px', height: '2px', background: '#0066ff' }} /> Pico
-                <span style={{ width: '12px', height: '2px', background: '#38bdf8', borderTop: '1px dashed #0284c7' }} /> Prom
+                <span style={{ width: '12px', height: '2px', background: '#0066ff' }} /> Carga Pico
+              </span>
+            )}
+            {weightMode === 'avg' && (
+              <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#0284c7' }}>
+                <span style={{ width: '12px', height: '2px', background: '#38bdf8', borderTop: '1px dashed #0284c7' }} /> Promedio
               </span>
             )}
 
@@ -868,6 +916,11 @@ export default function ExerciseProgressionChart({
               <linearGradient id="gradientWeight" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="#0066ff" stopOpacity={0.35} />
                 <stop offset="95%" stopColor="#0066ff" stopOpacity={0.02} />
+              </linearGradient>
+
+              <linearGradient id="gradientWeightRange" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#0066ff" stopOpacity={0.25} />
+                <stop offset="95%" stopColor="#38bdf8" stopOpacity={0.08} />
               </linearGradient>
 
               <linearGradient id="gradientAvgWeight" x1="0" y1="0" x2="0" y2="1">
@@ -1007,34 +1060,65 @@ export default function ExerciseProgressionChart({
             ) : (
               /* 🏋️ CURVAS DE PESO Y REPETICIONES */
               <>
+                {/* 🌊 BANDA SOMBREADA MIN-MAX (RANGE RIBBON) */}
+                {showWeight && (weightMode === 'band' || weightMode === 'both') && (
+                  <Area
+                    yAxisId="weight"
+                    type="monotone"
+                    dataKey="weightRange"
+                    name="Rango Min-Max (Dispersión)"
+                    fill="url(#gradientWeightRange)"
+                    stroke="none"
+                    dot={false}
+                    activeDot={false}
+                    connectNulls={false}
+                  />
+                )}
+
                 {/* 🌊 CURVA DE CARGA PICO (TOP SET) */}
-                {showWeight && (weightMode === 'peak' || weightMode === 'both') && (
+                {showWeight && (weightMode === 'band' || weightMode === 'peak' || weightMode === 'both') && (
                   <Area
                     yAxisId="weight"
                     type="monotone"
                     dataKey="weight"
                     name="Carga Pico (Top Set)"
                     stroke="#0066ff"
-                    strokeWidth={weightMode === 'both' ? 2.5 : 2.5}
-                    fill={weightMode === 'both' ? 'url(#gradientWeight)' : 'url(#gradientWeight)'}
+                    strokeWidth={2.5}
+                    fill={weightMode === 'peak' ? 'url(#gradientWeight)' : 'none'}
                     dot={{ r: 3.5, fill: '#0066ff', stroke: '#ffffff', strokeWidth: 1.5 }}
                     activeDot={{ r: 5, fill: '#0066ff' }}
                     connectNulls={false}
                   />
                 )}
 
-                {/* 🌊 CURVA DE CARGA PROMEDIO EFECTIVA */}
-                {showWeight && (weightMode === 'avg' || weightMode === 'both') && (
+                {/* 🌊 LÍNEA CENTRAL: CARGA PROMEDIO PONDERADA EFECTIVA */}
+                {showWeight && (weightMode === 'band' || weightMode === 'avg' || weightMode === 'both') && (
                   <Line
                     yAxisId="weight"
                     type="monotone"
-                    dataKey="avgWeight"
-                    name="Carga Promedio Efectiva"
+                    dataKey="weightedAvgWeight"
+                    name="Promedio Ponderado Efectivo"
                     stroke="#0284c7"
-                    strokeWidth={2}
-                    strokeDasharray={weightMode === 'both' ? '4 3' : 'none'}
-                    dot={{ r: 3, fill: '#38bdf8', stroke: '#0284c7', strokeWidth: 1 }}
+                    strokeWidth={2.5}
+                    strokeDasharray={weightMode === 'band' ? 'none' : '4 3'}
+                    dot={{ r: 3, fill: '#38bdf8', stroke: '#0284c7', strokeWidth: 1.5 }}
                     activeDot={{ r: 5, fill: '#0284c7' }}
+                    connectNulls={false}
+                  />
+                )}
+
+                {/* 🌊 LÍNEA SUTIL: CARGA MÍNIMA DE TRABAJO (BASE / BACK-OFF) */}
+                {showWeight && (weightMode === 'band' || weightMode === 'both') && (
+                  <Line
+                    yAxisId="weight"
+                    type="monotone"
+                    dataKey="minWeight"
+                    name="Carga Base / Back-off"
+                    stroke="#93c5fd"
+                    strokeWidth={1.5}
+                    strokeDasharray="2 2"
+                    dot={{ r: 2.5, fill: '#bfdbfe', stroke: '#60a5fa', strokeWidth: 1 }}
+                    activeDot={{ r: 4, fill: '#93c5fd' }}
                     connectNulls={false}
                   />
                 )}
@@ -1192,14 +1276,24 @@ export default function ExerciseProgressionChart({
               <strong style={{ fontSize: '15px', color: isProj ? '#c084fc' : '#60a5fa' }}>
                 {(isProj ? activeData.projectedWeight : activeData.weight) || '--'} <span style={{ fontSize: '10px', color: '#94a3b8' }}>lbs</span>
               </strong>
+              {!isProj && activeData.weightSpread > 0 && (
+                <span style={{ fontSize: '8.5px', color: '#93c5fd', display: 'block', marginTop: '2px' }}>
+                  Rango: {activeData.minWeight} - {activeData.weight}# (Δ {activeData.weightSpread}#)
+                </span>
+              )}
             </div>
 
-            {/* 2. Carga Promedio Efectiva */}
+            {/* 2. Carga Promedio Ponderada Efectiva */}
             <div style={{ background: 'rgba(255,255,255,0.05)', padding: '7px 9px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.08)' }}>
-              <span style={{ fontSize: '9px', color: '#94a3b8', display: 'block' }}>⚖️ Carga Promedio</span>
+              <span style={{ fontSize: '9px', color: '#94a3b8', display: 'block' }}>⚖️ Promedio Ponderado</span>
               <strong style={{ fontSize: '15px', color: isProj ? '#a855f7' : '#38bdf8' }}>
-                {(isProj ? activeData.projectedAvgWeight : activeData.avgWeight) || '--'} <span style={{ fontSize: '10px', color: '#94a3b8' }}>lbs</span>
+                {(isProj ? activeData.projectedAvgWeight : (activeData.weightedAvgWeight || activeData.avgWeight)) || '--'} <span style={{ fontSize: '10px', color: '#94a3b8' }}>lbs</span>
               </strong>
+              {!isProj && activeData.rpeStart && (
+                <span style={{ fontSize: '8.5px', color: '#cbd5e1', display: 'block', marginTop: '2px' }}>
+                  Esfuerzo: RPE {activeData.rpeStart}{activeData.rpeEnd && activeData.rpeEnd !== activeData.rpeStart ? ` ➔ ${activeData.rpeEnd}` : ''} {activeData.deltaRPE ? `(Δ ${activeData.deltaRPE > 0 ? `+${activeData.deltaRPE}` : activeData.deltaRPE})` : ''}
+                </span>
+              )}
             </div>
 
             {/* 3. Repeticiones (Top Set y Promedio simultáneas) */}
@@ -1220,6 +1314,11 @@ export default function ExerciseProgressionChart({
                   </span>
                 )}
               </div>
+              {!isProj && activeData.repDropOffPct > 0 && (
+                <span style={{ fontSize: '8.5px', color: '#fca5a5', display: 'block', marginTop: '2px' }}>
+                  Fatiga: {activeData.repDropOffPct}% caída reps
+                </span>
+              )}
             </div>
 
             {/* 4. Tonelaje Efectivo & 1RM */}

@@ -746,6 +746,97 @@ export function calculateRelativeStrength(estimated1RM, bodyWeight) {
   return parseFloat((rm / bw).toFixed(2));
 }
 
+/**
+ * Calcula estadísticas avanzadas de carga y variabilidad de esfuerzo para una sesión.
+ * @param {Array<{weight: number, reps: number, rpe?: string|number, isWarmup?: boolean}>} sets
+ * @returns {Object}
+ */
+export function calculateSessionLoadStats(sets = []) {
+  if (!Array.isArray(sets) || sets.length === 0) {
+    return {
+      peakWeight: 0,
+      minWeight: 0,
+      avgWeight: 0,
+      weightedAvgWeight: 0,
+      weightSpread: 0,
+      bestReps: 0,
+      avgReps: 0,
+      minReps: 0,
+      maxReps: 0,
+      tonnage: 0,
+      totalReps: 0,
+      rpeStart: null,
+      rpeEnd: null,
+      deltaRPE: 0,
+      repDropOffPct: 0,
+      effectiveSetsCount: 0
+    };
+  }
+
+  const workingSets = sets.filter(s => !s.isWarmup && (s.setNum === undefined || s.setNum > 0));
+  const activeSets = workingSets.length > 0 ? workingSets : sets;
+
+  let maxW = 0;
+  let minW = Infinity;
+  let maxR = 0;
+  let minR = Infinity;
+  let tonnage = 0;
+  let totalReps = 0;
+  let weightSum = 0;
+
+  activeSets.forEach(s => {
+    const w = parseFloat(s.weight) || 0;
+    const r = parseFloat(s.reps) || 0;
+    if (w > maxW) maxW = w;
+    if (w < minW && w > 0) minW = w;
+    if (r > maxR) maxR = r;
+    if (r < minR && r > 0) minR = r;
+    tonnage += (w * r);
+    totalReps += r;
+    weightSum += w;
+  });
+
+  const avgWeight = activeSets.length > 0 ? Math.round((weightSum / activeSets.length) * 10) / 10 : maxW;
+  const weightedAvgWeight = totalReps > 0 ? Math.round((tonnage / totalReps) * 10) / 10 : avgWeight;
+  const minWeight = minW !== Infinity ? minW : maxW;
+  const weightSpread = Math.max(0, maxW - minWeight);
+
+  // Esfuerzo (RPE/RIR)
+  const validRPEs = activeSets.map(s => parseFloat(s.rpe)).filter(v => !isNaN(v) && v > 0);
+  const rpeStart = validRPEs.length > 0 ? validRPEs[0] : null;
+  const rpeEnd = validRPEs.length > 0 ? validRPEs[validRPEs.length - 1] : null;
+  const deltaRPE = (rpeStart !== null && rpeEnd !== null) ? Math.round((rpeEnd - rpeStart) * 10) / 10 : 0;
+
+  // Caída de repeticiones (fatiga muscular)
+  let repDropOffPct = 0;
+  if (activeSets.length >= 2 && activeSets[0].reps > 0) {
+    const rFirst = activeSets[0].reps;
+    const rLast = activeSets[activeSets.length - 1].reps;
+    if (activeSets[0].weight === activeSets[activeSets.length - 1].weight) {
+      repDropOffPct = Math.max(0, Math.round(((rFirst - rLast) / rFirst) * 100));
+    }
+  }
+
+  return {
+    peakWeight: maxW,
+    minWeight,
+    avgWeight,
+    weightedAvgWeight,
+    weightSpread,
+    bestReps: maxR,
+    minReps: minR !== Infinity ? minR : maxR,
+    maxReps: maxR,
+    avgReps: activeSets.length > 0 ? Math.round((totalReps / activeSets.length) * 10) / 10 : 0,
+    tonnage,
+    totalReps,
+    rpeStart,
+    rpeEnd,
+    deltaRPE,
+    repDropOffPct,
+    effectiveSetsCount: activeSets.length
+  };
+}
+
 // Re-exportar gestor maestro de máquinas y calibraciones (Planta Alta / Planta Baja / Multi-Perfiles)
 export {
   getMachineStorageKey,

@@ -35,6 +35,74 @@ export function downloadTextFile(text, filename) {
 }
 
 /**
+ * Sanea y repara el historial de entrenamientos sin alterar datos del atleta:
+ * 1. Recupera la fecha ISO (YYYY-MM-DD) para sesiones huérfanas a partir de dateString o timestamp.
+ * 2. Limpia banderas internas como isWarmupDone dentro del mapa de ejercicios.
+ * 3. Descarta nodos corruptos que solo contengan machineConfig sin series.
+ * 4. Sintetiza nombres de cardio a partir del campo machine si no tienen name.
+ * 5. Ordena cronológicamente en orden ascendente estricto.
+ */
+export function sanitizeWorkoutHistory(rawHistory = []) {
+  if (!Array.isArray(rawHistory)) return [];
+
+  const spanishMonths = {
+    'ene': '01', 'feb': '02', 'mar': '03', 'abr': '04', 'may': '05', 'jun': '06',
+    'jul': '07', 'ago': '08', 'sep': '09', 'oct': '10', 'nov': '11', 'dic': '12'
+  };
+
+  return rawHistory.map(ses => {
+    if (!ses || typeof ses !== 'object') return null;
+    const cleanSes = { ...ses };
+
+    // 1. Reparar campo date si falta
+    if (!cleanSes.date && cleanSes.dateString) {
+      const match = cleanSes.dateString.match(/(\d{1,2})\s+(?:de\s+)?([a-zA-ZáéíóúÁÉÍÓÚ]+)(?:\s+(?:de\s+)?(\d{4}))?/i);
+      if (match) {
+        const day = match[1].padStart(2, '0');
+        const mStr = match[2].slice(0, 3).toLowerCase();
+        const year = match[3] || '2026';
+        const monthNum = spanishMonths[mStr];
+        if (monthNum) {
+          cleanSes.date = `${year}-${monthNum}-${day}`;
+        }
+      }
+    }
+    if (!cleanSes.date && cleanSes.timestamp) {
+      cleanSes.date = cleanSes.timestamp.split('T')[0];
+    }
+
+    // 2. Limpiar nodo exercises
+    if (cleanSes.exercises && typeof cleanSes.exercises === 'object' && !Array.isArray(cleanSes.exercises)) {
+      const sanitizedExs = {};
+      Object.entries(cleanSes.exercises).forEach(([k, v]) => {
+        if (!v || typeof v !== 'object' || k === 'isWarmupDone') return;
+
+        // Descartar si solo tiene machineConfig y nada más
+        const keys = Object.keys(v);
+        const hasSets = Array.isArray(v.sets) && v.sets.length > 0;
+        const hasNumericKeys = keys.some(key => !isNaN(parseInt(key, 10)));
+        const hasName = Boolean(v.name || v.exerciseName || v.machine);
+
+        if (!hasSets && !hasNumericKeys && !hasName) return;
+
+        const cleanEx = { ...v };
+        if (!cleanEx.name && cleanEx.machine) {
+          cleanEx.name = cleanEx.machine;
+        }
+        sanitizedExs[k] = cleanEx;
+      });
+      cleanSes.exercises = sanitizedExs;
+    }
+
+    return cleanSes;
+  }).filter(Boolean).sort((a, b) => {
+    const timeA = new Date(a.date ? `${a.date}T12:00:00` : (a.timestamp || 0)).getTime();
+    const timeB = new Date(b.date ? `${b.date}T12:00:00` : (b.timestamp || 0)).getTime();
+    return timeA - timeB;
+  });
+}
+
+/**
  * 1. EXPORTACIÓN MAESTRA TOTAL DE FIREBASE
  * Descarga el 100% de la base de datos de Firebase Firestore del usuario autenticado:
  * - Historial completo de entrenamientos (subcolección history)
@@ -94,11 +162,7 @@ export async function exportFullDatabase(currentUser) {
       }
     });
   }
-  const mergedWorkoutHistory = Array.from(sessionMap.values()).sort((a, b) => {
-    const timeA = new Date(a.timestamp || a.date || 0).getTime();
-    const timeB = new Date(b.timestamp || b.date || 0).getTime();
-    return timeA - timeB;
-  });
+  const mergedWorkoutHistory = sanitizeWorkoutHistory(Array.from(sessionMap.values()));
 
   // Extraer datos clave para acceso directo y compatibilidad
   const currentActiveSessions = storeData['coachv2_active_workouts'] || localDbDump['coachv2_active_workouts'] || {};
