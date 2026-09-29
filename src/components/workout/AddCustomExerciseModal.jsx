@@ -14,7 +14,11 @@ export default function AddCustomExerciseModal({
   newExReps,
   setNewExReps,
   handleAddCustomExercise,
-  handlePickFromLibrary
+  handlePickFromLibrary,
+  currentDayName = '',
+  allDays = [],
+  newExTargetDay = '',
+  setNewExTargetDay = null
 }) {
   const [searchTerm, setSearchTerm] = React.useState('');
   const [selectedMuscleFilter, setSelectedMuscleFilter] = React.useState('ALL');
@@ -45,7 +49,9 @@ export default function AddCustomExerciseModal({
       <div className="flex-between" style={{ marginBottom: '12px' }}>
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
           <Dumbbell size={18} color="#0066ff" />
-          <h3 style={{ margin: 0, fontSize: '15px', fontWeight: '800' }}>Nuevo Ejercicio / Máquina</h3>
+          <h3 style={{ margin: 0, fontSize: '15px', fontWeight: '800' }}>
+            Nuevo Ejercicio {currentDayName ? `• ${currentDayName}` : ''}
+          </h3>
         </div>
         <button type="button" onClick={() => setIsAddingExercise(false)} style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}>
           <X size={20} color="#64748b" />
@@ -98,6 +104,26 @@ export default function AddCustomExerciseModal({
             🔄 Permanente en Rutina
           </button>
         </div>
+
+        {/* SELECTOR DE DÍA OBJETIVO SI ES PERMANENTE */}
+        {newExScope === 'permanent' && allDays && allDays.length > 0 && setNewExTargetDay && (
+          <div style={{ marginBottom: '12px', background: '#f5f3ff', padding: '8px 12px', borderRadius: '12px', border: '1px solid #ddd6fe' }}>
+            <label style={{ display: 'block', fontSize: '11px', fontWeight: '800', color: '#6d28d9', marginBottom: '4px' }}>
+              📅 Día de la rutina a modificar:
+            </label>
+            <select
+              value={newExTargetDay}
+              onChange={(e) => setNewExTargetDay(e.target.value)}
+              style={{ width: '100%', padding: '6px 10px', borderRadius: '8px', border: '1px solid #c4b5fd', fontSize: '12px', fontWeight: '800', color: '#4c1d95', background: '#ffffff' }}
+            >
+              {allDays.map(d => (
+                <option key={d.id} value={d.id}>
+                  {d.name} {d.focus ? `(${d.focus})` : ''}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
 
         {/* CATÁLOGO DE MÁQUINAS CON BÚSQUEDA Y FILTRO */}
         <div style={{ background: '#f5f3ff', border: '1px solid #a78bfa', padding: '12px', borderRadius: '14px', marginBottom: '14px' }}>

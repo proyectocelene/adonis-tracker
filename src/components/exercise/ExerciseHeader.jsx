@@ -1,5 +1,5 @@
 import React from 'react';
-import { GripVertical, ChevronUp, ChevronDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { GripVertical, ChevronUp, ChevronDown, ArrowUp, ArrowDown, Trash2 } from 'lucide-react';
 
 export default function ExerciseHeader({
   exercise,
@@ -18,7 +18,8 @@ export default function ExerciseHeader({
   isFirst,
   isLast,
   isDeferred = false,
-  onDeferExercise
+  onDeferExercise,
+  onDeleteCustomExercise
 }) {
 
   return (
@@ -101,9 +102,41 @@ export default function ExerciseHeader({
                 ⏱️ Pospuesto
               </span>
             )}
+            {(exercise.isCustom || exercise.isTemporaryToday || exercise.id?.startsWith('custom_') || exercise.id?.startsWith('temp_today_')) && (
+              <span style={{ fontSize: '10px', background: exercise.isTemporaryToday ? '#eff6ff' : '#f5f3ff', color: exercise.isTemporaryToday ? '#1d4ed8' : '#6d28d9', border: `1px solid ${exercise.isTemporaryToday ? '#bfdbfe' : '#ddd6fe'}`, padding: '1px 6px', borderRadius: '6px', fontWeight: '800' }}>
+                {exercise.isTemporaryToday ? '📌 Solo Hoy' : '🔄 Extra'}
+              </span>
+            )}
           </div>
         </div>
 
+        {/* BOTÓN ELIMINAR SI ES PERSONALIZADO / TEMPORAL */}
+        {onDeleteCustomExercise && (exercise.isCustom || exercise.isTemporaryToday || exercise.id?.startsWith('custom_') || exercise.id?.startsWith('temp_today_')) && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onDeleteCustomExercise();
+            }}
+            title="Eliminar este ejercicio"
+            style={{
+              width: '36px',
+              height: '36px',
+              borderRadius: '12px',
+              border: 'none',
+              background: '#fee2e2',
+              color: '#dc2626',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              flexShrink: 0,
+              transition: 'all 0.2s'
+            }}
+          >
+            <Trash2 size={16} />
+          </button>
+        )}
 
         {/* CHEVRON COMPACTO PARA EXPANDIR */}
         <button

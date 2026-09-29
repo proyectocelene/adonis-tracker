@@ -122,6 +122,12 @@ export default function WorkoutDay() {
   const baseDay = activeDays[effectiveDayIndex] || activeDays[0] || scientificProtocol[0];
   const [newExTargetDay, setNewExTargetDay] = useState(baseDay.id);
 
+  useEffect(() => {
+    if (baseDay && baseDay.id) {
+      setNewExTargetDay(baseDay.id);
+    }
+  }, [baseDay?.id]);
+
   // === CÁLCULO DE SEMANA AUTOMÁTICO ===
   let currentWeek = 1;
   if (mesocycleStartDate) {
@@ -514,46 +520,64 @@ export default function WorkoutDay() {
     e.preventDefault();
     if (!newExName.trim()) return;
 
+    const setsCount = parseInt(newExSets) || 3;
+    const repsStr = newExReps.trim() || '10-12';
+    const restStr = newExRest.trim() || '90 s';
+    const biomechStr = newExBiomech.trim() || 'Control de técnica e IAP.';
+    const muscleGroupStr = newExMuscleGroup || 'General';
+    const cleanName = newExName.trim();
+
     if (newExScope === 'today') {
       const newExId = `temp_today_${Date.now()}`;
-      const setsCount = parseInt(newExSets) || 3;
       updateSessionDataForCurrentDay(dayData => {
         const initialSets = {};
         for (let s = 1; s <= setsCount; s++) {
-          initialSets[s] = { weight: '', reps: newExReps.split('-')[0] || '10', rpe: '8', completed: false, unit: 'lbs' };
+          initialSets[s] = { weight: '', reps: repsStr.split('-')[0] || '10', rpe: '8', completed: false, unit: 'lbs' };
         }
         return {
           ...dayData,
           [newExId]: {
-            name: newExName.trim(),
-            muscleGroup: newExMuscleGroup,
+            name: cleanName,
+            muscleGroup: muscleGroupStr,
             customSetsCount: setsCount,
-            reps: newExReps.trim() || '10-12',
-            restTime: newExRest.trim() || '90 s',
-            biomechanics: newExBiomech.trim() || 'Control de técnica e IAP.',
+            reps: repsStr,
+            restTime: restStr,
+            biomechanics: biomechStr,
             isTemporaryToday: true,
             isCustom: true,
             ...initialSets
           }
         };
       });
+
+      // Asegurar que el ejercicio temporal quede en el orden del día
+      setExerciseOrderMap(prev => {
+        const curOrder = prev?.[baseDay.id] || currentDay.exercises.map(x => x.id);
+        if (!curOrder.includes(newExId)) {
+          return { ...prev, [baseDay.id]: [...curOrder, newExId] };
+        }
+        return prev;
+      });
+
       setNewExName('');
       setIsAddingExercise(false);
       modal.showAlert({
         title: "📌 Ejercicio Añadido a Hoy",
-        message: `"${newExName.trim()}" fue agregado exclusivamente a la sesión de hoy.`,
+        message: `"${cleanName}" fue agregado exclusivamente a la sesión de hoy.`,
         variant: "success"
       });
     } else {
       const targetDayId = newExTargetDay || baseDay.id;
+      const targetDayObj = activeDays.find(d => d.id === targetDayId) || baseDay;
+      const newExId = `custom_${Date.now()}`;
       const newEx = {
-        id: `custom_${Date.now()}`,
-        name: newExName.trim(),
-        muscleGroup: newExMuscleGroup,
-        sets: parseInt(newExSets) || 3,
-        reps: newExReps.trim() || '10-12',
-        restTime: newExRest.trim() || '90 s',
-        biomechanics: newExBiomech.trim() || 'Control de técnica e IAP.',
+        id: newExId,
+        name: cleanName,
+        muscleGroup: muscleGroupStr,
+        sets: setsCount,
+        reps: repsStr,
+        restTime: restStr,
+        biomechanics: biomechStr,
         isCustom: true
       };
 
@@ -565,14 +589,94 @@ export default function WorkoutDay() {
         };
       });
 
+      // Si el día objetivo es el día que estamos viendo actualmente, inicializar sets en el borrador de hoy
+      if (targetDayId === baseDay.id) {
+        updateSessionDataForCurrentDay(dayData => {
+          const initialSets = {};
+          for (let s = 1; s <= setsCount; s++) {
+            initialSets[s] = { weight: '', reps: repsStr.split('-')[0] || '10', rpe: '8', completed: false, unit: 'lbs' };
+          }
+          return {
+            ...dayData,
+            [newExId]: {
+              name: cleanName,
+              muscleGroup: muscleGroupStr,
+              customSetsCount: setsCount,
+              reps: repsStr,
+              restTime: restStr,
+              biomechanics: biomechStr,
+              isCustom: true,
+              ...initialSets
+            }
+          };
+        });
+      }
+
+      // Asegurar orden persistente
+      setExerciseOrderMap(prev => {
+        const curOrder = prev?.[targetDayId] || targetDayObj.exercises.map(x => x.id);
+        if (!curOrder.includes(newExId)) {
+          return { ...prev, [targetDayId]: [...curOrder, newExId] };
+        }
+        return prev;
+      });
+
       setNewExName('');
       setIsAddingExercise(false);
       modal.showAlert({
         title: "🔄 Ejercicio Guardado en Rutina",
-        message: `"${newEx.name}" fue agregado a la rutina fija de ${baseDay.name}.`,
+        message: `"${newEx.name}" fue agregado a la rutina fija de ${targetDayObj.name}.`,
         variant: "success"
       });
     }
+  };
+
+  const handleDeleteCustomExercise = (exerciseId) => {
+    modal.showConfirm({
+      title: "🗑️ ¿Eliminar Ejercicio?",
+      message: "¿Deseas eliminar este ejercicio de tu rutina / sesión?",
+      confirmText: "Sí, Eliminar",
+      cancelText: "Cancelar",
+      variant: "danger",
+      onConfirm: () => {
+        // 1. Eliminar de customExercisesMap
+        setCustomExercisesMap(prev => {
+          if (!prev) return prev;
+          const next = { ...prev };
+          Object.keys(next).forEach(dId => {
+            if (Array.isArray(next[dId])) {
+              next[dId] = next[dId].filter(e => e.id !== exerciseId);
+            }
+          });
+          return next;
+        });
+
+        // 2. Eliminar del borrador actual
+        updateSessionDataForCurrentDay(dayData => {
+          const next = { ...dayData };
+          delete next[exerciseId];
+          return next;
+        });
+
+        // 3. Eliminar de exerciseOrderMap
+        setExerciseOrderMap(prev => {
+          if (!prev) return prev;
+          const next = { ...prev };
+          Object.keys(next).forEach(dId => {
+            if (Array.isArray(next[dId])) {
+              next[dId] = next[dId].filter(id => id !== exerciseId);
+            }
+          });
+          return next;
+        });
+
+        modal.showAlert({
+          title: "🗑️ Ejercicio Eliminado",
+          message: "El ejercicio ha sido retirado.",
+          variant: "success"
+        });
+      }
+    });
   };
 
   const calculateVolumeAndSets = () => {
@@ -1516,6 +1620,7 @@ export default function WorkoutDay() {
                 userWeightKg={latestWeight}
                 userSmartwatchKcal={smartwatchKcalMap?.[selectedDateKey] || null}
                 onOpenStrengthWatchModal={() => setShowStrengthWatchModal(true)}
+                onDeleteCustomExercise={handleDeleteCustomExercise}
               />
 
               <AddCustomExerciseModal
@@ -1531,6 +1636,10 @@ export default function WorkoutDay() {
                 setNewExReps={setNewExReps}
                 handleAddCustomExercise={handleAddCustomExercise}
                 handlePickFromLibrary={handlePickFromLibrary}
+                currentDayName={baseDay.name}
+                allDays={activeDays}
+                newExTargetDay={newExTargetDay}
+                setNewExTargetDay={setNewExTargetDay}
               />
 
               <WorkoutFooterControls

@@ -31,7 +31,8 @@ export default function ExerciseRow({
   todayWorkoutData = {},
   initiallyExpanded = false,
   isExpanded: controlledExpanded,
-  onToggleExpand
+  onToggleExpand,
+  onDeleteCustomExercise
 }) {
 
   const modal = useModal();
@@ -415,6 +416,7 @@ export default function ExerciseRow({
         isLast={isLast}
         isDeferred={isDeferred}
         onDeferExercise={onDeferExercise}
+        onDeleteCustomExercise={onDeleteCustomExercise}
       />
 
 

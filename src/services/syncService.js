@@ -3,7 +3,8 @@
 
 import { db, sanitizeForFirestore } from './firebase.js';
 import { collection, getDocs, doc, setDoc } from 'firebase/firestore';
-import { get, set } from 'idb-keyval';
+import { get, set, keys } from 'idb-keyval';
+import { mergeStoreValues, flushStoreOutbox } from './storeSyncHelper.js';
 
 /**
  * Descarga y consolida TODO el historial de sesiones y TODAS las configuraciones
@@ -17,6 +18,9 @@ export async function syncAllCloudDataToIndexedDB(currentUser) {
   const cacheKey = `coachv2_history_cache_${currentUser.uid}`;
 
   try {
+    // Procesar cualquier cambio pendiente en la cola offline antes de iniciar
+    await flushStoreOutbox(currentUser);
+
     // =========================================================================
     // 1. DESCARGA Y CONSOLIDACIÓN DEL 100% DEL HISTORIAL DE SESIONES
     // =========================================================================
@@ -81,27 +85,73 @@ export async function syncAllCloudDataToIndexedDB(currentUser) {
     await set('coachv2_history', allSessions);
 
     // =========================================================================
-    // 2. DESCARGA Y CONSOLIDACIÓN DEL 100% DE CONFIGURACIONES (STORE)
+    // 2. CONSOLIDACIÓN BIDIRECCIONAL DE CONFIGURACIONES (STORE)
     // =========================================================================
     const storeColRef = collection(db, 'users', currentUser.uid, 'store');
     const storeSnapshot = await getDocs(storeColRef);
-    let storeCount = 0;
+    const cloudStoreMap = new Map();
 
     for (const docSnap of storeSnapshot.docs) {
-      const docId = docSnap.id;
       const data = docSnap.data();
       const val = data.value !== undefined ? data.value : data;
+      cloudStoreMap.set(docSnap.id, val);
+    }
+
+    const KNOWN_STORE_KEYS = [
+      'coachv2_custom_day_exercises',
+      'coachv2_active_workouts',
+      'coachv2_swapped_exercises',
+      'coachv2_skipped_exercises',
+      'coachv2_smartwatch_kcal',
+      'coachv2_exercise_orders',
+      'coachv2_global_warmup',
+      'coachv2_body_metrics_history',
+      'coachv2_body_composition_data',
+      'coachv2_machine_configs',
+      'coachv2_machine_profiles',
+      'coachv2_custom_routine',
+      'coachv2_mesocycle_start'
+    ];
+
+    let localIdbKeys = [];
+    try {
+      const allIdbKeys = await keys();
+      localIdbKeys = allIdbKeys.filter(k => typeof k === 'string' && k.startsWith('coachv2_') && !k.includes('history') && !k.includes('outbox') && !k.includes('migrated'));
+    } catch (e) {}
+
+    const allStoreKeys = new Set([...KNOWN_STORE_KEYS, ...cloudStoreMap.keys(), ...localIdbKeys]);
+    let storeCount = 0;
+    const storeSyncPayload = {};
+
+    for (const docId of allStoreKeys) {
       try {
-        await set(docId, val);
-        storeCount++;
+        const localVal = await get(docId);
+        const cloudVal = cloudStoreMap.get(docId);
+        const mergedVal = mergeStoreValues(docId, localVal, cloudVal);
+
+        if (mergedVal !== undefined) {
+          await set(docId, mergedVal);
+          storeSyncPayload[docId] = mergedVal;
+          storeCount++;
+
+          const cloudStr = JSON.stringify(cloudVal ?? null);
+          const mergedStr = JSON.stringify(mergedVal ?? null);
+
+          // Si el valor local tenía contenido que la nube no tenía, subirlo a Firestore
+          if (!cloudStoreMap.has(docId) || cloudStr !== mergedStr) {
+            console.log(`[Adonis Sync] 💾 ➔ ☁️ Sincronizando clave ${docId} a Firestore...`);
+            const docRef = doc(db, 'users', currentUser.uid, 'store', docId);
+            await setDoc(docRef, { value: sanitizeForFirestore(mergedVal) }, { merge: true });
+          }
+        }
       } catch (err) {
-        console.warn(`[Adonis Sync] Error guardando ${docId} en IndexedDB:`, err);
+        console.warn(`[Adonis Sync] Error sincronizando store ${docId}:`, err);
       }
     }
 
     console.log(
       `[Adonis Sync] 👤 Usuario: ${currentUser.email || currentUser.uid}\n` +
-      `[Adonis Sync] ☁️ Firestore: ${firestoreSessions.length} sesiones, ${storeCount} configuraciones\n` +
+      `[Adonis Sync] ☁️ Firestore: ${firestoreSessions.length} sesiones, ${storeCount} configuraciones sincronizadas bidireccionalmente\n` +
       `[Adonis Sync] 💾 IndexedDB Local: ${localCache.length} sesiones previas ➔ Total consolidado: ${allSessions.length} sesiones.`
     );
 
@@ -111,7 +161,8 @@ export async function syncAllCloudDataToIndexedDB(currentUser) {
         detail: {
           sessionsCount: allSessions.length,
           storeCount,
-          allSessions
+          allSessions,
+          storeSyncPayload
         }
       }));
     }

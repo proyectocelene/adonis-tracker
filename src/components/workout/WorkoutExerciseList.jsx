@@ -25,7 +25,8 @@ export default function WorkoutExerciseList({
   handleSkipExercise,
   userWeightKg = 78.55,
   userSmartwatchKcal = null,
-  onOpenStrengthWatchModal = null
+  onOpenStrengthWatchModal = null,
+  onDeleteCustomExercise = null
 }) {
   return (
     <>
@@ -142,6 +143,7 @@ export default function WorkoutExerciseList({
             isSkipped={isSkipped}
             skipReason={skipReason}
             onSkipExercise={handleSkipExercise}
+            onDeleteCustomExercise={onDeleteCustomExercise ? () => onDeleteCustomExercise(exercise.id) : undefined}
             workoutHistory={workoutHistory}
             todayWorkoutData={todayWorkoutData}
           />
