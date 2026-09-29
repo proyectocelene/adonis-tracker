@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useModal } from './common/UIComponents';
 import ExerciseHeader from './exercise/ExerciseHeader';
 import RestTimer from './exercise/RestTimer';
@@ -6,7 +6,8 @@ import SetLogger from './exercise/SetLogger';
 import ExerciseNotes from './exercise/ExerciseNotes';
 import ExerciseBiomechanics from './exercise/ExerciseBiomechanics';
 import ExerciseSwap from './exercise/ExerciseSwap';
-import { calculateSmartWarmup, getLoadRecommendation, isExerciseUnilateral } from '../hooks/useWorkoutCalculations';
+import { calculateSmartWarmup, getLoadRecommendation, isExerciseUnilateral, loadMachineProfilesForExercise, getActiveMachineConfig } from '../hooks/useWorkoutCalculations';
+import { useIndexedDB as useLocalStorage } from '../hooks/useIndexedDB';
 import { UNIFIED_EXERCISE_LIBRARY } from '../data/unifiedExerciseLibrary';
 import { normalizeExerciseName } from '../utils/exerciseMatcher';
 
@@ -40,6 +41,21 @@ export default function ExerciseRow({
   const [activeSubTab, setActiveSubTab] = useState('logger');
   const [machineSetupInput, setMachineSetupInput] = useState(exerciseData.machineSetup || '');
   const [exerciseNotesInput, setExerciseNotesInput] = useState('');
+
+  // Perfiles de máquina y configuración activa resuelta para este ejercicio
+  const [globalMachineProfiles] = useLocalStorage('coachv2_machine_profiles', {});
+  const [globalMachineConfigs] = useLocalStorage('coachv2_machine_configs', {});
+
+  const activeMachineConfig = useMemo(() => {
+    const profiles = loadMachineProfilesForExercise(exercise, {
+      globalMachineProfiles,
+      globalMachineConfigs,
+      previousData,
+      exerciseData,
+      workoutHistory
+    });
+    return getActiveMachineConfig(profiles, exerciseData, previousData);
+  }, [exercise, globalMachineProfiles, globalMachineConfigs, previousData, exerciseData?.machineConfig, workoutHistory]);
 
   // Estado del Gesto "Dejar Presionado" (Long Press Reorder Mode)
   const [isReorderMode, setIsReorderMode] = useState(false);
@@ -358,8 +374,8 @@ export default function ExerciseRow({
 
   const warmupSetVal = exerciseData[0] || {};
   const isWarmupSetDone = !!warmupSetVal.completed;
-  const suggestedWarmupWeight = calculateSmartWarmup(previousData, exerciseData, 60);
-  const loadRecommendation = getLoadRecommendation(targetReps, previousData);
+  const suggestedWarmupWeight = calculateSmartWarmup(previousData, exerciseData, 60, activeMachineConfig);
+  const loadRecommendation = getLoadRecommendation(targetReps, previousData, activeMachineConfig);
 
   return (
     <div 
@@ -524,7 +540,7 @@ export default function ExerciseRow({
               handleDeleteNote={handleDeleteNote}
               workoutHistory={workoutHistory}
               todayWorkoutData={todayWorkoutData}
-              machineConfig={exerciseData.machineConfig}
+              machineConfig={activeMachineConfig}
             />
           )}
 

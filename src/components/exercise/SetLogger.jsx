@@ -13,7 +13,8 @@ import {
   isExerciseUnilateral,
   loadMachineProfilesForExercise,
   getActiveMachineConfig,
-  saveMachineConfigAndProfiles
+  saveMachineConfigAndProfiles,
+  roundToAttainableWeight
 } from '../../hooks/useWorkoutCalculations';
 import { useIndexedDB as useLocalStorage } from '../../hooks/useIndexedDB';
 
@@ -57,12 +58,6 @@ function getWarmupPlan(exercise, previousData, exerciseData, machineConfig, coac
     return { requiresWarmup: false, series: [] };
   }
 
-  // Base de incremento y peso mínimo de máquina (ej. trineo de prensa 100 lbs o barra 45 lbs)
-  const roundBase = machineConfig?.plateStep 
-    ? parseFloat(machineConfig.plateStep) 
-    : (machineConfig?.smallestPlate ? machineConfig.smallestPlate * 2 : 5);
-  const minMachineWeight = machineConfig?.sledWeight ? parseFloat(machineConfig.sledWeight) : 0;
-
   const hasSerie2 = warmupStr.includes('serie 2');
   if (hasSerie2) {
     const p1 = warmupStr.includes('40%') ? 0.40 : 0.50;
@@ -70,16 +65,8 @@ function getWarmupPlan(exercise, previousData, exerciseData, machineConfig, coac
     const r1 = 10;
     const r2 = warmupStr.includes('3 reps') ? 3 : 4;
 
-    let w1 = workingWeight > 0 ? Math.round((workingWeight * p1) / roundBase) * roundBase : 0;
-    let w2 = workingWeight > 0 ? Math.round((workingWeight * p2) / roundBase) * roundBase : 0;
-
-    if (minMachineWeight > 0) {
-      w1 = Math.max(minMachineWeight, w1);
-      w2 = Math.max(minMachineWeight + roundBase, w2);
-    } else {
-      w1 = Math.max(roundBase, w1);
-      w2 = Math.max(roundBase * 2, w2);
-    }
+    const w1 = workingWeight > 0 ? roundToAttainableWeight(workingWeight * p1, machineConfig) : 0;
+    const w2 = workingWeight > 0 ? roundToAttainableWeight(workingWeight * p2, machineConfig) : 0;
 
     return {
       requiresWarmup: true,
@@ -93,13 +80,7 @@ function getWarmupPlan(exercise, previousData, exerciseData, machineConfig, coac
 
   const p = warmupStr.includes('60%') ? 0.60 : 0.70;
   const r = warmupStr.includes('5 reps') ? 5 : (warmupStr.includes('6 reps') ? 6 : 4);
-  let w = workingWeight > 0 ? Math.round((workingWeight * p) / roundBase) * roundBase : 0;
-
-  if (minMachineWeight > 0) {
-    w = Math.max(minMachineWeight, w);
-  } else {
-    w = Math.max(roundBase, w);
-  }
+  const w = workingWeight > 0 ? roundToAttainableWeight(workingWeight * p, machineConfig) : 0;
 
   return {
     requiresWarmup: true,

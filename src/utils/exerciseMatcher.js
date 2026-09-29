@@ -1319,7 +1319,8 @@ export function getHistoricalRecordsForExercise(currentEx, workoutHistory = [], 
             detailedSets,
             workingSets,
             topSet: topSet || { weight: maxW, reps: bestRepsAtPeakWeight, est1RM: best1RM },
-            sourceName: matchedName
+            sourceName: matchedName,
+            rawExerciseData: matchedExData
           });
         }
       }
@@ -1475,8 +1476,10 @@ function findBestMatchInSession(currentEx, sessionOrExercises) {
 /**
  * Busca los datos de la sesión anterior para un ejercicio en WorkoutDay
  * con protección completa contra mezclas de máquinas y datos cruzados.
+ * Sincronizado al 100% con getHistoricalRecordsForExercise para que el peso
+ * anterior mostrado en el formulario coincida exactamente con la gráfica y los cálculos del coach.
  */
-export function getPreviousDataForExercise(currentEx, dayId, currentWeek, workoutHistory = [], currentSessions = {}) {
+export function getPreviousDataForExercise(currentEx, dayId, currentWeek, workoutHistory = [], currentSessions = {}, options = {}) {
   if (!currentEx) return {};
 
   const hasValidLoggedSets = (exData) => {
@@ -1502,13 +1505,15 @@ export function getPreviousDataForExercise(currentEx, dayId, currentWeek, workou
             : (s.repsR || s.repsL || 0);
 
           result[sNum] = {
-            weight: s.weight,
-            reps: resolvedReps,
+            weight: String(s.weight ?? ''),
+            reps: String(resolvedReps ?? ''),
             repsL: validRepsL,
             repsR: validRepsR,
-            rpe: s.rpe || '8',
+            rpe: String(s.rpe || '8'),
             unit: s.unit || matched.unit || 'lbs',
             completed: true,
+            isWarmup: !!s.isWarmup,
+            label: s.label || (sNum <= 0 ? 'C1' : `S${sNum}`),
             isUnilateral: isUni
           };
         }
@@ -1538,33 +1543,100 @@ export function getPreviousDataForExercise(currentEx, dayId, currentWeek, workou
     return result;
   };
 
-  const historyRev = [...workoutHistory].reverse();
+  // 1. Obtener historial cronológico unificado usando el mismo motor exacto de la gráfica
+  if (Array.isArray(workoutHistory) && workoutHistory.length > 0) {
+    const historyRecords = getHistoricalRecordsForExercise(currentEx, workoutHistory, {
+      autoFallback: true
+    });
 
-  // 1. Si semana > 1, buscar en la sesión archivada de la semana anterior del MISMO día si tiene series válidas
-  if (currentWeek > 1) {
-    const prevWeekLog = historyRev.find(s => s.dayId === dayId && s.weekNumber === (currentWeek - 1));
-    if (prevWeekLog) {
-      const matched = findBestMatchInSession(currentEx, prevWeekLog);
-      if (matched && hasValidLoggedSets(matched)) return normalizeResult(matched);
+    const occurrences = historyRecords.sessionOccurrences || [];
+    if (occurrences.length > 0) {
+      let candidateOccurrences = occurrences;
+      if (options.beforeDate) {
+        candidateOccurrences = occurrences.filter(occ => !occ.dateRaw || occ.dateRaw < options.beforeDate);
+      }
+      if (options.excludeSessionId) {
+        candidateOccurrences = candidateOccurrences.filter(occ => occ.sessionId !== options.excludeSessionId);
+      }
+
+      if (candidateOccurrences.length > 0) {
+        const lastOcc = candidateOccurrences[candidateOccurrences.length - 1];
+        const matched = lastOcc.rawExerciseData || {};
+        const result = { ...matched };
+
+        result.sessionId = lastOcc.sessionId;
+        result.date = lastOcc.dateRaw;
+        result.dateStr = lastOcc.dateStr;
+        result.dateFull = lastOcc.dateFull;
+        result.isFamilyFallback = Boolean(historyRecords.isFamilyFallback);
+        result.unit = lastOcc.unit || 'lbs';
+        result.sourceName = lastOcc.sourceName;
+        result.maxWeight = lastOcc.maxWeight;
+        result.bestReps = lastOcc.bestReps;
+
+        const isUni = isExerciseUnilateral(currentEx, matched);
+        result.isUnilateral = isUni;
+
+        // Poblamos las series efectivas y de aproximación desde detailedSets
+        if (Array.isArray(lastOcc.detailedSets) && lastOcc.detailedSets.length > 0) {
+          lastOcc.detailedSets.forEach((s, idx) => {
+            const sNum = s.setNum !== undefined ? s.setNum : idx + 1;
+            const validRepsL = isUni && s.repsL !== null && s.repsL !== undefined && s.repsL !== '' && s.repsL !== 'null' ? s.repsL : undefined;
+            const validRepsR = isUni && s.repsR !== null && s.repsR !== undefined && s.repsR !== '' && s.repsR !== 'null' ? s.repsR : undefined;
+            const resolvedReps = s.reps !== undefined && s.reps !== null && s.reps !== '' 
+              ? s.reps 
+              : (s.repsR || s.repsL || 0);
+
+            result[sNum] = {
+              weight: String(s.weight ?? ''),
+              reps: String(resolvedReps ?? ''),
+              repsL: validRepsL,
+              repsR: validRepsR,
+              weightL: s.weightL !== undefined ? String(s.weightL) : undefined,
+              weightR: s.weightR !== undefined ? String(s.weightR) : undefined,
+              rpe: String(s.rpe || '8'),
+              unit: s.unit || lastOcc.unit || 'lbs',
+              completed: true,
+              isWarmup: !!s.isWarmup,
+              label: s.label || (sNum <= 0 ? 'C1' : `S${sNum}`),
+              isUnilateral: isUni
+            };
+          });
+        }
+
+        // Normalizar formato de claves de series
+        Object.keys(result).forEach(key => {
+          if (/^-?\d+$/.test(key) && result[key] && typeof result[key] === 'object') {
+            const s = { ...result[key] };
+            if (!isUni) {
+              s.reps = (s.reps !== undefined && s.reps !== null && s.reps !== '' && s.reps !== 'null')
+                ? s.reps
+                : (s.repsR || s.repsL || 0);
+              delete s.repsL;
+              delete s.repsR;
+              s.isUnilateral = false;
+            } else {
+              s.isUnilateral = true;
+              if (s.repsL === 'null' || s.repsL === null) delete s.repsL;
+              if (s.repsR === 'null' || s.repsR === null) delete s.repsR;
+            }
+            result[key] = s;
+          }
+        });
+
+        return result;
+      }
     }
   }
 
-  // 2. Buscar en la última sesión del MISMO DÍA en el historial con series válidas
-  for (const s of historyRev) {
-    if (s.dayId === dayId) {
-      const matched = findBestMatchInSession(currentEx, s);
-      if (matched && hasValidLoggedSets(matched)) return normalizeResult(matched);
-    }
-  }
-
-  // 3. Buscar en CUALQUIER sesión previa donde se haya realizado exactamente este ejercicio
-  for (const s of historyRev) {
+  // 2. Fallback de contingencia si no hubo ocurrencias en el historial consolidado
+  const sortedRev = [...(workoutHistory || [])].sort((a, b) => parseSessionTimestamp(b) - parseSessionTimestamp(a));
+  for (const s of sortedRev) {
     const matched = findBestMatchInSession(currentEx, s);
     if (matched && hasValidLoggedSets(matched)) return normalizeResult(matched);
   }
 
-  // 4. Fallback final para configuraciones de máquina si no hay series
-  for (const s of historyRev) {
+  for (const s of sortedRev) {
     const matched = findBestMatchInSession(currentEx, s);
     if (matched) return normalizeResult(matched);
   }

@@ -12,7 +12,7 @@ import {
 } from 'recharts';
 import { TrendingUp, Sparkles, Filter, Info, Scale, Dumbbell } from 'lucide-react';
 import { getHistoricalRecordsForExercise, matchExercise, parseUnifiedCode } from '../../utils/exerciseMatcher.js';
-import { calculate1RM } from '../../hooks/useWorkoutCalculations.js';
+import { calculate1RM, roundToAttainableWeight, getNextAttainableWeight } from '../../hooks/useWorkoutCalculations.js';
 
 export default function ExerciseProgressionChart({
   exercise,
@@ -20,7 +20,8 @@ export default function ExerciseProgressionChart({
   todayWorkoutData = {},
   compact = false,
   height = 220,
-  defaultScope = 'family'
+  defaultScope = 'family',
+  machineConfig = null
 }) {
   // Modo de Alcance: 'family' (Toda la familia biomecánica, predeterminada) o 'station' (Solo esta máquina exacta)
   const [scopeMode, setScopeMode] = useState(defaultScope);
@@ -427,10 +428,23 @@ export default function ExerciseProgressionChart({
 
     const projectedPoints = projections.map(proj => {
       const factor = proj.factor;
-      const projectedW = Math.round(baselineWeight + factor);
-      const projectedAvgW = Math.round((baselineAvgWeight + factor * 0.95) * 10) / 10;
+      let projectedW;
+      if (proj.label === '+1 ses') {
+        const hasDominatedReps = (lastRealPoint.reps >= targetRange.max);
+        if (hasDominatedReps) {
+          projectedW = getNextAttainableWeight(baselineWeight, machineConfig, 'up');
+        } else {
+          projectedW = baselineWeight;
+        }
+      } else {
+        projectedW = roundToAttainableWeight(baselineWeight + factor, machineConfig);
+      }
+
+      if (projectedW < baselineWeight) projectedW = baselineWeight;
+
+      const projectedAvgW = roundToAttainableWeight(baselineAvgWeight + factor * 0.95, machineConfig);
       const projectedRM = Math.round(baseline1RM + (factor * 1.15));
-      const projectedTon = Math.round(baselineTonnage * (1 + (factor / baselineWeight) * 0.8));
+      const projectedTon = Math.round(baselineTonnage * (1 + (factor / (baselineWeight || 1)) * 0.8));
 
       return {
         date: proj.label,
@@ -472,7 +486,7 @@ export default function ExerciseProgressionChart({
       lastRealPoint: lastRealPoint || null,
       isFamilyView
     };
-  }, [exercise, workoutHistory, todayWorkoutData, scopeMode]);
+  }, [exercise, workoutHistory, todayWorkoutData, scopeMode, machineConfig, targetRange.max]);
 
   // Sincronizador de punto activo para la Caja de Auditoría inferior (elimina tooltips flotantes que tapen la curva)
   const CustomTooltipReceiver = ({ active, payload }) => {

@@ -3,7 +3,7 @@ import {
   X, TrendingUp, TrendingDown, Minus, Target, Sparkles, 
   Calendar, Award, Brain, Dumbbell, ShieldCheck, Clock, Zap
 } from 'lucide-react';
-import { calculate1RM } from '../../hooks/useWorkoutCalculations';
+import { calculate1RM, roundToAttainableWeight } from '../../hooks/useWorkoutCalculations';
 import { matchExercise, getHistoricalRecordsForExercise, getUnifiedCodeForExercise } from '../../utils/exerciseMatcher';
 import ExerciseProgressionChart from './ExerciseProgressionChart';
 
@@ -165,19 +165,24 @@ export default function ExerciseStrengthProgressModal({
     const baseline1RM = Math.max(peak1RM, current1RM) || 100;
     const safeWeeklyGain = Math.max(1.5, Math.min(5.0, weeklyRateLbs > 0 ? weeklyRateLbs : baselineWeight * 0.015));
 
-    const projNextSessionWeight = Math.round(baselineWeight + Math.max(1, safeWeeklyGain * 0.65));
+    const rawNextW = baselineWeight + Math.max(1, safeWeeklyGain * 0.65);
+    const projNextSessionWeight = roundToAttainableWeight(rawNextW, machineConfig);
     const projNextSession1RM = Math.round(baseline1RM + Math.max(1, safeWeeklyGain * 0.65 * 1.1));
 
-    const proj2SessionsWeight = Math.round(baselineWeight + Math.max(2, safeWeeklyGain * 1.3));
+    const raw2SesW = baselineWeight + Math.max(2, safeWeeklyGain * 1.3);
+    const proj2SessionsWeight = roundToAttainableWeight(raw2SesW, machineConfig);
     const proj2Sessions1RM = Math.round(baseline1RM + Math.max(2, safeWeeklyGain * 1.3 * 1.1));
 
-    const proj1MonthWeight = Math.round(baselineWeight + (safeWeeklyGain * 4));
+    const raw1MW = baselineWeight + (safeWeeklyGain * 4);
+    const proj1MonthWeight = roundToAttainableWeight(raw1MW, machineConfig);
     const proj1Month1RM = Math.round(baseline1RM + (safeWeeklyGain * 4 * 1.1));
 
-    const proj3MonthsWeight = Math.round(baselineWeight + (safeWeeklyGain * 12 * 0.85));
+    const raw3MW = baselineWeight + (safeWeeklyGain * 12 * 0.85);
+    const proj3MonthsWeight = roundToAttainableWeight(raw3MW, machineConfig);
     const proj3Months1RM = Math.round(baseline1RM + (safeWeeklyGain * 12 * 0.85 * 1.1));
 
-    const proj6MonthsWeight = Math.round(baselineWeight + (safeWeeklyGain * 24 * 0.7));
+    const raw6MW = baselineWeight + (safeWeeklyGain * 24 * 0.7);
+    const proj6MonthsWeight = roundToAttainableWeight(raw6MW, machineConfig);
     const proj6Months1RM = Math.round(baseline1RM + (safeWeeklyGain * 24 * 0.7 * 1.1));
 
     return {
@@ -203,7 +208,7 @@ export default function ExerciseStrengthProgressModal({
       proj6MonthsWeight,
       proj6Months1RM
     };
-  }, [sessionHistory, todaySets]);
+  }, [sessionHistory, todaySets, machineConfig]);
 
   if (!isOpen || !exercise) return null;
 
@@ -455,6 +460,7 @@ export default function ExerciseStrengthProgressModal({
                 exercise={exercise}
                 workoutHistory={workoutHistory}
                 todayWorkoutData={todayWorkoutData}
+                machineConfig={machineConfig}
                 height={240}
                 compact
               />

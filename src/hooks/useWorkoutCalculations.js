@@ -128,7 +128,7 @@ export function calculateAverageRPE(sets = []) {
  * @param {number} fallbackWeight - Peso por defecto
  * @returns {number} Peso de calentamiento redondeado a múltiplos de 5 lbs
  */
-export function calculateSmartWarmup(previousData = {}, currentData = {}, fallbackWeight = 60) {
+export function calculateSmartWarmup(previousData = {}, currentData = {}, fallbackWeight = 60, machineConfig = null) {
   let workingWeight = 0;
 
   // 1. Buscar en la primera serie de trabajo de la sesión actual si ya se introdujo
@@ -153,7 +153,7 @@ export function calculateSmartWarmup(previousData = {}, currentData = {}, fallba
 
   // 50% del peso de trabajo para bombeo sin fatiga metabólica
   const warmupRaw = workingWeight * 0.50;
-  return Math.max(5, Math.round(warmupRaw / 5) * 5);
+  return roundToAttainableWeight(warmupRaw, machineConfig);
 }
 
 /**
@@ -162,9 +162,10 @@ export function calculateSmartWarmup(previousData = {}, currentData = {}, fallba
  * la caída por fatiga (drop-off) y el RPE para orientar al atleta con precisión.
  * @param {string} targetRepsStr - Rango prescrito ej. "10-12" o "8-10"
  * @param {Object} previousData - Sets de la sesión anterior
+ * @param {Object} machineConfig - Configuración de la máquina
  * @returns {Object} { status, suggestionText, badgeBg, badgeColor, icon }
  */
-export function getLoadRecommendation(targetRepsStr = '10-12', previousData = {}) {
+export function getLoadRecommendation(targetRepsStr = '10-12', previousData = {}, machineConfig = null) {
   let minReps = 8;
   let maxReps = 12;
 
@@ -208,18 +209,18 @@ export function getLoadRecommendation(targetRepsStr = '10-12', previousData = {}
   }
 
   const weights = prevSets.map(s => s.weight);
-  const repsArray = prevSets.map(s => s.reps);
   const minW = Math.min(...weights);
   const maxW = Math.max(...weights);
   const spread = maxW - minW;
   const avgW = Math.round(weights.reduce((a, b) => a + b, 0) / weights.length);
+  const roundedAvgW = roundToAttainableWeight(avgW, machineConfig);
   const avgRpe = parseFloat((prevSets.reduce((acc, s) => acc + s.rpe, 0) / prevSets.length).toFixed(1));
   const unit = prevSets[0]?.unit || 'lbs';
 
   // 1. ANÁLISIS DE DISPERSIÓN DE CARGA (Variaciones bruscas intra-sesión)
   // Si la diferencia entre la serie más pesada y la más ligera supera 10 lbs (o >12% de cambio)
   if (spread >= 10 && prevSets.length >= 3) {
-    const anchorWeight = Math.round(avgW / 5) * 5;
+    const anchorWeight = roundToAttainableWeight(avgW, machineConfig);
     return {
       status: 'stabilize',
       suggestionText: `Estabilización de Carga: Variaste entre ${minW} y ${maxW} ${unit}. Para hipertrofia óptima sin fatiga errática, fija un peso ancla de ~${anchorWeight} ${unit} en todas tus series efectivas hasta dominar ${targetRepsStr} reps consistentes.`,
@@ -235,7 +236,7 @@ export function getLoadRecommendation(targetRepsStr = '10-12', previousData = {}
   if (firstSetReps - lastSetReps >= 4 && avgRpe >= 9) {
     return {
       status: 'fatigue',
-      suggestionText: `Caída por fatiga acumulada: Tus repeticiones cayeron de ${firstSetReps} a ${lastSetReps} (RPE ${avgRpe}). Mantén los ${avgW} ${unit} pero añade +30s de descanso o reduce 5 ${unit} en la última serie para preservar el volumen efectivo.`,
+      suggestionText: `Caída por fatiga acumulada: Tus repeticiones cayeron de ${firstSetReps} a ${lastSetReps} (RPE ${avgRpe}). Mantén los ${roundedAvgW} ${unit} pero añade +30s de descanso para preservar el volumen efectivo.`,
       badgeBg: '#fef2f2',
       badgeColor: '#b91c1c',
       icon: '⚠️'
@@ -247,9 +248,11 @@ export function getLoadRecommendation(targetRepsStr = '10-12', previousData = {}
   const majorityReachedMax = prevSets.filter(s => s.reps >= maxReps).length >= Math.ceil(prevSets.length * 0.7);
 
   if ((allSetsReachedMax || majorityReachedMax) && avgRpe <= 8.5) {
+    const nextW = getNextAttainableWeight(roundedAvgW, machineConfig, 'up');
+    const diff = Math.round((nextW - roundedAvgW) * 10) / 10;
     return {
       status: 'increase',
-      suggestionText: `¡Sobrecarga Lista! Dominaste consistentemente ${maxReps}+ reps en tus series a ${avgW} ${unit} con RPE ${avgRpe}. Sube +2.5 a 5 ${unit} en tu primera serie de hoy.`,
+      suggestionText: `¡Sobrecarga Lista! Dominaste consistentemente ${maxReps}+ reps en tus series a ${roundedAvgW} ${unit} con RPE ${avgRpe}. Sube a ${nextW} ${unit} (+${diff} ${unit}) en tu primera serie de hoy.`,
       badgeBg: '#ecfdf5',
       badgeColor: '#047857',
       icon: '🚀'
@@ -259,7 +262,7 @@ export function getLoadRecommendation(targetRepsStr = '10-12', previousData = {}
   // 4. CONSOLIDACIÓN EN ZONA DE HIPERTROFIA
   return {
     status: 'consolidate',
-    suggestionText: `Consolidación: Mantén la carga ancla en ${avgW} ${unit}. Tu objetivo hoy es sumar +1 o +2 repeticiones en tus dos primeras series dentro del rango ${targetRepsStr}.`,
+    suggestionText: `Consolidación: Mantén la carga ancla en ${roundedAvgW} ${unit}. Tu objetivo hoy es sumar +1 o +2 repeticiones en tus dos primeras series dentro del rango ${targetRepsStr}.`,
     badgeBg: '#eff6ff',
     badgeColor: '#1d4ed8',
     icon: '💪'
@@ -384,8 +387,7 @@ export function getUnifiedExerciseTarget(previousData = {}, targetRepsStr = "10-
   );
 
   if (isExcessiveLoad && anchorWeight > 0) {
-    const rawTarget = anchorWeight * 0.85;
-    const adjustedLoad = roundToAttainableWeight(rawTarget, machineConfig);
+    const adjustedLoad = getNextAttainableWeight(anchorWeight, machineConfig, 'down');
     return {
       hasData: true,
       targetWeight: adjustedLoad,
@@ -415,7 +417,8 @@ export function getUnifiedExerciseTarget(previousData = {}, targetRepsStr = "10-
     : (passedAnchorSets.length === 1 && anchorSets[0].reps >= maxReps + 2 && anchorSets[0].rpe <= 7.5);
 
   if (canProgressWeight) {
-    const nextW = roundToAttainableWeight(anchorWeight + increment, machineConfig);
+    const nextW = getNextAttainableWeight(anchorWeight, machineConfig, 'up');
+    const realIncrement = Math.round((nextW - anchorWeight) * 10) / 10;
     return {
       hasData: true,
       targetWeight: nextW,
@@ -424,14 +427,14 @@ export function getUnifiedExerciseTarget(previousData = {}, targetRepsStr = "10-
       maxReps,
       strategyType: 'progression',
       headline: `¡Sobrecarga Progresiva!: Sube a ${nextW} lbs × ${minReps}-${maxReps} reps`,
-      badgeText: `⚡ +${increment} lbs`,
+      badgeText: realIncrement > 0 ? `⚡ +${realIncrement} lbs` : '⚡ Subir',
       note: `¡Dominaste ${maxReps} reps a ${anchorWeight} lbs en la sesión anterior! Sube a ${nextW} lbs hoy para mantener la tensión mecánica óptima.`,
       anchorWeight,
       canProgressWeight: true,
       isExcessiveLoad: false,
       spread,
       isSpreadHigh: spread >= 15 && (spread / (anchorWeight || 1)) > 0.15,
-      increment
+      increment: realIncrement
     };
   }
 
@@ -586,6 +589,111 @@ export function analyzeExercisePerformance(previousData = {}, targetRepsStr = "1
 }
 
 /**
+ * Obtiene el siguiente peso físicamente alcanzable en la máquina (hacia arriba o hacia abajo).
+ * Garantiza que las sugerencias del coach respeten al 100% las placas reales de la máquina.
+ */
+export function getNextAttainableWeight(currentWeight, machineConfig = null, direction = 'up') {
+  const w = parseFloat(currentWeight) || 0;
+  if (w <= 0) {
+    if (machineConfig?.firstPlate) return parseFloat(machineConfig.firstPlate);
+    if (machineConfig?.availableWeights && machineConfig.availableWeights.length > 0) {
+      return Math.min(...machineConfig.availableWeights.map(Number));
+    }
+    return 10;
+  }
+
+  if (machineConfig) {
+    // 1. Pesos exactos disponibles en la máquina o torre de placas
+    if (machineConfig.availableWeights && Array.isArray(machineConfig.availableWeights) && machineConfig.availableWeights.length > 0) {
+      const weights = Array.from(new Set(machineConfig.availableWeights.map(Number).filter(x => !isNaN(x) && x > 0))).sort((a, b) => a - b);
+      const micro = parseFloat(machineConfig.microWeight) || 0;
+      let allPossible = [...weights];
+      if (micro > 0) {
+        weights.forEach(pw => allPossible.push(pw + micro));
+      }
+      allPossible = Array.from(new Set(allPossible)).sort((a, b) => a - b);
+
+      if (direction === 'up') {
+        const next = allPossible.find(pw => pw > w + 0.1);
+        if (next !== undefined) return next;
+        const lastStep = allPossible.length >= 2 ? (allPossible[allPossible.length - 1] - allPossible[allPossible.length - 2]) : 10;
+        return w + lastStep;
+      } else {
+        const lower = allPossible.filter(pw => pw < w - 0.1);
+        if (lower.length > 0) {
+          const target = lower.slice().reverse().find(pw => pw <= w * 0.85);
+          return target !== undefined ? target : lower[lower.length - 1];
+        }
+        return allPossible[0] || w;
+      }
+    }
+
+    // 2. Preset especial two_tens_then_twenty
+    if (machineConfig.stackPreset === 'two_tens_then_twenty') {
+      const weights = [10, 20, 40, 60, 80, 100, 120, 140, 160, 180, 200, 220, 240, 260, 280, 300];
+      if (direction === 'up') {
+        const next = weights.find(pw => pw > w + 0.1);
+        return next !== undefined ? next : w + 20;
+      } else {
+        const lower = weights.filter(pw => pw < w - 0.1);
+        return lower.length > 0 ? (lower.slice().reverse().find(pw => pw <= w * 0.85) || lower[lower.length - 1]) : 10;
+      }
+    }
+
+    // 3. Torre de placas estándar
+    if (machineConfig.type === 'stack') {
+      const firstP = parseFloat(machineConfig.firstPlate) || 10;
+      const step = parseFloat(machineConfig.plateStep) || parseFloat(machineConfig.minIncrement) || parseFloat(machineConfig.step) || 10;
+      if (direction === 'up') {
+        if (w < firstP) return firstP;
+        return w + step;
+      } else {
+        const rawTarget = w * 0.85;
+        const reduced = Math.max(firstP, firstP + Math.round((rawTarget - firstP) / step) * step);
+        return reduced < w ? reduced : Math.max(firstP, w - step);
+      }
+    }
+
+    // 4. Discos / Prensa de piernas
+    if (machineConfig.type === 'plates') {
+      const base = parseFloat(machineConfig.baseWeight) || 0;
+      const smallest = (machineConfig.availablePlates && machineConfig.availablePlates.length > 0)
+        ? Math.min(...machineConfig.availablePlates)
+        : (parseFloat(machineConfig.smallestPlate) || 2.5);
+      const step = smallest * 2;
+      if (direction === 'up') {
+        return Math.max(base + step, w + step);
+      } else {
+        const rawTarget = Math.max(0, (w * 0.85) - base);
+        const reduced = base + Math.round(rawTarget / step) * step;
+        return reduced < w ? reduced : Math.max(base, w - step);
+      }
+    }
+
+    // 5. Mancuernas
+    if (machineConfig.type === 'dumbbells') {
+      const step = parseFloat(machineConfig.dumbbellStep) || parseFloat(machineConfig.minIncrement) || 5;
+      if (direction === 'up') {
+        return w + step;
+      } else {
+        const reduced = Math.max(step, Math.round((w * 0.85) / step) * step);
+        return reduced < w ? reduced : Math.max(step, w - step);
+      }
+    }
+  }
+
+  // Estándar de gimnasio
+  const step = w >= 150 ? 5 : (w >= 40 ? 5 : 2.5);
+  if (direction === 'up') {
+    return w + step;
+  } else {
+    const rawTarget = w * 0.85;
+    const reduced = Math.round(rawTarget / step) * step;
+    return reduced < w ? reduced : Math.max(step, w - step);
+  }
+}
+
+/**
  * Redondea estrictamente a los pesos reales y físicamente alcanzables en la máquina o mancuernas.
  * Previene números imposibles como 151 lbs cuando las placas son de 10 o 20 lbs.
  */
@@ -602,7 +710,7 @@ export function roundToAttainableWeight(rawWeight, machineConfig = null) {
       if (micro > 0) {
         weights.forEach(pw => allPossible.push(pw + micro));
       }
-      allPossible.sort((a, b) => a - b);
+      allPossible = Array.from(new Set(allPossible)).sort((a, b) => a - b);
       return allPossible.reduce((prev, curr) => Math.abs(curr - w) < Math.abs(prev - w) ? curr : prev);
     }
 
@@ -614,14 +722,14 @@ export function roundToAttainableWeight(rawWeight, machineConfig = null) {
       if (micro > 0) {
         weights.forEach(pw => allPossible.push(pw + micro));
       }
-      allPossible.sort((a, b) => a - b);
+      allPossible = Array.from(new Set(allPossible)).sort((a, b) => a - b);
       return allPossible.reduce((prev, curr) => Math.abs(curr - w) < Math.abs(prev - w) ? curr : prev);
     }
 
     // 3. Torre de placas estándar (firstPlate + n * plateStep)
     if (machineConfig.type === 'stack') {
       const firstP = parseFloat(machineConfig.firstPlate) || 10;
-      const step = parseFloat(machineConfig.plateStep) || 10;
+      const step = parseFloat(machineConfig.plateStep) || parseFloat(machineConfig.minIncrement) || parseFloat(machineConfig.step) || 10;
       const micro = parseFloat(machineConfig.microWeight) || 0;
       if (w <= firstP) return firstP;
       const roundedBase = firstP + (Math.round((w - firstP) / step) * step);
@@ -644,7 +752,7 @@ export function roundToAttainableWeight(rawWeight, machineConfig = null) {
 
     // 5. Mancuernas
     if (machineConfig.type === 'dumbbells') {
-      const step = parseFloat(machineConfig.dumbbellStep) || 5;
+      const step = parseFloat(machineConfig.dumbbellStep) || parseFloat(machineConfig.minIncrement) || 5;
       return Math.max(step, Math.round(w / step) * step);
     }
   }
