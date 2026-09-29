@@ -1,0 +1,1 @@
+import{r as e}from"./rolldown-runtime-QTnfLwEv.js";import{S as t,Yt as n,l as r}from"./index-BSap-O-9.js";var i=e(n()),a=[`axis`],o=(0,i.forwardRef)((e,n)=>i.createElement(r,{chartName:`LineChart`,defaultTooltipEventType:`axis`,validateTooltipEventTypes:a,tooltipPayloadSearcher:t,categoricalChartProps:e,ref:n}));export{o as t};
