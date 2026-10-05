@@ -9,7 +9,12 @@ import HistorySessionCard from './history/HistorySessionCard';
 import DataBackupModal from './history/DataBackupModal';
 import HistoryProgressionView from './history/HistoryProgressionView';
 import HistoryChartsView from './history/HistoryChartsView';
-import { getHistoricalRecordsForExercise, formatSessionDate } from '../utils/exerciseMatcher';
+import { 
+  getHistoricalRecordsForExercise, 
+  formatSessionDate,
+  getExercisesFromSession,
+  getUnifiedCodeForExercise
+} from '../utils/exerciseMatcher';
 import { calculate1RM } from '../hooks/useWorkoutCalculations';
 import { 
   exportFullDatabase, 
@@ -105,6 +110,38 @@ export default function HistoryView() {
       allAvailableExercises.push({ ...ex, day: '⚡️ Creado' });
       exerciseOptions.push({ value: ex.id, label: `⚡️ Creado • ${ex.name}` });
     }
+  });
+
+  // Asegurar que cualquier ejercicio registrado en el historial aparezca en la lista de gráficas
+  (workoutHistory || []).forEach(ses => {
+    const list = getExercisesFromSession(ses);
+    list.forEach(item => {
+      const exData = item.data;
+      if (!exData || exData.machine) return; // omitir cardio
+      const uCode = getUnifiedCodeForExercise(exData);
+      const exId = exData.id || item.key;
+      const exName = exData.name || exId;
+      
+      const alreadyIncluded = allAvailableExercises.some(a => {
+        if (a.id === exId) return true;
+        const uCodeA = getUnifiedCodeForExercise(a);
+        if (uCodeA && uCode && uCodeA.canonical === uCode.canonical) return true;
+        return false;
+      });
+
+      if (!alreadyIncluded && exName && !exName.startsWith('custom_') && !exName.startsWith('temp_')) {
+        allAvailableExercises.push({
+          id: exId,
+          name: exName,
+          unifiedCode: uCode ? uCode.canonical : undefined,
+          day: '📜 Histórico'
+        });
+        exerciseOptions.push({
+          value: exId,
+          label: `📜 Histórico • ${exName}`
+        });
+      }
+    });
   });
 
   const totalSessions = workoutHistory.length;

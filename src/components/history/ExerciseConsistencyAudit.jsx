@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { AlertTriangle, CheckCircle2, TrendingUp, TrendingDown, Minus, ArrowUpDown, Sparkles, Filter } from 'lucide-react';
 import { UNIFIED_EXERCISE_LIBRARY } from '../../data/unifiedExerciseLibrary';
-import { normalizeExerciseName } from '../../utils/exerciseMatcher';
+import { normalizeExerciseName, getUnifiedCodeForExercise } from '../../utils/exerciseMatcher';
 
 export default function ExerciseConsistencyAudit({ workoutHistory = [] }) {
   const [sortCriteria, setSortCriteria] = useState('least_adherent'); // 'least_adherent' | 'most_adherent' | 'most_progress'
@@ -29,11 +29,13 @@ export default function ExerciseConsistencyAudit({ workoutHistory = [] }) {
         if (setKeys.length === 0) return;
 
         const rawName = exData.name || libraryNameMap[exId] || exId;
-        const groupKey = normalizeExerciseName(rawName) || exId;
+        const uCode = getUnifiedCodeForExercise({ ...exData, id: exData.id || exId, name: rawName });
+        const groupKey = uCode?.canonical || normalizeExerciseName(rawName) || exId;
 
         if (!stats[groupKey]) {
           stats[groupKey] = {
             id: exId,
+            code: uCode?.canonical,
             name: rawName,
             loggedCount: 0,
             skippedCount: 0,
@@ -59,11 +61,13 @@ export default function ExerciseConsistencyAudit({ workoutHistory = [] }) {
       const skipped = session.skippedExercises || {};
       Object.keys(skipped).forEach(exId => {
         const rawName = skipped[exId]?.name || libraryNameMap[exId] || exId;
-        const groupKey = normalizeExerciseName(rawName) || exId;
+        const uCode = getUnifiedCodeForExercise({ ...skipped[exId], id: skipped[exId]?.id || exId, name: rawName });
+        const groupKey = uCode?.canonical || normalizeExerciseName(rawName) || exId;
 
         if (!stats[groupKey]) {
           stats[groupKey] = {
             id: exId,
+            code: uCode?.canonical,
             name: rawName,
             loggedCount: 0,
             skippedCount: 0,

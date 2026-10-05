@@ -152,6 +152,8 @@ export const LEGACY_CODE_TO_CANONICAL_MAP = {
   '[ABDO-PALL-04]': '[ABDO-PALLOF_PRESS-CABLE_01]',
   '[ABDO-PALLOF_PRESS-CABLE_01]': '[ABDO-PALLOF_PRESS-CABLE_01]',
   '[ABDO-PLANK-ISOM_01]': '[ABDO-PLANK-ISOM_01]',
+  '[ABDO-CRUNCH-BODY_01]': '[ABDO-CRUNCH-BODY_01]',
+  '[ABDO-LEG_RAISE-BODY_01]': '[ABDO-LEG_RAISE-BODY_01]',
   '[ADUC-MAQ-01]': '[ADUC-ADUCTOR-STACK_01]',
   '[ADUC-ADUCTOR-STACK_01]': '[ADUC-ADUCTOR-STACK_01]',
 
@@ -354,11 +356,26 @@ export const HISTORICAL_ID_TO_CANONICAL_MAP = {
   'lib_core_3': '[ABDO-PALLOF_PRESS-CABLE_01]',
   'lib_core_4': '[ADUC-ADUCTOR-STACK_01]',
   'lib_cardio_1': '[CARD-TREADMILL-ZONA2_01]',
-  'lib_cardio_2': '[CARD-BIKE-STATIONARY_01]'
+  'lib_cardio_2': '[CARD-BIKE-STATIONARY_01]',
+  'lib_cardio_remo': '[CARD-ROW_HIIT_NEAT_01]',
+  'd1_cardio': '[CARD-ROW_HIIT_NEAT_01]',
+  'd2_cardio': '[CARD-ROW_HIIT_NEAT_01]',
+  'd3_cardio': '[CARD-ROW_HIIT_NEAT_01]',
+  'd4_cardio': '[CARD-ROW_HIIT_NEAT_01]',
+  'd5_cardio': '[CARD-ROW_HIIT_NEAT_01]',
+  'd6_cardio': '[CARD-ROW_HIIT_NEAT_01]',
+  'cardio_remo_matutino': '[CARD-ROW_HIIT_NEAT_01]'
 };
 
 // DICCIONARIO DE VARIANTES REALES AUDITADAS DEL HISTORIAL (77 Nombres del Usuario)
 const REAL_DATABASE_ALIASES = [
+  // Máquina de Remo Matutino
+  { name: 'Cardio Matutino en Máquina de Remo', code: '[CARD-ROW_HIIT_NEAT_01]' },
+  { name: 'Cardio Matutino en Máquina de Remo (≥ 6h antes de pesas)', code: '[CARD-ROW_HIIT_NEAT_01]' },
+  { name: 'Máquina de Remo', code: '[CARD-ROW_HIIT_NEAT_01]' },
+  { name: 'Remo Matutino', code: '[CARD-ROW_HIIT_NEAT_01]' },
+  { name: 'Cardio Remo HIIT NEAT', code: '[CARD-ROW_HIIT_NEAT_01]' },
+
   // Prensa 45 Central (Cuádriceps)
   { name: 'Prensa de Piernas (Posición Central)', code: '[CUAD-LEG_PRESS-DISC_45_PB]' },
   { name: 'Prensa de Piernas 45° (Posición Central)', code: '[CUAD-LEG_PRESS-DISC_45_PB]' },
@@ -480,7 +497,14 @@ const REAL_DATABASE_ALIASES = [
   { name: 'Extensión de Cuádriceps', code: '[CUAD-LEG_EXT-STACK_01]' },
   { name: 'Abductores en Máquina (Hip Abduction / Abrir Cadera)', code: '[ABDU-ABDUCTOR-STACK_01]' },
   { name: 'Aductores en Máquina (Hip Adduction / Cerrar Cadera)', code: '[ADUC-ADUCTOR-STACK_01]' },
-  { name: 'Elevación de Pantorrillas en Máquina (Rotary o de Pie)', code: '[PANT-CALF_RAISE-MAQ_01]' }
+  { name: 'Elevación de Pantorrillas en Máquina (Rotary o de Pie)', code: '[PANT-CALF_RAISE-MAQ_01]' },
+  { name: 'Abdominales', code: '[ABDO-CRUNCH-BODY_01]' },
+  { name: 'Abdominales en Suelo', code: '[ABDO-CRUNCH-BODY_01]' },
+  { name: 'Crunches', code: '[ABDO-CRUNCH-BODY_01]' },
+  { name: 'Leg raises', code: '[ABDO-LEG_RAISE-BODY_01]' },
+  { name: 'Leg Raises', code: '[ABDO-LEG_RAISE-BODY_01]' },
+  { name: 'Elevaciones de Piernas', code: '[ABDO-LEG_RAISE-BODY_01]' },
+  { name: 'Elevación de Piernas', code: '[ABDO-LEG_RAISE-BODY_01]' }
 ];
 
 export function normalizeExerciseNameFull(str) {
@@ -1043,6 +1067,9 @@ export function getExercisesFromSession(ses) {
       })
       .map(([key, data]) => {
         const cleanData = { ...data };
+        if (!cleanData.id) {
+          cleanData.id = key;
+        }
         if (!cleanData.name && cleanData.machine) {
           cleanData.name = cleanData.machine;
         }
@@ -1053,13 +1080,13 @@ export function getExercisesFromSession(ses) {
   if (Array.isArray(ses.exercises) && ses.exercises.length > 0) {
     return ses.exercises
       .filter(data => data && typeof data === 'object')
-      .map((data, idx) => ({ key: data?.id || String(idx), data }));
+      .map((data, idx) => ({ key: data?.id || String(idx), data: { ...data, id: data?.id || String(idx) } }));
   }
 
   if (Array.isArray(ses.exercisesDetailed) && ses.exercisesDetailed.length > 0) {
     return ses.exercisesDetailed
       .filter(data => data && typeof data === 'object')
-      .map((data, idx) => ({ key: data?.id || String(idx), data }));
+      .map((data, idx) => ({ key: data?.id || String(idx), data: { ...data, id: data?.id || String(idx) } }));
   }
 
   if (ses.rawWorkoutData && typeof ses.rawWorkoutData === 'object' && !Array.isArray(ses.rawWorkoutData)) {
@@ -1073,6 +1100,9 @@ export function getExercisesFromSession(ses) {
       })
       .map(([key, data]) => {
         const cleanData = { ...data };
+        if (!cleanData.id) {
+          cleanData.id = key;
+        }
         if (!cleanData.name && cleanData.machine) {
           cleanData.name = cleanData.machine;
         }
@@ -1215,10 +1245,20 @@ export function getHistoricalRecordsForExercise(currentEx, workoutHistory = [], 
 
       const matchRes = matchExercise(currentEx, key, exData, options);
       if (matchRes.isMatch) {
-        matchedExData = exData;
-        matchedName = matchRes.matchedName || exData.name || key;
-        matchedNamesSet.add(matchedName);
-        break;
+        if (matchedExData) {
+          const setsCurrent = extractExerciseSets(matchedExData);
+          const setsNew = extractExerciseSets(exData);
+          const maxWCurrent = setsCurrent.length > 0 ? Math.max(0, ...setsCurrent.map(s => s.weight || 0)) : 0;
+          const maxWNew = setsNew.length > 0 ? Math.max(0, ...setsNew.map(s => s.weight || 0)) : 0;
+          if (maxWNew > maxWCurrent || (maxWNew === maxWCurrent && setsNew.length > setsCurrent.length)) {
+            matchedExData = exData;
+            matchedName = matchRes.matchedName || exData.name || key;
+          }
+        } else {
+          matchedExData = exData;
+          matchedName = matchRes.matchedName || exData.name || key;
+          matchedNamesSet.add(matchedName);
+        }
       }
     }
 

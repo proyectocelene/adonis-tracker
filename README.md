@@ -1,16 +1,29 @@
-# React + Vite
+# ⚡️ Adonis Tracker — Coach V2 (Clinical Hypertrophy & Progressive Overload Tracker)
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+PWA de alto rendimiento diseñada para la periodización de sobrecarga progresiva, control biomecánico de maquinaria e hipertrofia clínica avanzada.
 
-Currently, two official plugins are available:
+## 🚀 Características Principales
+- **Sistema Canónico de 3 Segmentos (`[GRUPO-MÁQUINA-ESPEC]`)**: Aislamiento total de estaciones mecánicas para evitar contaminación cruzada de pesos y datos entre máquinas de palanca, cables y peso libre.
+- **Motor Inteligente de Historial**: Unificación transparente de más de 120 variantes de nombres comerciales y de usuario a través de [`src/utils/exerciseMatcher.js`](./src/utils/exerciseMatcher.js).
+- **Persistencia de Latencia Cero**: Arquitectura offline-first mediante IndexedDB (`idb-keyval`) con sincronización en tiempo real hacia Google Firebase Firestore.
+- **Analítica de Carga y Fatiga**: Estimación de 1RM por fórmula Epley, tonelaje acumulado, control de RPE/RIR y gasto metabólico.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## 🧠 Documentación para Inteligencias Artificiales y Desarrolladores
+- [Manual Maestro de Contexto para IA (`AI_INSTRUCTIONS_PROJECT_CONTEXT.md`)](./AI_INSTRUCTIONS_PROJECT_CONTEXT.md)
+- [Reglas Permanentes Antigravity (`GEMINI.md`)](./GEMINI.md)
+- [Instrucciones de Agentes (`AGENTS.md`)](./AGENTS.md)
 
-## React Compiler
+## 🛠️ Comandos de Desarrollo
+```bash
+# Instalar dependencias
+npm install
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+# Iniciar servidor local de desarrollo
+npm run dev
 
-## Expanding the Oxlint configuration
+# Compilar para producción (PWA con Service Worker)
+npm run build
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+# Previsualizar compilación de producción
+npm run preview
+```

@@ -97,6 +97,22 @@ export default function ExerciseHeader({
             }}>
               {totalSets} series x {targetReps} reps {completedSetsCount > 0 && `(${completedSetsCount}/${totalSets})`}
             </span>
+            {exercise.restTime && (
+              <span style={{ 
+                fontSize: '11px', 
+                background: '#eff6ff', 
+                color: '#1d4ed8', 
+                border: '1px solid #bfdbfe',
+                padding: '2px 8px', 
+                borderRadius: '8px', 
+                fontWeight: '800',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '3px'
+              }}>
+                ⏱️ {exercise.restTime} reposo
+              </span>
+            )}
             {isDeferred && (
               <span style={{ fontSize: '10px', background: '#fef3c7', color: '#b45309', border: '1px solid #fde68a', padding: '1px 6px', borderRadius: '6px', fontWeight: '800' }}>
                 ⏱️ Pospuesto

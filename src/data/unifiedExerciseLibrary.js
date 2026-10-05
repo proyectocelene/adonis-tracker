@@ -622,6 +622,68 @@ export const UNIFIED_EXERCISE_LIBRARY = [
     ]
   },
   {
+    "id": "lib_abdo_crunch_body_01",
+    "name": "Abdominales / Crunches en Suelo",
+    "muscleGroup": "Abdomen",
+    "equipment": "Peso Corporal",
+    "unifiedCode": "[ABDO-CRUNCH-BODY_01]",
+    "machineKey": "ABDO-CRUNCH",
+    "muscleGroupCode": "ABDO",
+    "machineCode": "CRUNCH",
+    "specCode": "BODY_01",
+    "defaultSets": 4,
+    "defaultReps": "12-15",
+    "defaultRest": "60 s",
+    "ratio": 1,
+    "biomechanics": "Flexión espinal activa sobre colchoneta controlando la contracción de la pared abdominal sin tirar del cuello ni despegar la zona lumbar.",
+    "mindMuscle": {
+      "title": "Recto Abdominal en Suelo",
+      "internalCue": "Acerca las costillas hacia la pelvis contrayendo el abdomen en cada repetición.",
+      "externalCue": "Expulsa todo el aire en la fase concéntrica manteniendo tensión continua.",
+      "eccentricCue": "Desciende en 2 segundos sin relajar la tensión abdominal al tocar el suelo."
+    },
+    "warmup": "",
+    "searchQuery": "",
+    "aliases": [
+      "Abdominales",
+      "Abdominales en Suelo",
+      "Crunches",
+      "Crunches en Suelo",
+      "Encogimientos Abdominales"
+    ]
+  },
+  {
+    "id": "lib_abdo_leg_raise_body_01",
+    "name": "Elevaciones de Piernas (Leg Raises)",
+    "muscleGroup": "Abdomen",
+    "equipment": "Peso Corporal",
+    "unifiedCode": "[ABDO-LEG_RAISE-BODY_01]",
+    "machineKey": "ABDO-LEG_RAISE",
+    "muscleGroupCode": "ABDO",
+    "machineCode": "LEG_RAISE",
+    "specCode": "BODY_01",
+    "defaultSets": 4,
+    "defaultReps": "10-15",
+    "defaultRest": "60 s",
+    "ratio": 1,
+    "biomechanics": "Elevación de piernas colgado en barra o apoyado en paralelas/suelo con retroversión pélvica activa para involucrar el abdomen inferior sin sobrecargar el psoas ilíaco.",
+    "mindMuscle": {
+      "title": "Abdomen Inferior y Flexores",
+      "internalCue": "Gira la pelvis hacia el pecho al subir sin usar balanceo ni impulso.",
+      "externalCue": "Lleva las rodillas o puntas de los pies hacia el pecho de forma controlada.",
+      "eccentricCue": "Baja las piernas lentamente frenando la caída con la pared abdominal activa."
+    },
+    "warmup": "",
+    "searchQuery": "",
+    "aliases": [
+      "Leg raises",
+      "Leg Raises",
+      "Elevación de Piernas",
+      "Elevaciones de Piernas",
+      "Hanging Leg Raises"
+    ]
+  },
+  {
     "id": "lib_aduc_aductor_stack_01",
     "name": "Aductores en Máquina (Hip Adduction / Cerrar Cadera)",
     "muscleGroup": "Aductores",
@@ -1176,6 +1238,37 @@ export const UNIFIED_EXERCISE_LIBRARY = [
       "Cardio Zona 2 en Caminadora (Bifásico)",
       "Cardio Zona 2 en Caminadora",
       "Cardio Zona 2"
+    ]
+  },
+  {
+    "id": "lib_card_row_hiit_neat_01",
+    "name": "Cardio Matutino en Máquina de Remo",
+    "muscleGroup": "Cardio",
+    "equipment": "Máquina de Remo",
+    "unifiedCode": "[CARD-ROW_HIIT_NEAT_01]",
+    "machineKey": "CARD-ROW",
+    "muscleGroupCode": "CARD",
+    "machineCode": "ROW",
+    "specCode": "HIIT_NEAT_01",
+    "defaultSets": 1,
+    "defaultReps": "35-40 min",
+    "defaultRest": "0 s",
+    "ratio": 1,
+    "biomechanics": "Protocolo matutino en máquina de remo separado por al menos 6 horas del entrenamiento de fuerza vespertino para anular el efecto de interferencia (AMPK vs mTOR):\n• Opción A (Híbrida: HIIT + NEAT, máx 1-2 veces por semana): 10-15 min con 4 a 6 sprints de 20 segundos a máxima velocidad (RPE 16-18/20) x 40-60 segundos de remo suave + 20-25 min LISS continuo.\n• Opción B (NEAT puro LISS, 2-3 veces por semana): 30-45 min a baja intensidad (RPE 12-13/20, Talk Test conversacional fluido sin jadear) para elevar gasto calórico sin fatiga muscular residual.",
+    "mindMuscle": {
+      "title": "Máquina de Remo Matutina (Cardio vs NEAT)",
+      "internalCue": "Inicia la palada empujando con las piernas (60%), extiende la cadera (20%) y tracciona con los brazos hacia el abdomen bajo (20%).",
+      "externalCue": "Mantén ritmo cardíaco en Zona 2 en LISS y potencia explosiva en los intervalos de sprint.",
+      "eccentricCue": "Retorno fluido sin golpear la cadena."
+    },
+    "warmup": "3 minutos de remo muy suave de adaptación.",
+    "searchQuery": "rowing machine hiit neat morning protocol",
+    "aliases": [
+      "Cardio Matutino en Máquina de Remo",
+      "Máquina de Remo",
+      "Remo Matutino",
+      "Cardio Remo HIIT NEAT",
+      "Remo Zona 2"
     ]
   },
   {

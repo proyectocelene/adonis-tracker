@@ -1,4 +1,4 @@
-﻿/**
+/**
  * GESTOR MAESTRO DE MÁQUINAS Y CALIBRACIONES (Planta Alta / Planta Baja / Multi-Perfiles)
  * 
  * Garantiza:
@@ -8,7 +8,7 @@
  * 4. Auto-recuperación: si las claves locales se limpian, rescata las calibraciones de sesiones previas en Firestore/IndexedDB.
  */
 
-import { normalizeExerciseName } from './exerciseMatcher.js';
+import { normalizeExerciseName, parseUnifiedCode } from './exerciseMatcher.js';
 
 /**
  * Genera la clave base de almacenamiento de una máquina a partir de un ejercicio o nombre.
@@ -138,10 +138,35 @@ export function loadMachineProfilesForExercise(exercise, {
   const seenIds = new Set();
   const seenFloorStation = new Set();
 
+  const exName = (exercise.name || '').toLowerCase();
+  const exEq = (exercise.equipment || '').toLowerCase();
+  const parsed = parseUnifiedCode(exercise.unifiedCode);
+  const isDumbbell = Boolean(
+    parsed?.isDumbbell ||
+    exEq.includes('mancuerna') ||
+    exName.includes('mancuerna') ||
+    exName.includes('dumbbell')
+  );
+
   const addProfile = (raw, srcLabel = '') => {
     if (!raw || typeof raw !== 'object') return;
     const sanitized = sanitizeMachineProfile(raw, exercise.name, foundProfiles.length + 1);
     if (!sanitized) return;
+
+    // Validación de compatibilidad biomecánica:
+    // Si el ejercicio es de mancuernas, NO adoptar perfiles de torre de placas ni máquinas convergentes
+    if (isDumbbell) {
+      const isMachineProfile = sanitized.type === 'stack' || sanitized.type === 'plates' || 
+        (sanitized.name && (
+          sanitized.name.toLowerCase().includes('máquina') ||
+          sanitized.name.toLowerCase().includes('maquina') ||
+          sanitized.name.toLowerCase().includes('nitro') ||
+          sanitized.name.toLowerCase().includes('hammer') ||
+          sanitized.name.toLowerCase().includes('smith') ||
+          sanitized.name.toLowerCase().includes('placas')
+        ));
+      if (isMachineProfile) return;
+    }
 
     // Deduplicación inteligente por ID o por coincidencia de Piso + Estación/Nombre
     const floorKey = `${sanitized.floor}_${sanitized.station || sanitized.name}`.toLowerCase();
@@ -210,6 +235,25 @@ export function loadMachineProfilesForExercise(exercise, {
         }
       }
     } catch (e) {}
+  }
+
+  // Si es ejercicio de mancuernas y no tiene perfiles compatibles, generar perfil de rack de mancuernas
+  if (isDumbbell && foundProfiles.length === 0) {
+    foundProfiles.push({
+      id: 'prof_mancuernas_default',
+      name: 'Mancuernas (Incrementos de 5 lbs)',
+      floor: 'Planta Baja',
+      station: 'Mancuernas',
+      seat: '',
+      pad: '',
+      notch: '',
+      notes: 'Mancuernas de peso libre en rack',
+      type: 'dumbbells',
+      dumbbellStep: 5,
+      minIncrement: 5,
+      isDefault: true,
+      availableWeights: [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100, 105, 110, 115, 120]
+    });
   }
 
   // Si se encontraron perfiles pero ninguno tiene isDefault, marcar el primero

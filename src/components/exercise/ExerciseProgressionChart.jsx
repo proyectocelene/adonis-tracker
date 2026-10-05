@@ -14,6 +14,81 @@ import { TrendingUp, Sparkles, Filter, Info, Scale, Dumbbell } from 'lucide-reac
 import { getHistoricalRecordsForExercise, matchExercise, parseUnifiedCode } from '../../utils/exerciseMatcher.js';
 import { calculate1RM, roundToAttainableWeight, getNextAttainableWeight } from '../../hooks/useWorkoutCalculations.js';
 
+// PALETA DE ALTO CONTRASTE CON TONOS TOTALMENTE DIFERENCIADOS (SIN VARIANTES CLARAS/OSCURAS CONFUSAS)
+export const PROGRESSION_COLORS = {
+  peakWeight: '#1d4ed8',     // Azul Real Intenso (Carga Pico / Top Set)
+  avgWeight: '#9333ea',      // Púrpura / Violeta Eléctrico (Promedio Ponderado)
+  minWeight: '#64748b',      // Gris Pizarra / Slate (Carga Base / Back-off)
+  rangeFillStart: '#2563eb', // Azul medio
+  rangeFillEnd: '#9333ea',   // Púrpura medio
+  
+  repsTop: '#059669',        // Verde Esmeralda Vivo (Reps Top Set)
+  repsAvg: '#d97706',        // Ámbar Dorado Oscuro (Reps Promedio) - ¡Diferente al verde!
+  repsBand: '#10b981',       // Verde hipertrofia prescrito
+
+  rpe: '#dc2626',            // Rojo Carmesí Fuego (Esfuerzo Percibido RPE / Fatiga)
+  est1RM: '#0891b2',         // Cian / Turquesa Profundo (1RM Estimado)
+  projection: '#db2777',     // Rosa Fucsia Magenta Neón (Metas Futuras)
+  tonnage: '#ea580c'         // Naranja Óxido / Fuego (Tonelaje de Volumen)
+};
+
+function StationDot(props) {
+  const { cx, cy, payload, baseColor = PROGRESSION_COLORS.peakWeight, isFamilyView = false } = props;
+  if (!cx || !cy || !payload || payload.isProjected) return null;
+  const sType = payload.stationType || 'machine';
+
+  if (!isFamilyView) {
+    return <circle cx={cx} cy={cy} r={3.5} fill={baseColor} stroke="#ffffff" strokeWidth={1.5} />;
+  }
+
+  // En vista de familia, distinguir estaciones por forma geométrica
+  if (sType === 'dumbbell') {
+    return (
+      <rect
+        x={cx - 3.5}
+        y={cy - 3.5}
+        width={7}
+        height={7}
+        fill={baseColor}
+        stroke="#ffffff"
+        strokeWidth={1.5}
+        rx={1}
+      />
+    );
+  }
+  if (sType === 'cable') {
+    return (
+      <polygon
+        points={`${cx},${cy - 4.5} ${cx + 4.5},${cy} ${cx},${cy + 4.5} ${cx - 4.5},${cy}`}
+        fill={baseColor}
+        stroke="#ffffff"
+        strokeWidth={1.5}
+      />
+    );
+  }
+  if (sType === 'smith') {
+    return (
+      <polygon
+        points={`${cx},${cy - 4.5} ${cx + 4.5},${cy + 3.5} ${cx - 4.5},${cy + 3.5}`}
+        fill={baseColor}
+        stroke="#ffffff"
+        strokeWidth={1.5}
+      />
+    );
+  }
+
+  if (sType === 'plate') {
+    return (
+      <g>
+        <circle cx={cx} cy={cy} r={4} fill={baseColor} stroke="#ffffff" strokeWidth={1.5} />
+        <circle cx={cx} cy={cy} r={1.5} fill="#ffffff" />
+      </g>
+    );
+  }
+
+  return <circle cx={cx} cy={cy} r={3.5} fill={baseColor} stroke="#ffffff" strokeWidth={1.5} />;
+}
+
 export default function ExerciseProgressionChart({
   exercise,
   workoutHistory = [],
@@ -30,6 +105,7 @@ export default function ExerciseProgressionChart({
   const [showWeight, setShowWeight] = useState(true);
   const [showReps, setShowReps] = useState(true);
   const [show1RM, setShow1RM] = useState(false);
+  const [showRPE, setShowRPE] = useState(false);
   const [showProjections, setShowProjections] = useState(true);
   // Modalidad de repeticiones: 'both' (Ambas al mismo tiempo), 'topSet' (Top Set) o 'avg' (Promedio)
   const [repsMode, setRepsMode] = useState('both');
@@ -176,18 +252,52 @@ export default function ExerciseProgressionChart({
       const effectiveTonnage = Math.round(occ.tonnage || occ.totalVolume || (peakW * (occ.bestReps || 0)));
       const weightSpread = Math.max(0, peakW - minW);
 
+      const validRPEs = (occ.workingSets || occ.detailedSets || [])
+        .map(s => parseFloat(s.rpe))
+        .filter(r => !isNaN(r) && r > 0);
+      const avgRPE = validRPEs.length > 0 
+        ? Math.round((validRPEs.reduce((a, b) => a + b, 0) / validRPEs.length) * 10) / 10 
+        : (occ.rpeStart ? parseFloat(occ.rpeStart) : null);
+
+      const srcName = (occ.sourceName || occ.matchedName || '').toLowerCase();
+      let stationType = 'machine';
+      let stationIcon = '⚙️';
+      let stationLabel = 'Máquina';
+
+      if (srcName.includes('mancuerna') || srcName.includes('dumbbell')) {
+        stationType = 'dumbbell';
+        stationIcon = '🏋️';
+        stationLabel = 'Mancuerna';
+      } else if (srcName.includes('polea') || srcName.includes('cable')) {
+        stationType = 'cable';
+        stationIcon = '⛓️';
+        stationLabel = 'Polea';
+      } else if (srcName.includes('smith') || srcName.includes('multipower')) {
+        stationType = 'smith';
+        stationIcon = '🏛️';
+        stationLabel = 'Smith';
+      } else if (srcName.includes('disco') || srcName.includes('prensa 45') || srcName.includes('hack')) {
+        stationType = 'plate';
+        stationIcon = '💿';
+        stationLabel = 'Discos';
+      }
+
       return {
         date: uniqueKey,
         displayDate: baseLabel,
         sessionIndex: idx + 1,
         dateFull: occ.dateFull || occ.dateStr || `Sesión ${idx + 1}`,
         sourceName: occ.sourceName || occ.matchedName || '',
+        stationType,
+        stationIcon,
+        stationLabel,
         weight: peakW, // Carga Pico (Top Set)
         avgWeight: avgW, // Carga Promedio Efectiva
         weightedAvgWeight: weightedAvgW, // Carga Promedio Ponderada por Reps
         minWeight: minW, // Carga Mínima de Trabajo
         weightRange: [minW, peakW], // Rango Min-Max para Banda Sombreada
         weightSpread,
+        rpe: avgRPE,
         rpeStart: occ.rpeStart,
         rpeEnd: occ.rpeEnd,
         deltaRPE: occ.deltaRPE || 0,
@@ -298,6 +408,31 @@ export default function ExerciseProgressionChart({
       const todayRpeStart = todayValidRPEs.length > 0 ? todayValidRPEs[0] : null;
       const todayRpeEnd = todayValidRPEs.length > 0 ? todayValidRPEs[todayValidRPEs.length - 1] : null;
       const todayDeltaRPE = (todayRpeStart !== null && todayRpeEnd !== null) ? Math.round((todayRpeEnd - todayRpeStart) * 10) / 10 : 0;
+      const todayAvgRPE = todayValidRPEs.length > 0 
+        ? Math.round((todayValidRPEs.reduce((a, b) => a + b, 0) / todayValidRPEs.length) * 10) / 10 
+        : (todayRpeStart !== null ? todayRpeStart : null);
+
+      const exName = (exercise?.name || '').toLowerCase();
+      let todayStationType = 'machine';
+      let todayStationIcon = '⚙️';
+      let todayStationLabel = 'Máquina';
+      if (exName.includes('mancuerna') || exName.includes('dumbbell')) {
+        todayStationType = 'dumbbell';
+        todayStationIcon = '🏋️';
+        todayStationLabel = 'Mancuerna';
+      } else if (exName.includes('polea') || exName.includes('cable')) {
+        todayStationType = 'cable';
+        todayStationIcon = '⛓️';
+        todayStationLabel = 'Polea';
+      } else if (exName.includes('smith') || exName.includes('multipower')) {
+        todayStationType = 'smith';
+        todayStationIcon = '🏛️';
+        todayStationLabel = 'Smith';
+      } else if (exName.includes('disco') || exName.includes('prensa 45') || exName.includes('hack')) {
+        todayStationType = 'plate';
+        todayStationIcon = '💿';
+        todayStationLabel = 'Discos';
+      }
 
       let todayDropOff = 0;
       if (workingTodaySets.length >= 2 && workingTodaySets[0].reps > 0) {
@@ -313,12 +448,17 @@ export default function ExerciseProgressionChart({
         displayDate: 'Hoy',
         sessionIndex: realPoints.length + 1,
         dateFull: 'Sesión de Hoy (En curso)',
+        sourceName: exercise?.name || '',
+        stationType: todayStationType,
+        stationIcon: todayStationIcon,
+        stationLabel: todayStationLabel,
         weight: finalTodayPeak,
         avgWeight: avgWeightToday,
         weightedAvgWeight: todayWeightedAvgW,
         minWeight: finalTodayMin,
         weightRange: [finalTodayMin, finalTodayPeak],
         weightSpread: Math.max(0, finalTodayPeak - finalTodayMin),
+        rpe: todayAvgRPE,
         rpeStart: todayRpeStart,
         rpeEnd: todayRpeEnd,
         deltaRPE: todayDeltaRPE,
@@ -658,10 +798,10 @@ export default function ExerciseProgressionChart({
               {/* Selector de Modo de Carga: Banda | Pico | Prom | Líneas */}
               <div style={{ display: 'inline-flex', background: '#eff6ff', borderRadius: '8px', padding: '2px', border: '1px solid #bfdbfe' }}>
                 {[
-                  { id: 'band', label: 'Banda', title: 'Ver área sombreada entre Carga Mínima y Pico con Promedio Ponderado en medio' },
-                  { id: 'peak', label: 'Pico', title: 'Ver solo la Carga Máxima (Top Set)' },
-                  { id: 'avg', label: 'Prom', title: 'Ver la Carga Promedio Efectiva' },
-                  { id: 'both', label: 'Líneas', title: 'Ver curvas de Pico y Promedio' }
+                  { id: 'band', label: 'Banda', bg: PROGRESSION_COLORS.peakWeight, title: 'Ver área sombreada entre Carga Mínima y Pico con Promedio Ponderado en medio' },
+                  { id: 'peak', label: 'Pico', bg: PROGRESSION_COLORS.peakWeight, title: 'Ver solo la Carga Máxima (Top Set)' },
+                  { id: 'avg', label: 'Prom', bg: PROGRESSION_COLORS.avgWeight, title: 'Ver la Carga Promedio Efectiva' },
+                  { id: 'both', label: 'Líneas', bg: '#0f172a', title: 'Ver curvas de Pico y Promedio' }
                 ].map(wm => (
                   <button
                     key={wm.id}
@@ -674,7 +814,7 @@ export default function ExerciseProgressionChart({
                       padding: '3px 6px',
                       borderRadius: '6px',
                       border: 'none',
-                      background: weightMode === wm.id ? '#0066ff' : 'transparent',
+                      background: weightMode === wm.id ? wm.bg : 'transparent',
                       color: weightMode === wm.id ? '#ffffff' : '#1e40af',
                       fontWeight: '900',
                       fontSize: '9px',
@@ -688,7 +828,7 @@ export default function ExerciseProgressionChart({
               </div>
 
               {/* Toggle Reps */}
-              <div style={{ display: 'inline-flex', borderRadius: '8px', overflow: 'hidden', border: showReps ? '1.5px solid #10b981' : '1px solid #cbd5e1' }}>
+              <div style={{ display: 'inline-flex', borderRadius: '8px', overflow: 'hidden', border: showReps ? `1.5px solid ${PROGRESSION_COLORS.repsTop}` : '1px solid #cbd5e1' }}>
                 <button
                   type="button"
                   onClick={() => setShowReps(prev => !prev)}
@@ -696,7 +836,7 @@ export default function ExerciseProgressionChart({
                     padding: '3px 6px',
                     border: 'none',
                     background: showReps ? '#ecfdf5' : '#f8fafc',
-                    color: showReps ? '#059669' : '#94a3b8',
+                    color: showReps ? PROGRESSION_COLORS.repsTop : '#94a3b8',
                     fontSize: '9.5px',
                     fontWeight: '900',
                     cursor: 'pointer',
@@ -706,7 +846,7 @@ export default function ExerciseProgressionChart({
                   }}
                   title="Activar/Desactivar curva de repeticiones"
                 >
-                  <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: showReps ? '#10b981' : '#94a3b8' }} />
+                  <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: showReps ? PROGRESSION_COLORS.repsTop : '#94a3b8' }} />
                   Reps
                 </button>
                 {showReps && (
@@ -716,14 +856,14 @@ export default function ExerciseProgressionChart({
                     style={{
                       padding: '3px 6px',
                       border: 'none',
-                      borderLeft: '1px solid #a7f3d0',
-                      background: '#d1fae5',
-                      color: '#047857',
+                      borderLeft: '1px solid #fed7aa',
+                      background: repsMode === 'avg' ? '#fef3c7' : '#ecfdf5',
+                      color: repsMode === 'avg' ? PROGRESSION_COLORS.repsAvg : PROGRESSION_COLORS.repsTop,
                       fontSize: '9px',
                       fontWeight: '900',
                       cursor: 'pointer'
                     }}
-                    title="Alternar: Ambas curvas simultáneas, solo Top Set, o solo Promedio"
+                    title="Alternar: Ambas curvas simultáneas (Verde=Top, Dorado=Promedio), solo Top Set, o solo Promedio"
                   >
                     {repsMode === 'both' ? 'Ambas' : repsMode === 'topSet' ? 'Top' : 'Prom'}
                   </button>
@@ -737,9 +877,9 @@ export default function ExerciseProgressionChart({
                 style={{
                   padding: '3px 7px',
                   borderRadius: '8px',
-                  border: show1RM ? '1.5px solid #06b6d4' : '1px solid #cbd5e1',
+                  border: show1RM ? `1.5px solid ${PROGRESSION_COLORS.est1RM}` : '1px solid #cbd5e1',
                   background: show1RM ? '#ecfeff' : '#f8fafc',
-                  color: show1RM ? '#0891b2' : '#94a3b8',
+                  color: show1RM ? PROGRESSION_COLORS.est1RM : '#94a3b8',
                   fontSize: '9.5px',
                   fontWeight: '900',
                   cursor: 'pointer',
@@ -749,8 +889,31 @@ export default function ExerciseProgressionChart({
                 }}
                 title="Curva de 1RM Estimado por fórmula de Epley"
               >
-                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: show1RM ? '#06b6d4' : '#94a3b8' }} />
+                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: show1RM ? PROGRESSION_COLORS.est1RM : '#94a3b8' }} />
                 1RM
+              </button>
+
+              {/* Toggle RPE */}
+              <button
+                type="button"
+                onClick={() => setShowRPE(prev => !prev)}
+                style={{
+                  padding: '3px 7px',
+                  borderRadius: '8px',
+                  border: showRPE ? `1.5px solid ${PROGRESSION_COLORS.rpe}` : '1px solid #cbd5e1',
+                  background: showRPE ? '#fef2f2' : '#f8fafc',
+                  color: showRPE ? PROGRESSION_COLORS.rpe : '#94a3b8',
+                  fontSize: '9.5px',
+                  fontWeight: '900',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '3px'
+                }}
+                title="Curva de Esfuerzo Percibido (RPE 6-10 / RIR)"
+              >
+                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: showRPE ? PROGRESSION_COLORS.rpe : '#94a3b8' }} />
+                🔥 RPE
               </button>
             </>
           )}
@@ -762,9 +925,9 @@ export default function ExerciseProgressionChart({
             style={{
               padding: '3px 7px',
               borderRadius: '8px',
-              border: showProjections ? '1.5px solid #8b5cf6' : '1px solid #cbd5e1',
-              background: showProjections ? '#f5f3ff' : '#f8fafc',
-              color: showProjections ? '#7c3aed' : '#94a3b8',
+              border: showProjections ? `1.5px solid ${PROGRESSION_COLORS.projection}` : '1px solid #cbd5e1',
+              background: showProjections ? '#fdf2f8' : '#f8fafc',
+              color: showProjections ? PROGRESSION_COLORS.projection : '#94a3b8',
               fontSize: '9.5px',
               fontWeight: '900',
               cursor: 'pointer',
@@ -774,7 +937,7 @@ export default function ExerciseProgressionChart({
             }}
             title="Mostrar u ocultar proyecciones científicas (próxima sesión, 2 sesiones, 1m, 3m y 6 meses)"
           >
-            <Sparkles size={11} color={showProjections ? '#7c3aed' : '#94a3b8'} />
+            <Sparkles size={11} color={showProjections ? PROGRESSION_COLORS.projection : '#94a3b8'} />
             Metas
           </button>
 
@@ -867,40 +1030,77 @@ export default function ExerciseProgressionChart({
             </span>
 
             {(weightMode === 'band' || weightMode === 'both') && (
-              <span style={{ display: 'flex', alignItems: 'center', gap: '5px', color: '#1e40af' }}>
-                <span style={{ width: '12px', height: '8px', background: 'rgba(59, 130, 246, 0.25)', border: '1px solid #3b82f6', borderRadius: '2px' }} />
-                <span>Banda Min-Max</span>
-                <span style={{ width: '10px', height: '2.5px', background: '#0284c7' }} /> Prom Ponderado
+              <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                <span style={{ width: '12px', height: '8px', background: 'rgba(29, 78, 216, 0.2)', border: `1.5px solid ${PROGRESSION_COLORS.peakWeight}`, borderRadius: '2px' }} />
+                <span style={{ color: PROGRESSION_COLORS.peakWeight, fontWeight: '800' }}>Banda Min-Max</span>
+                <span style={{ width: '10px', height: '2.5px', background: PROGRESSION_COLORS.avgWeight, borderRadius: '2px' }} />
+                <span style={{ color: PROGRESSION_COLORS.avgWeight, fontWeight: '800' }}>Prom Ponderado</span>
               </span>
             )}
             {weightMode === 'peak' && (
-              <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#1e40af' }}>
-                <span style={{ width: '12px', height: '2px', background: '#0066ff' }} /> Carga Pico
+              <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: PROGRESSION_COLORS.peakWeight, fontWeight: '800' }}>
+                <span style={{ width: '12px', height: '2.5px', background: PROGRESSION_COLORS.peakWeight, borderRadius: '2px' }} /> Carga Pico
               </span>
             )}
             {weightMode === 'avg' && (
-              <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#0284c7' }}>
-                <span style={{ width: '12px', height: '2px', background: '#38bdf8', borderTop: '1px dashed #0284c7' }} /> Promedio
+              <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: PROGRESSION_COLORS.avgWeight, fontWeight: '800' }}>
+                <span style={{ width: '12px', height: '2.5px', background: PROGRESSION_COLORS.avgWeight, borderRadius: '2px' }} /> Promedio Ponderado
               </span>
             )}
 
             {showReps && repsMode === 'both' && (
-              <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#047857' }}>
-                <span style={{ width: '12px', height: '2.5px', background: '#10b981' }} /> Reps Top
-                <span style={{ width: '12px', height: '2px', background: '#059669', borderTop: '1px dashed #059669' }} /> Prom
+              <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', color: PROGRESSION_COLORS.repsTop, fontWeight: '800' }}>
+                  <span style={{ width: '10px', height: '2.5px', background: PROGRESSION_COLORS.repsTop, borderRadius: '2px' }} /> Reps Top
+                </span>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', color: PROGRESSION_COLORS.repsAvg, fontWeight: '800' }}>
+                  <span style={{ width: '10px', height: '2.5px', background: PROGRESSION_COLORS.repsAvg, borderRadius: '2px' }} /> Reps Prom
+                </span>
+              </span>
+            )}
+            {showReps && repsMode === 'topSet' && (
+              <span style={{ display: 'flex', alignItems: 'center', gap: '3px', color: PROGRESSION_COLORS.repsTop, fontWeight: '800' }}>
+                <span style={{ width: '10px', height: '2.5px', background: PROGRESSION_COLORS.repsTop, borderRadius: '2px' }} /> Reps Top
+              </span>
+            )}
+            {showReps && repsMode === 'avg' && (
+              <span style={{ display: 'flex', alignItems: 'center', gap: '3px', color: PROGRESSION_COLORS.repsAvg, fontWeight: '800' }}>
+                <span style={{ width: '10px', height: '2.5px', background: PROGRESSION_COLORS.repsAvg, borderRadius: '2px' }} /> Reps Prom
+              </span>
+            )}
+
+            {show1RM && (
+              <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: PROGRESSION_COLORS.est1RM, fontWeight: '800' }}>
+                <span style={{ width: '12px', height: '2px', background: PROGRESSION_COLORS.est1RM, borderTop: `1px dashed ${PROGRESSION_COLORS.est1RM}` }} /> 1RM
+              </span>
+            )}
+
+            {showRPE && (
+              <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: PROGRESSION_COLORS.rpe, fontWeight: '800' }}>
+                <span style={{ width: '12px', height: '2.5px', background: PROGRESSION_COLORS.rpe, borderRadius: '2px' }} /> 🔥 RPE (6-10)
+              </span>
+            )}
+
+            {isFamilyView && (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: '#64748b', fontSize: '9px', background: '#f8fafc', padding: '1px 6px', borderRadius: '4px', border: '1px solid #e2e8f0' }}>
+                <span style={{ fontWeight: '800' }}>Estación:</span>
+                <span>■ Mancuerna</span>
+                <span>◆ Polea</span>
+                <span>▲ Smith</span>
+                <span>● Máquina</span>
               </span>
             )}
           </div>
         ) : (
-          <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#b45309' }}>
-            <span style={{ width: '10px', height: '10px', background: 'rgba(245, 158, 11, 0.25)', border: '1px solid #f59e0b', borderRadius: '3px' }} />
+          <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: PROGRESSION_COLORS.tonnage, fontWeight: '800' }}>
+            <span style={{ width: '10px', height: '10px', background: 'rgba(234, 88, 12, 0.25)', border: `1px solid ${PROGRESSION_COLORS.tonnage}`, borderRadius: '3px' }} />
             Tonelaje de Sesión = suma de (peso × reps) de series efectivas
           </span>
         )}
 
         {showProjections && (
-          <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#7c3aed' }}>
-            <span style={{ width: '10px', height: '10px', background: 'rgba(139, 92, 246, 0.15)', border: '1px dashed #8b5cf6', borderRadius: '3px' }} />
+          <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: PROGRESSION_COLORS.projection, fontWeight: '800' }}>
+            <span style={{ width: '10px', height: '10px', background: 'rgba(219, 39, 119, 0.15)', border: `1px dashed ${PROGRESSION_COLORS.projection}`, borderRadius: '3px' }} />
             🔮 Proyecciones (+1m a +6m)
           </span>
         )}
@@ -911,7 +1111,7 @@ export default function ExerciseProgressionChart({
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart
             data={chartData}
-            margin={{ top: 10, right: 8, left: -16, bottom: 0 }}
+            margin={{ top: 10, right: showRPE ? 36 : 8, left: -16, bottom: 0 }}
             onMouseMove={(e) => {
               if (e && e.activePayload && e.activePayload.length > 0) {
                 setHoveredPoint(e.activePayload[0].payload);
@@ -928,38 +1128,38 @@ export default function ExerciseProgressionChart({
             {/* GRADIENTES TRANSLÚCIDOS */}
             <defs>
               <linearGradient id="gradientWeight" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#0066ff" stopOpacity={0.35} />
-                <stop offset="95%" stopColor="#0066ff" stopOpacity={0.02} />
+                <stop offset="5%" stopColor={PROGRESSION_COLORS.peakWeight} stopOpacity={0.35} />
+                <stop offset="95%" stopColor={PROGRESSION_COLORS.peakWeight} stopOpacity={0.02} />
               </linearGradient>
 
               <linearGradient id="gradientWeightRange" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#0066ff" stopOpacity={0.25} />
-                <stop offset="95%" stopColor="#38bdf8" stopOpacity={0.08} />
+                <stop offset="5%" stopColor={PROGRESSION_COLORS.rangeFillStart} stopOpacity={0.25} />
+                <stop offset="95%" stopColor={PROGRESSION_COLORS.rangeFillEnd} stopOpacity={0.08} />
               </linearGradient>
 
               <linearGradient id="gradientAvgWeight" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#38bdf8" stopOpacity={0.25} />
-                <stop offset="95%" stopColor="#38bdf8" stopOpacity={0.02} />
+                <stop offset="5%" stopColor={PROGRESSION_COLORS.avgWeight} stopOpacity={0.25} />
+                <stop offset="95%" stopColor={PROGRESSION_COLORS.avgWeight} stopOpacity={0.02} />
               </linearGradient>
 
               <linearGradient id="gradientTonnage" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.35} />
-                <stop offset="95%" stopColor="#f59e0b" stopOpacity={0.02} />
+                <stop offset="5%" stopColor={PROGRESSION_COLORS.tonnage} stopOpacity={0.35} />
+                <stop offset="95%" stopColor={PROGRESSION_COLORS.tonnage} stopOpacity={0.02} />
               </linearGradient>
 
               <linearGradient id="gradientReps" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#10b981" stopOpacity={0.30} />
-                <stop offset="95%" stopColor="#10b981" stopOpacity={0.02} />
+                <stop offset="5%" stopColor={PROGRESSION_COLORS.repsTop} stopOpacity={0.30} />
+                <stop offset="95%" stopColor={PROGRESSION_COLORS.repsTop} stopOpacity={0.02} />
               </linearGradient>
 
               <linearGradient id="gradient1RM" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.30} />
-                <stop offset="95%" stopColor="#06b6d4" stopOpacity={0.02} />
+                <stop offset="5%" stopColor={PROGRESSION_COLORS.est1RM} stopOpacity={0.30} />
+                <stop offset="95%" stopColor={PROGRESSION_COLORS.est1RM} stopOpacity={0.02} />
               </linearGradient>
 
               <linearGradient id="gradientProj" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.30} />
-                <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0.02} />
+                <stop offset="5%" stopColor={PROGRESSION_COLORS.projection} stopOpacity={0.30} />
+                <stop offset="95%" stopColor={PROGRESSION_COLORS.projection} stopOpacity={0.02} />
               </linearGradient>
             </defs>
 
@@ -980,8 +1180,8 @@ export default function ExerciseProgressionChart({
                 <YAxis
                   yAxisId="weight"
                   domain={weightYDomain}
-                  tick={{ fontSize: 10, fontWeight: '700', fill: '#0066ff' }}
-                  axisLine={{ stroke: '#93c5fd' }}
+                  tick={{ fontSize: 10, fontWeight: '800', fill: PROGRESSION_COLORS.peakWeight }}
+                  axisLine={{ stroke: PROGRESSION_COLORS.peakWeight }}
                   tickLine={false}
                 />
 
@@ -990,10 +1190,24 @@ export default function ExerciseProgressionChart({
                   yAxisId="reps"
                   orientation="right"
                   domain={[0, Math.max(20, targetRange.max + 4)]}
-                  tick={{ fontSize: 10, fontWeight: '700', fill: '#10b981' }}
-                  axisLine={{ stroke: '#86efac' }}
+                  tick={{ fontSize: 10, fontWeight: '800', fill: PROGRESSION_COLORS.repsTop }}
+                  axisLine={{ stroke: PROGRESSION_COLORS.repsTop }}
                   tickLine={false}
                 />
+
+                {/* Eje Y Derecho Secundario: RPE (escala 5 a 10) */}
+                {showRPE && (
+                  <YAxis
+                    yAxisId="rpe"
+                    orientation="right"
+                    domain={[5, 10]}
+                    ticks={[6, 7, 8, 9, 10]}
+                    tick={{ fontSize: 9.5, fontWeight: '800', fill: PROGRESSION_COLORS.rpe }}
+                    axisLine={{ stroke: PROGRESSION_COLORS.rpe }}
+                    tickLine={false}
+                    tickFormatter={(v) => `R${v}`}
+                  />
+                )}
 
                 {/* 🟩 BANDA VERDE SOMBREADA DE HIPERTROFIA DINÁMICA POR EJERCICIO */}
                 {showReps && (
@@ -1001,9 +1215,9 @@ export default function ExerciseProgressionChart({
                     yAxisId="reps"
                     y1={targetRange.min}
                     y2={targetRange.max}
-                    fill="#10b981"
-                    fillOpacity={0.14}
-                    stroke="#10b981"
+                    fill={PROGRESSION_COLORS.repsBand}
+                    fillOpacity={0.12}
+                    stroke={PROGRESSION_COLORS.repsBand}
                     strokeDasharray="3 3"
                   />
                 )}
@@ -1013,8 +1227,8 @@ export default function ExerciseProgressionChart({
               <YAxis
                 yAxisId="tonnage"
                 domain={tonnageYDomain}
-                tick={{ fontSize: 10, fontWeight: '700', fill: '#f59e0b' }}
-                axisLine={{ stroke: '#fcd34d' }}
+                tick={{ fontSize: 10, fontWeight: '800', fill: PROGRESSION_COLORS.tonnage }}
+                axisLine={{ stroke: PROGRESSION_COLORS.tonnage }}
                 tickLine={false}
                 tickFormatter={(val) => val >= 1000 ? `${(val / 1000).toFixed(1)}k` : val}
               />
@@ -1026,16 +1240,16 @@ export default function ExerciseProgressionChart({
                 yAxisId={metricMode === 'weights' ? 'weight' : 'tonnage'}
                 x1={transitionDate}
                 x2={lastProjectedDate}
-                fill="#8b5cf6"
+                fill={PROGRESSION_COLORS.projection}
                 fillOpacity={0.07}
-                stroke="#8b5cf6"
+                stroke={PROGRESSION_COLORS.projection}
                 strokeDasharray="4 4"
               />
             )}
 
             {/* Guía vertical de cursor sin popup flotante molesto que tape la gráfica */}
             <Tooltip
-              cursor={{ stroke: '#3b82f6', strokeWidth: 1.5, strokeDasharray: '3 3' }}
+              cursor={{ stroke: PROGRESSION_COLORS.peakWeight, strokeWidth: 1.5, strokeDasharray: '3 3' }}
               content={<CustomTooltipReceiver />}
             />
 
@@ -1048,11 +1262,11 @@ export default function ExerciseProgressionChart({
                   type="monotone"
                   dataKey="tonnage"
                   name="Tonelaje Efectivo"
-                  stroke="#f59e0b"
+                  stroke={PROGRESSION_COLORS.tonnage}
                   strokeWidth={2.5}
                   fill="url(#gradientTonnage)"
-                  dot={{ r: 3.5, fill: '#f59e0b', stroke: '#ffffff', strokeWidth: 1.5 }}
-                  activeDot={{ r: 5, fill: '#f59e0b' }}
+                  dot={{ r: 3.5, fill: PROGRESSION_COLORS.tonnage, stroke: '#ffffff', strokeWidth: 1.5 }}
+                  activeDot={{ r: 5, fill: PROGRESSION_COLORS.tonnage }}
                   connectNulls={false}
                 />
                 {showProjections && (
@@ -1061,12 +1275,12 @@ export default function ExerciseProgressionChart({
                     type="monotone"
                     dataKey="projectedTonnage"
                     name="Meta de Tonelaje"
-                    stroke="#8b5cf6"
+                    stroke={PROGRESSION_COLORS.projection}
                     strokeWidth={2}
                     strokeDasharray="5 5"
                     fill="url(#gradientProj)"
-                    dot={{ r: 3.5, fill: '#8b5cf6', stroke: '#ffffff', strokeWidth: 1.5 }}
-                    activeDot={{ r: 5, fill: '#8b5cf6' }}
+                    dot={{ r: 3.5, fill: PROGRESSION_COLORS.projection, stroke: '#ffffff', strokeWidth: 1.5 }}
+                    activeDot={{ r: 5, fill: PROGRESSION_COLORS.projection }}
                     connectNulls
                   />
                 )}
@@ -1096,11 +1310,11 @@ export default function ExerciseProgressionChart({
                     type="monotone"
                     dataKey="weight"
                     name="Carga Pico (Top Set)"
-                    stroke="#0066ff"
+                    stroke={PROGRESSION_COLORS.peakWeight}
                     strokeWidth={2.5}
                     fill={weightMode === 'peak' ? 'url(#gradientWeight)' : 'none'}
-                    dot={{ r: 3.5, fill: '#0066ff', stroke: '#ffffff', strokeWidth: 1.5 }}
-                    activeDot={{ r: 5, fill: '#0066ff' }}
+                    dot={(dotProps) => <StationDot {...dotProps} baseColor={PROGRESSION_COLORS.peakWeight} isFamilyView={isFamilyView} />}
+                    activeDot={{ r: 5, fill: PROGRESSION_COLORS.peakWeight }}
                     connectNulls={false}
                   />
                 )}
@@ -1112,11 +1326,11 @@ export default function ExerciseProgressionChart({
                     type="monotone"
                     dataKey="weightedAvgWeight"
                     name="Promedio Ponderado Efectivo"
-                    stroke="#0284c7"
+                    stroke={PROGRESSION_COLORS.avgWeight}
                     strokeWidth={2.5}
                     strokeDasharray={weightMode === 'band' ? 'none' : '4 3'}
-                    dot={{ r: 3, fill: '#38bdf8', stroke: '#0284c7', strokeWidth: 1.5 }}
-                    activeDot={{ r: 5, fill: '#0284c7' }}
+                    dot={(dotProps) => <StationDot {...dotProps} baseColor={PROGRESSION_COLORS.avgWeight} isFamilyView={isFamilyView} />}
+                    activeDot={{ r: 5, fill: PROGRESSION_COLORS.avgWeight }}
                     connectNulls={false}
                   />
                 )}
@@ -1128,11 +1342,11 @@ export default function ExerciseProgressionChart({
                     type="monotone"
                     dataKey="minWeight"
                     name="Carga Base / Back-off"
-                    stroke="#93c5fd"
-                    strokeWidth={1.5}
-                    strokeDasharray="2 2"
-                    dot={{ r: 2.5, fill: '#bfdbfe', stroke: '#60a5fa', strokeWidth: 1 }}
-                    activeDot={{ r: 4, fill: '#93c5fd' }}
+                    stroke={PROGRESSION_COLORS.minWeight}
+                    strokeWidth={1.8}
+                    strokeDasharray="3 3"
+                    dot={(dotProps) => <StationDot {...dotProps} baseColor={PROGRESSION_COLORS.minWeight} isFamilyView={isFamilyView} />}
+                    activeDot={{ r: 4, fill: PROGRESSION_COLORS.minWeight }}
                     connectNulls={false}
                   />
                 )}
@@ -1144,11 +1358,11 @@ export default function ExerciseProgressionChart({
                     type="monotone"
                     dataKey="reps"
                     name="Reps (Top Set)"
-                    stroke="#10b981"
+                    stroke={PROGRESSION_COLORS.repsTop}
                     strokeWidth={2.5}
                     fill="url(#gradientReps)"
-                    dot={{ r: 3.5, fill: '#10b981', stroke: '#ffffff', strokeWidth: 1.5 }}
-                    activeDot={{ r: 5, fill: '#10b981' }}
+                    dot={{ r: 3.5, fill: PROGRESSION_COLORS.repsTop, stroke: '#ffffff', strokeWidth: 1.5 }}
+                    activeDot={{ r: 5, fill: PROGRESSION_COLORS.repsTop }}
                     connectNulls={false}
                   />
                 )}
@@ -1159,11 +1373,11 @@ export default function ExerciseProgressionChart({
                     type="monotone"
                     dataKey="avgReps"
                     name="Reps (Promedio)"
-                    stroke="#059669"
-                    strokeWidth={2}
+                    stroke={PROGRESSION_COLORS.repsAvg}
+                    strokeWidth={2.2}
                     strokeDasharray={repsMode === 'both' ? '4 3' : 'none'}
-                    dot={{ r: 3, fill: '#34d399', stroke: '#059669', strokeWidth: 1 }}
-                    activeDot={{ r: 5, fill: '#059669' }}
+                    dot={{ r: 3.5, fill: PROGRESSION_COLORS.repsAvg, stroke: '#ffffff', strokeWidth: 1.5 }}
+                    activeDot={{ r: 5, fill: PROGRESSION_COLORS.repsAvg }}
                     connectNulls={false}
                   />
                 )}
@@ -1175,12 +1389,27 @@ export default function ExerciseProgressionChart({
                     type="monotone"
                     dataKey="est1RM"
                     name="1RM Estimado"
-                    stroke="#06b6d4"
+                    stroke={PROGRESSION_COLORS.est1RM}
                     strokeWidth={2}
                     strokeDasharray="3 3"
-                    dot={{ r: 2.5, fill: '#06b6d4' }}
+                    dot={{ r: 2.5, fill: PROGRESSION_COLORS.est1RM }}
                     activeDot={{ r: 4 }}
                     connectNulls={false}
+                  />
+                )}
+
+                {/* 🔥 CURVA DE RPE (ESFUERZO PERCIBIDO / RIR) */}
+                {showRPE && (
+                  <Line
+                    yAxisId="rpe"
+                    type="monotone"
+                    dataKey="rpe"
+                    name="RPE Promedio"
+                    stroke={PROGRESSION_COLORS.rpe}
+                    strokeWidth={2.5}
+                    dot={(dotProps) => <StationDot {...dotProps} baseColor={PROGRESSION_COLORS.rpe} isFamilyView={isFamilyView} />}
+                    activeDot={{ r: 5, fill: PROGRESSION_COLORS.rpe }}
+                    connectNulls
                   />
                 )}
 
@@ -1191,12 +1420,12 @@ export default function ExerciseProgressionChart({
                     type="monotone"
                     dataKey={weightMode === 'avg' ? 'projectedAvgWeight' : 'projectedWeight'}
                     name="Meta Proyectada"
-                    stroke="#8b5cf6"
+                    stroke={PROGRESSION_COLORS.projection}
                     strokeWidth={2}
                     strokeDasharray="5 5"
                     fill="url(#gradientProj)"
-                    dot={{ r: 3.5, fill: '#8b5cf6', stroke: '#ffffff', strokeWidth: 1.5 }}
-                    activeDot={{ r: 5, fill: '#8b5cf6' }}
+                    dot={{ r: 3.5, fill: PROGRESSION_COLORS.projection, stroke: '#ffffff', strokeWidth: 1.5 }}
+                    activeDot={{ r: 5, fill: PROGRESSION_COLORS.projection }}
                     connectNulls
                   />
                 )}
@@ -1240,6 +1469,19 @@ export default function ExerciseProgressionChart({
                   borderRadius: '6px'
                 }}>
                   🏷️ {activeData.sourceName}
+                </span>
+              )}
+              {!isProj && activeData.stationLabel && (
+                <span style={{
+                  fontSize: '9.5px',
+                  color: '#67e8f9',
+                  fontWeight: '800',
+                  background: 'rgba(6, 182, 212, 0.15)',
+                  border: '1px solid rgba(6, 182, 212, 0.3)',
+                  padding: '1px 6px',
+                  borderRadius: '6px'
+                }}>
+                  {activeData.stationIcon} {activeData.stationLabel}
                 </span>
               )}
             </div>
@@ -1286,8 +1528,8 @@ export default function ExerciseProgressionChart({
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '8px', marginBottom: '8px' }}>
             {/* 1. Carga Pico */}
             <div style={{ background: 'rgba(255,255,255,0.05)', padding: '7px 9px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.08)' }}>
-              <span style={{ fontSize: '9px', color: '#94a3b8', display: 'block' }}>🔵 Carga Pico (Top Set)</span>
-              <strong style={{ fontSize: '15px', color: isProj ? '#c084fc' : '#60a5fa' }}>
+              <span style={{ fontSize: '9px', color: '#93c5fd', display: 'block', fontWeight: '800' }}>🔵 Carga Pico (Top Set)</span>
+              <strong style={{ fontSize: '15px', color: isProj ? '#f472b6' : '#60a5fa' }}>
                 {(isProj ? activeData.projectedWeight : activeData.weight) || '--'} <span style={{ fontSize: '10px', color: '#94a3b8' }}>lbs</span>
               </strong>
               {!isProj && activeData.weightSpread > 0 && (
@@ -1299,26 +1541,26 @@ export default function ExerciseProgressionChart({
 
             {/* 2. Carga Promedio Ponderada Efectiva */}
             <div style={{ background: 'rgba(255,255,255,0.05)', padding: '7px 9px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.08)' }}>
-              <span style={{ fontSize: '9px', color: '#94a3b8', display: 'block' }}>⚖️ Promedio Ponderado</span>
-              <strong style={{ fontSize: '15px', color: isProj ? '#a855f7' : '#38bdf8' }}>
+              <span style={{ fontSize: '9px', color: '#d8b4fe', display: 'block', fontWeight: '800' }}>🟣 Promedio Ponderado</span>
+              <strong style={{ fontSize: '15px', color: isProj ? '#f472b6' : '#c084fc' }}>
                 {(isProj ? activeData.projectedAvgWeight : (activeData.weightedAvgWeight || activeData.avgWeight)) || '--'} <span style={{ fontSize: '10px', color: '#94a3b8' }}>lbs</span>
               </strong>
-              {!isProj && activeData.rpeStart && (
-                <span style={{ fontSize: '8.5px', color: '#cbd5e1', display: 'block', marginTop: '2px' }}>
-                  Esfuerzo: RPE {activeData.rpeStart}{activeData.rpeEnd && activeData.rpeEnd !== activeData.rpeStart ? ` ➔ ${activeData.rpeEnd}` : ''} {activeData.deltaRPE ? `(Δ ${activeData.deltaRPE > 0 ? `+${activeData.deltaRPE}` : activeData.deltaRPE})` : ''}
+              {!isProj && (activeData.rpe || activeData.rpeStart) && (
+                <span style={{ fontSize: '8.5px', color: '#f87171', display: 'block', marginTop: '2px', fontWeight: '800' }}>
+                  🔥 RPE {activeData.rpe || activeData.rpeStart} {activeData.rpe ? `• RIR ${Math.max(0, Math.round(10 - activeData.rpe))}` : ''}{activeData.rpeEnd && activeData.rpeEnd !== activeData.rpeStart ? ` (➔ ${activeData.rpeEnd})` : ''} {activeData.deltaRPE ? `(Δ ${activeData.deltaRPE > 0 ? `+${activeData.deltaRPE}` : activeData.deltaRPE})` : ''}
                 </span>
               )}
             </div>
 
-            {/* 3. Repeticiones (Top Set y Promedio simultáneas) */}
+            {/* 3. Repeticiones (Top Set y Promedio simultáneas con colores diferenciados) */}
             <div style={{ background: 'rgba(255,255,255,0.05)', padding: '7px 9px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.08)' }}>
-              <span style={{ fontSize: '9px', color: '#94a3b8', display: 'block' }}>⚡ Reps (Top • Prom)</span>
+              <span style={{ fontSize: '9px', color: '#86efac', display: 'block', fontWeight: '800' }}>⚡ Reps (Top • Prom)</span>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
                 <strong style={{ fontSize: '15px', color: '#4ade80' }}>
                   {(isProj ? activeData.projectedReps : activeData.reps) || '--'}
                 </strong>
                 {!isProj && activeData.avgReps > 0 && activeData.avgReps !== activeData.reps && (
-                  <span style={{ fontSize: '11px', color: '#a7f3d0' }}>
+                  <span style={{ fontSize: '11px', color: '#fbbf24', fontWeight: '800' }}>
                     • Prom: {activeData.avgReps}
                   </span>
                 )}
@@ -1340,13 +1582,13 @@ export default function ExerciseProgressionChart({
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
                   <span style={{ fontSize: '9px', color: '#94a3b8', display: 'block' }}>📦 Tonelaje</span>
-                  <strong style={{ fontSize: '12px', color: '#fbbf24' }}>
+                  <strong style={{ fontSize: '12px', color: '#fb923c' }}>
                     {(isProj ? activeData.projectedTonnage : activeData.tonnage)?.toLocaleString() || '--'}#
                   </strong>
                 </div>
                 <div style={{ textAlign: 'right' }}>
                   <span style={{ fontSize: '9px', color: '#94a3b8', display: 'block' }}>🏆 1RM Teórico</span>
-                  <strong style={{ fontSize: '12px', color: '#06b6d4' }}>
+                  <strong style={{ fontSize: '12px', color: '#22d3ee' }}>
                     {(isProj ? activeData.projected1RM : activeData.est1RM) || '--'}#
                   </strong>
                 </div>
@@ -1379,11 +1621,11 @@ export default function ExerciseProgressionChart({
                         padding: '2px 6px',
                         borderRadius: '5px',
                         background: isTop
-                          ? 'rgba(0, 102, 255, 0.35)'
+                          ? 'rgba(29, 78, 216, 0.4)'
                           : (isWarm ? 'rgba(245, 158, 11, 0.2)' : 'rgba(255,255,255,0.08)'),
                         color: isTop ? '#93c5fd' : (isWarm ? '#fcd34d' : '#cbd5e1'),
                         border: isTop
-                          ? '1.5px solid #3b82f6'
+                          ? `1.5px solid ${PROGRESSION_COLORS.peakWeight}`
                           : (isWarm ? '1px dashed #f59e0b' : '1px solid transparent'),
                         fontWeight: isTop ? '900' : '600'
                       }}
@@ -1398,7 +1640,7 @@ export default function ExerciseProgressionChart({
           )}
 
           {isProj && activeData.projectionNote && (
-            <div style={{ fontSize: '10px', color: '#c084fc', fontStyle: 'italic', borderTop: '1px dashed rgba(255,255,255,0.1)', paddingTop: '4px' }}>
+            <div style={{ fontSize: '10px', color: '#f472b6', fontStyle: 'italic', borderTop: '1px dashed rgba(255,255,255,0.1)', paddingTop: '4px' }}>
               💡 Meta: {activeData.projectionNote}
             </div>
           )}
@@ -1425,11 +1667,11 @@ export default function ExerciseProgressionChart({
       }}>
         <div>
           <span>
-            Último Pico: <strong style={{ color: '#0066ff' }}>{currentWeight} lbs</strong> (Récord: <strong style={{ color: '#15803d' }}>{peakWeight}#</strong>)
+            Último Pico: <strong style={{ color: PROGRESSION_COLORS.peakWeight }}>{currentWeight} lbs</strong> (Récord: <strong style={{ color: '#15803d' }}>{peakWeight}#</strong>)
           </span>
           {currentAvgWeight > 0 && (
             <span style={{ marginLeft: '6px', borderLeft: '1px solid #cbd5e1', paddingLeft: '6px' }}>
-              Último Prom: <strong style={{ color: '#0284c7' }}>{currentAvgWeight} lbs</strong>
+              Último Prom: <strong style={{ color: PROGRESSION_COLORS.avgWeight }}>{currentAvgWeight} lbs</strong>
             </span>
           )}
         </div>

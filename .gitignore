@@ -26,3 +26,4 @@ RESPALDOS PRUEBA JSON/
 base de datos pruebas/
 *.backup.json
 *Backup*.json
+scratch/

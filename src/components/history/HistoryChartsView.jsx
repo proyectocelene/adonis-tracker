@@ -228,8 +228,8 @@ export default function HistoryChartsView({
                       <YAxis domain={muscleYDomain} tick={{ fontSize: 11, fontWeight: '700', fill: '#64748b' }} />
                       <Tooltip contentStyle={{ borderRadius: '14px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
                       <Legend />
-                      <Line type="monotone" dataKey="maxWeight" name="Carga Máxima" stroke="#0066ff" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
-                      <Line type="monotone" dataKey="est1RM" name="1RM Estimado" stroke="#10b981" strokeWidth={2} strokeDasharray="4 4" dot={{ r: 3 }} />
+                      <Line type="monotone" dataKey="maxWeight" name="Carga Máxima" stroke="#1d4ed8" strokeWidth={3} dot={{ r: 4, fill: '#1d4ed8' }} activeDot={{ r: 6, fill: '#1d4ed8' }} />
+                      <Line type="monotone" dataKey="est1RM" name="1RM Estimado" stroke="#0891b2" strokeWidth={2.5} strokeDasharray="4 4" dot={{ r: 3, fill: '#0891b2' }} />
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
