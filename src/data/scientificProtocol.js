@@ -401,14 +401,17 @@ export const scientificProtocol = [
       {
         "id": "d1_cardio",
         "unifiedCode": "[CARD-ROW_HIIT_NEAT_01]",
-        "name": "Cardio Matutino en Máquina de Remo (≥ 6h antes de pesas)",
-        "muscleGroup": "Cardiovascular & NEAT",
+        "name": "Cardio Matutino: Remo (Cardio vs. NEAT)",
+        "muscleGroup": "Cardio",
+        "isCardio": true,
+        "machineType": "rower",
+        "machine": "Máquina de Remo (Ergómetro)",
         "sets": 1,
         "reps": "35-40 min",
         "restTime": "0 s",
         "defaultUnit": "min",
-        "biomechanics": "Protocolo matutino en máquina de remo separado por al menos 6 horas del entrenamiento de pesas vespertino para anular el efecto de interferencia (AMPK vs mTOR) y proteger tus 55.8 kg de músculo:\n• Opción A (Híbrida: HIIT + NEAT, máx 1-2 veces/sem): 10-15m con 4-6 sprints de 20 segundos a máxima velocidad (RPE 16-18/20) x 40-60s de remo suave + 20-25m LISS suave.\n• Opción B (NEAT puro LISS, 2-3 veces/sem): 30-45m a intensidad baja continua (RPE 12-13/20, Talk Test fluido conversacional sin jadear) para elevar el gasto calórico sin fatiga muscular residual.",
-        "warmup": "🔥 3 minutos de remo progresivo suave antes de iniciar.",
+        "biomechanics": "Para anular el efecto de interferencia, estas sesiones deben realizarse por la mañana, separadas por al menos 6 horas de tu entrenamiento de fuerza.\n\n• Opción A: Sesión Híbrida (\"Cardio de verdad\" + NEAT) — Máximo 1 a 2 veces por semana\n- Duración Total: 35-40 minutos.\n- Fase 1 (Cardio HIIT / Vigoroso): 10-15 minutos. Realiza de 4 a 6 sprints de 20 segundos a máxima velocidad, seguidos de 40 a 60 segundos de remo muy suave para recuperar. El nivel de esfuerzo percibido (RPE) en el sprint debe ser de 16-18 sobre 20.\n- Fase 2 (NEAT / LISS): 20-25 minutos continuos a intensidad muy baja. Funciona como enfriamiento activo y suma gasto calórico sin añadir fatiga metabólica.\n\n• Opción B: Sesión Pura de NEAT (LISS) — 2 a 3 veces por semana\n- Duración Total: 30-45 minutos.\n- Intensidad (Talk Test): Nivel de esfuerzo (RPE) de 12 a 13 sobre 20. Debes poder mantener una conversación fluida o respirar cómodamente por la nariz sin jadear.\n- Objetivo: Simular los pasos y la actividad que no realizas por tu trabajo sedentario. No debes terminar exhausto ni con los músculos ardiendo.",
+        "warmup": "🔥 3 minutos de remo progresivo muy suave antes de iniciar.",
         "searchQuery": "rowing machine hiit neat morning protocol",
         "equivalents": [
           {
@@ -717,14 +720,17 @@ export const scientificProtocol = [
       {
         "id": "d2_cardio",
         "unifiedCode": "[CARD-ROW_HIIT_NEAT_01]",
-        "name": "Cardio Matutino en Máquina de Remo (≥ 6h antes de pesas)",
-        "muscleGroup": "Cardiovascular & NEAT",
+        "name": "Cardio Matutino: Remo (Cardio vs. NEAT)",
+        "muscleGroup": "Cardio",
+        "isCardio": true,
+        "machineType": "rower",
+        "machine": "Máquina de Remo (Ergómetro)",
         "sets": 1,
         "reps": "35-40 min",
         "restTime": "0 s",
         "defaultUnit": "min",
-        "biomechanics": "Protocolo matutino en máquina de remo separado por al menos 6 horas del entrenamiento de pesas vespertino para anular el efecto de interferencia (AMPK vs mTOR) y proteger tus 55.8 kg de músculo:\n• Opción A (Híbrida: HIIT + NEAT, máx 1-2 veces/sem): 10-15m con 4-6 sprints de 20 segundos a máxima velocidad (RPE 16-18/20) x 40-60s de remo suave + 20-25m LISS suave.\n• Opción B (NEAT puro LISS, 2-3 veces/sem): 30-45m a intensidad baja continua (RPE 12-13/20, Talk Test fluido conversacional sin jadear) para elevar el gasto calórico sin fatiga muscular residual.",
-        "warmup": "🔥 3 minutos de remo progresivo suave antes de iniciar.",
+        "biomechanics": "Para anular el efecto de interferencia, estas sesiones deben realizarse por la mañana, separadas por al menos 6 horas de tu entrenamiento de fuerza.\n\n• Opción A: Sesión Híbrida (\"Cardio de verdad\" + NEAT) — Máximo 1 a 2 veces por semana\n- Duración Total: 35-40 minutos.\n- Fase 1 (Cardio HIIT / Vigoroso): 10-15 minutos. Realiza de 4 a 6 sprints de 20 segundos a máxima velocidad, seguidos de 40 a 60 segundos de remo muy suave para recuperar. El nivel de esfuerzo percibido (RPE) en el sprint debe ser de 16-18 sobre 20.\n- Fase 2 (NEAT / LISS): 20-25 minutos continuos a intensidad muy baja. Funciona como enfriamiento activo y suma gasto calórico sin añadir fatiga metabólica.\n\n• Opción B: Sesión Pura de NEAT (LISS) — 2 a 3 veces por semana\n- Duración Total: 30-45 minutos.\n- Intensidad (Talk Test): Nivel de esfuerzo (RPE) de 12 a 13 sobre 20. Debes poder mantener una conversación fluida o respirar cómodamente por la nariz sin jadear.\n- Objetivo: Simular los pasos y la actividad que no realizas por tu trabajo sedentario. No debes terminar exhausto ni con los músculos ardiendo.",
+        "warmup": "🔥 3 minutos de remo progresivo muy suave antes de iniciar.",
         "searchQuery": "rowing machine hiit neat morning protocol",
         "equivalents": [
           {
@@ -1072,14 +1078,17 @@ export const scientificProtocol = [
       {
         "id": "d3_cardio",
         "unifiedCode": "[CARD-ROW_HIIT_NEAT_01]",
-        "name": "Cardio Matutino en Máquina de Remo (≥ 6h antes de pesas)",
-        "muscleGroup": "Cardiovascular & NEAT",
+        "name": "Cardio Matutino: Remo (Cardio vs. NEAT)",
+        "muscleGroup": "Cardio",
+        "isCardio": true,
+        "machineType": "rower",
+        "machine": "Máquina de Remo (Ergómetro)",
         "sets": 1,
         "reps": "35-40 min",
         "restTime": "0 s",
         "defaultUnit": "min",
-        "biomechanics": "Protocolo matutino en máquina de remo separado por al menos 6 horas del entrenamiento de pesas vespertino para anular el efecto de interferencia (AMPK vs mTOR) y proteger tus 55.8 kg de músculo:\n• Opción A (Híbrida: HIIT + NEAT, máx 1-2 veces/sem): 10-15m con 4-6 sprints de 20 segundos a máxima velocidad (RPE 16-18/20) x 40-60s de remo suave + 20-25m LISS suave.\n• Opción B (NEAT puro LISS, 2-3 veces/sem): 30-45m a intensidad baja continua (RPE 12-13/20, Talk Test fluido conversacional sin jadear) para elevar el gasto calórico sin fatiga muscular residual.",
-        "warmup": "🔥 3 minutos de remo progresivo suave antes de iniciar.",
+        "biomechanics": "Para anular el efecto de interferencia, estas sesiones deben realizarse por la mañana, separadas por al menos 6 horas de tu entrenamiento de fuerza.\n\n• Opción A: Sesión Híbrida (\"Cardio de verdad\" + NEAT) — Máximo 1 a 2 veces por semana\n- Duración Total: 35-40 minutos.\n- Fase 1 (Cardio HIIT / Vigoroso): 10-15 minutos. Realiza de 4 a 6 sprints de 20 segundos a máxima velocidad, seguidos de 40 a 60 segundos de remo muy suave para recuperar. El nivel de esfuerzo percibido (RPE) en el sprint debe ser de 16-18 sobre 20.\n- Fase 2 (NEAT / LISS): 20-25 minutos continuos a intensidad muy baja. Funciona como enfriamiento activo y suma gasto calórico sin añadir fatiga metabólica.\n\n• Opción B: Sesión Pura de NEAT (LISS) — 2 a 3 veces por semana\n- Duración Total: 30-45 minutos.\n- Intensidad (Talk Test): Nivel de esfuerzo (RPE) de 12 a 13 sobre 20. Debes poder mantener una conversación fluida o respirar cómodamente por la nariz sin jadear.\n- Objetivo: Simular los pasos y la actividad que no realizas por tu trabajo sedentario. No debes terminar exhausto ni con los músculos ardiendo.",
+        "warmup": "🔥 3 minutos de remo progresivo muy suave antes de iniciar.",
         "searchQuery": "rowing machine hiit neat morning protocol",
         "equivalents": [
           {
@@ -1336,21 +1345,21 @@ export const scientificProtocol = [
       {
         "id": "d4_e4",
         "unifiedCode": "[HOMB-LAT_RAISE-CABLE_01]",
-        "name": "Elevaciones Laterales en Polea Baja (Tras Espalda)",
-        "desc": "Aislamiento guiado con apoyo de codos.",
-        "ratio": 1.2,
-        "biomechanics": "Polea a la altura de la rodilla o muñeca. Cable pasando por detrás del torso para tensión continua desde el grado cero (tensión en elongación). Empuja desde el codo hacia afuera.",
-        "mindMuscle": {
-          "title": "Tríceps en Máquina de Aislamiento",
-          "internalCue": "Aprieta la cara posterior del brazo contra las almohadillas al bloquear los codos.",
-          "externalCue": "Empuja las palancas hacia el suelo con fuerza constante.",
-          "eccentricCue": "Permite que los mangos suban en 3 segundos sin despegar los codos."
-        },
-        "searchQuery": "triceps extension machine seated proper form",
-        "warmup": "🔥 No ocupa.",
+        "name": "Elevaciones Laterales en Máquina o Polea",
+        "muscleGroup": "Hombro (Deltoides Lateral 3D)",
         "sets": 4,
         "reps": "12-15",
-        "restTime": "90-120 s"
+        "restTime": "90-120 s",
+        "defaultUnit": "lbs",
+        "biomechanics": "Tensión constante desde el fondo. Torso inclinado 10° al frente; empuja desde los codos hacia las paredes laterales, no hacia arriba con las manos. En polea baja pasando por detrás del cuerpo para tensión continua desde el grado cero.",
+        "mindMuscle": {
+          "title": "Deltoides Lateral en Tensión Continua",
+          "internalCue": "Siente cómo el deltoides lateral se activa desde el grado cero.",
+          "externalCue": "Lanza los codos hacia las paredes laterales como si quisieras tocar los extremos del gimnasio.",
+          "eccentricCue": "Desciende en 3 segundos sintiendo la tensión continua sin dejar caer el peso."
+        },
+        "searchQuery": "cable lateral raise behind back proper form",
+        "warmup": "🔥 No ocupa."
       },
       {
         "id": "d4_e5",
@@ -1446,14 +1455,17 @@ export const scientificProtocol = [
       {
         "id": "d4_cardio",
         "unifiedCode": "[CARD-ROW_HIIT_NEAT_01]",
-        "name": "Cardio Matutino en Máquina de Remo (≥ 6h antes de pesas)",
-        "muscleGroup": "Cardiovascular & NEAT",
+        "name": "Cardio Matutino: Remo (Cardio vs. NEAT)",
+        "muscleGroup": "Cardio",
+        "isCardio": true,
+        "machineType": "rower",
+        "machine": "Máquina de Remo (Ergómetro)",
         "sets": 1,
         "reps": "35-40 min",
         "restTime": "0 s",
         "defaultUnit": "min",
-        "biomechanics": "Protocolo matutino en máquina de remo separado por al menos 6 horas del entrenamiento de pesas vespertino para anular el efecto de interferencia (AMPK vs mTOR) y proteger tus 55.8 kg de músculo:\n• Opción A (Híbrida: HIIT + NEAT, máx 1-2 veces/sem): 10-15m con 4-6 sprints de 20 segundos a máxima velocidad (RPE 16-18/20) x 40-60s de remo suave + 20-25m LISS suave.\n• Opción B (NEAT puro LISS, 2-3 veces/sem): 30-45m a intensidad baja continua (RPE 12-13/20, Talk Test fluido conversacional sin jadear) para elevar el gasto calórico sin fatiga muscular residual.",
-        "warmup": "🔥 3 minutos de remo progresivo suave antes de iniciar.",
+        "biomechanics": "Para anular el efecto de interferencia, estas sesiones deben realizarse por la mañana, separadas por al menos 6 horas de tu entrenamiento de fuerza.\n\n• Opción A: Sesión Híbrida (\"Cardio de verdad\" + NEAT) — Máximo 1 a 2 veces por semana\n- Duración Total: 35-40 minutos.\n- Fase 1 (Cardio HIIT / Vigoroso): 10-15 minutos. Realiza de 4 a 6 sprints de 20 segundos a máxima velocidad, seguidos de 40 a 60 segundos de remo muy suave para recuperar. El nivel de esfuerzo percibido (RPE) en el sprint debe ser de 16-18 sobre 20.\n- Fase 2 (NEAT / LISS): 20-25 minutos continuos a intensidad muy baja. Funciona como enfriamiento activo y suma gasto calórico sin añadir fatiga metabólica.\n\n• Opción B: Sesión Pura de NEAT (LISS) — 2 a 3 veces por semana\n- Duración Total: 30-45 minutos.\n- Intensidad (Talk Test): Nivel de esfuerzo (RPE) de 12 a 13 sobre 20. Debes poder mantener una conversación fluida o respirar cómodamente por la nariz sin jadear.\n- Objetivo: Simular los pasos y la actividad que no realizas por tu trabajo sedentario. No debes terminar exhausto ni con los músculos ardiendo.",
+        "warmup": "🔥 3 minutos de remo progresivo muy suave antes de iniciar.",
         "searchQuery": "rowing machine hiit neat morning protocol",
         "equivalents": [
           {
@@ -1755,14 +1767,17 @@ export const scientificProtocol = [
       {
         "id": "d5_cardio",
         "unifiedCode": "[CARD-ROW_HIIT_NEAT_01]",
-        "name": "Cardio Matutino en Máquina de Remo (≥ 6h antes de pesas)",
-        "muscleGroup": "Cardiovascular & NEAT",
+        "name": "Cardio Matutino: Remo (Cardio vs. NEAT)",
+        "muscleGroup": "Cardio",
+        "isCardio": true,
+        "machineType": "rower",
+        "machine": "Máquina de Remo (Ergómetro)",
         "sets": 1,
         "reps": "35-40 min",
         "restTime": "0 s",
         "defaultUnit": "min",
-        "biomechanics": "Protocolo matutino en máquina de remo separado por al menos 6 horas del entrenamiento de pesas vespertino para anular el efecto de interferencia (AMPK vs mTOR) y proteger tus 55.8 kg de músculo:\n• Opción A (Híbrida: HIIT + NEAT, máx 1-2 veces/sem): 10-15m con 4-6 sprints de 20 segundos a máxima velocidad (RPE 16-18/20) x 40-60s de remo suave + 20-25m LISS suave.\n• Opción B (NEAT puro LISS, 2-3 veces/sem): 30-45m a intensidad baja continua (RPE 12-13/20, Talk Test fluido conversacional sin jadear) para elevar el gasto calórico sin fatiga muscular residual.",
-        "warmup": "🔥 3 minutos de remo progresivo suave antes de iniciar.",
+        "biomechanics": "Para anular el efecto de interferencia, estas sesiones deben realizarse por la mañana, separadas por al menos 6 horas de tu entrenamiento de fuerza.\n\n• Opción A: Sesión Híbrida (\"Cardio de verdad\" + NEAT) — Máximo 1 a 2 veces por semana\n- Duración Total: 35-40 minutos.\n- Fase 1 (Cardio HIIT / Vigoroso): 10-15 minutos. Realiza de 4 a 6 sprints de 20 segundos a máxima velocidad, seguidos de 40 a 60 segundos de remo muy suave para recuperar. El nivel de esfuerzo percibido (RPE) en el sprint debe ser de 16-18 sobre 20.\n- Fase 2 (NEAT / LISS): 20-25 minutos continuos a intensidad muy baja. Funciona como enfriamiento activo y suma gasto calórico sin añadir fatiga metabólica.\n\n• Opción B: Sesión Pura de NEAT (LISS) — 2 a 3 veces por semana\n- Duración Total: 30-45 minutos.\n- Intensidad (Talk Test): Nivel de esfuerzo (RPE) de 12 a 13 sobre 20. Debes poder mantener una conversación fluida o respirar cómodamente por la nariz sin jadear.\n- Objetivo: Simular los pasos y la actividad que no realizas por tu trabajo sedentario. No debes terminar exhausto ni con los músculos ardiendo.",
+        "warmup": "🔥 3 minutos de remo progresivo muy suave antes de iniciar.",
         "searchQuery": "rowing machine hiit neat morning protocol",
         "equivalents": [
           {
@@ -2126,14 +2141,17 @@ export const scientificProtocol = [
       {
         "id": "d6_cardio",
         "unifiedCode": "[CARD-ROW_HIIT_NEAT_01]",
-        "name": "Cardio Matutino en Máquina de Remo (≥ 6h antes de pesas)",
-        "muscleGroup": "Cardiovascular & NEAT",
+        "name": "Cardio Matutino: Remo (Cardio vs. NEAT)",
+        "muscleGroup": "Cardio",
+        "isCardio": true,
+        "machineType": "rower",
+        "machine": "Máquina de Remo (Ergómetro)",
         "sets": 1,
         "reps": "35-40 min",
         "restTime": "0 s",
         "defaultUnit": "min",
-        "biomechanics": "Protocolo matutino en máquina de remo separado por al menos 6 horas del entrenamiento de pesas vespertino para anular el efecto de interferencia (AMPK vs mTOR) y proteger tus 55.8 kg de músculo:\n• Opción A (Híbrida: HIIT + NEAT, máx 1-2 veces/sem): 10-15m con 4-6 sprints de 20 segundos a máxima velocidad (RPE 16-18/20) x 40-60s de remo suave + 20-25m LISS suave.\n• Opción B (NEAT puro LISS, 2-3 veces/sem): 30-45m a intensidad baja continua (RPE 12-13/20, Talk Test fluido conversacional sin jadear) para elevar el gasto calórico sin fatiga muscular residual.",
-        "warmup": "🔥 3 minutos de remo progresivo suave antes de iniciar.",
+        "biomechanics": "Para anular el efecto de interferencia, estas sesiones deben realizarse por la mañana, separadas por al menos 6 horas de tu entrenamiento de fuerza.\n\n• Opción A: Sesión Híbrida (\"Cardio de verdad\" + NEAT) — Máximo 1 a 2 veces por semana\n- Duración Total: 35-40 minutos.\n- Fase 1 (Cardio HIIT / Vigoroso): 10-15 minutos. Realiza de 4 a 6 sprints de 20 segundos a máxima velocidad, seguidos de 40 a 60 segundos de remo muy suave para recuperar. El nivel de esfuerzo percibido (RPE) en el sprint debe ser de 16-18 sobre 20.\n- Fase 2 (NEAT / LISS): 20-25 minutos continuos a intensidad muy baja. Funciona como enfriamiento activo y suma gasto calórico sin añadir fatiga metabólica.\n\n• Opción B: Sesión Pura de NEAT (LISS) — 2 a 3 veces por semana\n- Duración Total: 30-45 minutos.\n- Intensidad (Talk Test): Nivel de esfuerzo (RPE) de 12 a 13 sobre 20. Debes poder mantener una conversación fluida o respirar cómodamente por la nariz sin jadear.\n- Objetivo: Simular los pasos y la actividad que no realizas por tu trabajo sedentario. No debes terminar exhausto ni con los músculos ardiendo.",
+        "warmup": "🔥 3 minutos de remo progresivo muy suave antes de iniciar.",
         "searchQuery": "rowing machine hiit neat morning protocol",
         "equivalents": [
           {

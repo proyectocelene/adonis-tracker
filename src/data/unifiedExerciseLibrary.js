@@ -1244,6 +1244,8 @@ export const UNIFIED_EXERCISE_LIBRARY = [
     "id": "lib_card_row_hiit_neat_01",
     "name": "Cardio Matutino en Máquina de Remo",
     "muscleGroup": "Cardio",
+    "isCardio": true,
+    "machineType": "rower",
     "equipment": "Máquina de Remo",
     "unifiedCode": "[CARD-ROW_HIIT_NEAT_01]",
     "machineKey": "CARD-ROW",

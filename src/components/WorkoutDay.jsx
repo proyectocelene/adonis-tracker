@@ -1544,6 +1544,84 @@ export default function WorkoutDay() {
             </div>
           ) : (
             <div>
+              {/* ACCESO RÁPIDO PROTOCOLO MATUTINO (CARDIO / REMO) */}
+              {(() => {
+                const morningCardioEx = currentDay.exercises?.find(e => e.isCardio);
+                if (!morningCardioEx) return null;
+                const morningCardioData = todayWorkoutData[morningCardioEx.id];
+                const isCardioDone = !!morningCardioData?.completed;
+                const isRower = morningCardioEx.machineType === 'rower' || morningCardioEx.unifiedCode === '[CARD-ROW_HIIT_NEAT_01]';
+                return (
+                  <div 
+                    onClick={() => {
+                      setExpandedExerciseId(morningCardioEx.id);
+                      setTimeout(() => {
+                        const el = document.getElementById(`exercise-${morningCardioEx.id}`);
+                        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                      }, 50);
+                    }}
+                    style={{
+                      background: isCardioDone 
+                        ? 'linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)' 
+                        : 'linear-gradient(135deg, #f0fdf4 0%, #e0f2fe 100%)',
+                      border: isCardioDone ? '1.5px solid #34d399' : '1.5px solid #0284c7',
+                      borderRadius: '20px',
+                      padding: '12px 16px',
+                      marginBottom: '12px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      cursor: 'pointer',
+                      userSelect: 'none',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <div style={{ 
+                        width: '38px', 
+                        height: '38px', 
+                        borderRadius: '12px', 
+                        background: isCardioDone ? '#059669' : 'linear-gradient(135deg, #0284c7 0%, #0f766e 100%)', 
+                        color: '#fff', 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'center', 
+                        flexShrink: 0,
+                        fontSize: '18px'
+                      }}>
+                        {isRower ? '🚣‍♂️' : '🫀'}
+                      </div>
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                          <h4 style={{ margin: 0, fontSize: '13.5px', fontWeight: '900', color: isCardioDone ? '#065f46' : '#0369a1' }}>
+                            {isRower ? '☀️ Protocolo Matutino: Remo (Cardio vs. NEAT)' : '☀️ Cardio Aeróbico en Zona 2'}
+                          </h4>
+                          <span style={{ fontSize: '10px', background: isCardioDone ? '#d1fae5' : '#fef3c7', color: isCardioDone ? '#065f46' : '#92400e', padding: '1px 7px', borderRadius: '6px', fontWeight: '900' }}>
+                            ≥ 6h antes de pesas
+                          </span>
+                        </div>
+                        <span style={{ fontSize: '11px', color: isCardioDone ? '#047857' : '#475569', fontWeight: '700' }}>
+                          {isCardioDone 
+                            ? `✓ Completado • ${morningCardioData?.cardioKcal || 0} kcal registradas` 
+                            : 'Realizar por la mañana para anular interferencia AMPK/mTOR • Toca para abrir'}
+                        </span>
+                      </div>
+                    </div>
+                    <span style={{
+                      fontSize: '11px',
+                      fontWeight: '900',
+                      padding: '4px 10px',
+                      borderRadius: '10px',
+                      background: isCardioDone ? '#059669' : '#0284c7',
+                      color: '#ffffff',
+                      flexShrink: 0
+                    }}>
+                      {isCardioDone ? '✓ LISTO' : 'ABRIR CARDIO'}
+                    </span>
+                  </div>
+                );
+              })()}
+
               {/* PASO 0: CALENTAMIENTO GENERAL */}
               {currentDay.type === 'workout' && (
                 <div 

@@ -29,10 +29,25 @@ export default function CardioLogger({
   
   // Tipo de máquina
   const initialMachineType = exerciseData.machineType || 
-    (exerciseData.machine?.toLowerCase().includes('caminadora') ? 'treadmill' :
+    (exercise?.unifiedCode === '[CARD-ROW_HIIT_NEAT_01]' || exercise?.name?.toLowerCase().includes('remo') || exerciseData.machine?.toLowerCase().includes('remo') ? 'rower' :
+     exerciseData.machine?.toLowerCase().includes('caminadora') ? 'treadmill' :
      exerciseData.machine?.toLowerCase().includes('elíptica') || exerciseData.machine?.toLowerCase().includes('eliptica') ? 'elliptical' : 'bike');
   
   const [machineType, setMachineType] = useState(initialMachineType);
+
+  // Parámetros específicos Protocolo Matutino de Remo (Opción A Híbrida vs Opción B NEAT)
+  const [rowOption, setRowOption] = useState(exerciseData.rowOption || (exerciseData.isRowOptionA ? 'A' : 'B'));
+  const [rowPhase1Mins, setRowPhase1Mins] = useState(cleanInputVal(exerciseData.rowPhase1Mins ?? exerciseData.phaseMinutesA, '15'));
+  const [rowPhase2Mins, setRowPhase2Mins] = useState(cleanInputVal(exerciseData.rowPhase2Mins ?? exerciseData.phaseMinutesB, '20'));
+  const [rowSprintsCount, setRowSprintsCount] = useState(cleanInputVal(exerciseData.rowSprintsCount, '5'));
+  const [rowSprintSec, setRowSprintSec] = useState(cleanInputVal(exerciseData.rowSprintSec, '20'));
+  const [rowRecoverySec, setRowRecoverySec] = useState(cleanInputVal(exerciseData.rowRecoverySec, '40'));
+  const [rowLissMins, setRowLissMins] = useState(cleanInputVal(exerciseData.rowLissMins, '35'));
+  const [rowDamper, setRowDamper] = useState(cleanInputVal(exerciseData.damperLevel ?? exerciseData.resistanceLevel, '5'));
+  const [rowSpm, setRowSpm] = useState(cleanInputVal(exerciseData.strokesPerMin ?? exerciseData.cadenceRpm, '24'));
+  const [rowDistanceMeters, setRowDistanceMeters] = useState(cleanInputVal(exerciseData.distanceMeters, ''));
+  const [rowSplit500m, setRowSplit500m] = useState(cleanInputVal(exerciseData.split500m, '2:15'));
+  const [rowRpe, setRowRpe] = useState(cleanInputVal(exerciseData.rpe, exerciseData.rowOption === 'A' ? '17' : '13'));
   
   // Parámetros específicos Protocolo Bifásico Adonis (Fase A Inclinada + Fase B Plana)
   const [isDualPhase, setIsDualPhase] = useState(exerciseData.isDualPhase !== undefined ? !!exerciseData.isDualPhase : true);
@@ -99,9 +114,32 @@ export default function CardioLogger({
   // Sincronizar estado local cuando cambie exerciseData desde el exterior
   useEffect(() => {
     const rawMType = exerciseData.machineType || 
-      (exerciseData.machine?.toLowerCase().includes('caminadora') ? 'treadmill' :
+      (exercise?.unifiedCode === '[CARD-ROW_HIIT_NEAT_01]' || exercise?.name?.toLowerCase().includes('remo') || exerciseData.machine?.toLowerCase().includes('remo') ? 'rower' :
+       exerciseData.machine?.toLowerCase().includes('caminadora') ? 'treadmill' :
        exerciseData.machine?.toLowerCase().includes('elíptica') || exerciseData.machine?.toLowerCase().includes('eliptica') ? 'elliptical' : 'bike');
     setMachineType(rawMType);
+
+    if (exerciseData.rowOption) setRowOption(exerciseData.rowOption);
+    if (exerciseData.rowPhase1Mins !== undefined || exerciseData.phaseMinutesA !== undefined) {
+      setRowPhase1Mins(cleanInputVal(exerciseData.rowPhase1Mins ?? exerciseData.phaseMinutesA, '15'));
+    }
+    if (exerciseData.rowPhase2Mins !== undefined || exerciseData.phaseMinutesB !== undefined) {
+      setRowPhase2Mins(cleanInputVal(exerciseData.rowPhase2Mins ?? exerciseData.phaseMinutesB, '20'));
+    }
+    if (exerciseData.rowSprintsCount !== undefined) setRowSprintsCount(cleanInputVal(exerciseData.rowSprintsCount, '5'));
+    if (exerciseData.rowSprintSec !== undefined) setRowSprintSec(cleanInputVal(exerciseData.rowSprintSec, '20'));
+    if (exerciseData.rowRecoverySec !== undefined) setRowRecoverySec(cleanInputVal(exerciseData.rowRecoverySec, '40'));
+    if (exerciseData.rowLissMins !== undefined) setRowLissMins(cleanInputVal(exerciseData.rowLissMins, '35'));
+    if (exerciseData.damperLevel !== undefined || exerciseData.resistanceLevel !== undefined) {
+      setRowDamper(cleanInputVal(exerciseData.damperLevel ?? exerciseData.resistanceLevel, '5'));
+    }
+    if (exerciseData.strokesPerMin !== undefined || exerciseData.cadenceRpm !== undefined) {
+      setRowSpm(cleanInputVal(exerciseData.strokesPerMin ?? exerciseData.cadenceRpm, '24'));
+    }
+    if (exerciseData.distanceMeters !== undefined) setRowDistanceMeters(cleanInputVal(exerciseData.distanceMeters, ''));
+    if (exerciseData.split500m !== undefined) setRowSplit500m(cleanInputVal(exerciseData.split500m, '2:15'));
+    if (exerciseData.rpe !== undefined) setRowRpe(cleanInputVal(exerciseData.rpe, '13'));
+
     if (exerciseData.isDualPhase !== undefined) setIsDualPhase(!!exerciseData.isDualPhase);
     setPhaseMinutesA(cleanInputVal(exerciseData.phaseMinutesA, '30'));
     setPhaseInclineA(cleanInputVal(exerciseData.phaseInclineA, '11.5'));
@@ -139,21 +177,36 @@ export default function CardioLogger({
   }, [exerciseData]);
 
   // Nombre legible de la máquina
-  const machineLabel = machineType === 'treadmill' 
-    ? (isDualPhase ? '🏃‍♀️ Caminadora Inclinada (Bifásico 60m)' : '🏃‍♀️ Caminadora Inclinada')
-    : machineType === 'bike' 
-    ? '🚴‍♂️ Bicicleta Estática Ergómetro' 
-    : '🚶‍♀️ Elíptica de Bajo Impacto (Solo Piernas)';
+  const machineLabel = machineType === 'rower'
+    ? (rowOption === 'A' ? '🚣‍♂️ Máquina de Remo (Opción A Híbrida 35-40 min)' : '🚣‍♂️ Máquina de Remo (Opción B NEAT LISS 35 min)')
+    : machineType === 'treadmill' 
+      ? (isDualPhase ? '🏃‍♀️ Caminadora Inclinada (Bifásico 60m)' : '🏃‍♀️ Caminadora Inclinada')
+      : machineType === 'bike' 
+        ? '🚴‍♂️ Bicicleta Estática Ergómetro' 
+        : '🚶‍♀️ Elíptica de Bajo Impacto (Solo Piernas)';
 
-  const calculatedDuration = machineType === 'treadmill' && isDualPhase
-    ? (parseFloat(phaseMinutesA) || 0) + (parseFloat(phaseMinutesB) || 0)
-    : (parseFloat(duration) || 0);
+  const calculatedDuration = machineType === 'rower'
+    ? (rowOption === 'A' ? (parseFloat(rowPhase1Mins) || 15) + (parseFloat(rowPhase2Mins) || 20) : (parseFloat(rowLissMins) || 35))
+    : machineType === 'treadmill' && isDualPhase
+      ? (parseFloat(phaseMinutesA) || 0) + (parseFloat(phaseMinutesB) || 0)
+      : (parseFloat(duration) || 0);
 
   // Empaquetar estado actual para calcular calorías reactivas
   const currentCardioState = {
     machineType,
     machine: machineLabel,
     duration: calculatedDuration,
+    rowOption,
+    rowPhase1Mins: parseFloat(rowPhase1Mins) || 15,
+    rowPhase2Mins: parseFloat(rowPhase2Mins) || 20,
+    rowSprintsCount: parseInt(rowSprintsCount, 10) || 5,
+    rowSprintSec: parseInt(rowSprintSec, 10) || 20,
+    rowRecoverySec: parseInt(rowRecoverySec, 10) || 40,
+    rowLissMins: parseFloat(rowLissMins) || 35,
+    damperLevel: parseFloat(rowDamper) || 5,
+    strokesPerMin: parseFloat(rowSpm) || 24,
+    distanceMeters: parseFloat(rowDistanceMeters) || 0,
+    split500m: rowSplit500m,
     isDualPhase: machineType === 'treadmill' ? isDualPhase : false,
     phaseMinutesA: parseFloat(phaseMinutesA) || 0,
     phaseInclineA: parseFloat(phaseInclineA) || 0,
@@ -163,10 +216,10 @@ export default function CardioLogger({
     phaseSpeedB: parseFloat(phaseSpeedB) || 0,
     speedKmh: parseFloat(treadmillSpeed) || 0,
     inclinePct: parseFloat(treadmillIncline) || 0,
-    distanceKm: parseFloat(machineType === 'treadmill' ? treadmillDistance : machineType === 'bike' ? bikeDistance : ellipticalDistance) || 0,
-    resistanceLevel: parseFloat(machineType === 'bike' ? bikeResistance : ellipticalResistance) || 0,
+    distanceKm: parseFloat(machineType === 'treadmill' ? treadmillDistance : machineType === 'bike' ? bikeDistance : machineType === 'rower' ? (parseFloat(rowDistanceMeters) / 1000 || '') : ellipticalDistance) || 0,
+    resistanceLevel: parseFloat(machineType === 'bike' ? bikeResistance : machineType === 'rower' ? rowDamper : ellipticalResistance) || 0,
     avgSpeedKmh: parseFloat(bikeSpeed) || 0,
-    cadenceRpm: parseFloat(bikeCadence) || 0,
+    cadenceRpm: parseFloat(machineType === 'rower' ? rowSpm : bikeCadence) || 0,
     watts: parseFloat(bikeWatts) || 0,
     stridesPerMin: parseFloat(ellipticalSpm) || 0,
     heartRate: parseInt(watchHrAvg, 10) || 0,
@@ -194,10 +247,23 @@ export default function CardioLogger({
 
     onUpdateCardio({
       machineType: merged.machineType,
-      machine: merged.machineType === 'treadmill' 
-        ? (merged.isDualPhase ? 'Caminadora Inclinada (Bifásico 60 min)' : 'Caminadora Inclinada (Zona 2)')
-        : merged.machineType === 'bike' ? 'Bicicleta Estática Ergómetro' : 'Elíptica de Bajo Impacto',
+      machine: merged.machineType === 'rower'
+        ? (merged.rowOption === 'A' ? 'Máquina de Remo (Opción A Híbrida 35-40 min)' : 'Máquina de Remo (Opción B NEAT LISS 35 min)')
+        : merged.machineType === 'treadmill' 
+          ? (merged.isDualPhase ? 'Caminadora Inclinada (Bifásico 60 min)' : 'Caminadora Inclinada (Zona 2)')
+          : merged.machineType === 'bike' ? 'Bicicleta Estática Ergómetro' : 'Elíptica de Bajo Impacto',
       duration: merged.duration,
+      rowOption: merged.rowOption,
+      rowPhase1Mins: merged.rowPhase1Mins,
+      rowPhase2Mins: merged.rowPhase2Mins,
+      rowSprintsCount: merged.rowSprintsCount,
+      rowSprintSec: merged.rowSprintSec,
+      rowRecoverySec: merged.rowRecoverySec,
+      rowLissMins: merged.rowLissMins,
+      damperLevel: merged.damperLevel,
+      strokesPerMin: merged.strokesPerMin,
+      distanceMeters: merged.distanceMeters,
+      split500m: merged.split500m,
       isDualPhase: merged.isDualPhase,
       phaseMinutesA: merged.phaseMinutesA,
       phaseInclineA: merged.phaseInclineA,
@@ -277,6 +343,8 @@ export default function CardioLogger({
           userSelect: 'none',
           background: completed 
             ? 'linear-gradient(135deg, #059669 0%, #047857 100%)' 
+            : machineType === 'rower'
+            ? 'linear-gradient(135deg, #0f766e 0%, #0284c7 100%)'
             : 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
           color: '#ffffff',
           transition: 'all 0.2s ease'
@@ -284,10 +352,15 @@ export default function CardioLogger({
       >
         <div style={{ flex: 1, minWidth: 0, paddingRight: '10px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginBottom: '4px' }}>
-            <HeartPulse size={22} color="#ffffff" style={{ flexShrink: 0 }} />
+            <span style={{ fontSize: '20px', flexShrink: 0 }}>{machineType === 'rower' ? '🚣‍♂️' : '🫀'}</span>
             <strong style={{ fontSize: '16px', fontWeight: '900', color: '#ffffff', lineHeight: '1.3' }}>
-              {exercise?.name || 'Cardio Aeróbico en Zona 2'}
+              {exercise?.name || (machineType === 'rower' ? 'Protocolo Matutino: Remo (Cardio vs. NEAT)' : 'Cardio Aeróbico en Zona 2')}
             </strong>
+            {machineType === 'rower' && (
+              <span style={{ fontSize: '10px', background: 'rgba(254, 243, 199, 0.95)', color: '#92400e', padding: '2px 8px', borderRadius: '8px', fontWeight: '900' }}>
+                ☀️ Matutino (≥ 6h antes de pesas)
+              </span>
+            )}
             {completed && (
               <span style={{ fontSize: '10px', background: '#ffffff', color: '#047857', padding: '2px 8px', borderRadius: '8px', fontWeight: '900' }}>
                 ✓ Completado
@@ -296,16 +369,37 @@ export default function CardioLogger({
           </div>
           
           <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
-            <span style={{ background: 'rgba(255, 255, 255, 0.2)', color: '#ffffff', fontSize: '11px', padding: '2px 8px', borderRadius: '10px', fontWeight: '800' }}>
-              🫀 Zona 2 (120-135 BPM)
-            </span>
-            <span style={{ background: 'rgba(255, 255, 255, 0.25)', color: '#ffffff', fontSize: '11px', padding: '2px 8px', borderRadius: '10px', fontWeight: '900' }}>
-              🔥 {metrics.cardioKcal} kcal
-            </span>
-            {metrics.distanceKm > 0 && (
-              <span style={{ background: 'rgba(255, 255, 255, 0.2)', color: '#ffffff', fontSize: '11px', padding: '2px 8px', borderRadius: '10px', fontWeight: '800' }}>
-                📍 {metrics.distanceKm} km
-              </span>
+            {machineType === 'rower' ? (
+              <>
+                <span style={{ background: 'rgba(255, 255, 255, 0.25)', color: '#ffffff', fontSize: '11px', padding: '2px 8px', borderRadius: '10px', fontWeight: '800' }}>
+                  {rowOption === 'A' ? '⚡ Opción A: Híbrida (HIIT+NEAT)' : '🌿 Opción B: Pura NEAT'}
+                </span>
+                <span style={{ background: 'rgba(255, 255, 255, 0.25)', color: '#ffffff', fontSize: '11px', padding: '2px 8px', borderRadius: '10px', fontWeight: '900' }}>
+                  ⏱️ {calculatedDuration} min
+                </span>
+                <span style={{ background: 'rgba(255, 255, 255, 0.25)', color: '#ffffff', fontSize: '11px', padding: '2px 8px', borderRadius: '10px', fontWeight: '900' }}>
+                  🔥 {metrics.cardioKcal} kcal
+                </span>
+                {metrics.distanceKm > 0 && (
+                  <span style={{ background: 'rgba(255, 255, 255, 0.2)', color: '#ffffff', fontSize: '11px', padding: '2px 8px', borderRadius: '10px', fontWeight: '800' }}>
+                    📍 {metrics.distanceKm} km
+                  </span>
+                )}
+              </>
+            ) : (
+              <>
+                <span style={{ background: 'rgba(255, 255, 255, 0.2)', color: '#ffffff', fontSize: '11px', padding: '2px 8px', borderRadius: '10px', fontWeight: '800' }}>
+                  🫀 Zona 2 (120-135 BPM)
+                </span>
+                <span style={{ background: 'rgba(255, 255, 255, 0.25)', color: '#ffffff', fontSize: '11px', padding: '2px 8px', borderRadius: '10px', fontWeight: '900' }}>
+                  🔥 {metrics.cardioKcal} kcal
+                </span>
+                {metrics.distanceKm > 0 && (
+                  <span style={{ background: 'rgba(255, 255, 255, 0.2)', color: '#ffffff', fontSize: '11px', padding: '2px 8px', borderRadius: '10px', fontWeight: '800' }}>
+                    📍 {metrics.distanceKm} km
+                  </span>
+                )}
+              </>
             )}
           </div>
         </div>
@@ -412,6 +506,28 @@ export default function CardioLogger({
                   <button
                     type="button"
                     onClick={() => {
+                      setMachineType('rower');
+                      notifyChange({ machineType: 'rower' });
+                    }}
+                    style={{
+                      padding: '10px 8px',
+                      borderRadius: '12px',
+                      border: machineType === 'rower' ? '2.5px solid #0284c7' : '1.5px solid #cbd5e1',
+                      background: machineType === 'rower' ? '#f0f9ff' : '#ffffff',
+                      color: machineType === 'rower' ? '#0369a1' : '#475569',
+                      fontWeight: '900',
+                      fontSize: '11.5px',
+                      cursor: 'pointer',
+                      textAlign: 'center',
+                      boxShadow: machineType === 'rower' ? '0 2px 8px rgba(2, 132, 199, 0.25)' : 'none'
+                    }}
+                  >
+                    🚣‍♂️ Máquina de Remo
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
                       setMachineType('treadmill');
                       notifyChange({ machineType: 'treadmill' });
                     }}
@@ -487,6 +603,343 @@ export default function CardioLogger({
                     Ecuación Oficial ACSM
                   </span>
                 </div>
+
+                {/* PROTOCOLO MATUTINO: MÁQUINA DE REMO (CARDIO VS NEAT) */}
+                {machineType === 'rower' && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                    {/* Alerta Médica: Regla de las 6 Horas para anular efecto de interferencia */}
+                    <div style={{
+                      padding: '12px 14px',
+                      background: 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)',
+                      border: '1.5px solid #60a5fa',
+                      borderRadius: '14px',
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      gap: '10px'
+                    }}>
+                      <Info size={18} color="#1d4ed8" style={{ flexShrink: 0, marginTop: '2px' }} />
+                      <div style={{ fontSize: '11.5px', color: '#1e40af', lineHeight: '1.4' }}>
+                        <strong>Ventana Matutina (Anular Efecto de Interferencia):</strong> Realizar esta sesión por la mañana, separada por al menos <strong>6 horas</strong> de tu entrenamiento de fuerza para evitar que la vía AMPK bloquee la síntesis proteica de mTORC1.
+                      </div>
+                    </div>
+
+                    {/* Selector de Opción A vs Opción B */}
+                    <div>
+                      <label style={{ display: 'block', fontSize: '11px', fontWeight: '900', color: '#0f172a', marginBottom: '6px', textTransform: 'uppercase' }}>
+                        Selecciona el Protocolo del Día:
+                      </label>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setRowOption('A');
+                            const total = (parseFloat(rowPhase1Mins) || 15) + (parseFloat(rowPhase2Mins) || 20);
+                            notifyChange({ 
+                              rowOption: 'A',
+                              duration: total,
+                              rpe: 17
+                            });
+                          }}
+                          style={{
+                            padding: '12px 10px',
+                            borderRadius: '14px',
+                            border: rowOption === 'A' ? '2.5px solid #0284c7' : '1.5px solid #cbd5e1',
+                            background: rowOption === 'A' ? 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)' : '#ffffff',
+                            color: rowOption === 'A' ? '#0369a1' : '#475569',
+                            fontWeight: '900',
+                            fontSize: '12px',
+                            cursor: 'pointer',
+                            textAlign: 'left',
+                            boxShadow: rowOption === 'A' ? '0 4px 12px rgba(2, 132, 199, 0.2)' : 'none'
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                            <span style={{ fontSize: '12.5px', fontWeight: '900' }}>⚡ Opción A: Híbrida</span>
+                            <span style={{ fontSize: '10px', background: rowOption === 'A' ? '#0284c7' : '#e2e8f0', color: rowOption === 'A' ? '#fff' : '#64748b', padding: '2px 6px', borderRadius: '6px' }}>
+                              Máx 1-2x/sem
+                            </span>
+                          </div>
+                          <div style={{ fontSize: '11px', fontWeight: '800', color: rowOption === 'A' ? '#0369a1' : '#64748b' }}>
+                            "Cardio de verdad" + NEAT
+                          </div>
+                          <div style={{ fontSize: '10px', color: '#64748b', marginTop: '4px' }}>
+                            35-40 min (HIIT 10-15m + LISS 20-25m)
+                          </div>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setRowOption('B');
+                            notifyChange({ 
+                              rowOption: 'B',
+                              duration: parseFloat(rowLissMins) || 35,
+                              rpe: 13
+                            });
+                          }}
+                          style={{
+                            padding: '12px 10px',
+                            borderRadius: '14px',
+                            border: rowOption === 'B' ? '2.5px solid #059669' : '1.5px solid #cbd5e1',
+                            background: rowOption === 'B' ? 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)' : '#ffffff',
+                            color: rowOption === 'B' ? '#065f46' : '#475569',
+                            fontWeight: '900',
+                            fontSize: '12px',
+                            cursor: 'pointer',
+                            textAlign: 'left',
+                            boxShadow: rowOption === 'B' ? '0 4px 12px rgba(5, 150, 105, 0.2)' : 'none'
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                            <span style={{ fontSize: '12.5px', fontWeight: '900' }}>🚶 Opción B: NEAT Puro</span>
+                            <span style={{ fontSize: '10px', background: rowOption === 'B' ? '#059669' : '#e2e8f0', color: rowOption === 'B' ? '#fff' : '#64748b', padding: '2px 6px', borderRadius: '6px' }}>
+                              2-3x/sem
+                            </span>
+                          </div>
+                          <div style={{ fontSize: '11px', fontWeight: '800', color: rowOption === 'B' ? '#047857' : '#64748b' }}>
+                            LISS Continuo (Talk Test)
+                          </div>
+                          <div style={{ fontSize: '10px', color: '#64748b', marginTop: '4px' }}>
+                            30-45 min (RPE 12-13, sin fatiga)
+                          </div>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* DETALLE OPCIÓN A: SESIÓN HÍBRIDA */}
+                    {rowOption === 'A' && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                        {/* Fase 1: HIIT */}
+                        <div style={{ padding: '12px', background: '#fef2f2', border: '1.5px solid #f87171', borderRadius: '14px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                            <strong style={{ fontSize: '12px', color: '#991b1b', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              🔥 Fase 1: Cardio HIIT / Vigoroso ({rowPhase1Mins} min)
+                            </strong>
+                            <span style={{ fontSize: '10px', background: '#fee2e2', color: '#b91c1c', padding: '2px 8px', borderRadius: '6px', fontWeight: '800' }}>
+                              RPE 16-18 / 20
+                            </span>
+                          </div>
+                          <p style={{ fontSize: '11px', color: '#7f1d1d', margin: '0 0 10px 0', lineHeight: '1.4' }}>
+                            Realiza de <strong>4 a 6 sprints de 20 segundos</strong> a máxima velocidad, seguidos de <strong>40 a 60 segundos</strong> de remo muy suave para recuperar.
+                          </p>
+
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
+                            <div>
+                              <label style={{ display: 'block', fontSize: '10px', fontWeight: '800', color: '#991b1b', marginBottom: '3px' }}>
+                                ⏱️ Minutos Fase 1:
+                              </label>
+                              <input
+                                type="number"
+                                value={cleanInputVal(rowPhase1Mins, '15')}
+                                onChange={e => {
+                                  setRowPhase1Mins(e.target.value);
+                                  const total = (parseFloat(e.target.value) || 0) + (parseFloat(rowPhase2Mins) || 0);
+                                  notifyChange({ rowPhase1Mins: parseFloat(e.target.value) || 0, duration: total });
+                                }}
+                                style={{ width: '100%', padding: '6px', textAlign: 'center', borderRadius: '8px', border: '1.5px solid #ef4444', fontWeight: '900', fontSize: '12.5px', background: '#ffffff' }}
+                              />
+                            </div>
+                            <div>
+                              <label style={{ display: 'block', fontSize: '10px', fontWeight: '800', color: '#991b1b', marginBottom: '3px' }}>
+                                ⚡ Sprints Realizados:
+                              </label>
+                              <div style={{ display: 'flex', alignItems: 'center' }}>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const next = Math.max(1, (parseInt(rowSprintsCount, 10) || 5) - 1);
+                                    setRowSprintsCount(String(next));
+                                    notifyChange({ rowSprintsCount: next });
+                                  }}
+                                  style={{ width: '28px', height: '30px', border: '1px solid #fca5a5', background: '#fff', borderRadius: '6px 0 0 6px', fontWeight: '900', cursor: 'pointer' }}
+                                >-</button>
+                                <input
+                                  type="number"
+                                  value={cleanInputVal(rowSprintsCount, '5')}
+                                  onChange={e => {
+                                    setRowSprintsCount(e.target.value);
+                                    notifyChange({ rowSprintsCount: parseInt(e.target.value, 10) || 5 });
+                                  }}
+                                  style={{ width: '100%', padding: '6px', textAlign: 'center', border: '1px solid #ef4444', borderLeft: 'none', borderRight: 'none', fontWeight: '900', fontSize: '12px', background: '#ffffff' }}
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const next = Math.min(10, (parseInt(rowSprintsCount, 10) || 5) + 1);
+                                    setRowSprintsCount(String(next));
+                                    notifyChange({ rowSprintsCount: next });
+                                  }}
+                                  style={{ width: '28px', height: '30px', border: '1px solid #fca5a5', background: '#fff', borderRadius: '0 6px 6px 0', fontWeight: '900', cursor: 'pointer' }}
+                                >+</button>
+                              </div>
+                            </div>
+                            <div>
+                              <label style={{ display: 'block', fontSize: '10px', fontWeight: '800', color: '#991b1b', marginBottom: '3px' }}>
+                                🎯 Intervalo Sprint:
+                              </label>
+                              <div style={{ padding: '6px', textAlign: 'center', borderRadius: '8px', background: '#fff', border: '1.5px solid #fca5a5', fontWeight: '900', fontSize: '11px', color: '#b91c1c' }}>
+                                20s Max / 40s Suave
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Fase 2: NEAT / LISS */}
+                        <div style={{ padding: '12px', background: '#ecfdf5', border: '1.5px solid #34d399', borderRadius: '14px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                            <strong style={{ fontSize: '12px', color: '#065f46', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              🌊 Fase 2: NEAT / LISS Continuo ({rowPhase2Mins} min)
+                            </strong>
+                            <span style={{ fontSize: '10px', background: '#d1fae5', color: '#047857', padding: '2px 8px', borderRadius: '6px', fontWeight: '800' }}>
+                              Enfriamiento Activo
+                            </span>
+                          </div>
+                          <p style={{ fontSize: '11px', color: '#064e3b', margin: '0 0 10px 0', lineHeight: '1.4' }}>
+                            20 a 25 minutos continuos a intensidad muy baja. Funciona como enfriamiento activo y suma gasto calórico sin fatiga metabólica.
+                          </p>
+
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                            <div>
+                              <label style={{ display: 'block', fontSize: '10px', fontWeight: '800', color: '#065f46', marginBottom: '3px' }}>
+                                ⏱️ Minutos Fase 2:
+                              </label>
+                              <input
+                                type="number"
+                                value={cleanInputVal(rowPhase2Mins, '20')}
+                                onChange={e => {
+                                  setRowPhase2Mins(e.target.value);
+                                  const total = (parseFloat(rowPhase1Mins) || 0) + (parseFloat(e.target.value) || 0);
+                                  notifyChange({ rowPhase2Mins: parseFloat(e.target.value) || 0, duration: total });
+                                }}
+                                style={{ width: '100%', padding: '6px', textAlign: 'center', borderRadius: '8px', border: '1.5px solid #10b981', fontWeight: '900', fontSize: '12.5px', background: '#ffffff' }}
+                              />
+                            </div>
+                            <div>
+                              <label style={{ display: 'block', fontSize: '10px', fontWeight: '800', color: '#065f46', marginBottom: '3px' }}>
+                                ⏱️ Duración Total Sesión:
+                              </label>
+                              <div style={{ padding: '6px', textAlign: 'center', borderRadius: '8px', background: '#fff', border: '1.5px solid #a7f3d0', fontWeight: '900', fontSize: '12px', color: '#047857' }}>
+                                {(parseFloat(rowPhase1Mins) || 0) + (parseFloat(rowPhase2Mins) || 0)} min en total
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* DETALLE OPCIÓN B: SESIÓN PURA NEAT */}
+                    {rowOption === 'B' && (
+                      <div style={{ padding: '14px', background: '#ecfdf5', border: '1.5px solid #10b981', borderRadius: '16px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                          <strong style={{ fontSize: '13px', color: '#065f46', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            🚶‍♂️ Sesión Pura de NEAT (LISS en Máquina de Remo)
+                          </strong>
+                          <span style={{ fontSize: '10.5px', background: '#d1fae5', color: '#047857', padding: '2px 8px', borderRadius: '8px', fontWeight: '900' }}>
+                            Talk Test: RPE 12-13 / 20
+                          </span>
+                        </div>
+
+                        <p style={{ fontSize: '11.5px', color: '#064e3b', margin: '0 0 10px 0', lineHeight: '1.4' }}>
+                          <strong>Talk Test:</strong> Debes poder mantener una conversación fluida o respirar cómodamente por la nariz sin jadear.<br />
+                          <strong>Objetivo:</strong> Simular los pasos y la actividad que no realizas por tu trabajo sedentario. No debes terminar exhausto ni con los músculos ardiendo.
+                        </p>
+
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
+                          <div>
+                            <label style={{ display: 'block', fontSize: '11px', fontWeight: '800', color: '#065f46', marginBottom: '3px' }}>
+                              ⏱️ Minutos de Sesión:
+                            </label>
+                            <input
+                              type="number"
+                              value={cleanInputVal(rowLissMins, '35')}
+                              onChange={e => {
+                                setRowLissMins(e.target.value);
+                                notifyChange({ rowLissMins: parseFloat(e.target.value) || 0, duration: parseFloat(e.target.value) || 0 });
+                              }}
+                              style={{ width: '100%', padding: '8px', textAlign: 'center', borderRadius: '10px', border: '1.5px solid #10b981', fontWeight: '900', fontSize: '13.5px', background: '#ffffff' }}
+                            />
+                          </div>
+                          <div>
+                            <label style={{ display: 'block', fontSize: '11px', fontWeight: '800', color: '#065f46', marginBottom: '3px' }}>
+                              🗣️ Esfuerzo Percibido:
+                            </label>
+                            <div style={{ padding: '8px', textAlign: 'center', borderRadius: '10px', background: '#fff', border: '1.5px solid #a7f3d0', fontWeight: '900', fontSize: '12px', color: '#047857' }}>
+                              RPE 12-13 (Conversación fluida)
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* TELEMETRÍA DEL ERGÓMETRO DE REMO */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(105px, 1fr))', gap: '8px' }}>
+                      <div>
+                        <label style={{ display: 'block', fontSize: '10.5px', fontWeight: '800', color: '#334155', marginBottom: '3px' }}>
+                          ⚙️ Damper (Palanca):
+                        </label>
+                        <input
+                          type="number"
+                          step="1"
+                          min="1"
+                          max="10"
+                          value={cleanInputVal(rowDamper, '5')}
+                          onChange={e => {
+                            setRowDamper(e.target.value);
+                            notifyChange({ damperLevel: parseFloat(e.target.value) || 5 });
+                          }}
+                          style={{ width: '100%', padding: '7px', textAlign: 'center', borderRadius: '10px', border: '1.5px solid #cbd5e1', fontWeight: '900', fontSize: '13px' }}
+                        />
+                      </div>
+
+                      <div>
+                        <label style={{ display: 'block', fontSize: '10.5px', fontWeight: '800', color: '#334155', marginBottom: '3px' }}>
+                          🔄 SPM (Paladas/min):
+                        </label>
+                        <input
+                          type="number"
+                          value={cleanInputVal(rowSpm, '24')}
+                          onChange={e => {
+                            setRowSpm(e.target.value);
+                            notifyChange({ strokesPerMin: parseFloat(e.target.value) || 24 });
+                          }}
+                          style={{ width: '100%', padding: '7px', textAlign: 'center', borderRadius: '10px', border: '1.5px solid #cbd5e1', fontWeight: '900', fontSize: '13px' }}
+                        />
+                      </div>
+
+                      <div>
+                        <label style={{ display: 'block', fontSize: '10.5px', fontWeight: '800', color: '#334155', marginBottom: '3px' }}>
+                          📍 Metros Recorridos:
+                        </label>
+                        <input
+                          type="number"
+                          value={cleanInputVal(rowDistanceMeters, '')}
+                          placeholder={metrics.distanceKm ? String(Math.round(metrics.distanceKm * 1000)) : '6500'}
+                          onChange={e => {
+                            setRowDistanceMeters(e.target.value);
+                            notifyChange({ distanceMeters: parseFloat(e.target.value) || 0, distanceKm: (parseFloat(e.target.value) || 0) / 1000 });
+                          }}
+                          style={{ width: '100%', padding: '7px', textAlign: 'center', borderRadius: '10px', border: '1.5px solid #cbd5e1', fontWeight: '900', fontSize: '13px' }}
+                        />
+                      </div>
+
+                      <div>
+                        <label style={{ display: 'block', fontSize: '10.5px', fontWeight: '800', color: '#334155', marginBottom: '3px' }}>
+                          ⏱️ Split /500m:
+                        </label>
+                        <input
+                          type="text"
+                          value={cleanInputVal(rowSplit500m, '2:15')}
+                          onChange={e => {
+                            setRowSplit500m(e.target.value);
+                            notifyChange({ split500m: e.target.value });
+                          }}
+                          placeholder="2:15"
+                          style={{ width: '100%', padding: '7px', textAlign: 'center', borderRadius: '10px', border: '1.5px solid #cbd5e1', fontWeight: '900', fontSize: '13px' }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* 1. CAMPOS PARA CAMINADORA INCLINADA */}
                 {machineType === 'treadmill' && (
@@ -1523,65 +1976,132 @@ export default function CardioLogger({
           {/* SUBPESTAÑA 3: FISIOLOGÍA & GUÍA */}
           {activeSubTab === 'science' && (
             <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              <div style={{ background: '#f0f9ff', border: '1.5px solid #bae6fd', borderRadius: '16px', padding: '14px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
-                  <Flame size={18} color="#0284c7" />
-                  <strong style={{ color: '#0369a1', fontSize: '13.5px', fontWeight: '900' }}>
-                    Prescripción Médica de Cardio Diario Adonis (Protocolo Bifásico de 60 Minutos):
-                  </strong>
-                </div>
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '12px', color: '#0c4a6e', lineHeight: '1.4' }}>
-                  {/* FASE A */}
-                  <div style={{ background: '#ffffff', padding: '10px 12px', borderRadius: '12px', border: '1.5px solid #7dd3fc' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
-                      <span style={{ fontSize: '13px' }}>🟢</span>
-                      <strong style={{ color: '#0369a1', fontSize: '12.5px', fontWeight: '900' }}>
-                        1. Fase A (30 min al 11-12% de Inclinación):
-                      </strong>
-                    </div>
-                    <ul style={{ margin: '0', paddingLeft: '18px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                      <li>
-                        <strong style={{ color: '#0284c7' }}>Zona 2 Lipolítica Pura:</strong> A 120-135 BPM, las mitocondrias oxidan ácidos grasos libres sin agotar las reservas glucolíticas requeridas para el estudio.
-                      </li>
-                      <li>
-                        <strong style={{ color: '#0284c7' }}>Cero Impacto Articular:</strong> La pendiente reduce drásticamente las fuerzas de impacto sobre los meniscos y cartílago rotuliano en comparación con correr o trotar.
-                      </li>
-                    </ul>
-                  </div>
-
-                  {/* FASE B */}
-                  <div style={{ background: '#ffffff', padding: '10px 12px', borderRadius: '12px', border: '1.5px solid #6ee7b7' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
-                      <span style={{ fontSize: '13px' }}>🔵</span>
-                      <strong style={{ color: '#047857', fontSize: '12.5px', fontWeight: '900' }}>
-                        2. Fase B (30 min Planos a 0% de Inclinación):
-                      </strong>
-                    </div>
-                    <ul style={{ margin: '0', paddingLeft: '18px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                      <li>
-                        <strong style={{ color: '#059669' }}>Descarga del Tendón de Aquiles & Sóleo:</strong> Caminar inclinado más de 30-40 min continuos produce sobrecarga excéntrica en el tendón de Aquiles y la fascia plantar.
-                      </li>
-                      <li>
-                        <strong style={{ color: '#059669' }}>Retorno Venoso & Aclaramiento:</strong> Pasar a plano descarga la musculatura de la pantorrilla, normaliza el ángulo tibio-tarsiano y promueve el retorno venoso y aclaramiento de lactato.
-                      </li>
-                    </ul>
-                  </div>
-
-                  {/* ECUACIONES ACSM */}
-                  <div style={{ background: '#ffffff', padding: '10px 12px', borderRadius: '12px', border: '1px solid #bae6fd' }}>
-                    <strong style={{ color: '#0284c7', display: 'block', marginBottom: '2px', fontWeight: '900' }}>
-                      3. Ecuaciones Metabólicas ACSM Bi-Fásicas:
+              {machineType === 'rower' ? (
+                <div style={{ background: '#f0fdf4', border: '1.5px solid #86efac', borderRadius: '16px', padding: '14px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: '20px' }}>🚣‍♂️</span>
+                    <strong style={{ color: '#166534', fontSize: '14px', fontWeight: '900' }}>
+                      Protocolo Matutino: Cardio vs. NEAT en Máquina de Remo
                     </strong>
-                    El costo energético se computa independientemente para cada fase: VO₂ con pendiente fraccional en Fase A + VO₂ plano a mayor velocidad en Fase B, sumando kcal mecánicas reales y elevación ganada exacta.
+                    <span style={{ fontSize: '10px', background: '#dcfce7', color: '#15803d', padding: '2px 8px', borderRadius: '8px', fontWeight: '900' }}>
+                      ☀️ Separación ≥ 6h de Pesas
+                    </span>
+                  </div>
+
+                  <p style={{ fontSize: '12px', color: '#14532d', lineHeight: '1.45', margin: '0 0 10px 0' }}>
+                    <strong>Anulación del Efecto de Interferencia (AMPK vs. mTOR):</strong> Para que el cardio no bloquee la síntesis proteica miofibrilar ni desgaste tus sustratos de glucógeno para el entrenamiento de hipertrofia, estas sesiones deben realizarse por la mañana, separadas por al menos 6 horas de tu entrenamiento de fuerza.
+                  </p>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '12px', color: '#14532d' }}>
+                    {/* OPCIÓN A */}
+                    <div style={{ background: '#ffffff', padding: '10px 12px', borderRadius: '12px', border: '1.5px solid #fed7aa' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                        <span style={{ fontSize: '13px' }}>⚡</span>
+                        <strong style={{ color: '#c2410c', fontSize: '12.5px', fontWeight: '900' }}>
+                          Opción A: Sesión Híbrida ("Cardio de verdad" + NEAT) — Máximo 1 a 2 veces por semana
+                        </strong>
+                      </div>
+                      <ul style={{ margin: '0', paddingLeft: '18px', display: 'flex', flexDirection: 'column', gap: '4px', lineHeight: '1.4' }}>
+                        <li>
+                          <strong>Duración Total:</strong> 35-40 minutos.
+                        </li>
+                        <li>
+                          <strong style={{ color: '#ea580c' }}>Fase 1 (Cardio HIIT / Vigoroso - 10-15 min):</strong> Realiza de 4 a 6 sprints de 20 segundos a máxima velocidad, seguidos de 40 a 60 segundos de remo muy suave para recuperar. Esfuerzo percibido RPE 16-18 sobre 20.
+                        </li>
+                        <li>
+                          <strong style={{ color: '#ea580c' }}>Fase 2 (NEAT / LISS - 20-25 min):</strong> Ritmo continuo a muy baja intensidad. Funciona como enfriamiento activo y suma gasto calórico sin añadir fatiga metabólica.
+                        </li>
+                      </ul>
+                    </div>
+
+                    {/* OPCIÓN B */}
+                    <div style={{ background: '#ffffff', padding: '10px 12px', borderRadius: '12px', border: '1.5px solid #a7f3d0' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                        <span style={{ fontSize: '13px' }}>🌿</span>
+                        <strong style={{ color: '#047857', fontSize: '12.5px', fontWeight: '900' }}>
+                          Opción B: Sesión Pura de NEAT (LISS) — 2 a 3 veces por semana
+                        </strong>
+                      </div>
+                      <ul style={{ margin: '0', paddingLeft: '18px', display: 'flex', flexDirection: 'column', gap: '4px', lineHeight: '1.4' }}>
+                        <li>
+                          <strong>Duración Total:</strong> 30-45 minutos.
+                        </li>
+                        <li>
+                          <strong style={{ color: '#059669' }}>Intensidad (Talk Test - RPE 12-13 sobre 20):</strong> Debes poder mantener una conversación fluida o respirar cómodamente por la nariz sin jadear.
+                        </li>
+                        <li>
+                          <strong style={{ color: '#059669' }}>Objetivo:</strong> Simular los pasos y la actividad que no realizas por el trabajo sedentario. No debes terminar exhausto ni con los músculos ardiendo.
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  <div style={{ background: '#f0fdf4', border: '1px solid #86efac', padding: '8px 10px', borderRadius: '10px', color: '#166534', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '6px', marginTop: '10px', fontSize: '11.5px' }}>
+                    <Check size={16} color="#166534" style={{ flexShrink: 0 }} />
+                    <span>Beneficio Mecánico: Cero impacto axial en columna o rodillas, tracción escapular suave e inducción mitocondrial sin fatiga residual en sentadillas.</span>
                   </div>
                 </div>
+              ) : (
+                <div style={{ background: '#f0f9ff', border: '1.5px solid #bae6fd', borderRadius: '16px', padding: '14px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+                    <Flame size={18} color="#0284c7" />
+                    <strong style={{ color: '#0369a1', fontSize: '13.5px', fontWeight: '900' }}>
+                      Prescripción Médica de Cardio Diario Adonis (Protocolo Bifásico de 60 Minutos):
+                    </strong>
+                  </div>
 
-                <div style={{ background: '#f0fdf4', border: '1px solid #86efac', padding: '8px 10px', borderRadius: '10px', color: '#166534', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '6px', marginTop: '10px', fontSize: '11.5px' }}>
-                  <Check size={16} color="#166534" style={{ flexShrink: 0 }} />
-                  <span>Sin interferencia hipertrófica: Este formato bifásico de 60 minutos maximiza el déficit calórico diario protegiendo tus piernas pesadas y la energía cerebral de estudio.</span>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '12px', color: '#0c4a6e', lineHeight: '1.4' }}>
+                    {/* FASE A */}
+                    <div style={{ background: '#ffffff', padding: '10px 12px', borderRadius: '12px', border: '1.5px solid #7dd3fc' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                        <span style={{ fontSize: '13px' }}>🟢</span>
+                        <strong style={{ color: '#0369a1', fontSize: '12.5px', fontWeight: '900' }}>
+                          1. Fase A (30 min al 11-12% de Inclinación):
+                        </strong>
+                      </div>
+                      <ul style={{ margin: '0', paddingLeft: '18px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <li>
+                          <strong style={{ color: '#0284c7' }}>Zona 2 Lipolítica Pura:</strong> A 120-135 BPM, las mitocondrias oxidan ácidos grasos libres sin agotar las reservas glucolíticas requeridas para el estudio.
+                        </li>
+                        <li>
+                          <strong style={{ color: '#0284c7' }}>Cero Impacto Articular:</strong> La pendiente reduce drásticamente las fuerzas de impacto sobre los meniscos y cartílago rotuliano en comparación con correr o trotar.
+                        </li>
+                      </ul>
+                    </div>
+
+                    {/* FASE B */}
+                    <div style={{ background: '#ffffff', padding: '10px 12px', borderRadius: '12px', border: '1.5px solid #6ee7b7' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                        <span style={{ fontSize: '13px' }}>🔵</span>
+                        <strong style={{ color: '#047857', fontSize: '12.5px', fontWeight: '900' }}>
+                          2. Fase B (30 min Planos a 0% de Inclinación):
+                        </strong>
+                      </div>
+                      <ul style={{ margin: '0', paddingLeft: '18px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <li>
+                          <strong style={{ color: '#059669' }}>Descarga del Tendón de Aquiles & Sóleo:</strong> Caminar inclinado más de 30-40 min continuos produce sobrecarga excéntrica en el tendón de Aquiles y la fascia plantar.
+                        </li>
+                        <li>
+                          <strong style={{ color: '#059669' }}>Retorno Venoso & Aclaramiento:</strong> Pasar a plano descarga la musculatura de la pantorrilla, normaliza el ángulo tibio-tarsiano y promueve el retorno venoso y aclaramiento de lactato.
+                        </li>
+                      </ul>
+                    </div>
+
+                    {/* ECUACIONES ACSM */}
+                    <div style={{ background: '#ffffff', padding: '10px 12px', borderRadius: '12px', border: '1px solid #bae6fd' }}>
+                      <strong style={{ color: '#0284c7', display: 'block', marginBottom: '2px', fontWeight: '900' }}>
+                        3. Ecuaciones Metabólicas ACSM Bi-Fásicas:
+                      </strong>
+                      El costo energético se computa independientemente para cada fase: VO₂ con pendiente fraccional en Fase A + VO₂ plano a mayor velocidad en Fase B, sumando kcal mecánicas reales y elevación ganada exacta.
+                    </div>
+                  </div>
+
+                  <div style={{ background: '#f0fdf4', border: '1px solid #86efac', padding: '8px 10px', borderRadius: '10px', color: '#166534', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '6px', marginTop: '10px', fontSize: '11.5px' }}>
+                    <Check size={16} color="#166534" style={{ flexShrink: 0 }} />
+                    <span>Sin interferencia hipertrófica: Este formato bifásico de 60 minutos maximiza el déficit calórico diario protegiendo tus piernas pesadas y la energía cerebral de estudio.</span>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           )}
 

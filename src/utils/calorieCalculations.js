@@ -239,6 +239,34 @@ export function calculateCardioCalories(cardioData = {}, userWeightKg = 78.55) {
     if (distanceKm <= 0) {
       distanceKm = Math.round(((spm * 2 * 0.5 * durationMinutes) / 1000) * 100) / 100;
     }
+  } else if (machineType === 'rower') {
+    // Protocolo Matutino de Remo: Opción A (Híbrida HIIT+NEAT) vs Opción B (LISS NEAT)
+    const rowOption = cardioData.rowOption || 'B';
+    const damper = parseFloat(cardioData.damperLevel || cardioData.resistanceLevel || 5) || 5;
+    const spm = parseFloat(cardioData.strokesPerMin || cardioData.cadenceRpm || 24) || 24;
+
+    if (rowOption === 'A') {
+      // Opción A: Sesión Híbrida (HIIT + NEAT)
+      // Fase 1: 10-15 min HIIT (sprints RPE 16-18) ~ 11.5 METs
+      // Fase 2: 20-25 min NEAT LISS ~ 5.5 METs
+      const phase1 = parseFloat(cardioData.rowPhase1Mins || cardioData.phaseMinutesA || 15) || 15;
+      const phase2 = parseFloat(cardioData.rowPhase2Mins || cardioData.phaseMinutesB || 20) || 20;
+      const totalPhases = Math.max(1, phase1 + phase2);
+      const weightedMet = ((phase1 * 11.5) + (phase2 * 5.5)) / totalPhases;
+      met = Math.max(6.5, Math.min(12.0, weightedMet + (damper * 0.1)));
+    } else {
+      // Opción B: Sesión Pura de NEAT LISS (Talk Test RPE 12-13/20)
+      met = 5.5 + (damper * 0.12) + ((spm - 20) * 0.04);
+      met = Math.max(4.8, Math.min(8.0, met));
+    }
+    acsmKcal = ((met * 3.5 * userWeightKg) / 200) * durationMinutes;
+
+    if (distanceKm <= 0) {
+      // Estimación en metros según SPM y duración (Concept2 estándar)
+      const metersPerStroke = 7.5 + (damper * 0.3);
+      const estMeters = spm * durationMinutes * metersPerStroke;
+      distanceKm = Math.round((estMeters / 1000) * 100) / 100;
+    }
   }
 
   // Sesión específica de cardio del Smartwatch
