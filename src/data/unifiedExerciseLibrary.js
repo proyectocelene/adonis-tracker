@@ -684,6 +684,132 @@ export const UNIFIED_EXERCISE_LIBRARY = [
     ]
   },
   {
+    "id": "lib_abdo_decline_crunch_disc_01",
+    "name": "Crunch Declinado con Disco (Decline Plate-Weighted Crunch)",
+    "muscleGroup": "Abdomen",
+    "equipment": "Banco Declinado & Disco / Mancuerna",
+    "unifiedCode": "[ABDO-DECLINE_CRUNCH-DISC_01]",
+    "machineKey": "ABDO-DECLINE_CRUNCH",
+    "muscleGroupCode": "ABDO",
+    "machineCode": "DECLINE_CRUNCH",
+    "specCode": "DISC_01",
+    "defaultSets": 3,
+    "defaultReps": "10-15",
+    "defaultRest": "60-90 s",
+    "ratio": 1,
+    "biomechanics": "Sostén un disco o mancuerna en tu pecho y haz el crunch con fuerza. Enfócate en flexionar tu columna. No des tirones a tu cabeza con los brazos. Asegúrate de redondear la espalda al subir para que el recto abdominal haga el trabajo hipertrófico y no los flexores de cadera (psoas).",
+    "mindMuscle": {
+      "title": "Recto Abdominal en Banco Declinado (Sobrecarga Progresiva)",
+      "internalCue": "Imagina enrollar las costillas hacia la pelvis redondeando la espalda alta como un caparazón.",
+      "externalCue": "Presiona el disco contra las clavículas y despega las escápulas del banco con fuerza explosiva.",
+      "eccentricCue": "Desciende vértebra a vértebra en 3 segundos manteniendo la tensión en la pared abdominal sin relajar al fondo."
+    },
+    "warmup": "🔥 1 serie de aproximación: 6-8 reps sin peso para calibrar el ángulo del banco.",
+    "searchQuery": "decline weighted crunch proper form hypertrophy",
+    "aliases": [
+      "Crunch Declinado con Disco (Decline Plate-Weighted Crunch)",
+      "Crunch Declinado con Disco",
+      "Decline Plate-Weighted Crunch",
+      "Crunch en Banco Declinado",
+      "Crunch Declinado",
+      "Abdominales en Banco Declinado"
+    ]
+  },
+  {
+    "id": "lib_abdo_leg_raise_hanging_01",
+    "name": "Elevación de Piernas Colgado (Hanging Leg Raise) o en Silla Romana",
+    "muscleGroup": "Abdomen",
+    "equipment": "Barra de Dominadas / Silla Romana",
+    "unifiedCode": "[ABDO-LEG_RAISE-HANGING_01]",
+    "machineKey": "ABDO-LEG_RAISE",
+    "muscleGroupCode": "ABDO",
+    "machineCode": "LEG_RAISE",
+    "specCode": "HANGING_01",
+    "defaultSets": 3,
+    "defaultReps": "10-20",
+    "defaultRest": "60-90 s",
+    "ratio": 1,
+    "biomechanics": "Colgado en barra o con antebrazos en silla romana. Hazlo sin balanceo, enrollando la pelvis hacia arriba al contraer. Enfócate en flexionar la zona lumbar para reclutar al máximo las fibras inferiores del recto abdominal en lugar de solo los flexores de cadera.",
+    "mindMuscle": {
+      "title": "Fibras Inferiores del Recto Abdominal (Retroversion Pélvica)",
+      "internalCue": "No pienses en subir los pies: piensa en rodar tu pelvis hacia tu esternón mostrando las plantas de los pies al frente.",
+      "externalCue": "Enrolla la cintura y acerca el pubis a tu pecho con una pausa de 1 segundo arriba.",
+      "eccentricCue": "Baja las piernas en 3 segundos lentos frenando con el abdomen antes de que se inicie ningún balanceo pendular."
+    },
+    "warmup": "🔥 No ocupa.",
+    "searchQuery": "hanging leg raise form posterior pelvic tilt",
+    "aliases": [
+      "Elevación de Piernas Colgado (Hanging Leg Raise) o en Silla Romana (Roman Chair Leg Raise)",
+      "Elevación de Piernas Colgado (Hanging Leg Raise)",
+      "Elevación de Piernas Colgado",
+      "Hanging Leg Raise",
+      "Roman Chair Leg Raise",
+      "Elevación de Piernas en Silla Romana",
+      "Elevaciones de Piernas Colgado"
+    ]
+  },
+  {
+    "id": "lib_abdo_reverse_crunch_body_01",
+    "name": "Crunch Inverso en Suelo (Reverse Crunch)",
+    "muscleGroup": "Abdomen",
+    "equipment": "Colchoneta / Suelo",
+    "unifiedCode": "[ABDO-REVERSE_CRUNCH-BODY_01]",
+    "machineKey": "ABDO-REVERSE_CRUNCH",
+    "muscleGroupCode": "ABDO",
+    "machineCode": "REVERSE_CRUNCH",
+    "specCode": "BODY_01",
+    "defaultSets": 3,
+    "defaultReps": "6-12",
+    "defaultRest": "60 s",
+    "ratio": 1,
+    "biomechanics": "Alternativa ideal si no deseas colgarte. Tumbado supino en suelo, flexiona rodillas y despega la pelvis del piso rodando las rodillas hacia el pecho exclusivamente con la fuerza del abdomen bajo.",
+    "mindMuscle": {
+      "title": "Abdomen Inferior sin Tensión Cervical",
+      "internalCue": "Despega el coxis del suelo usando solo la pared abdominal baja sin empujar con las manos.",
+      "externalCue": "Lleva la pelvis hacia la cabeza enrollando la columna lumbar.",
+      "eccentricCue": "Baja el sacro al suelo en 3 segundos lentos manteniendo el control."
+    },
+    "warmup": "🔥 No ocupa.",
+    "searchQuery": "reverse crunch floor proper form",
+    "aliases": [
+      "Crunch Inverso (Reverse Crunch)",
+      "Crunch Inverso",
+      "Reverse Crunch",
+      "Crunch Inverso en Suelo"
+    ]
+  },
+  {
+    "id": "lib_abdo_bicycle_crunch_body_01",
+    "name": "Crunch en Bicicleta (Bicycle Crunch)",
+    "muscleGroup": "Abdomen",
+    "equipment": "Colchoneta / Suelo",
+    "unifiedCode": "[ABDO-BICYCLE_CRUNCH-BODY_01]",
+    "machineKey": "ABDO-BICYCLE_CRUNCH",
+    "muscleGroupCode": "ABDO",
+    "machineCode": "BICYCLE_CRUNCH",
+    "specCode": "BODY_01",
+    "defaultSets": 3,
+    "defaultReps": "10-12",
+    "defaultRest": "60 s",
+    "ratio": 1,
+    "biomechanics": "Enfócate en flexionar y rotar tu columna, llevando el codo izquierdo a la rodilla derecha y el codo derecho a la rodilla izquierda. Movimiento controlado con pausa isométrica de 1 segundo en cada cruce para reclutar oblicuos internos y externos sin tironear del cuello.",
+    "mindMuscle": {
+      "title": "Oblicuos y Rotación Torácica",
+      "internalCue": "Conduce la axila hacia la rodilla opuesta (no solo el codo) para garantizar rotación del torso entero.",
+      "externalCue": "Gira los hombros cruzando diagonalmente sobre el centro del abdomen.",
+      "eccentricCue": "Cambia de pierna en 2 segundos controlados sin dejar caer los hombros al piso."
+    },
+    "warmup": "🔥 No ocupa.",
+    "searchQuery": "bicycle crunch proper technique obliques",
+    "aliases": [
+      "Crunch en Bicicleta (Bicycle Crunch)",
+      "Crunch en Bicicleta",
+      "Bicycle Crunch",
+      "Bicicleta Abdominal",
+      "Crunches en Bicicleta"
+    ]
+  },
+  {
     "id": "lib_aduc_aductor_stack_01",
     "name": "Aductores en Máquina (Hip Adduction / Cerrar Cadera)",
     "muscleGroup": "Aductores",

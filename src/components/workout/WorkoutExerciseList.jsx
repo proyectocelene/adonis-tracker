@@ -26,7 +26,8 @@ export default function WorkoutExerciseList({
   userWeightKg = 78.55,
   userSmartwatchKcal = null,
   onOpenStrengthWatchModal = null,
-  onDeleteCustomExercise = null
+  onDeleteCustomExercise = null,
+  isDeloadMode = false
 }) {
   return (
     <>
@@ -215,6 +216,7 @@ export default function WorkoutExerciseList({
             onDeleteCustomExercise={onDeleteCustomExercise ? () => onDeleteCustomExercise(exercise.id) : undefined}
             workoutHistory={workoutHistory}
             todayWorkoutData={todayWorkoutData}
+            isDeloadMode={isDeloadMode}
           />
         );
       })}

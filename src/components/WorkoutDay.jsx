@@ -14,6 +14,14 @@ import WorkoutLiveStats from './workout/WorkoutLiveStats';
 import WorkoutExerciseList from './workout/WorkoutExerciseList';
 import AddCustomExerciseModal from './workout/AddCustomExerciseModal';
 import WorkoutFooterControls from './workout/WorkoutFooterControls';
+import SmartRescheduleModal from './workout/SmartRescheduleModal';
+import SundayRecoveryDashboard from './workout/SundayRecoveryDashboard';
+import PendingExercisesBanner from './workout/PendingExercisesBanner';
+import DeloadMonitoringCard from './workout/DeloadMonitoringCard';
+import { detectFatigueStatus, isSplitOverrideActive, createDeloadCycle, calculateDeloadProgress } from '../utils/adaptiveRoutineEngine';
+import { detectUnfinishedExercisesFromPreviousSession } from '../utils/pendingExercisesDetector';
+import { executeCleanSlate } from '../services/cleanSlateService';
+import { useAuth } from '../contexts/AuthContext';
 import { getPreviousDataForExercise } from '../utils/exerciseMatcher';
 import { calculateVolume, calculate1RM, calculateAverageRPE, isExerciseUnilateral, getMachineStorageKey } from '../hooks/useWorkoutCalculations';
 import { calculateWorkoutCalories } from '../utils/calorieCalculations';
@@ -25,6 +33,7 @@ import { Target, Calendar as CalendarIcon, Clock, ArrowRight, Loader2, Dumbbell,
 import { useModal } from './common/UIComponents';
 
 export default function WorkoutDay() {
+  const { currentUser } = useAuth();
   const [activeTab, setActiveTab] = useState('workout');
   const modal = useModal();
   const todayStr = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(new Date().getDate()).padStart(2, '0')}`;
@@ -46,6 +55,10 @@ export default function WorkoutDay() {
   const [workoutHistory, setWorkoutHistory, isHistoryLoading, saveSession, deleteSession] = useWorkoutHistory();
   const [apiKey] = useLocalStorage('coachv2_deepseek_apikey', '');
   const [googleSheetsUrl, setGoogleSheetsUrl] = useLocalStorage('coachv2_google_sheets_url', 'https://script.google.com/macros/s/AKfycbxA-KbUcEgWUq4jvjdSBxLw3tGsgPxXsF2Y7mX5JsNIpE2qslN1v7xW3NqdJ3-4b-RCwg/exec');
+  const [isDeloadMode, setIsDeloadMode] = useLocalStorage('coachv2_deload_active', false);
+  const [deloadCycleConfig, setDeloadCycleConfig] = useLocalStorage('coachv2_deload_cycle_config', null);
+  const [weekSplitOverride, setWeekSplitOverride] = useLocalStorage('coachv2_week_split_override', null);
+  const [dismissedPendingAlerts, setDismissedPendingAlerts] = useLocalStorage('coachv2_dismissed_pending_alerts', {});
 
   const isLoadingDb = isHistoryLoading || isSessionsLoading || isMetricsLoading;
 
@@ -59,11 +72,20 @@ export default function WorkoutDay() {
 
   const [showMonthlyCalendar, setShowMonthlyCalendar] = useState(true);
   const [showGlosarioModal, setShowGlosarioModal] = useState(false);
+  const [showRescheduleModal, setShowRescheduleModal] = useState(false);
   const [isAddingExercise, setIsAddingExercise] = useState(false);
   const [newExScope, setNewExScope] = useState('today'); // 'today' | 'permanent'
   const [showRoutineBuilder, setShowRoutineBuilder] = useState(false);
   const [showSecondaryTools, setShowSecondaryTools] = useState(false);
   const [showStrengthWatchModal, setShowStrengthWatchModal] = useState(false);
+
+  // 2.1 Verificar expiración automática del split override semanal (domingo 23:59)
+  const isOverrideActive = useMemo(() => isSplitOverrideActive(weekSplitOverride), [weekSplitOverride]);
+  useEffect(() => {
+    if (weekSplitOverride && !isOverrideActive) {
+      setWeekSplitOverride(null);
+    }
+  }, [weekSplitOverride, isOverrideActive]);
 
   // Formulario nuevo ejercicio
   const [newExName, setNewExName] = useState('');
@@ -108,7 +130,10 @@ export default function WorkoutDay() {
   }
 
   // 3. Variables derivadas en orden estricto de dependencias
-  const activeDays = (customRoutine && Array.isArray(customRoutine) && customRoutine.length > 0) ? customRoutine : scientificProtocol;
+  const baseActiveDays = (customRoutine && Array.isArray(customRoutine) && customRoutine.length > 0) ? customRoutine : scientificProtocol;
+  const activeDays = (isOverrideActive && weekSplitOverride?.routine && Array.isArray(weekSplitOverride.routine))
+    ? weekSplitOverride.routine
+    : baseActiveDays;
   
   // Si existe una sesión guardada para esta fecha, usar su dayId correspondiente (ej. d3 Jalón)
   let effectiveDayIndex = currentDayIndex;
@@ -152,6 +177,206 @@ export default function WorkoutDay() {
   } else if (!isHistoryLoading && workoutHistory && workoutHistory.length === 0 && !mesocycleStartDate) {
     setMesocycleStartDate(new Date().toISOString());
   }
+
+  // === ANÁLISIS CLÍNICO DE FATIGA Y RECOMENDACIÓN DE DESCARGA ===
+  const fatigueStatus = useMemo(() => {
+    return detectFatigueStatus(workoutHistory, currentWeek);
+  }, [workoutHistory, currentWeek]);
+
+  // Progreso y cálculo exacto del ciclo de descarga (7 días completos)
+  const deloadProgress = useMemo(() => {
+    if (!isDeloadMode && !deloadCycleConfig?.isActive) return null;
+    return calculateDeloadProgress(deloadCycleConfig, workoutHistory);
+  }, [isDeloadMode, deloadCycleConfig, workoutHistory]);
+
+  // Si el ciclo de 7 días se completó y expiró, finalizar descarga automáticamente
+  useEffect(() => {
+    if (isDeloadMode && deloadProgress?.isCompleted) {
+      setIsDeloadMode(false);
+      setDeloadCycleConfig(prev => prev ? { ...prev, isActive: false, completedAt: new Date().toISOString() } : null);
+      modal.showAlert({
+        title: "⚡ ¡Semana de Descarga Completada!",
+        message: "Has completado exitosamente el microciclo de 7 días de recuperación activa y supercompensación. Tu sistema nervioso y articulaciones están al 100%. ¡Iniciando nueva fase de sobrecarga progresiva pesada!",
+        variant: "success"
+      });
+    }
+  }, [isDeloadMode, deloadProgress?.isCompleted]);
+
+  const handleToggleDeload = () => {
+    if (!isDeloadMode) {
+      // Activar ciclo de 7 días
+      const newCycle = createDeloadCycle(currentWeek, fatigueStatus?.reason);
+      setDeloadCycleConfig(newCycle);
+      setIsDeloadMode(true);
+      modal.showAlert({
+        title: "🧘 Modo Descarga Activado (7 Días)",
+        message: `Iniciado microciclo de descarga científica de 7 días naturales.\n\n• Cargas ajustadas al 80%\n• Volumen reducido al 50% (2 series)\n• Intensidad RIR 3-4\n• Duración: hasta el ${new Date(newCycle.endDate).toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' })}.`,
+        variant: "info"
+      });
+    } else {
+      // Desactivar manualmente
+      modal.showConfirm({
+        title: "⚠️ ¿Finalizar Semana de Descarga?",
+        message: "Si desactivas el modo Deload antes de concluir los 7 días naturales, regresarás inmediatamente a las series completas (3-4 series) y pesos máximos de sobrecarga progresiva.",
+        confirmText: "Sí, Volver a Pesado",
+        cancelText: "Mantener Descarga",
+        variant: "warning",
+        onConfirm: () => {
+          setIsDeloadMode(false);
+          setDeloadCycleConfig(prev => prev ? { ...prev, isActive: false } : null);
+        }
+      });
+    }
+  };
+
+  const handleRollingShift = () => {
+    modal.showConfirm({
+      title: "🔄 Desplazar Sesión a Mañana",
+      message: `Hoy se marcará como descanso regenerador. Tu entrenamiento (${baseDay.name}) se reprogramará como la prioridad para mañana.`,
+      confirmText: "Confirmar Desplazamiento",
+      variant: "info",
+      onConfirm: async () => {
+        await handleSaveSpecialDay('rest');
+        modal.showAlert({
+          title: "🔄 Sesión Desplazada",
+          message: "El descanso de hoy ha sido registrado. Mañana retomas tu entrenamiento exactamente donde lo dejaste.",
+          variant: "success"
+        });
+      }
+    });
+  };
+
+  const handleSaveSundayLog = async (recoveryData) => {
+    const sessionId = historySession?.id || `ses_${selectedDateKey}_d7`;
+    const sessionDate = new Date(`${selectedDateKey}T12:00:00`);
+    const sessionLog = {
+      id: sessionId,
+      weekNumber: currentWeek,
+      weekName: `Semana ${currentWeek}`,
+      date: selectedDateKey,
+      timestamp: sessionDate.toISOString(),
+      dateString: sessionDate.toLocaleDateString('es-ES', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }),
+      dayId: 'd7',
+      dayName: 'Domingo: Descanso Activo / NEAT',
+      focus: 'Descanso total del SNC & Termogénesis NEAT',
+      volume: 0,
+      completedSets: 0,
+      cardioCompleted: 0,
+      exercises: {},
+      isCompleted: true,
+      isRestDay: true,
+      isMissedDay: false,
+      neatSteps: recoveryData.neatSteps,
+      sleepHours: recoveryData.sleepHours,
+      energyLevel: recoveryData.energyLevel,
+      recoveryNotes: recoveryData.recoveryNotes
+    };
+    await saveSession(sessionLog);
+    modal.showAlert({
+      title: "✅ Descanso Activo Guardado",
+      message: `Registro de recuperación del Domingo archivado con éxito (${recoveryData.neatSteps.toLocaleString()} pasos NEAT • ${recoveryData.sleepHours} hrs de sueño).`,
+      variant: "success"
+    });
+  };
+
+  // === DETECCIÓN INTELIGENTE DE EJERCICIOS PENDIENTES DE LA SESIÓN PREVIA ===
+  const pendingPreviousData = useMemo(() => {
+    if (isViewingHistory) return null;
+    return detectUnfinishedExercisesFromPreviousSession({
+      selectedDateKey,
+      activeDays,
+      workoutHistory,
+      dismissedAlerts: dismissedPendingAlerts
+    });
+  }, [selectedDateKey, activeDays, workoutHistory, dismissedPendingAlerts, isViewingHistory]);
+
+  const handleImportPendingToToday = (exercisesToImport) => {
+    if (!exercisesToImport || exercisesToImport.length === 0) return;
+    const dayKey = baseDay.id;
+    const existingCustoms = customExercisesMap[dayKey] || [];
+    const newAdds = exercisesToImport.map(ex => ({
+      id: `pending_${Date.now()}_${ex.id}`,
+      name: ex.name,
+      muscleGroup: ex.muscleGroup || 'General',
+      sets: ex.sets || 3,
+      reps: ex.reps || '10-12',
+      restTime: ex.restTime || '90 s',
+      biomechanics: ex.biomechanics || 'Trabajo recuperado de sesión anterior para balance de volumen semanal.',
+      unifiedCode: ex.unifiedCode,
+      isCustom: true
+    }));
+
+    setCustomExercisesMap(prev => ({
+      ...prev,
+      [dayKey]: [...existingCustoms, ...newAdds]
+    }));
+
+    setDismissedPendingAlerts(prev => ({
+      ...prev,
+      [selectedDateKey]: true
+    }));
+
+    modal.showAlert({
+      title: "✅ Ejercicios Incorporados",
+      message: `Se agregaron ${newAdds.length} ejercicio(s) al final de tu rutina de hoy (${baseDay.name}) como remate para completar tu volumen semanal.`,
+      variant: "success"
+    });
+  };
+
+  const handleMoveExerciseBetweenDays = (sourceDayId, targetDayId, exerciseId) => {
+    const srcDay = activeDays.find(d => d.id === sourceDayId);
+    const targetDay = activeDays.find(d => d.id === targetDayId);
+    if (!srcDay || !targetDay) return;
+
+    const exToMove = (srcDay.exercises || []).find(e => e.id === exerciseId);
+    if (!exToMove) return;
+
+    const currentTargetCustoms = customExercisesMap[targetDayId] || [];
+    const newTargetItem = {
+      id: `moved_${Date.now()}_${exToMove.id}`,
+      name: exToMove.name,
+      muscleGroup: exToMove.muscleGroup || 'General',
+      sets: exToMove.sets || 3,
+      reps: exToMove.reps || '10-12',
+      restTime: exToMove.restTime || '90 s',
+      biomechanics: exToMove.biomechanics || 'Ejercicio redistribuido para balance de volumen semanal.',
+      unifiedCode: exToMove.unifiedCode,
+      isCustom: true
+    };
+
+    setCustomExercisesMap(prev => ({
+      ...prev,
+      [targetDayId]: [...currentTargetCustoms, newTargetItem]
+    }));
+
+    modal.showAlert({
+      title: "⚖️ Volumen Redistribuido",
+      message: `${exToMove.name} fue transferido a ${targetDay.name.split(':')[0]} para equilibrar tus series semanales.`,
+      variant: "success"
+    });
+  };
+
+  const handleExecuteCleanSlate = () => {
+    modal.showConfirm({
+      title: "🧹 Clean Slate: Purgar Caché y Órdenes Viejos",
+      message: "Esta acción eliminará de forma atómica en tu dispositivo y en Firestore Cloud cualquier orden residual o rutina desfasada que cause desajustes entre celular y PC.\n\n✅ Tu historial completo de entrenamientos, pesos levantados y marcas de 1RM quedará 100% a salvo e intacto.\n\n¿Proceder con la purga limpia?",
+      confirmText: "🧹 Sí, Purgar y Limpiar Todo",
+      cancelText: "Cancelar",
+      variant: "danger",
+      onConfirm: async () => {
+        await executeCleanSlate(currentUser);
+        setCustomExercisesMap({});
+        setSwappedExercisesMap({});
+        setExerciseOrderMap({});
+        setCustomRoutine(null);
+        modal.showAlert({
+          title: "🎉 Clean Slate Aplicado con Éxito",
+          message: "Se purgaron todos los órdenes desfasados de la nube y almacenamiento local. La app ahora está sincronizada al 100% con el Protocolo Oficial limpio en todos tus dispositivos.",
+          variant: "success"
+        });
+      }
+    });
+  };
 
   // === SINCRONIZAR currentDayIndex CON FECHA O HISTORIAL ===
   useEffect(() => {
@@ -990,7 +1215,8 @@ export default function WorkoutDay() {
           bodyComposition: bodyComposition || null,
           isCompleted: true,
           isRestDay: false,
-          isMissedDay: false
+          isMissedDay: false,
+          isDeloadSession: Boolean(isDeloadMode)
         };
 
         // Guardar en Firebase Collection y sincronizar
@@ -1129,18 +1355,19 @@ export default function WorkoutDay() {
   const handleResetAllDaysToOfficial = () => {
     modal.showConfirm({
       title: "✨ Activar Protocolo Adonis Oficial en Toda la Semana",
-      message: "Se limpiarán todas las sustituciones y ejercicios añadidos en los 7 días para activar la lista oficial limpia del Protocolo Adonis Definitivo.\n\nTu historial de marcas y bitácoras anteriores permanecerá 100% a salvo e intacto.",
+      message: "Se limpiarán todas las sustituciones, órdenes alterados y ejercicios añadidos en los 7 días para activar la lista oficial limpia del Protocolo Adonis Definitivo en todos tus dispositivos.\n\n✅ Tu historial de marcas y bitácoras anteriores permanecerá 100% a salvo e intacto.",
       confirmText: "✨ Sí, Activar en Todos los Días",
       cancelText: "Cancelar",
       variant: "warning",
-      onConfirm: () => {
+      onConfirm: async () => {
+        await executeCleanSlate(currentUser);
         setCustomExercisesMap({});
         setSwappedExercisesMap({});
         setExerciseOrderMap({});
         setCustomRoutine(null);
         modal.showAlert({
           title: "🎉 Protocolo Adonis Definitivo Activado",
-          message: "Todos los días de la semana ahora muestran la plantilla oficial limpia.",
+          message: "Todos los días de la semana y dispositivos ahora muestran la plantilla oficial limpia sin residuos de órdenes antiguos.",
           variant: "success"
         });
       }
@@ -1211,11 +1438,21 @@ export default function WorkoutDay() {
 
       if (totalExercises === 0) {
         analysisText = "No hay series completadas hoy para realizar análisis matemático.";
+      } else if (isDeloadMode) {
+        analysisText += `\n🧘 EVALUACIÓN CLÍNICA DE DESCARGA (DELOAD):\n`;
+        analysisText += `• Volumen controlado: Has completado tus series con rango submáximo de recuperación.\n`;
+        analysisText += `• El objetivo clínico no es batir récords hoy, sino disipar la fatiga de tendones y del SNC.\n`;
+        analysisText += `• Mantén este estímulo controlado hasta el final de tu microciclo de 7 días para detonar la supercompensación de fuerza en el siguiente bloque.`;
       } else {
         analysisText += `\n🎯 Resumen: Lograste sobrecarga progresiva real en ${improvements} de ${totalExercises} ejercicios evaluados.`;
+        if (fatigueStatus?.shouldHighlightDeload) {
+          analysisText += `\n\n💡 DIAGNÓSTICO DEL COACH INTELIGENTE:`;
+          analysisText += `\n⚠️ Alerta de fatiga o avance de mesociclo: ${fatigueStatus.reason}`;
+          analysisText += `\n👉 Recomendación: Puedes activar el [🧘 Modo Descarga] para resetear la fatiga articular y volver a romper marcas la próxima semana.`;
+        }
       }
 
-      setAiAnalysisResult({ resumenSobrecarga: analysisText });
+      setAiAnalysisResult({ resumenSobrecarga: analysisText, isDeloadMode });
       setIsAnalyzingAI(false);
     }, 600);
   };
@@ -1340,7 +1577,10 @@ export default function WorkoutDay() {
       machineConfigs: globalMachineConfigs || {},
       bodyMetrics,
       bodyComposition,
-      userWeightKg
+      userWeightKg,
+      isDeloadMode,
+      deloadCycleConfig,
+      fatigueStatus
     });
 
     if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -1520,6 +1760,11 @@ export default function WorkoutDay() {
             completedSets={completedSets}
             volume={volume}
             workoutHistory={workoutHistory}
+            isDeloadMode={isDeloadMode}
+            onToggleDeload={handleToggleDeload}
+            fatigueStatus={fatigueStatus}
+            activeOverride={isOverrideActive ? weekSplitOverride : null}
+            onOpenRescheduleModal={() => setShowRescheduleModal(true)}
           />
 
           {/* BARRITAS KPI EN VIVO */}
@@ -1533,17 +1778,50 @@ export default function WorkoutDay() {
             elapsedMinutes={liveElapsedMinutes}
           />
 
-          {/* DÍA DE DESCANSO O RUTINA DE ENTRENAMIENTO */}
-          {currentDay.type === 'rest' && currentDay.exercises.length === 0 ? (
-            <div className="card card-success" style={{ padding: '32px 20px', textAlign: 'center', margin: '16px 0' }}>
-              <CheckCircle size={48} color="#00b464" style={{ margin: '0 auto 12px auto' }} />
-              <h2 style={{ color: '#0f172a', fontSize: '19px', fontWeight: '800' }}>Día de Síntesis Muscular & Descanso</h2>
-              <p style={{ marginTop: '8px', color: '#475569', fontSize: '13px', lineHeight: '1.6' }}>
-                Descanso absoluto programado. La reparación de fibras musculares ocurre fuera del gimnasio.
-              </p>
-            </div>
+          {/* DÍA DE DESCANSO / RECUPERACIÓN O RUTINA DE ENTRENAMIENTO */}
+          {currentDay.id === 'd7' || (currentDay.type === 'rest' && currentDay.exercises.length === 0) ? (
+            currentDay.id === 'd7' ? (
+              <SundayRecoveryDashboard
+                selectedDateKey={selectedDateKey}
+                currentWeek={currentWeek}
+                onSaveSundayLog={handleSaveSundayLog}
+                historySession={historySession}
+                isViewingHistory={isViewingHistory}
+              />
+            ) : (
+              <div className="card card-success" style={{ padding: '32px 20px', textAlign: 'center', margin: '16px 0' }}>
+                <CheckCircle size={48} color="#00b464" style={{ margin: '0 auto 12px auto' }} />
+                <h2 style={{ color: '#0f172a', fontSize: '19px', fontWeight: '800' }}>Día de Síntesis Muscular & Descanso</h2>
+                <p style={{ marginTop: '8px', color: '#475569', fontSize: '13px', lineHeight: '1.6' }}>
+                  Descanso absoluto programado. La reparación de fibras musculares ocurre fuera del gimnasio.
+                </p>
+              </div>
+            )
           ) : (
             <div>
+              {/* MONITOR CLÍNICO DE DESCARGA ACTIVA (DURACIÓN 7 DÍAS & 4 PILARES) */}
+              {isDeloadMode && deloadProgress && (
+                <DeloadMonitoringCard
+                  deloadProgress={deloadProgress}
+                  onDeactivateDeload={handleToggleDeload}
+                />
+              )}
+
+              {/* BANNER INTELIGENTE DE EJERCICIOS PENDIENTES DE LA SESIÓN ANTERIOR */}
+              {pendingPreviousData && (
+                <PendingExercisesBanner
+                  pendingData={pendingPreviousData}
+                  onImportToToday={handleImportPendingToToday}
+                  onOpenRescheduleModal={() => setShowRescheduleModal(true)}
+                  onDismiss={() => {
+                    setDismissedPendingAlerts(prev => ({
+                      ...prev,
+                      [selectedDateKey]: true
+                    }));
+                  }}
+                />
+              )}
+
               {/* ACCESO RÁPIDO PROTOCOLO MATUTINO (CARDIO / REMO) */}
               {(() => {
                 const morningCardioEx = currentDay.exercises?.find(e => e.isCardio);
@@ -1699,6 +1977,35 @@ export default function WorkoutDay() {
                 userSmartwatchKcal={smartwatchKcalMap?.[selectedDateKey] || null}
                 onOpenStrengthWatchModal={() => setShowStrengthWatchModal(true)}
                 onDeleteCustomExercise={handleDeleteCustomExercise}
+                isDeloadMode={isDeloadMode}
+              />
+
+              <SmartRescheduleModal
+                isOpen={showRescheduleModal}
+                onClose={() => setShowRescheduleModal(false)}
+                activeOverride={isOverrideActive ? weekSplitOverride : null}
+                onApplyOverride={(overrideObj) => {
+                  setWeekSplitOverride(overrideObj);
+                  modal.showAlert({
+                    title: "⚡ Semana Reestructurada",
+                    message: `Tu microciclo ha sido adaptado inteligentemente a ${overrideObj.splitType?.replace('_', ' ').toUpperCase()}. Todos los ejercicios clave de hipertrofia fueron preservados. Vencerá automáticamente el domingo.`,
+                    variant: "success"
+                  });
+                }}
+                onClearOverride={() => {
+                  setWeekSplitOverride(null);
+                  modal.showAlert({
+                    title: "🔄 Rutina Base Restaurada",
+                    message: "Has vuelto a la rutina base de 6 días.",
+                    variant: "info"
+                  });
+                }}
+                onRollingShift={handleRollingShift}
+                onCleanSlate={handleExecuteCleanSlate}
+                onMoveExerciseBetweenDays={handleMoveExerciseBetweenDays}
+                currentDayName={baseDay.name}
+                baseRoutine={customRoutine || scientificProtocol}
+                activeDays={activeDays}
               />
 
               <AddCustomExerciseModal
@@ -1761,19 +2068,62 @@ export default function WorkoutDay() {
 
       {/* REPORTES Y MODALES SECUNDARIOS */}
       {aiAnalysisResult && (
-        <div className="card animate-fade" style={{ padding: '16px', marginBottom: '16px', background: '#f3e8ff', border: '1.5px solid #d8b4fe', borderRadius: '20px' }}>
+        <div className="card animate-fade" style={{
+          padding: '16px 18px',
+          marginBottom: '16px',
+          background: aiAnalysisResult.isDeloadMode ? 'linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 100%)' : '#f3e8ff',
+          border: aiAnalysisResult.isDeloadMode ? '1.5px solid #34d399' : '1.5px solid #d8b4fe',
+          borderRadius: '20px',
+          boxShadow: '0 4px 16px rgba(0,0,0,0.06)'
+        }}>
           <div className="flex-between" style={{ marginBottom: '10px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Sparkles size={20} color="#7c3aed" />
-              <strong style={{ fontSize: '15px', color: '#4c1d95', fontWeight: '900' }}>Reporte de Sobrecarga AI</strong>
+              {aiAnalysisResult.isDeloadMode ? <Sparkles size={20} color="#059669" /> : <Sparkles size={20} color="#7c3aed" />}
+              <strong style={{ fontSize: '15px', color: aiAnalysisResult.isDeloadMode ? '#065f46' : '#4c1d95', fontWeight: '900' }}>
+                {aiAnalysisResult.isDeloadMode ? '🧘 Auditoría de Descarga del Coach' : 'Reporte de Sobrecarga AI'}
+              </strong>
             </div>
             <button type="button" onClick={() => setAiAnalysisResult(null)} style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}>
               <X size={18} color="#64748b" />
             </button>
           </div>
-          <p style={{ fontSize: '13px', color: '#581c87', margin: 0, lineHeight: '1.5', fontWeight: '600' }}>
+          <p style={{
+            fontSize: '13px',
+            color: aiAnalysisResult.isDeloadMode ? '#047857' : '#581c87',
+            margin: 0,
+            lineHeight: '1.6',
+            fontWeight: '600',
+            whiteSpace: 'pre-line'
+          }}>
             {aiAnalysisResult.resumenSobrecarga}
           </p>
+          {!isDeloadMode && fatigueStatus?.shouldHighlightDeload && (
+            <div style={{ marginTop: '12px', display: 'flex', justifyContent: 'flex-end' }}>
+              <button
+                type="button"
+                onClick={() => {
+                  setAiAnalysisResult(null);
+                  handleToggleDeload();
+                }}
+                style={{
+                  background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
+                  color: '#ffffff',
+                  border: 'none',
+                  padding: '8px 14px',
+                  borderRadius: '12px',
+                  fontSize: '12px',
+                  fontWeight: '800',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  boxShadow: '0 2px 8px rgba(5, 150, 105, 0.3)'
+                }}
+              >
+                🧘 Activar Modo Descarga (7 Días)
+              </button>
+            </div>
+          )}
         </div>
       )}
 

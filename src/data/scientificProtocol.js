@@ -362,40 +362,42 @@ export const scientificProtocol = [
       },
       {
         "id": "d1_e6",
-        "unifiedCode": "[ABDO-VACUUM-ISOM_01]",
-        "name": "Vacuum Abdominal (Transverso / Cintura Estrecha)",
-        "muscleGroup": "Core (Transverso & Cintura Estrecha)",
-        "sets": 4,
-        "reps": "20-25 s",
+        "unifiedCode": "[ABDO-PLANK-ISOM_01]",
+        "name": "Plancha (Plank)",
+        "muscleGroup": "Core (Estabilidad y Core Interno)",
+        "sets": 3,
+        "reps": "20 s",
         "isTime": true,
         "restTime": "60 s",
         "defaultUnit": "s",
-        "biomechanics": "Apnea espiratoria completa. Ombligo succionado hacia la columna para cerrar el perímetro de la cintura. De pie o apoyado en rodillas. Exhala todo el aire residual de los pulmones. Sin inhalar, expande la caja torácica aspirando el ombligo hacia la columna vertebral y hacia arriba bajo las costillas. Mantén 20 a 25 segundos en apnea espiratoria.",
-        "warmup": "🔥 No ocupa (solo 2 exhalaciones profundas previas).",
+        "biomechanics": "Aprieta los glúteos y mantén las caderas bajas. Estabilidad y tensión global del core en cuatro apoyos manteniendo la columna neutra sin arquear la zona lumbar.",
+        "warmup": "🔥 No ocupa.",
+        "searchQuery": "plank proper form glute squeeze core stability",
+        "mindMuscle": {
+          "title": "Core Anterior & Estabilidad Isométrica",
+          "internalCue": "Aprieta glúteos con fuerza y clava los codos hacia los pies generando tensión activa.",
+          "externalCue": "Mantén el cuerpo recto como una viga de acero sin subir ni bajar la pelvis.",
+          "eccentricCue": "Sostén la tensión continua durante los 20 segundos sin dejar caer el abdomen."
+        }
+      },
+      {
+        "id": "d1_e7",
+        "unifiedCode": "[ABDO-VACUUM-ISOM_01]",
+        "name": "Vacuum Abdominal",
+        "muscleGroup": "Core (Transverso & Cintura Estrecha)",
+        "sets": 3,
+        "reps": "20 s",
+        "isTime": true,
+        "restTime": "60 s",
+        "defaultUnit": "s",
+        "biomechanics": "Exhala todo el aire y succiona el ombligo hacia adentro y hacia arriba. 3 a 4 series de 20 segundos de retención en apnea espiratoria.",
+        "warmup": "🔥 No ocupa (2 exhalaciones profundas previas).",
         "searchQuery": "stomach vacuum exercise waist tightening",
-        "equivalents": [
-          {
-            "id": "d1_e8_eq1",
-            "unifiedCode": "[ABDO-PLANK-ISOM_01]",
-            "name": "Plancha Abdominal Isométrica Convencional",
-            "desc": "Estabilidad y tensión global del core.",
-            "ratio": 1,
-            "biomechanics": "Tumbado supino, retroversión pélvica pegando la zona lumbar al suelo, piernas y brazos extendidos flotando a 15 cm.",
-            "mindMuscle": {
-              "title": "Hollow Body Isométrico",
-              "internalCue": "Aplasta el suelo con la espalda baja sin dejar pasar ni una hoja de papel.",
-              "externalCue": "Extiende las puntas de los pies y dedos de las manos en direcciones opuestas.",
-              "eccentricCue": "Mantén la tensión continua durante todo el tiempo prescrito."
-            },
-            "searchQuery": "Plancha abdominal isométrica convencional (45 s) tecnica biomecanica",
-            "warmup": "🔥 No ocupa (solo 2 exhalaciones profundas previas)."
-          }
-        ],
         "mindMuscle": {
           "title": "Músculo Transverso Abdominal & Cinturón Natural",
           "internalCue": "Imagina que abrochas un corsé interno extremadamente ajustado alrededor de tus órganos.",
           "externalCue": "Pega el ombligo directamente contra la cara interna de tu columna vertebral.",
-          "eccentricCue": "Al terminar los segundos de retención, relaja lentamente tomando aire nasal controlado."
+          "eccentricCue": "Al terminar los 20 segundos, relaja lentamente tomando aire nasal controlado."
         }
       },
       {
@@ -715,6 +717,25 @@ export const scientificProtocol = [
           "internalCue": "En el fondo, siente cómo el tendón de Aquiles se estira y la pantorrilla se alarga. Al subir, elévate sobre el dedo gordo del pie.",
           "externalCue": "Imagina que intentas tocar el techo con la cabeza impulsándote solo con las puntas de los pies.",
           "eccentricCue": "Desciende en 3 segundos muy lentos hasta sentir el estiramiento máximo del talón hacia el suelo."
+        }
+      },
+      {
+        "id": "d2_e6",
+        "unifiedCode": "[ABDO-DECLINE_CRUNCH-DISC_01]",
+        "name": "Crunch Declinado con Disco (Decline Plate-Weighted Crunch)",
+        "muscleGroup": "Core (Recto Abdominal / Hipertrofia Cuadros)",
+        "sets": 3,
+        "reps": "10-15",
+        "restTime": "60-90 s",
+        "defaultUnit": "lbs",
+        "biomechanics": "Sostén un disco o mancuerna en tu pecho y haz el crunch con fuerza. Enfócate en flexionar tu columna. No des tirones a tu cabeza con los brazos. Asegúrate de redondear la espalda al subir para que el abdomen haga el trabajo y no las piernas.",
+        "warmup": "🔥 1 serie de aproximación: 8 reps sin peso para calibrar el ángulo del banco.",
+        "searchQuery": "decline weighted crunch proper form hypertrophy",
+        "mindMuscle": {
+          "title": "Recto Abdominal en Banco Declinado (Cuadros Superiores/Medios)",
+          "internalCue": "Imagina enrollar las costillas hacia la pelvis redondeando la espalda alta como un caparazón.",
+          "externalCue": "Presiona el disco contra las clavículas y despega las escápulas del banco con fuerza explosiva.",
+          "eccentricCue": "Desciende vértebra a vértebra en 3 segundos manteniendo la tensión en la pared abdominal sin relajar al fondo."
         }
       },
       {
@@ -1039,40 +1060,39 @@ export const scientificProtocol = [
       },
       {
         "id": "d3_e6",
-        "unifiedCode": "[ABDO-VACUUM-ISOM_01]",
-        "name": "Vacuum Abdominal (Transverso / Cintura Estrecha)",
-        "muscleGroup": "Core (Transverso & Cintura Estrecha)",
-        "sets": 4,
-        "reps": "20-25 s",
-        "isTime": true,
-        "restTime": "60 s",
-        "defaultUnit": "s",
-        "biomechanics": "Transverso profundo. De pie, manos apoyadas en rodillas o barra. Exhala todo el aire residual de los pulmones. Sin inhalar, expande la caja torácica aspirando el ombligo hacia la columna vertebral y hacia arriba bajo las costillas. Mantén 20 a 25 segundos en apnea espiratoria.",
+        "unifiedCode": "[ABDO-LEG_RAISE-HANGING_01]",
+        "name": "Elevación de Piernas Colgado o en Silla Romana (Hanging Leg Raise)",
+        "muscleGroup": "Core (Fibras Inferiores del Abdomen)",
+        "sets": 3,
+        "reps": "10-20",
+        "restTime": "60-90 s",
+        "defaultUnit": "reps",
+        "biomechanics": "Enfócate en flexionar tu zona lumbar y enrollar la pelvis hacia el esternón al subir sin balanceo pendular. Alternativa si no quieres colgarte: Crunch Inverso (Reverse Crunch) de 3 a 4 series de 6 a 12 reps.",
         "warmup": "🔥 No ocupa.",
-        "searchQuery": "stomach vacuum exercise waist tightening",
+        "searchQuery": "hanging leg raise form posterior pelvic tilt",
         "equivalents": [
           {
-            "id": "d3_e7_eq1",
-            "unifiedCode": "[ABDO-PLANK-ISOM_01]",
-            "name": "Plancha Abdominal Isométrica Convencional",
-            "desc": "Tensión estabilizadora.",
+            "id": "d3_e6_eq1",
+            "unifiedCode": "[ABDO-REVERSE_CRUNCH-BODY_01]",
+            "name": "Crunch Inverso en Suelo (Reverse Crunch)",
+            "desc": "Alternativa en colchoneta si no deseas colgarte.",
             "ratio": 1,
-            "biomechanics": "Posición de cuatro apoyos en colchoneta. Exhalación completa y aspiración abdominal manteniendo la columna neutra por 15 segundos.",
+            "biomechanics": "Tumbado supino en suelo. Despega la pelvis del piso rodando las rodillas hacia el pecho de 6 a 12 repeticiones sin tirar del cuello.",
             "mindMuscle": {
-              "title": "Plancha Vacío Abdominal en Cuadrupedia",
-              "internalCue": "Aspira el abdomen desafiando la gravedad hacia el techo.",
-              "externalCue": "Pega el ombligo contra la espalda sin arquear la zona lumbar.",
-              "eccentricCue": "Control respiratorio pausado al finalizar."
+              "title": "Abdomen Inferior sin Tensión Cervical",
+              "internalCue": "Despega el coxis del suelo usando solo la pared abdominal baja sin empujar con las manos.",
+              "externalCue": "Lleva la pelvis hacia la cabeza enrollando la columna lumbar.",
+              "eccentricCue": "Baja el sacro al suelo en 3 segundos lentos manteniendo el control."
             },
-            "searchQuery": "Plancha Isométrica tecnica biomecanica",
+            "searchQuery": "reverse crunch floor proper form",
             "warmup": "🔥 No ocupa."
           }
         ],
         "mindMuscle": {
-          "title": "Músculo Transverso Abdominal & Cinturón Natural",
-          "internalCue": "Imagina que abrochas un corsé interno extremadamente ajustado alrededor de tus órganos.",
-          "externalCue": "Pega el ombligo directamente contra la cara interna de tu columna vertebral.",
-          "eccentricCue": "Al terminar los segundos de retención, relaja lentamente tomando aire nasal controlado."
+          "title": "Fibras Inferiores del Recto Abdominal (Retroversion Pélvica)",
+          "internalCue": "No pienses en subir los pies: piensa en rodar tu pelvis hacia tu esternón mostrando las plantas de los pies al frente.",
+          "externalCue": "Enrolla la cintura y acerca el pubis a tu pecho con una pausa de 1 segundo arriba.",
+          "eccentricCue": "Baja las piernas en 3 segundos lentos frenando con el abdomen antes de que se inicie ningún balanceo pendular."
         }
       },
       {
@@ -1416,40 +1436,21 @@ export const scientificProtocol = [
       },
       {
         "id": "d4_e6",
-        "unifiedCode": "[ABDO-VACUUM-ISOM_01]",
-        "name": "Vacuum Abdominal (Transverso / Cintura Estrecha)",
-        "muscleGroup": "Core (Transverso & Cintura Estrecha)",
-        "sets": 4,
-        "reps": "20-25 s",
-        "isTime": true,
+        "unifiedCode": "[ABDO-BICYCLE_CRUNCH-BODY_01]",
+        "name": "Crunch en Bicicleta (Bicycle Crunch)",
+        "muscleGroup": "Core (Oblicuos y Rotación Torácica)",
+        "sets": 3,
+        "reps": "10-12",
         "restTime": "60 s",
-        "defaultUnit": "s",
-        "biomechanics": "Apnea espiratoria completa. Ombligo succionado hacia la columna para cerrar el perímetro de la cintura. De pie o apoyado en rodillas. Exhala todo el aire residual de los pulmones. Sin inhalar, expande la caja torácica aspirando el ombligo hacia la columna vertebral y hacia arriba bajo las costillas. Mantén 20 a 25 segundos en apnea espiratoria.",
-        "warmup": "🔥 No ocupa (solo 2 exhalaciones profundas previas).",
-        "searchQuery": "stomach vacuum exercise waist tightening",
-        "equivalents": [
-          {
-            "id": "d1_e8_eq1",
-            "unifiedCode": "[ABDO-PLANK-ISOM_01]",
-            "name": "Plancha Abdominal Isométrica Convencional",
-            "desc": "Estabilidad y tensión global del core.",
-            "ratio": 1,
-            "biomechanics": "Tumbado supino, retroversión pélvica pegando la zona lumbar al suelo, piernas y brazos extendidos flotando a 15 cm.",
-            "mindMuscle": {
-              "title": "Hollow Body Isométrico",
-              "internalCue": "Aplasta el suelo con la espalda baja sin dejar pasar ni una hoja de papel.",
-              "externalCue": "Extiende las puntas de los pies y dedos de las manos en direcciones opuestas.",
-              "eccentricCue": "Mantén la tensión continua durante todo el tiempo prescrito."
-            },
-            "searchQuery": "Plancha abdominal isométrica convencional (45 s) tecnica biomecanica",
-            "warmup": "🔥 No ocupa (solo 2 exhalaciones profundas previas)."
-          }
-        ],
+        "defaultUnit": "reps",
+        "biomechanics": "Enfócate en flexionar y rotar tu columna, llevando el codo izquierdo a la rodilla derecha y el codo derecho a la rodilla izquierda. Pausa de 1 segundo en cada cruce para activación neuromuscular pura sin tirones al cuello.",
+        "warmup": "🔥 No ocupa.",
+        "searchQuery": "bicycle crunch proper technique obliques",
         "mindMuscle": {
-          "title": "Músculo Transverso Abdominal & Cinturón Natural",
-          "internalCue": "Imagina que abrochas un corsé interno extremadamente ajustado alrededor de tus órganos.",
-          "externalCue": "Pega el ombligo directamente contra la cara interna de tu columna vertebral.",
-          "eccentricCue": "Al terminar los segundos de retención, relaja lentamente tomando aire nasal controlado."
+          "title": "Oblicuos y Rotación Torácica",
+          "internalCue": "Conduce la axila hacia la rodilla opuesta (no solo el codo) para garantizar rotación del torso entero.",
+          "externalCue": "Gira los hombros cruzando diagonalmente sobre el centro del abdomen.",
+          "eccentricCue": "Cambia de pierna en 2 segundos controlados sin dejar caer los hombros al piso."
         }
       },
       {
@@ -1728,40 +1729,21 @@ export const scientificProtocol = [
       },
       {
         "id": "d5_e6",
-        "unifiedCode": "[ABDO-VACUUM-ISOM_01]",
-        "name": "Vacuum Abdominal (Transverso / Cintura Estrecha)",
-        "muscleGroup": "Core (Transverso & Cintura Estrecha)",
-        "sets": 4,
-        "reps": "20-25 s",
-        "isTime": true,
-        "restTime": "60 s",
-        "defaultUnit": "s",
-        "biomechanics": "Transverso. De pie o apoyado en rodillas. Exhalación total del aire. Expande la caja torácica y aspira el ombligo hacia adentro por 20-25 segundos continuos.",
-        "warmup": "🔥 No ocupa.",
-        "searchQuery": "stomach vacuum exercise waist tightening",
-        "equivalents": [
-          {
-            "id": "d5_e6_eq1",
-            "unifiedCode": "[ABDO-PLANK-ISOM_01]",
-            "name": "Plancha Abdominal Isométrica Convencional",
-            "desc": "Estabilidad y contracción del core.",
-            "ratio": 1,
-            "biomechanics": "Posición de cuatro apoyos en colchoneta. Aspiración diafragmática de 15 a 20 segundos.",
-            "mindMuscle": {
-              "title": "Plancha Vacío Abdominal en Cuadrupedia",
-              "internalCue": "Aspira el abdomen hacia el techo.",
-              "externalCue": "Pega el ombligo a la columna.",
-              "eccentricCue": "Control respiratorio pausado."
-            },
-            "searchQuery": "Plancha Isométrica tecnica biomecanica",
-            "warmup": "🔥 No ocupa."
-          }
-        ],
+        "unifiedCode": "[ABDO-DECLINE_CRUNCH-DISC_01]",
+        "name": "Crunch Declinado con Disco (Decline Plate-Weighted Crunch)",
+        "muscleGroup": "Core (Recto Abdominal / Hipertrofia Pesada)",
+        "sets": 3,
+        "reps": "10-15",
+        "restTime": "60-90 s",
+        "defaultUnit": "lbs",
+        "biomechanics": "Nuevamente, sostén un disco o mancuerna en tu pecho y haz el crunch con fuerza. Asegúrate de redondear la espalda al subir para que el abdomen haga el trabajo y no las piernas.",
+        "warmup": "🔥 1 serie de aproximación: 6-8 reps sin peso para calibrar el ángulo del banco.",
+        "searchQuery": "decline weighted crunch proper form hypertrophy",
         "mindMuscle": {
-          "title": "Vacuum Abdominal (Transverso)",
-          "internalCue": "Aprieta el transverso como un corsé de acero.",
-          "externalCue": "Pega el ombligo contra la columna vertebral.",
-          "eccentricCue": "Relaja de forma lenta al finalizar."
+          "title": "Recto Abdominal en Banco Declinado (Sobrecarga de Viernes)",
+          "internalCue": "Imagina enrollar las costillas hacia la pelvis redondeando la espalda alta como un caparazón.",
+          "externalCue": "Presiona el disco contra las clavículas y despega las escápulas del banco con fuerza explosiva.",
+          "eccentricCue": "Desciende vértebra a vértebra en 3 segundos manteniendo la tensión en la pared abdominal sin relajar al fondo."
         }
       },
       {
@@ -2086,56 +2068,39 @@ export const scientificProtocol = [
       },
       {
         "id": "d6_e6",
-        "unifiedCode": "[ABDO-VACUUM-ISOM_01]",
-        "name": "Vacuum Abdominal (Transverso / Cintura Estrecha)",
-        "muscleGroup": "Core (Transverso & Cintura Estrecha)",
-        "sets": 4,
-        "reps": "20-25 s",
-        "isTime": true,
-        "restTime": "60 s",
-        "defaultUnit": "s",
-        "biomechanics": "Transverso. De pie o apoyado en rodillas. Exhalación total del aire. Expande la caja torácica y aspira el ombligo hacia adentro por 20-25 segundos continuos.",
+        "unifiedCode": "[ABDO-LEG_RAISE-HANGING_01]",
+        "name": "Elevación de Piernas Colgado (Hanging Leg Raise)",
+        "muscleGroup": "Core (Fibras Inferiores del Abdomen)",
+        "sets": 3,
+        "reps": "10-20",
+        "restTime": "60-90 s",
+        "defaultUnit": "reps",
+        "biomechanics": "Hazlo sin balanceo, enrollando la pelvis hacia arriba al contraer. Enfócate en flexionar la zona lumbar para sobrecarga directa en el abdomen inferior.",
         "warmup": "🔥 No ocupa.",
-        "searchQuery": "stomach vacuum exercise waist tightening",
+        "searchQuery": "hanging leg raise form posterior pelvic tilt",
         "equivalents": [
           {
-            "id": "d6_e7_eq1",
-            "unifiedCode": "[ABDO-PLANK-ISOM_01]",
-            "name": "Plancha Abdominal Isométrica Convencional",
-            "desc": "Estabilidad y contracción del core.",
+            "id": "d6_e6_eq1",
+            "unifiedCode": "[ABDO-REVERSE_CRUNCH-BODY_01]",
+            "name": "Crunch Inverso en Suelo (Reverse Crunch)",
+            "desc": "Alternativa en colchoneta si no deseas colgarte.",
             "ratio": 1,
-            "biomechanics": "Posición de cuatro apoyos en colchoneta. Aspiración diafragmática de 15 a 20 segundos.",
+            "biomechanics": "Tumbado supino en suelo. Despega la pelvis del piso rodando las rodillas hacia el pecho de 6 a 12 repeticiones sin tirar del cuello.",
             "mindMuscle": {
-              "title": "Plancha Vacío Abdominal en Cuadrupedia",
-              "internalCue": "Aspira el abdomen hacia el techo.",
-              "externalCue": "Pega el ombligo a la columna.",
-              "eccentricCue": "Control respiratorio pausado."
+              "title": "Abdomen Inferior sin Tensión Cervical",
+              "internalCue": "Despega el coxis del suelo usando solo la pared abdominal baja sin empujar con las manos.",
+              "externalCue": "Lleva la pelvis hacia la cabeza enrollando la columna lumbar.",
+              "eccentricCue": "Baja el sacro al suelo en 3 segundos lentos manteniendo el control."
             },
-            "searchQuery": "Plancha Isométrica tecnica biomecanica",
-            "warmup": "🔥 No ocupa."
-          },
-          {
-            "id": "d6_e7_eq_pallof",
-            "unifiedCode": "[ABDO-PALLOF_PRESS-CABLE_01]",
-            "name": "Pallof Press en Polea (Anti-Rotación)",
-            "desc": "Fuerza y control anti-rotacional de core.",
-            "ratio": 1,
-            "biomechanics": "Polea a la altura del esternón. De pie perpendicular a la polea con agarre doble frente al pecho. Extiende los brazos al frente en línea recta resistiendo el torque rotacional del cable.",
-            "mindMuscle": {
-              "title": "Core Funcional Anti-Rotación",
-              "internalCue": "Contrae los oblicuos y el abdomen profundo para impedir que el cable gire tu torso hacia la polea.",
-              "externalCue": "Extiende las manos al frente formando una línea perpendicular perfecta con tu esternón.",
-              "eccentricCue": "Regresa las manos al pecho en 2 segundos controlando la fuerza lateral."
-            },
-            "searchQuery": "pallof press cable anti rotation core stability",
+            "searchQuery": "reverse crunch floor proper form",
             "warmup": "🔥 No ocupa."
           }
         ],
         "mindMuscle": {
-          "title": "Vacuum Abdominal (Transverso)",
-          "internalCue": "Aprieta el transverso como un corsé de acero.",
-          "externalCue": "Pega el ombligo contra la columna vertebral.",
-          "eccentricCue": "Relaja de forma lenta al finalizar."
+          "title": "Fibras Inferiores del Recto Abdominal (Retroversion Pélvica)",
+          "internalCue": "No pienses en subir los pies: piensa en rodar tu pelvis hacia tu esternón mostrando las plantas de los pies al frente.",
+          "externalCue": "Enrolla la cintura y acerca el pubis a tu pecho con una pausa de 1 segundo arriba.",
+          "eccentricCue": "Baja las piernas en 3 segundos lentos frenando con el abdomen antes de que se inicie ningún balanceo pendular."
         }
       },
       {

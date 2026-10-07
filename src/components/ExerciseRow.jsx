@@ -32,7 +32,8 @@ export default function ExerciseRow({
   initiallyExpanded = false,
   isExpanded: controlledExpanded,
   onToggleExpand,
-  onDeleteCustomExercise
+  onDeleteCustomExercise,
+  isDeloadMode = false
 }) {
 
   const modal = useModal();
@@ -519,6 +520,7 @@ export default function ExerciseRow({
                 handleRemoveSet={handleRemoveSet}
                 onUpdateExerciseMeta={onUpdateExerciseMeta}
                 workoutHistory={workoutHistory}
+                isDeloadMode={isDeloadMode}
               />
             </div>
           )}

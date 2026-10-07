@@ -104,8 +104,10 @@ export default function SetLogger({
   handleAddSet,
   handleRemoveSet,
   onUpdateExerciseMeta,
-  workoutHistory = []
+  workoutHistory = [],
+  isDeloadMode = false
 }) {
+  const [unlockedDeloadSets, setUnlockedDeloadSets] = useState({});
   // Clasificación biomecánica inteligente (unilateral vs bilateral)
   const isUnilateral = useMemo(() => {
     return isExerciseUnilateral(exercise, exerciseData);
@@ -657,6 +659,26 @@ export default function SetLogger({
         </div>
       )}
 
+      {/* BANNER INFORMATIVO MODO DELOAD */}
+      {isDeloadMode && (
+        <div style={{
+          background: 'linear-gradient(135deg, #ecfdf5 0%, #e0f2fe 100%)',
+          border: '1.5px solid #059669',
+          borderRadius: '12px',
+          padding: '8px 12px',
+          marginBottom: '10px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          boxShadow: '0 2px 6px rgba(5, 150, 105, 0.08)'
+        }}>
+          <span style={{ fontSize: '16px' }}>🧘</span>
+          <div style={{ fontSize: '11px', color: '#065f46', fontWeight: '800', lineHeight: '1.4' }}>
+            <strong>Modo Deload Activo:</strong> Pesos sugeridos al 80%, objetivo 2 series y RIR 3-4 (sin fallo) para disipar fatiga del SNC.
+          </div>
+        </div>
+      )}
+
       {/* TABLA DE SERIES DE TRABAJO EFECTIVAS (DISEÑO ANTI-DESBORDE Y SIN TRUNCAMIENTO) */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '10px', width: '100%' }}>
         {Array.from({ length: totalSets }).map((_, sIdx) => {
@@ -686,10 +708,63 @@ export default function SetLogger({
           const isExtraSet = !prevWeightNum && !prevRepsNum;
 
           // Pasa machineConfig y lo realizado hoy (exerciseData) para cálculo con incrementos reales y estabilidad
-          const overloadTarget = getOverloadTarget(setNum, previousData, prescribedReps, machineConfig, prevVal.weight, prevVal.reps, exerciseData);
+          const overloadTarget = getOverloadTarget(setNum, previousData, prescribedReps, machineConfig, prevVal.weight, prevVal.reps, exerciseData, isDeloadMode);
           const current1RM = calculate1RM(setVal.weight, setVal.reps);
           const prev1RM = calculate1RM(prevVal.weight, prevVal.reps);
           const isPr = isDone && current1RM > 0 && prev1RM > 0 && current1RM > prev1RM;
+
+          // Si estamos en Deload y es la serie 3 o posterior (y no está completada ni desbloqueada manualmente)
+          if (isDeloadMode && sIdx >= 2 && !unlockedDeloadSets[setNum] && !isDone) {
+            return (
+              <div
+                key={setNum}
+                style={{
+                  background: '#f8fafc',
+                  border: '1.5px dashed #cbd5e1',
+                  borderRadius: '12px',
+                  padding: '9px 12px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: '8px',
+                  opacity: 0.8
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{
+                    background: '#94a3b8',
+                    color: '#ffffff',
+                    borderRadius: '6px',
+                    padding: '1px 5px',
+                    fontSize: '10px',
+                    fontWeight: '900'
+                  }}>
+                    S{setNum}
+                  </span>
+                  <span style={{ fontSize: '11px', color: '#64748b', fontWeight: '700' }}>
+                    🧘 Serie Omitida por Deload (Objetivo: 2 series de descarga)
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setUnlockedDeloadSets(prev => ({ ...prev, [setNum]: true }))}
+                  style={{
+                    background: '#ffffff',
+                    border: '1px solid #cbd5e1',
+                    borderRadius: '8px',
+                    padding: '4px 8px',
+                    fontSize: '10px',
+                    fontWeight: '800',
+                    color: '#0284c7',
+                    cursor: 'pointer'
+                  }}
+                  title="Desbloquear si deseas realizar esta serie extra"
+                >
+                  🔓 Desbloquear
+                </button>
+              </div>
+            );
+          }
 
           // Insignia inteligente delta-aware al completar la serie
           let completedBadge = null;

@@ -18,7 +18,10 @@ export function generateAISessionPrompt({
   machineConfigs = {},
   bodyMetrics = [],
   bodyComposition = {},
-  userWeightKg = null
+  userWeightKg = null,
+  isDeloadMode = false,
+  deloadCycleConfig = null,
+  fatigueStatus = null
 }) {
   const dateStr = selectedDateKey || new Date().toISOString().split('T')[0];
   const dayName = currentDay.name || 'Entrenamiento';
@@ -45,9 +48,9 @@ export function generateAISessionPrompt({
     adonisRatio = (parseFloat(shouldersCm) / parseFloat(waistCm)).toFixed(3);
   }
 
-  let prompt = `Actúa como un entrenador de fuerza de élite, biomecánico aplicado y científico deportivo con PhD en fisiología del ejercicio e hipertrofia (estilo Dr. Brad Schoenfeld / Dr. Mike Israetel / Chris Beardsley).
+  let prompt = `Actúa como un entrenador de fuerza de élite, biomecánico aplicado y científico deportivo con PhD en fisiología del ejercicio, hipertrofia y periodización clínica (al nivel de Dr. Brad Schoenfeld, Dr. Mike Israetel y Chris Beardsley).
 
-He completado mi sesión de entrenamiento con el Protocolo Adonis y aquí tienes mi bitácora cuantitativa completa, incluyendo mis métricas corporales actualizadas y la configuración mecánica exacta de cada estación. Necesito que la analices a fondo, evalúes mi sobrecarga progresiva y me des feedback accionable.
+He completado mi sesión de entrenamiento con el Protocolo Adonis y aquí tienes mi bitácora cuantitativa completa, incluyendo mis métricas corporales actualizadas, la configuración mecánica exacta de cada estación y el estado fisiológico de mi mesociclo. Necesito que la analices a fondo, evalúes mi sobrecarga progresiva o recuperación activa (Deload) y me des feedback experto y accionable.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 📐 COMPOSICIÓN CORPORAL & MEDIDAS DEL ATLETA (LÍNEA BASE ACTUAL)
@@ -66,12 +69,15 @@ ${bodyComposition?.bmr ? `• Tasa Metabólica Basal (BMR): ${bodyComposition.bm
 ${bodyComposition?.metabolicAge ? `• Edad Metabólica: ${bodyComposition.metabolicAge} años (Edad cronológica: ${bodyComposition.realAge || 26} años)` : ''}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📊 RESUMEN GENERAL DE LA SESIÓN
+📊 RESUMEN GENERAL DE LA SESIÓN & ESTADO DE FATIGA
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 • Fecha: ${dateStr}
 • Semana del Mesociclo: Semana ${currentWeek}
 • Rutina / Día: ${dayName}
 • Enfoque Biomecánico: ${focus}
+• Modalidad de Sesión: ${isDeloadMode ? '🧘 SEMANA DE DESCARGA ACTIVA (DELOAD) - VOLUMEN 50% / CARGAS 80% / RIR 3-4' : '⚡ SOBRECARGA PROGRESIVA MÁXIMA REGULAR (RIR 1-2)'}
+${isDeloadMode ? `• Microciclo Deload: ${deloadCycleConfig?.reason || 'Regeneración articular, resensibilización muscular y disipación de fatiga del SNC (Duración 7 días)'}` : ''}
+${fatigueStatus ? `• Diagnóstico Clínico de Fatiga: RPE medio reciente: ${fatigueStatus.averageRpe || '8.0'}/10 | Alerta de Descarga: ${fatigueStatus.shouldHighlightDeload ? `SÍ (${fatigueStatus.reason})` : 'NO (SNC en balance óptimo)'}` : ''}
 • Duración Real: ${totalDuration}
 • Series Efectivas de Hipertrofia: ${completedSets} series de trabajo directo
 • Series de Calentamiento / Aproximación (S0): ${warmupSets} series preparatorias
@@ -236,11 +242,20 @@ ${bodyComposition?.metabolicAge ? `• Edad Metabólica: ${bodyComposition.metab
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🎯 TUS TAREAS DE ANÁLISIS COMO MI ENTRENADOR:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-1. **Auditoría de Sobrecarga Progresiva & Tensión Mecánica:** ¿Hubo una tensión mecánica efectiva o me estanqué en algún movimiento? ¿Qué ejercicio mostró el mejor estímulo miofibrilar hoy?
-2. **Análisis de Esfuerzo, RPE & Fatiga Acumulada:** Con base en los RPEs reportados, ¿estuve en la zona óptima de hipertrofia (RIR 1-3)? ¿Hay signos de fatiga central o sobre-entrenamiento en esta etapa del mesociclo?
-3. **Recomendaciones de Carga Exacta para la Próxima Sesión:** Dime con qué peso y rango de repeticiones debo empezar la Serie 1 y subsiguientes la próxima vez que toque este día, teniendo en cuenta las limitaciones reales de placas de las máquinas.
+1. **Auditoría de Sobrecarga Progresiva o Ejecución de Deload:** 
+   ${isDeloadMode 
+     ? '• Esta sesión fue en MODO DESCARGA (DELOAD). Evalúa si cumplí adecuadamente con la reducción de volumen (2 series efectivas) y cargas submáximas (~80%). ¿Logré el objetivo de disipar fatiga articular y central sin entrenar al fallo?' 
+     : '• Evalúa si hubo tensión mecánica efectiva o si me estanqué en algún movimiento. ¿Qué ejercicio mostró el mejor estímulo miofibrilar hoy?'}
+2. **Análisis de Esfuerzo, RPE, Fatiga Acumulada & Prescripción de Deload:** 
+   • Con base en los RPEs reportados ${fatigueStatus ? `(RPE promedio reciente: ${fatigueStatus.averageRpe})` : ''}, ¿hay signos de fatiga central o sobre-entrenamiento en esta etapa del mesociclo? 
+   • Si no estuve en descarga y mis RPEs superan 9.2-9.5 de forma recurrente, o si estoy en la semana 5+, ¿me recomiendas activar formalmente una semana de descarga?
+   • Si estoy en Deload, ¿cómo evalúas mi respuesta fisiológica y qué señales de supercompensación debo buscar?
+3. **Recomendaciones de Carga Exacta para la Próxima Sesión:** 
+   ${isDeloadMode 
+     ? '• Al concluir este microciclo de descarga de 7 días, ¿con qué cargas y repeticiones debo retomar la sobrecarga progresiva pesada en el nuevo mesociclo para capitalizar la supercompensación?' 
+     : '• Dime con qué peso y rango de repeticiones debo empezar la Serie 1 y subsiguientes la próxima vez que toque este día, teniendo en cuenta las limitaciones reales de placas de las máquinas.'}
 4. **Relación Fisiológica con Mis Medidas Corporales:** Considerando mi peso actual, % de grasa, perímetro de cintura y ratio Adonis actual, ¿el volumen de hoy apoya mi objetivo estético y de recomposición?
-5. **Recuperación & Nutrición Post-Entreno Inmediata:** 2 recomendaciones específicas de nutrición (proteína, carbohidratos, hidratación) y descanso calculadas para el gasto energético y grupos musculares trabajados.
+5. **Recuperación, Nutrición & Blindaje Fisiológico:** 2 recomendaciones específicas de nutrición (proteína, carbohidratos, hidratación) y descanso calculadas para el gasto energético y grupos musculares trabajados.
 `;
 
   return prompt;

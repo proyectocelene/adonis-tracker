@@ -774,16 +774,22 @@ export function getOverloadTarget(
   machineConfig = null, 
   fallbackWeight = null, 
   fallbackReps = null,
-  currentExerciseData = null
+  currentExerciseData = null,
+  isDeloadMode = false
 ) {
   const analysis = analyzeExercisePerformance(previousData, targetRepsStr, machineConfig);
   const unified = analysis.unifiedTarget || getUnifiedExerciseTarget(previousData, targetRepsStr, machineConfig);
 
   const minReps = unified.minReps || 8;
   const maxReps = unified.maxReps || 12;
-  const plannedWeight = unified.hasData && unified.targetWeight > 0
+  const rawPlannedWeight = unified.hasData && unified.targetWeight > 0
     ? unified.targetWeight
     : roundToAttainableWeight(fallbackWeight || 0, machineConfig);
+
+  // Ajuste por Deload (80% de carga habitual para disipar fatiga articular y neural)
+  const plannedWeight = isDeloadMode && rawPlannedWeight > 0
+    ? roundToAttainableWeight(rawPlannedWeight * 0.8, machineConfig)
+    : rawPlannedWeight;
 
   // Retroalimentación inteligente intra-entreno (SIN mutar ni desplazar la meta planificada)
   let coachFeedback = null;
@@ -797,7 +803,9 @@ export function getOverloadTarget(
       const actualReps = parseFloat(prevDoneSet.reps) || minReps;
       const actualRpe = parseFloat(prevDoneSet.rpe) || 8;
 
-      if (actualRpe <= 7 || actualReps >= maxReps + 2) {
+      if (isDeloadMode) {
+        coachFeedback = `🧘 Deload S${setNum - 1}: Carga reducida (${actualWeight}# × ${actualReps}r, RPE ${actualRpe}). Mantén RIR 3-4 sin aproximarte al fallo.`;
+      } else if (actualRpe <= 7 || actualReps >= maxReps + 2) {
         isIntraSessionEasy = true;
         coachFeedback = `S${setNum - 1} completada con solvencia (${actualWeight}# × ${actualReps}r, RPE ${actualRpe}). Mantén ${plannedWeight || actualWeight} lbs para acumular volumen efectivo de hipertrofia.`;
       } else if (actualRpe >= 9.5 || actualReps < Math.max(3, minReps - 2)) {
@@ -811,39 +819,55 @@ export function getOverloadTarget(
 
   if (plannedWeight > 0) {
     let setNote = coachFeedback || unified.note || `Trabajar a ${plannedWeight} lbs buscando ${minReps}-${maxReps} reps con RPE 8.`;
-    if (!coachFeedback && setNum === 1 && unified.isS1RampUp) {
+    if (isDeloadMode) {
+      setNote = coachFeedback || `🧘 Semana de Descarga: ${plannedWeight} lbs (~80% de tu carga normal). Busca ${minReps} reps con RIR 3-4 (cero fallo) para recuperación celular.`;
+    } else if (!coachFeedback && setNum === 1 && unified.isS1RampUp) {
       setNote = `En la sesión anterior S1 fue ligera (${analysis.sets[0]?.weight || 0} lbs). Tu peso real de trabajo es ${plannedWeight} lbs.`;
     }
 
     return {
       suggestedWeight: plannedWeight,
       suggestedReps: minReps,
-      targetText: `Meta: ${plannedWeight} lbs × ${unified.targetReps || `${minReps}-${maxReps}`} reps`,
-      shortText: `Meta: ${plannedWeight}# × ${unified.targetReps || `${minReps}-${maxReps}`}r`,
+      targetText: isDeloadMode 
+        ? `Deload 80%: ${plannedWeight} lbs × ${minReps} reps (RIR 3-4)` 
+        : `Meta: ${plannedWeight} lbs × ${unified.targetReps || `${minReps}-${maxReps}`} reps`,
+      shortText: isDeloadMode
+        ? `Deload: ${plannedWeight}# (80%)`
+        : `Meta: ${plannedWeight}# × ${unified.targetReps || `${minReps}-${maxReps}`}r`,
       note: setNote,
-      isProgression: unified.canProgressWeight,
+      isProgression: !isDeloadMode && unified.canProgressWeight,
       isLoadAdjustment: unified.isExcessiveLoad,
-      isAnchorFix: setNum === 1 && unified.isS1RampUp,
+      isAnchorFix: !isDeloadMode && setNum === 1 && unified.isS1RampUp,
+      isDeload: isDeloadMode,
+      targetRpe: isDeloadMode ? '7 (RIR 3-4)' : '8 (RIR 1-2)',
       coachFeedback,
       isIntraSessionEasy,
       isIntraSessionHard,
-      type: unified.canProgressWeight ? 'increase' : (unified.isExcessiveLoad ? 'decrease' : 'maintain')
+      type: isDeloadMode ? 'deload' : (unified.canProgressWeight ? 'increase' : (unified.isExcessiveLoad ? 'decrease' : 'maintain'))
     };
   }
 
   // Fallback si no hay peso previo
   const fallbackW = roundToAttainableWeight(fallbackWeight || 0, machineConfig);
+  const fallbackEffectiveW = isDeloadMode && fallbackW > 0 
+    ? roundToAttainableWeight(fallbackW * 0.8, machineConfig) 
+    : fallbackW;
   const fallbackR = parseFloat(fallbackReps || minReps);
-  if (fallbackW <= 0 && fallbackR <= 0) return null;
+  if (fallbackEffectiveW <= 0 && fallbackR <= 0) return null;
 
   return {
-    suggestedWeight: fallbackW,
+    suggestedWeight: fallbackEffectiveW,
     suggestedReps: fallbackR,
-    targetText: `Meta: ${fallbackW} lbs × ${fallbackR} reps`,
-    shortText: `Meta: ${fallbackW}# × ${fallbackR}r`,
-    note: coachFeedback || 'Encuentra tu carga de trabajo objetivo a RPE 8.',
+    targetText: isDeloadMode 
+      ? `Deload 80%: ${fallbackEffectiveW} lbs × ${fallbackR} reps (RIR 3-4)` 
+      : `Meta: ${fallbackEffectiveW} lbs × ${fallbackR} reps`,
+    shortText: isDeloadMode ? `Deload: ${fallbackEffectiveW}#` : `Meta: ${fallbackEffectiveW}# × ${fallbackR}r`,
+    note: isDeloadMode 
+      ? `🧘 Modo Deload: Carga al 80% y RIR 3-4 para recuperación articular y neural.`
+      : (coachFeedback || 'Encuentra tu carga de trabajo objetivo a RPE 8.'),
     coachFeedback,
-    type: 'maintain'
+    isDeload: isDeloadMode,
+    type: isDeloadMode ? 'deload' : 'maintain'
   };
 }
 

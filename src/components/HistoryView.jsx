@@ -220,7 +220,8 @@ export default function HistoryView() {
               maxWeight: Math.round(maxGroupWeight),
               est1RM: Math.round(totalGroupVolume),
               reps: '-',
-              unit: 'lbs-reps'
+              unit: 'lbs-reps',
+              isDeloadSession: Boolean(ses.isDeloadSession || ses.isDeload || ses.focus?.toLowerCase().includes('deload') || ses.focus?.toLowerCase().includes('descarga'))
             });
           }
         }

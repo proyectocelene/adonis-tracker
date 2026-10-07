@@ -226,10 +226,59 @@ export default function HistoryChartsView({
                       <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                       <XAxis dataKey="date" tick={{ fontSize: 11, fontWeight: '700', fill: '#64748b' }} />
                       <YAxis domain={muscleYDomain} tick={{ fontSize: 11, fontWeight: '700', fill: '#64748b' }} />
-                      <Tooltip contentStyle={{ borderRadius: '14px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
+                      <Tooltip
+                        content={({ active, payload }) => {
+                          if (active && payload && payload.length > 0) {
+                            const data = payload[0].payload;
+                            return (
+                              <div style={{ background: '#0f172a', padding: '10px 12px', borderRadius: '12px', color: '#ffffff', boxShadow: '0 4px 14px rgba(0,0,0,0.25)', fontSize: '11px' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', marginBottom: '6px' }}>
+                                  <span style={{ fontWeight: '800', color: '#93c5fd' }}>📅 {data.date}</span>
+                                  {data.isDeloadSession && (
+                                    <span style={{ background: '#065f46', color: '#6ee7b7', padding: '1px 6px', borderRadius: '4px', fontSize: '9px', fontWeight: '900' }}>
+                                      🧘 DELOAD
+                                    </span>
+                                  )}
+                                </div>
+                                <div style={{ color: '#60a5fa', fontWeight: '700' }}>Carga Máxima: {data.maxWeight} lbs</div>
+                                <div style={{ color: '#38bdf8', fontWeight: '700' }}>Volumen Grupo: {data.est1RM?.toLocaleString()} lbs-reps</div>
+                              </div>
+                            );
+                          }
+                          return null;
+                        }}
+                      />
                       <Legend />
-                      <Line type="monotone" dataKey="maxWeight" name="Carga Máxima" stroke="#1d4ed8" strokeWidth={3} dot={{ r: 4, fill: '#1d4ed8' }} activeDot={{ r: 6, fill: '#1d4ed8' }} />
-                      <Line type="monotone" dataKey="est1RM" name="1RM Estimado" stroke="#0891b2" strokeWidth={2.5} strokeDasharray="4 4" dot={{ r: 3, fill: '#0891b2' }} />
+                      <Line
+                        type="monotone"
+                        dataKey="maxWeight"
+                        name="Carga Máxima"
+                        stroke="#1d4ed8"
+                        strokeWidth={3}
+                        dot={(props) => {
+                          const { cx, cy, payload } = props;
+                          if (!cx || !cy) return null;
+                          if (payload?.isDeloadSession) {
+                            return (
+                              <g key={`dot-deload-${cx}-${cy}`}>
+                                <circle cx={cx} cy={cy} r={6} fill="#ecfdf5" stroke="#059669" strokeWidth={2} />
+                                <circle cx={cx} cy={cy} r={2.5} fill="#10b981" />
+                              </g>
+                            );
+                          }
+                          return <circle key={`dot-${cx}-${cy}`} cx={cx} cy={cy} r={4} fill="#1d4ed8" stroke="#ffffff" strokeWidth={1.5} />;
+                        }}
+                        activeDot={{ r: 6, fill: '#1d4ed8' }}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="est1RM"
+                        name="Volumen Grupo"
+                        stroke="#0891b2"
+                        strokeWidth={2.5}
+                        strokeDasharray="4 4"
+                        dot={{ r: 3, fill: '#0891b2' }}
+                      />
                     </LineChart>
                   </ResponsiveContainer>
                 </div>

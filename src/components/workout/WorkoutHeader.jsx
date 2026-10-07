@@ -23,7 +23,12 @@ export default function WorkoutHeader({
   isHistoryLoading,
   completedSets,
   volume,
-  workoutHistory = []
+  workoutHistory = [],
+  isDeloadMode = false,
+  onToggleDeload = null,
+  fatigueStatus = null,
+  activeOverride = null,
+  onOpenRescheduleModal = null
 }) {
   return (
     <>
@@ -48,6 +53,10 @@ export default function WorkoutHeader({
         }
         isHistoryLoading={isHistoryLoading}
         workoutHistory={workoutHistory}
+        isDeloadMode={isDeloadMode}
+        onToggleDeload={onToggleDeload}
+        fatigueStatus={fatigueStatus}
+        activeOverride={activeOverride}
       />
 
       {/* ENFOQUE FISIOLÓGICO COMPACTO */}
@@ -119,11 +128,35 @@ export default function WorkoutHeader({
       )}
 
       {!isViewingHistory && (
-        <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
-          <button onClick={() => handleSaveSpecialDay('rest')} style={{ flex: 1, padding: '10px', background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: '12px', fontSize: '12px', fontWeight: '800', color: '#475569', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '4px' }}>
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' }}>
+          {onOpenRescheduleModal && (
+            <button 
+              type="button"
+              onClick={onOpenRescheduleModal} 
+              style={{ 
+                flex: '1 1 100%', 
+                padding: '11px 14px', 
+                background: activeOverride ? 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)' : 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)', 
+                border: activeOverride ? '1.5px solid #0284c7' : '1.5px solid #38bdf8', 
+                borderRadius: '14px', 
+                fontSize: '12.5px', 
+                fontWeight: '900', 
+                color: activeOverride ? '#ffffff' : '#0369a1', 
+                cursor: 'pointer', 
+                display: 'flex', 
+                justifyContent: 'center', 
+                alignItems: 'center', 
+                gap: '6px',
+                boxShadow: activeOverride ? '0 4px 12px rgba(2, 132, 199, 0.25)' : 'none'
+              }}
+            >
+              <span>⚡ {activeOverride ? `Split Activo: ${activeOverride.splitType?.replace('_', ' ').toUpperCase()}` : '¿No puedes entrenar hoy? Ajustar Semana'}</span>
+            </button>
+          )}
+          <button type="button" onClick={() => handleSaveSpecialDay('rest')} style={{ flex: 1, padding: '10px', background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: '12px', fontSize: '12px', fontWeight: '800', color: '#475569', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '4px' }}>
             💤 Día de Descanso
           </button>
-          <button onClick={() => handleSaveSpecialDay('miss')} style={{ flex: 1, padding: '10px', background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: '12px', fontSize: '12px', fontWeight: '800', color: '#dc2626', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '4px' }}>
+          <button type="button" onClick={() => handleSaveSpecialDay('miss')} style={{ flex: 1, padding: '10px', background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: '12px', fontSize: '12px', fontWeight: '800', color: '#dc2626', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '4px' }}>
             ❌ Falta / Ausencia
           </button>
         </div>

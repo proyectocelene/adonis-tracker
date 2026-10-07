@@ -52,23 +52,25 @@ export function mergeStoreValues(key, localVal, cloudVal) {
 
   // 3. Órdenes personalizados de ejercicios por día
   if (key === 'coachv2_exercise_orders') {
+    // Si uno de los dos es un objeto vacío explícito (reset o clean slate), priorizar el reset
+    if (localVal && typeof localVal === 'object' && Object.keys(localVal).length === 0) {
+      return {};
+    }
+    if (cloudVal && typeof cloudVal === 'object' && Object.keys(cloudVal).length === 0) {
+      return {};
+    }
+
     const merged = { ...(typeof cloudVal === 'object' && cloudVal ? cloudVal : {}) };
     const localObj = (typeof localVal === 'object' && localVal) ? localVal : {};
 
     Object.keys(localObj).forEach(dayId => {
       const localOrder = Array.isArray(localObj[dayId]) ? localObj[dayId] : [];
-      const cloudOrder = Array.isArray(merged[dayId]) ? merged[dayId] : [];
-
-      if (localOrder.length === 0) return;
-      if (cloudOrder.length === 0) {
-        merged[dayId] = localOrder;
+      // Si el orden local para este día se reseteó a vacío, respetarlo
+      if (localOrder.length === 0) {
+        merged[dayId] = [];
         return;
       }
-      const combined = [...localOrder];
-      cloudOrder.forEach(id => {
-        if (!combined.includes(id)) combined.push(id);
-      });
-      merged[dayId] = combined;
+      merged[dayId] = localOrder;
     });
     return merged;
   }
@@ -103,6 +105,10 @@ export function mergeStoreValues(key, localVal, cloudVal) {
     key === 'coachv2_global_warmup' ||
     key === 'coachv2_body_composition_data'
   ) {
+    // Si el usuario vació intencionalmente swaps o skipped, respetar el estado vacío
+    if (localVal && typeof localVal === 'object' && Object.keys(localVal).length === 0) {
+      return {};
+    }
     if (
       typeof localVal === 'object' && localVal !== null &&
       typeof cloudVal === 'object' && cloudVal !== null &&
@@ -113,6 +119,12 @@ export function mergeStoreValues(key, localVal, cloudVal) {
   }
 
   // 6. Rutina personalizada completa o fecha de inicio de mesociclo
+  if (key === 'coachv2_custom_routine') {
+    // Si es null en local o en cloud, significa que se usa el Protocolo Oficial científico
+    if (localVal === null || cloudVal === null) return null;
+    return localVal || cloudVal;
+  }
+
   if (cloudVal && (!localVal || (Array.isArray(localVal) && localVal.length === 0))) return cloudVal;
   if (localVal && (!cloudVal || (Array.isArray(cloudVal) && cloudVal.length === 0))) return localVal;
 

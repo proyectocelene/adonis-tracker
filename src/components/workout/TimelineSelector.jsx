@@ -8,7 +8,11 @@ export default function TimelineSelector({
   onResetMesocycle,
   onClonePreviousWeek,
   isHistoryLoading,
-  workoutHistory = []
+  workoutHistory = [],
+  isDeloadMode = false,
+  onToggleDeload = null,
+  fatigueStatus = null,
+  activeOverride = null
 }) {
   const scrollRef = useRef(null);
 
@@ -81,35 +85,80 @@ export default function TimelineSelector({
     }
   }, [selectedDateKey]);
 
+  const isDeloadGlow = !isDeloadMode && fatigueStatus?.shouldHighlightDeload;
+
   return (
     <div className="card" style={{ padding: '16px', marginBottom: '14px', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', border: '1.5px solid #334155', borderRadius: '24px', color: '#ffffff', boxShadow: '0 10px 25px rgba(15, 23, 42, 0.25)' }}>
       
       {/* Cabecera del Mesociclo */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px', flexWrap: 'wrap', gap: '8px' }}>
         <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
             <Calendar size={18} color="#38bdf8" />
             <span style={{ fontSize: '12px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.5px', color: '#38bdf8' }}>
               Mesociclo Científico
             </span>
+            {activeOverride && (
+              <span style={{ fontSize: '10px', background: 'rgba(56, 189, 248, 0.2)', color: '#38bdf8', padding: '2px 7px', borderRadius: '8px', fontWeight: '900', border: '1px solid rgba(56, 189, 248, 0.4)' }}>
+                ⚡ Split: {activeOverride.splitType?.replace('_', ' ').toUpperCase()}
+              </span>
+            )}
           </div>
-          <div style={{ fontSize: '19px', fontWeight: '900', color: '#ffffff', marginTop: '4px' }}>
+          <div style={{ fontSize: '19px', fontWeight: '900', color: isDeloadMode ? '#86efac' : '#ffffff', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '8px' }}>
             Semana {currentWeek}
+            {isDeloadMode && (
+              <span style={{ fontSize: '11px', background: '#065f46', color: '#86efac', border: '1px solid #10b981', padding: '2px 8px', borderRadius: '10px', fontWeight: '800' }}>
+                🧘 Deload Activo
+              </span>
+            )}
           </div>
-          <div style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '700' }}>
-            {currentWeek === 1 ? '🌱 Semana de Calibración & Línea Base' : `🔥 Fase de Sobrecarga Progresiva (S${currentWeek})`}
+          <div style={{ fontSize: '11px', color: isDeloadMode ? '#86efac' : '#94a3b8', fontWeight: '700' }}>
+            {isDeloadMode 
+              ? '🧘 Semana de Descarga: Volumen al 50%, cargas al 80% y RIR 3-4' 
+              : (currentWeek === 1 ? '🌱 Semana de Calibración & Línea Base' : `🔥 Fase de Sobrecarga Progresiva (S${currentWeek})`)}
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '8px' }}>
+        <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
+          {onToggleDeload && (
+            <button
+              type="button"
+              onClick={onToggleDeload}
+              title={isDeloadMode ? "Desactivar modo descarga" : (fatigueStatus?.reason || "Activar semana de descarga (Deload)")}
+              style={{
+                background: isDeloadMode 
+                  ? '#065f46' 
+                  : (isDeloadGlow ? 'rgba(245, 158, 11, 0.25)' : 'rgba(255, 255, 255, 0.08)'),
+                border: isDeloadMode 
+                  ? '1.5px solid #10b981' 
+                  : (isDeloadGlow ? '1.5px solid #f59e0b' : '1px solid rgba(255, 255, 255, 0.2)'),
+                color: isDeloadMode 
+                  ? '#86efac' 
+                  : (isDeloadGlow ? '#fbbf24' : '#e2e8f0'),
+                padding: '8px 11px',
+                borderRadius: '12px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                fontSize: '11px',
+                fontWeight: '900',
+                boxShadow: isDeloadGlow ? '0 0 14px rgba(245, 158, 11, 0.6)' : 'none',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              <span>{isDeloadMode ? '🧘 Salir Deload' : (isDeloadGlow ? '⚠️ Sugerir Deload' : '🧘 Deload')}</span>
+            </button>
+          )}
+
           {currentWeek > 1 && onClonePreviousWeek && (
             <button 
               type="button"
               onClick={onClonePreviousWeek}
               title="Clonar pesos de semana anterior"
-              style={{ background: 'rgba(16, 185, 129, 0.15)', border: '1px solid rgba(16, 185, 129, 0.4)', color: '#10b981', padding: '8px 12px', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', fontWeight: '800' }}
+              style={{ background: 'rgba(16, 185, 129, 0.15)', border: '1px solid rgba(16, 185, 129, 0.4)', color: '#10b981', padding: '8px 10px', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', fontWeight: '800' }}
             >
-              <Copy size={15} /> Clonar S{currentWeek - 1}
+              <Copy size={14} /> Clonar S{currentWeek - 1}
             </button>
           )}
           <button 
@@ -118,7 +167,7 @@ export default function TimelineSelector({
             title="Reiniciar Mesociclo a Semana 1"
             style={{ background: 'rgba(239, 68, 68, 0.15)', border: '1px solid rgba(239, 68, 68, 0.4)', color: '#ef4444', padding: '8px 10px', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', fontWeight: '800' }}
           >
-            <RotateCcw size={15} /> Reiniciar
+            <RotateCcw size={14} /> Reiniciar
           </button>
         </div>
       </div>

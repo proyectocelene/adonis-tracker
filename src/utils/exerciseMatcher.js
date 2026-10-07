@@ -154,6 +154,10 @@ export const LEGACY_CODE_TO_CANONICAL_MAP = {
   '[ABDO-PLANK-ISOM_01]': '[ABDO-PLANK-ISOM_01]',
   '[ABDO-CRUNCH-BODY_01]': '[ABDO-CRUNCH-BODY_01]',
   '[ABDO-LEG_RAISE-BODY_01]': '[ABDO-LEG_RAISE-BODY_01]',
+  '[ABDO-DECLINE_CRUNCH-DISC_01]': '[ABDO-DECLINE_CRUNCH-DISC_01]',
+  '[ABDO-LEG_RAISE-HANGING_01]': '[ABDO-LEG_RAISE-HANGING_01]',
+  '[ABDO-REVERSE_CRUNCH-BODY_01]': '[ABDO-REVERSE_CRUNCH-BODY_01]',
+  '[ABDO-BICYCLE_CRUNCH-BODY_01]': '[ABDO-BICYCLE_CRUNCH-BODY_01]',
   '[ADUC-MAQ-01]': '[ADUC-ADUCTOR-STACK_01]',
   '[ADUC-ADUCTOR-STACK_01]': '[ADUC-ADUCTOR-STACK_01]',
 
@@ -185,11 +189,20 @@ export const HISTORICAL_ID_TO_CANONICAL_MAP = {
   'd1_e6_eq1': '[TRIC-KATANA_EXT-CABLE_01]',
   'd1_e6_eq2': '[TRIC-FRENCH_PRESS-MANC_01]',
   'd1_e6_eq3': '[TRIC-PUSHDOWN-STRAIGHT_01]',
+  'd1_e6': '[ABDO-PLANK-ISOM_01]',
+  'd1_e7': '[ABDO-VACUUM-ISOM_01]',
   'd1_e8': '[ABDO-VACUUM-ISOM_01]',
   'd1_e8_eq1': '[ABDO-PLANK-ISOM_01]',
   'd1_e9': '[CARD-TREADMILL-ZONA2_01]',
   'd1_e9_eq1': '[CARD-TREADMILL-INCLINE_01]',
   'd1_e9_eq2': '[CARD-BIKE-STATIONARY_01]',
+  'd2_e6': '[ABDO-DECLINE_CRUNCH-DISC_01]',
+  'd3_e6': '[ABDO-LEG_RAISE-HANGING_01]',
+  'd3_e6_eq1': '[ABDO-REVERSE_CRUNCH-BODY_01]',
+  'd4_e6': '[ABDO-BICYCLE_CRUNCH-BODY_01]',
+  'd5_e6': '[ABDO-DECLINE_CRUNCH-DISC_01]',
+  'd6_e6': '[ABDO-LEG_RAISE-HANGING_01]',
+  'd6_e6_eq1': '[ABDO-REVERSE_CRUNCH-BODY_01]',
 
   // Protocol Day 2
   'd2_e3': '[CUAD-LEG_EXT-STACK_01]',
@@ -504,7 +517,31 @@ const REAL_DATABASE_ALIASES = [
   { name: 'Leg raises', code: '[ABDO-LEG_RAISE-BODY_01]' },
   { name: 'Leg Raises', code: '[ABDO-LEG_RAISE-BODY_01]' },
   { name: 'Elevaciones de Piernas', code: '[ABDO-LEG_RAISE-BODY_01]' },
-  { name: 'Elevación de Piernas', code: '[ABDO-LEG_RAISE-BODY_01]' }
+  { name: 'Elevación de Piernas', code: '[ABDO-LEG_RAISE-BODY_01]' },
+  { name: 'Plancha', code: '[ABDO-PLANK-ISOM_01]' },
+  { name: 'Plank', code: '[ABDO-PLANK-ISOM_01]' },
+  { name: 'Plancha Abdominal', code: '[ABDO-PLANK-ISOM_01]' },
+  { name: 'Plancha Abdominal Isométrica (Plank)', code: '[ABDO-PLANK-ISOM_01]' },
+  { name: 'Crunch Declinado con Disco (Decline Plate-Weighted Crunch)', code: '[ABDO-DECLINE_CRUNCH-DISC_01]' },
+  { name: 'Crunch Declinado con Disco', code: '[ABDO-DECLINE_CRUNCH-DISC_01]' },
+  { name: 'Decline Plate-Weighted Crunch', code: '[ABDO-DECLINE_CRUNCH-DISC_01]' },
+  { name: 'Crunch en Banco Declinado', code: '[ABDO-DECLINE_CRUNCH-DISC_01]' },
+  { name: 'Crunch Declinado', code: '[ABDO-DECLINE_CRUNCH-DISC_01]' },
+  { name: 'Elevación de Piernas Colgado (Hanging Leg Raise) o en Silla Romana (Roman Chair Leg Raise)', code: '[ABDO-LEG_RAISE-HANGING_01]' },
+  { name: 'Elevación de Piernas Colgado (Hanging Leg Raise)', code: '[ABDO-LEG_RAISE-HANGING_01]' },
+  { name: 'Elevación de Piernas Colgado', code: '[ABDO-LEG_RAISE-HANGING_01]' },
+  { name: 'Hanging Leg Raise', code: '[ABDO-LEG_RAISE-HANGING_01]' },
+  { name: 'Roman Chair Leg Raise', code: '[ABDO-LEG_RAISE-HANGING_01]' },
+  { name: 'Elevación de Piernas en Silla Romana', code: '[ABDO-LEG_RAISE-HANGING_01]' },
+  { name: 'Elevaciones de Piernas Colgado', code: '[ABDO-LEG_RAISE-HANGING_01]' },
+  { name: 'Crunch Inverso (Reverse Crunch)', code: '[ABDO-REVERSE_CRUNCH-BODY_01]' },
+  { name: 'Crunch Inverso', code: '[ABDO-REVERSE_CRUNCH-BODY_01]' },
+  { name: 'Reverse Crunch', code: '[ABDO-REVERSE_CRUNCH-BODY_01]' },
+  { name: 'Crunch Inverso en Suelo', code: '[ABDO-REVERSE_CRUNCH-BODY_01]' },
+  { name: 'Crunch en Bicicleta (Bicycle Crunch)', code: '[ABDO-BICYCLE_CRUNCH-BODY_01]' },
+  { name: 'Crunch en Bicicleta', code: '[ABDO-BICYCLE_CRUNCH-BODY_01]' },
+  { name: 'Bicycle Crunch', code: '[ABDO-BICYCLE_CRUNCH-BODY_01]' },
+  { name: 'Bicicleta Abdominal', code: '[ABDO-BICYCLE_CRUNCH-BODY_01]' }
 ];
 
 export function normalizeExerciseNameFull(str) {
@@ -1360,7 +1397,8 @@ export function getHistoricalRecordsForExercise(currentEx, workoutHistory = [], 
             workingSets,
             topSet: topSet || { weight: maxW, reps: bestRepsAtPeakWeight, est1RM: best1RM },
             sourceName: matchedName,
-            rawExerciseData: matchedExData
+            rawExerciseData: matchedExData,
+            isDeloadSession: Boolean(ses.isDeloadSession || ses.isDeload || ses.focus?.toLowerCase().includes('deload') || ses.focus?.toLowerCase().includes('descarga'))
           });
         }
       }

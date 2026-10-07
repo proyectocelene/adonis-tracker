@@ -29,13 +29,26 @@ export const PROGRESSION_COLORS = {
   rpe: '#dc2626',            // Rojo Carmesí Fuego (Esfuerzo Percibido RPE / Fatiga)
   est1RM: '#0891b2',         // Cian / Turquesa Profundo (1RM Estimado)
   projection: '#db2777',     // Rosa Fucsia Magenta Neón (Metas Futuras)
-  tonnage: '#ea580c'         // Naranja Óxido / Fuego (Tonelaje de Volumen)
+  tonnage: '#ea580c',        // Naranja Óxido / Fuego (Tonelaje de Volumen)
+  deload: '#10b981',         // Verde Menta Clínico (Semana de Descarga / Deload)
+  deloadBorder: '#059669'    // Borde esmeralda para Deload
 };
 
 function StationDot(props) {
   const { cx, cy, payload, baseColor = PROGRESSION_COLORS.peakWeight, isFamilyView = false } = props;
   if (!cx || !cy || !payload || payload.isProjected) return null;
   const sType = payload.stationType || 'machine';
+  const isDeload = Boolean(payload.isDeloadSession);
+
+  // Si es sesión de Deload, dibujar un indicador visual prominente de recuperación activa
+  if (isDeload) {
+    return (
+      <g>
+        <circle cx={cx} cy={cy} r={6.5} fill="#ecfdf5" stroke={PROGRESSION_COLORS.deloadBorder} strokeWidth={2.2} />
+        <circle cx={cx} cy={cy} r={3} fill={PROGRESSION_COLORS.deload} />
+      </g>
+    );
+  }
 
   if (!isFamilyView) {
     return <circle cx={cx} cy={cy} r={3.5} fill={baseColor} stroke="#ffffff" strokeWidth={1.5} />;
@@ -96,7 +109,8 @@ export default function ExerciseProgressionChart({
   compact = false,
   height = 220,
   defaultScope = 'family',
-  machineConfig = null
+  machineConfig = null,
+  isDeloadMode = false
 }) {
   // Modo de Alcance: 'family' (Toda la familia biomecánica, predeterminada) o 'station' (Solo esta máquina exacta)
   const [scopeMode, setScopeMode] = useState(defaultScope);
@@ -213,8 +227,8 @@ export default function ExerciseProgressionChart({
   const isAutoFamily = stationStats.count === 0 && scopeMode === 'station';
 
   // Procesar puntos reales + proyecciones matemáticas
-  const { chartData, transitionDate, lastProjectedDate, hasHistory, realPointsCount, peakWeight, avgPeakWeight, currentWeight, currentAvgWeight, lastRealPoint, isFamilyView } = useMemo(() => {
-    if (!exercise) return { chartData: [], transitionDate: null, lastProjectedDate: null, hasHistory: false, realPointsCount: 0, peakWeight: 0, avgPeakWeight: 0, currentWeight: 0, currentAvgWeight: 0, lastRealPoint: null, isFamilyView: false };
+  const { chartData, transitionDate, lastProjectedDate, hasHistory, realPointsCount, peakWeight, avgPeakWeight, currentWeight, currentAvgWeight, lastRealPoint, isFamilyView, deloadWindows } = useMemo(() => {
+    if (!exercise) return { chartData: [], transitionDate: null, lastProjectedDate: null, hasHistory: false, realPointsCount: 0, peakWeight: 0, avgPeakWeight: 0, currentWeight: 0, currentAvgWeight: 0, lastRealPoint: null, isFamilyView: false, deloadWindows: [] };
 
     // 1. Extraer historial real usando el motor de matching tolerante a alias y familias
     const records = getHistoricalRecordsForExercise(exercise, workoutHistory, { 
@@ -314,6 +328,7 @@ export default function ExerciseProgressionChart({
         topSet: occ.topSet,
         est1RM: Math.round(occ.est1RM || calculate1RM(peakW, occ.bestReps)),
         volume: effectiveTonnage,
+        isDeloadSession: Boolean(occ.isDeloadSession),
         isProjected: false,
         projectedWeight: null,
         projectedAvgWeight: null,
@@ -474,6 +489,7 @@ export default function ExerciseProgressionChart({
         workingSets: workingTodaySets,
         est1RM: Math.round(calculate1RM(todayMaxW, bestRepsAtPeakToday)),
         volume: Math.round(todayTonnage),
+        isDeloadSession: Boolean(isDeloadMode),
         isProjected: false,
         projectedWeight: null,
         projectedAvgWeight: null,
@@ -613,6 +629,28 @@ export default function ExerciseProgressionChart({
     const combinedData = [...realPoints, ...projectedPoints];
     const lastProj = projectedPoints[projectedPoints.length - 1]?.date || null;
 
+    // Calcular intervalos continuos de sesiones marcadas como Deload para sombrear en la gráfica
+    const deloadWindows = [];
+    let currentWindow = null;
+    realPoints.forEach(p => {
+      if (p.isDeloadSession) {
+        if (!currentWindow) {
+          currentWindow = { start: p.date, end: p.date, count: 1 };
+        } else {
+          currentWindow.end = p.date;
+          currentWindow.count++;
+        }
+      } else {
+        if (currentWindow) {
+          deloadWindows.push(currentWindow);
+          currentWindow = null;
+        }
+      }
+    });
+    if (currentWindow) {
+      deloadWindows.push(currentWindow);
+    }
+
     return {
       chartData: combinedData,
       transitionDate: transDate,
@@ -624,9 +662,10 @@ export default function ExerciseProgressionChart({
       currentWeight: lastRealPoint.weight,
       currentAvgWeight: lastRealPoint.avgWeight,
       lastRealPoint: lastRealPoint || null,
-      isFamilyView
+      isFamilyView,
+      deloadWindows
     };
-  }, [exercise, workoutHistory, todayWorkoutData, scopeMode, machineConfig, targetRange.max]);
+  }, [exercise, workoutHistory, todayWorkoutData, scopeMode, machineConfig, targetRange.max, isDeloadMode]);
 
   // Sincronizador de punto activo para la Caja de Auditoría inferior (elimina tooltips flotantes que tapen la curva)
   const CustomTooltipReceiver = ({ active, payload }) => {
@@ -1090,6 +1129,12 @@ export default function ExerciseProgressionChart({
                 <span>● Máquina</span>
               </span>
             )}
+
+            {deloadWindows && deloadWindows.length > 0 && (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: PROGRESSION_COLORS.deloadBorder, fontWeight: '800', background: '#ecfdf5', padding: '1px 6px', borderRadius: '4px', border: '1px solid #a7f3d0' }}>
+                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: PROGRESSION_COLORS.deload, border: '1.5px solid #059669' }} /> 🧘 Deload (80% / RIR 3-4)
+              </span>
+            )}
           </div>
         ) : (
           <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: PROGRESSION_COLORS.tonnage, fontWeight: '800' }}>
@@ -1246,6 +1291,21 @@ export default function ExerciseProgressionChart({
                 strokeDasharray="4 4"
               />
             )}
+
+            {/* 🧘 FRANJAS CLÍNICAS SOMBREADAS DE SEMANA DE DESCARGA (DELOAD) */}
+            {deloadWindows && deloadWindows.map((win, wIdx) => (
+              <ReferenceArea
+                key={`deload-win-${wIdx}`}
+                yAxisId={metricMode === 'weights' ? 'weight' : 'tonnage'}
+                x1={win.start}
+                x2={win.end}
+                fill={PROGRESSION_COLORS.deload}
+                fillOpacity={0.16}
+                stroke={PROGRESSION_COLORS.deloadBorder}
+                strokeWidth={1.5}
+                strokeDasharray="3 3"
+              />
+            ))}
 
             {/* Guía vertical de cursor sin popup flotante molesto que tape la gráfica */}
             <Tooltip
@@ -1487,6 +1547,22 @@ export default function ExerciseProgressionChart({
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              {!isProj && activeData.isDeloadSession && (
+                <span style={{
+                  fontSize: '9.5px',
+                  fontWeight: '900',
+                  padding: '2px 8px',
+                  borderRadius: '6px',
+                  background: 'rgba(16, 185, 129, 0.25)',
+                  color: '#34d399',
+                  border: '1px solid #10b981',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px'
+                }}>
+                  🧘 SEMANA DE DESCARGA (DELOAD)
+                </span>
+              )}
               <span style={{
                 fontSize: '9.5px',
                 fontWeight: '900',
@@ -1613,6 +1689,7 @@ export default function ExerciseProgressionChart({
                 {activeData.detailedSets.map((s, sIdx) => {
                   const isTop = s.weight === activeData.weight && s.reps === activeData.reps;
                   const isWarm = s.isWarmup;
+                  const isDeload = Boolean(activeData.isDeloadSession);
                   return (
                     <span
                       key={sIdx}
@@ -1620,18 +1697,22 @@ export default function ExerciseProgressionChart({
                         fontSize: '9px',
                         padding: '2px 6px',
                         borderRadius: '5px',
-                        background: isTop
-                          ? 'rgba(29, 78, 216, 0.4)'
-                          : (isWarm ? 'rgba(245, 158, 11, 0.2)' : 'rgba(255,255,255,0.08)'),
-                        color: isTop ? '#93c5fd' : (isWarm ? '#fcd34d' : '#cbd5e1'),
-                        border: isTop
-                          ? `1.5px solid ${PROGRESSION_COLORS.peakWeight}`
-                          : (isWarm ? '1px dashed #f59e0b' : '1px solid transparent'),
+                        background: isDeload
+                          ? (isTop ? 'rgba(16, 185, 129, 0.35)' : 'rgba(16, 185, 129, 0.15)')
+                          : (isTop
+                            ? 'rgba(29, 78, 216, 0.4)'
+                            : (isWarm ? 'rgba(245, 158, 11, 0.2)' : 'rgba(255,255,255,0.08)')),
+                        color: isDeload ? '#a7f3d0' : (isTop ? '#93c5fd' : (isWarm ? '#fcd34d' : '#cbd5e1')),
+                        border: isDeload
+                          ? (isTop ? '1.5px solid #10b981' : '1px solid rgba(16, 185, 129, 0.4)')
+                          : (isTop
+                            ? `1.5px solid ${PROGRESSION_COLORS.peakWeight}`
+                            : (isWarm ? '1px dashed #f59e0b' : '1px solid transparent')),
                         fontWeight: isTop ? '900' : '600'
                       }}
-                      title={isWarm ? 'Serie de aproximación/calentamiento' : 'Serie efectiva'}
+                      title={isDeload ? 'Serie en semana de descarga (volumen 50% / RIR 3-4)' : (isWarm ? 'Serie de aproximación/calentamiento' : 'Serie efectiva')}
                     >
-                      {s.label || (s.setNum <= 0 ? 'C1' : `S${s.setNum || sIdx + 1}`)}: {s.weight}#×{s.reps}{isTop ? ' 🔥' : ''}
+                      {s.label || (s.setNum <= 0 ? 'C1' : `S${s.setNum || sIdx + 1}`)}: {s.weight}#×{s.reps}{isDeload ? ' 🧘' : (isTop ? ' 🔥' : '')}
                     </span>
                   );
                 })}
