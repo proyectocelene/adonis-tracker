@@ -20,24 +20,24 @@ export default function WeightChartSection({
       const data = payload[0].payload;
       const momentObj = MOMENTS.find(m => m.id === data.moment) || MOMENTS[4];
       return (
-        <div style={{ background: '#0f172a', color: '#fff', padding: '12px 14px', borderRadius: '14px', boxShadow: '0 8px 24px rgba(0,0,0,0.3)', border: '1.5px solid rgba(56,189,248,0.3)', minWidth: '190px' }}>
-          <div style={{ fontSize: '11px', color: '#94a3b8', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+        <div style={{ background: 'var(--bg-surface)', color: 'var(--text-main)', padding: '12px 14px', borderRadius: '14px', boxShadow: 'var(--shadow-ios-lg)', border: '1px solid var(--border-subtle)', minWidth: '190px' }}>
+          <div style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
             <span>📅 {data.date}</span>
             <span>⏰ {data.time}</span>
           </div>
-          <div style={{ fontSize: '22px', fontWeight: '900', color: '#38bdf8', margin: '4px 0' }}>
-            {data.peso} <span style={{ fontSize: '13px', color: '#94a3b8' }}>{data.unit}</span>
+          <div className="font-mono-tech" style={{ fontSize: '22px', fontWeight: '900', color: 'var(--accent-blue)', margin: '4px 0' }}>
+            {data.peso} <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{data.unit}</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
-            <span style={{ fontSize: '11px', background: data.isFasting ? '#f59e0b' : 'rgba(255,255,255,0.15)', color: data.isFasting ? '#000' : '#fff', padding: '2px 8px', borderRadius: '8px', fontWeight: '900' }}>
+            <span style={{ fontSize: '11px', background: data.isFasting ? 'var(--accent-amber-subtle)' : 'var(--bg-surface-secondary)', color: data.isFasting ? 'var(--accent-amber)' : 'var(--text-secondary)', padding: '2px 8px', borderRadius: '8px', fontWeight: '900' }}>
               {momentObj.label}
             </span>
           </div>
-          <div style={{ fontSize: '11px', color: '#a78bfa', fontWeight: '700' }}>
-            Tendencia (Media Móvil): <strong>{data.promedioMovil} {data.unit}</strong>
+          <div style={{ fontSize: '11px', color: '#c084fc', fontWeight: '700' }}>
+            Tendencia (Media Móvil): <strong className="font-mono-tech">{data.promedioMovil} {data.unit}</strong>
           </div>
           {data.comment && (
-            <div style={{ fontSize: '11px', color: '#cbd5e1', borderTop: '1px solid rgba(255,255,255,0.15)', paddingTop: '6px', marginTop: '6px', fontStyle: 'italic' }}>
+            <div style={{ fontSize: '11px', color: 'var(--text-muted)', borderTop: '1px solid var(--border-subtle)', paddingTop: '6px', marginTop: '6px', fontStyle: 'italic' }}>
               💬 "{data.comment}"
             </div>
           )}
@@ -46,6 +46,9 @@ export default function WeightChartSection({
     }
     return null;
   };
+
+  const isDense = chartData.length > 20;
+  const dynamicXInterval = chartData.length <= 8 ? 0 : (chartData.length <= 15 ? 1 : (chartData.length <= 25 ? 2 : Math.ceil(chartData.length / 6)));
 
   return (
     <>
@@ -60,15 +63,15 @@ export default function WeightChartSection({
               onClick={() => setSelectedTimeframe(tf.id)}
               style={{
                 flex: '0 0 auto',
-                padding: '8px 14px',
-                borderRadius: '12px',
-                border: isSelected ? '2px solid #0066ff' : '1px solid #cbd5e1',
-                background: isSelected ? '#0066ff' : '#ffffff',
-                color: isSelected ? '#ffffff' : '#475569',
-                fontSize: '12px',
+                padding: '6px 12px',
+                borderRadius: '10px',
+                border: isSelected ? '1px solid var(--accent-blue)' : '1px solid var(--border-subtle)',
+                background: isSelected ? 'var(--accent-blue)' : 'var(--bg-surface-secondary)',
+                color: isSelected ? '#ffffff' : 'var(--text-muted)',
+                fontSize: '11px',
                 fontWeight: '900',
                 cursor: 'pointer',
-                boxShadow: isSelected ? '0 4px 10px rgba(0,102,255,0.25)' : 'none',
+                boxShadow: isSelected ? '0 2px 8px rgba(0,102,255,0.25)' : 'none',
                 transition: 'all 0.2s ease'
               }}
             >
@@ -79,24 +82,24 @@ export default function WeightChartSection({
       </div>
 
       {/* GRÁFICA CIENTÍFICA RECHARTS CON TENDENCIA Y PUNTOS DE AYUNAS */}
-      <div className="card" style={{ padding: '16px', borderRadius: '22px', background: '#ffffff', border: '1.5px solid #e2e8f0', marginBottom: '20px', boxShadow: '0 4px 14px rgba(0,0,0,0.04)' }}>
+      <div className="card" style={{ padding: '16px', borderRadius: '22px', background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', marginBottom: '20px', boxShadow: 'var(--shadow-ios)' }}>
         <div className="flex-between" style={{ marginBottom: '12px', flexWrap: 'wrap', gap: '6px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <Activity size={18} color="#0066ff" />
-            <h3 style={{ margin: 0, fontSize: '14px', fontWeight: '900', color: '#0f172a' }}>
+            <Activity size={18} color="var(--accent-blue)" />
+            <h3 style={{ margin: 0, fontSize: '14px', fontWeight: '900', color: 'var(--text-main)' }}>
               Curva de Peso & Tendencia ({chartData.length} registros)
             </h3>
           </div>
           <div style={{ display: 'flex', gap: '8px', fontSize: '10px', fontWeight: '800', flexWrap: 'wrap' }}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#0066ff' }}>
-              <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#0066ff' }}></span> Peso Real
+            <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--accent-blue)' }}>
+              <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--accent-blue)' }}></span> Peso Real
             </span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#9333ea' }}>
-              <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#9333ea' }}></span> Tendencia (Media Móvil)
+            <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#a855f7' }}>
+              <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#a855f7' }}></span> Tendencia (Media Móvil)
             </span>
             {targetWeight > 0 && (
-              <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#10b981' }}>
-                <span style={{ width: '8px', height: '2px', background: '#10b981' }}></span> Meta Adonis ({targetWeight} {preferredUnit})
+              <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--accent-emerald)' }}>
+                <span style={{ width: '8px', height: '2px', background: 'var(--accent-emerald)' }}></span> Meta Adonis ({targetWeight} {preferredUnit})
               </span>
             )}
           </div>
@@ -107,11 +110,12 @@ export default function WeightChartSection({
             <div style={{ width: '100%', height: '250px' }}>
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={chartData} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border-subtle)" opacity={0.6} />
                   <XAxis 
                     dataKey="label" 
-                    tick={{ fontSize: 10, fill: '#64748b', fontWeight: 600 }} 
-                    axisLine={{ stroke: '#cbd5e1' }}
+                    interval={dynamicXInterval}
+                    tick={{ fontSize: 10, fill: 'var(--text-muted)', fontWeight: 600 }} 
+                    axisLine={{ stroke: 'var(--border-subtle)' }}
                     tickLine={false}
                   />
                   <YAxis 
@@ -124,7 +128,7 @@ export default function WeightChartSection({
                       },
                       'dataMax + 1'
                     ]} 
-                    tick={{ fontSize: 10, fill: '#64748b', fontWeight: 600 }}
+                    tick={{ fontSize: 10, fill: 'var(--text-muted)', fontWeight: 600 }}
                     axisLine={false}
                     tickLine={false}
                   />
@@ -145,13 +149,13 @@ export default function WeightChartSection({
                     />
                   )}
                   {stats?.average > 0 && (
-                    <ReferenceLine y={stats.average} stroke="#cbd5e1" strokeDasharray="3 3" />
+                    <ReferenceLine y={stats.average} stroke="var(--border-subtle)" strokeDasharray="3 3" />
                   )}
                   {/* Línea de Peso Real */}
                   <Line 
                     type="monotone" 
                     dataKey="peso" 
-                    stroke="#0066ff" 
+                    stroke="var(--accent-blue)" 
                     strokeWidth={2.5} 
                     dot={({ cx, cy, payload }) => {
                       const isFasting = payload.isFasting;
@@ -160,14 +164,14 @@ export default function WeightChartSection({
                           key={payload.id}
                           cx={cx}
                           cy={cy}
-                          r={isFasting ? 5 : 3.5}
-                          fill={isFasting ? '#f59e0b' : '#0066ff'}
-                          stroke="#ffffff"
-                          strokeWidth={2}
+                          r={isDense ? (isFasting ? 2.5 : 1.5) : (isFasting ? 5 : 3.5)}
+                          fill={isFasting ? 'var(--accent-amber)' : 'var(--accent-blue)'}
+                          stroke="var(--bg-surface)"
+                          strokeWidth={isDense ? 1 : 2}
                         />
                       );
                     }}
-                    activeDot={{ r: 7 }} 
+                    activeDot={{ r: isDense ? 5 : 7 }} 
                   />
                   {/* Línea de Tendencia / Media Móvil Suavizada */}
                   <Line 

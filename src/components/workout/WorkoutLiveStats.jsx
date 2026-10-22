@@ -21,54 +21,73 @@ export default function WorkoutLiveStats({
   };
 
   return (
-    <div style={{ 
-      background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', 
-      color: '#fff', 
-      padding: '14px 18px', 
-      borderRadius: '20px', 
-      marginBottom: '16px', 
-      boxShadow: '0 8px 24px rgba(15, 23, 42, 0.18)',
-      display: 'grid',
-      gridTemplateColumns: 'repeat(4, 1fr) auto',
-      alignItems: 'center',
-      border: '1px solid rgba(255,255,255,0.1)',
-      gap: '8px',
-      textAlign: 'left'
-    }}>
+    <div 
+      className="card"
+      style={{ 
+        background: 'var(--bg-surface)', 
+        color: 'var(--text-main)', 
+        padding: '8px 12px', 
+        borderRadius: 'var(--radius-md)', 
+        marginBottom: '10px', 
+        border: '1px solid var(--border-subtle)',
+        display: 'grid',
+        gridTemplateColumns: 'repeat(4, 1fr) auto',
+        alignItems: 'center',
+        gap: '6px',
+        textAlign: 'left'
+      }}
+    >
       <div>
-        <span style={{ fontSize: '10px', color: '#94a3b8', display: 'block', textTransform: 'uppercase', fontWeight: '800' }}>Carga</span>
-        <strong style={{ fontSize: '16px', color: '#ffffff', fontWeight: '800' }}>{volume.toLocaleString()} <span style={{ fontSize: '10px', color: '#94a3b8' }}>lbs</span></strong>
+        <span style={{ fontSize: '9px', color: 'var(--text-muted)', display: 'block', textTransform: 'uppercase', fontWeight: '800', letterSpacing: '0.4px' }}>Carga</span>
+        <strong className="font-mono-tech" style={{ fontSize: '14px', color: 'var(--text-main)', fontWeight: '800' }}>
+          {volume.toLocaleString()} <span style={{ fontSize: '9px', color: 'var(--text-muted)', fontWeight: '600' }}>lbs</span>
+        </strong>
       </div>
       <div>
-        <span style={{ fontSize: '10px', color: '#94a3b8', display: 'block', textTransform: 'uppercase', fontWeight: '800' }}>Series</span>
-        <strong style={{ fontSize: '16px', color: '#00b464', fontWeight: '800' }}>{completedSets} <span style={{ fontSize: '10px', color: '#94a3b8' }}>efectivas</span></strong>
-        {warmupSets > 0 && (
-          <div style={{ fontSize: '9px', color: '#94a3b8', fontWeight: '700', marginTop: '1px' }}>
-            +{warmupSets} aprox
-          </div>
-        )}
+        <span style={{ fontSize: '9px', color: 'var(--text-muted)', display: 'block', textTransform: 'uppercase', fontWeight: '800', letterSpacing: '0.4px' }}>Series</span>
+        <strong className="font-mono-tech" style={{ fontSize: '14px', color: 'var(--accent-emerald)', fontWeight: '800' }}>
+          {completedSets}
+          {warmupSets > 0 && <span style={{ fontSize: '9px', color: 'var(--accent-amber)', fontWeight: '700' }}> +{warmupSets}</span>}
+        </strong>
       </div>
       <div>
-        <span style={{ fontSize: '10px', color: '#38bdf8', display: 'block', textTransform: 'uppercase', fontWeight: '800' }}>Tiempo</span>
-        <strong style={{ fontSize: '16px', color: '#7dd3fc', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '3px' }}>
-          <Clock size={13} color="#38bdf8" />
+        <span style={{ fontSize: '9px', color: 'var(--text-muted)', display: 'block', textTransform: 'uppercase', fontWeight: '800', letterSpacing: '0.4px' }}>Tiempo</span>
+        <strong className="font-mono-tech" style={{ fontSize: '14px', color: 'var(--accent-cyan)', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '2px' }}>
+          <Clock size={11} color="var(--accent-cyan)" />
           {formatTime(elapsedMinutes)}
         </strong>
       </div>
       <div>
-        <span style={{ fontSize: '10px', color: '#fb923c', display: 'block', textTransform: 'uppercase', fontWeight: '800' }}>Gasto</span>
-        <strong style={{ fontSize: '16px', color: '#fdba74', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '2px' }}>
-          <Flame size={13} color="#ea580c" />
-          {calories?.totalKcal || 0} <span style={{ fontSize: '10px', color: '#fed7aa' }}>kcal</span>
+        <span style={{ fontSize: '9px', color: 'var(--text-muted)', display: 'block', textTransform: 'uppercase', fontWeight: '800', letterSpacing: '0.4px' }}>Gasto</span>
+        <strong className="font-mono-tech" style={{ fontSize: '14px', color: 'var(--accent-amber)', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '2px' }}>
+          <Flame size={11} color="var(--accent-amber)" />
+          {calories?.totalKcal || 0} <span style={{ fontSize: '9px', color: 'var(--accent-amber)', opacity: 0.8 }}>kcal</span>
         </strong>
       </div>
       <button 
         type="button"
-        onClick={handleResetCurrent} 
+        onClick={() => {
+          if (navigator.vibrate) {
+            try { navigator.vibrate(20); } catch (e) {}
+          }
+          handleResetCurrent();
+        }} 
         title="Reiniciar casillas hoy" 
-        style={{ background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: '12px', padding: '8px', color: '#ffffff', cursor: 'pointer', flexShrink: 0 }}
+        style={{ 
+          background: 'var(--bg-surface-secondary)', 
+          border: '1px solid var(--border-subtle)', 
+          borderRadius: '8px', 
+          padding: '6px', 
+          color: 'var(--text-muted)', 
+          cursor: 'pointer', 
+          flexShrink: 0,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          transition: 'all 0.15s ease'
+        }}
       >
-        <RefreshCcw size={16} />
+        <RefreshCcw size={13} />
       </button>
     </div>
   );

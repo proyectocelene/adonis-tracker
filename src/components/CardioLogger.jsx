@@ -320,13 +320,11 @@ export default function CardioLogger({
       style={{ 
         marginBottom: '16px', 
         borderRadius: '24px',
-        background: completed 
-          ? 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)' 
-          : 'linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%)',
-        border: completed ? '2.5px solid #10b981' : '2px solid #0284c7',
+        background: 'var(--bg-surface)',
+        border: completed ? '1px solid var(--accent-emerald)' : '1px solid var(--border-subtle)',
         boxShadow: completed 
           ? '0 8px 24px rgba(16, 185, 129, 0.18)' 
-          : '0 8px 24px rgba(2, 132, 199, 0.15)',
+          : 'var(--shadow-ios)',
         overflow: 'hidden',
         transition: 'all 0.25s ease'
       }}
@@ -433,10 +431,10 @@ export default function CardioLogger({
 
       {/* CONTENIDO EXPANDIDO */}
       {isExpanded && (
-        <div className="animate-fade" style={{ padding: '14px', background: '#ffffff', width: '100%' }}>
+        <div className="animate-fade" style={{ padding: '14px', background: 'var(--bg-surface)', width: '100%' }}>
           
           {/* NAVEGACIÓN DE SUBPESTAÑAS */}
-          <div style={{ display: 'flex', background: '#e2e8f0', padding: '4px', borderRadius: '16px', marginBottom: '14px', gap: '4px', width: '100%' }}>
+          <div style={{ display: 'flex', background: 'var(--bg-surface-secondary)', border: '1px solid var(--border-subtle)', padding: '4px', borderRadius: '16px', marginBottom: '14px', gap: '4px', width: '100%' }}>
             <button
               type="button"
               onClick={() => setActiveSubTab('logger')}
@@ -446,7 +444,7 @@ export default function CardioLogger({
                 border: 'none',
                 borderRadius: '12px',
                 background: activeSubTab === 'logger' ? 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)' : 'transparent',
-                color: activeSubTab === 'logger' ? '#ffffff' : '#64748b',
+                color: activeSubTab === 'logger' ? '#ffffff' : 'var(--text-muted)',
                 fontWeight: '900',
                 fontSize: '12px',
                 cursor: 'pointer',
@@ -464,7 +462,7 @@ export default function CardioLogger({
                 border: 'none',
                 borderRadius: '12px',
                 background: activeSubTab === 'timer' ? 'linear-gradient(135deg, #059669 0%, #047857 100%)' : 'transparent',
-                color: activeSubTab === 'timer' ? '#ffffff' : '#64748b',
+                color: activeSubTab === 'timer' ? '#ffffff' : 'var(--text-muted)',
                 fontWeight: '900',
                 fontSize: '12px',
                 cursor: 'pointer',
@@ -482,7 +480,7 @@ export default function CardioLogger({
                 border: 'none',
                 borderRadius: '12px',
                 background: activeSubTab === 'science' ? 'linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)' : 'transparent',
-                color: activeSubTab === 'science' ? '#ffffff' : '#64748b',
+                color: activeSubTab === 'science' ? '#ffffff' : 'var(--text-muted)',
                 fontWeight: '900',
                 fontSize: '12px',
                 cursor: 'pointer',
@@ -499,7 +497,7 @@ export default function CardioLogger({
               
               {/* SELECTOR SEGMENTADO DE MÁQUINA DE CARDIO */}
               <div>
-                <label style={{ display: 'block', fontSize: '11px', fontWeight: '900', color: '#0f172a', marginBottom: '6px', textTransform: 'uppercase' }}>
+                <label style={{ display: 'block', fontSize: '11px', fontWeight: '900', color: 'var(--text-main)', marginBottom: '6px', textTransform: 'uppercase' }}>
                   Aparato Aeróbico Utilizado:
                 </label>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: '6px' }}>
@@ -512,9 +510,9 @@ export default function CardioLogger({
                     style={{
                       padding: '10px 8px',
                       borderRadius: '12px',
-                      border: machineType === 'rower' ? '2.5px solid #0284c7' : '1.5px solid #cbd5e1',
-                      background: machineType === 'rower' ? '#f0f9ff' : '#ffffff',
-                      color: machineType === 'rower' ? '#0369a1' : '#475569',
+                      border: machineType === 'rower' ? '1px solid var(--accent-blue)' : '1px solid var(--border-subtle)',
+                      background: machineType === 'rower' ? 'var(--accent-blue-light)' : 'var(--bg-surface-secondary)',
+                      color: machineType === 'rower' ? 'var(--accent-blue)' : 'var(--text-muted)',
                       fontWeight: '900',
                       fontSize: '11.5px',
                       cursor: 'pointer',
@@ -534,9 +532,9 @@ export default function CardioLogger({
                     style={{
                       padding: '10px 8px',
                       borderRadius: '12px',
-                      border: machineType === 'treadmill' ? '2px solid #0284c7' : '1.5px solid #cbd5e1',
-                      background: machineType === 'treadmill' ? '#f0f9ff' : '#ffffff',
-                      color: machineType === 'treadmill' ? '#0369a1' : '#475569',
+                      border: machineType === 'treadmill' ? '1px solid var(--accent-blue)' : '1px solid var(--border-subtle)',
+                      background: machineType === 'treadmill' ? 'var(--accent-blue-light)' : 'var(--bg-surface-secondary)',
+                      color: machineType === 'treadmill' ? 'var(--accent-blue)' : 'var(--text-muted)',
                       fontWeight: '900',
                       fontSize: '11.5px',
                       cursor: 'pointer',
@@ -555,9 +553,9 @@ export default function CardioLogger({
                     style={{
                       padding: '10px 8px',
                       borderRadius: '12px',
-                      border: machineType === 'bike' ? '2px solid #0284c7' : '1.5px solid #cbd5e1',
-                      background: machineType === 'bike' ? '#f0f9ff' : '#ffffff',
-                      color: machineType === 'bike' ? '#0369a1' : '#475569',
+                      border: machineType === 'bike' ? '1px solid var(--accent-blue)' : '1px solid var(--border-subtle)',
+                      background: machineType === 'bike' ? 'var(--accent-blue-light)' : 'var(--bg-surface-secondary)',
+                      color: machineType === 'bike' ? 'var(--accent-blue)' : 'var(--text-muted)',
                       fontWeight: '900',
                       fontSize: '11.5px',
                       cursor: 'pointer',
@@ -576,9 +574,9 @@ export default function CardioLogger({
                     style={{
                       padding: '10px 8px',
                       borderRadius: '12px',
-                      border: machineType === 'elliptical' ? '2px solid #0284c7' : '1.5px solid #cbd5e1',
-                      background: machineType === 'elliptical' ? '#f0f9ff' : '#ffffff',
-                      color: machineType === 'elliptical' ? '#0369a1' : '#475569',
+                      border: machineType === 'elliptical' ? '1px solid var(--accent-blue)' : '1px solid var(--border-subtle)',
+                      background: machineType === 'elliptical' ? 'var(--accent-blue-light)' : 'var(--bg-surface-secondary)',
+                      color: machineType === 'elliptical' ? 'var(--accent-blue)' : 'var(--text-muted)',
                       fontWeight: '900',
                       fontSize: '11.5px',
                       cursor: 'pointer',
@@ -591,15 +589,15 @@ export default function CardioLogger({
               </div>
 
               {/* BLOQUE DINÁMICO: TELEMETRÍA ESPECÍFICA DE LA MÁQUINA SELECCIONADA */}
-              <div style={{ background: '#f8fafc', padding: '14px', borderRadius: '16px', border: '1.5px solid #e2e8f0' }}>
+              <div style={{ background: 'var(--bg-surface-secondary)', padding: '14px', borderRadius: '16px', border: '1px solid var(--border-subtle)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <Monitor size={16} color="#0284c7" />
-                    <span style={{ fontSize: '12px', fontWeight: '900', color: '#0f172a' }}>
+                    <Monitor size={16} color="var(--accent-blue)" />
+                    <span style={{ fontSize: '12px', fontWeight: '900', color: 'var(--text-main)' }}>
                       Datos de la Máquina ({machineLabel})
                     </span>
                   </div>
-                  <span style={{ fontSize: '10.5px', color: '#64748b', fontWeight: '700' }}>
+                  <span style={{ fontSize: '10.5px', color: 'var(--text-muted)', fontWeight: '700' }}>
                     Ecuación Oficial ACSM
                   </span>
                 </div>
@@ -610,22 +608,22 @@ export default function CardioLogger({
                     {/* Alerta Médica: Regla de las 6 Horas para anular efecto de interferencia */}
                     <div style={{
                       padding: '12px 14px',
-                      background: 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)',
-                      border: '1.5px solid #60a5fa',
+                      background: 'var(--accent-blue-light)',
+                      border: '1px solid var(--accent-blue)',
                       borderRadius: '14px',
                       display: 'flex',
                       alignItems: 'flex-start',
                       gap: '10px'
                     }}>
-                      <Info size={18} color="#1d4ed8" style={{ flexShrink: 0, marginTop: '2px' }} />
-                      <div style={{ fontSize: '11.5px', color: '#1e40af', lineHeight: '1.4' }}>
+                      <Info size={18} color="var(--accent-blue)" style={{ flexShrink: 0, marginTop: '2px' }} />
+                      <div style={{ fontSize: '11.5px', color: 'var(--accent-blue)', lineHeight: '1.4' }}>
                         <strong>Ventana Matutina (Anular Efecto de Interferencia):</strong> Realizar esta sesión por la mañana, separada por al menos <strong>6 horas</strong> de tu entrenamiento de fuerza para evitar que la vía AMPK bloquee la síntesis proteica de mTORC1.
                       </div>
                     </div>
 
                     {/* Selector de Opción A vs Opción B */}
                     <div>
-                      <label style={{ display: 'block', fontSize: '11px', fontWeight: '900', color: '#0f172a', marginBottom: '6px', textTransform: 'uppercase' }}>
+                      <label style={{ display: 'block', fontSize: '11px', fontWeight: '900', color: 'var(--text-main)', marginBottom: '6px', textTransform: 'uppercase' }}>
                         Selecciona el Protocolo del Día:
                       </label>
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
@@ -643,26 +641,26 @@ export default function CardioLogger({
                           style={{
                             padding: '12px 10px',
                             borderRadius: '14px',
-                            border: rowOption === 'A' ? '2.5px solid #0284c7' : '1.5px solid #cbd5e1',
-                            background: rowOption === 'A' ? 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)' : '#ffffff',
-                            color: rowOption === 'A' ? '#0369a1' : '#475569',
+                            border: rowOption === 'A' ? '2px solid var(--accent-blue)' : '1px solid var(--border-subtle)',
+                            background: rowOption === 'A' ? 'var(--accent-blue-light)' : 'var(--bg-card)',
+                            color: rowOption === 'A' ? 'var(--accent-blue)' : 'var(--text-secondary)',
                             fontWeight: '900',
                             fontSize: '12px',
                             cursor: 'pointer',
                             textAlign: 'left',
-                            boxShadow: rowOption === 'A' ? '0 4px 12px rgba(2, 132, 199, 0.2)' : 'none'
+                            boxShadow: rowOption === 'A' ? '0 4px 12px rgba(56, 189, 248, 0.2)' : 'none'
                           }}
                         >
                           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
                             <span style={{ fontSize: '12.5px', fontWeight: '900' }}>⚡ Opción A: Híbrida</span>
-                            <span style={{ fontSize: '10px', background: rowOption === 'A' ? '#0284c7' : '#e2e8f0', color: rowOption === 'A' ? '#fff' : '#64748b', padding: '2px 6px', borderRadius: '6px' }}>
+                            <span style={{ fontSize: '10px', background: rowOption === 'A' ? 'var(--accent-blue)' : 'var(--bg-surface-secondary)', color: rowOption === 'A' ? '#000000' : 'var(--text-muted)', padding: '2px 6px', borderRadius: '6px', fontWeight: '900' }}>
                               Máx 1-2x/sem
                             </span>
                           </div>
-                          <div style={{ fontSize: '11px', fontWeight: '800', color: rowOption === 'A' ? '#0369a1' : '#64748b' }}>
+                          <div style={{ fontSize: '11px', fontWeight: '800', color: rowOption === 'A' ? 'var(--accent-blue)' : 'var(--text-main)' }}>
                             "Cardio de verdad" + NEAT
                           </div>
-                          <div style={{ fontSize: '10px', color: '#64748b', marginTop: '4px' }}>
+                          <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '4px' }}>
                             35-40 min (HIIT 10-15m + LISS 20-25m)
                           </div>
                         </button>
@@ -680,26 +678,26 @@ export default function CardioLogger({
                           style={{
                             padding: '12px 10px',
                             borderRadius: '14px',
-                            border: rowOption === 'B' ? '2.5px solid #059669' : '1.5px solid #cbd5e1',
-                            background: rowOption === 'B' ? 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)' : '#ffffff',
-                            color: rowOption === 'B' ? '#065f46' : '#475569',
+                            border: rowOption === 'B' ? '2px solid var(--accent-emerald)' : '1px solid var(--border-subtle)',
+                            background: rowOption === 'B' ? 'var(--accent-emerald-subtle)' : 'var(--bg-card)',
+                            color: rowOption === 'B' ? 'var(--accent-emerald)' : 'var(--text-secondary)',
                             fontWeight: '900',
                             fontSize: '12px',
                             cursor: 'pointer',
                             textAlign: 'left',
-                            boxShadow: rowOption === 'B' ? '0 4px 12px rgba(5, 150, 105, 0.2)' : 'none'
+                            boxShadow: rowOption === 'B' ? '0 4px 12px rgba(0, 230, 118, 0.2)' : 'none'
                           }}
                         >
                           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
                             <span style={{ fontSize: '12.5px', fontWeight: '900' }}>🚶 Opción B: NEAT Puro</span>
-                            <span style={{ fontSize: '10px', background: rowOption === 'B' ? '#059669' : '#e2e8f0', color: rowOption === 'B' ? '#fff' : '#64748b', padding: '2px 6px', borderRadius: '6px' }}>
+                            <span style={{ fontSize: '10px', background: rowOption === 'B' ? 'var(--accent-emerald)' : 'var(--bg-surface-secondary)', color: rowOption === 'B' ? '#000000' : 'var(--text-muted)', padding: '2px 6px', borderRadius: '6px', fontWeight: '900' }}>
                               2-3x/sem
                             </span>
                           </div>
-                          <div style={{ fontSize: '11px', fontWeight: '800', color: rowOption === 'B' ? '#047857' : '#64748b' }}>
+                          <div style={{ fontSize: '11px', fontWeight: '800', color: rowOption === 'B' ? 'var(--accent-emerald)' : 'var(--text-main)' }}>
                             LISS Continuo (Talk Test)
                           </div>
-                          <div style={{ fontSize: '10px', color: '#64748b', marginTop: '4px' }}>
+                          <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '4px' }}>
                             30-45 min (RPE 12-13, sin fatiga)
                           </div>
                         </button>
@@ -710,22 +708,22 @@ export default function CardioLogger({
                     {rowOption === 'A' && (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                         {/* Fase 1: HIIT */}
-                        <div style={{ padding: '12px', background: '#fef2f2', border: '1.5px solid #f87171', borderRadius: '14px' }}>
+                        <div style={{ padding: '12px', background: 'var(--accent-red-subtle)', border: '1px solid var(--accent-red)', borderRadius: '14px' }}>
                           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
-                            <strong style={{ fontSize: '12px', color: '#991b1b', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <strong style={{ fontSize: '12px', color: 'var(--accent-red)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                               🔥 Fase 1: Cardio HIIT / Vigoroso ({rowPhase1Mins} min)
                             </strong>
-                            <span style={{ fontSize: '10px', background: '#fee2e2', color: '#b91c1c', padding: '2px 8px', borderRadius: '6px', fontWeight: '800' }}>
+                            <span style={{ fontSize: '10px', background: 'var(--accent-red)', color: '#ffffff', padding: '2px 8px', borderRadius: '6px', fontWeight: '800' }}>
                               RPE 16-18 / 20
                             </span>
                           </div>
-                          <p style={{ fontSize: '11px', color: '#7f1d1d', margin: '0 0 10px 0', lineHeight: '1.4' }}>
+                          <p style={{ fontSize: '11px', color: 'var(--text-secondary)', margin: '0 0 10px 0', lineHeight: '1.4' }}>
                             Realiza de <strong>4 a 6 sprints de 20 segundos</strong> a máxima velocidad, seguidos de <strong>40 a 60 segundos</strong> de remo muy suave para recuperar.
                           </p>
 
                           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
                             <div>
-                              <label style={{ display: 'block', fontSize: '10px', fontWeight: '800', color: '#991b1b', marginBottom: '3px' }}>
+                              <label style={{ display: 'block', fontSize: '10px', fontWeight: '800', color: 'var(--accent-red)', marginBottom: '3px' }}>
                                 ⏱️ Minutos Fase 1:
                               </label>
                               <input
@@ -736,11 +734,11 @@ export default function CardioLogger({
                                   const total = (parseFloat(e.target.value) || 0) + (parseFloat(rowPhase2Mins) || 0);
                                   notifyChange({ rowPhase1Mins: parseFloat(e.target.value) || 0, duration: total });
                                 }}
-                                style={{ width: '100%', padding: '6px', textAlign: 'center', borderRadius: '8px', border: '1.5px solid #ef4444', fontWeight: '900', fontSize: '12.5px', background: '#ffffff' }}
+                                style={{ width: '100%', padding: '6px', textAlign: 'center', borderRadius: '8px', border: '1px solid var(--accent-red)', fontWeight: '900', fontSize: '12.5px', background: 'var(--bg-surface-secondary)', color: 'var(--text-main)' }}
                               />
                             </div>
                             <div>
-                              <label style={{ display: 'block', fontSize: '10px', fontWeight: '800', color: '#991b1b', marginBottom: '3px' }}>
+                              <label style={{ display: 'block', fontSize: '10px', fontWeight: '800', color: 'var(--accent-red)', marginBottom: '3px' }}>
                                 ⚡ Sprints Realizados:
                               </label>
                               <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -751,7 +749,7 @@ export default function CardioLogger({
                                     setRowSprintsCount(String(next));
                                     notifyChange({ rowSprintsCount: next });
                                   }}
-                                  style={{ width: '28px', height: '30px', border: '1px solid #fca5a5', background: '#fff', borderRadius: '6px 0 0 6px', fontWeight: '900', cursor: 'pointer' }}
+                                  style={{ width: '28px', height: '30px', border: '1px solid var(--border-subtle)', background: 'var(--bg-surface-secondary)', color: 'var(--text-main)', borderRadius: '6px 0 0 6px', fontWeight: '900', cursor: 'pointer' }}
                                 >-</button>
                                 <input
                                   type="number"
@@ -760,7 +758,7 @@ export default function CardioLogger({
                                     setRowSprintsCount(e.target.value);
                                     notifyChange({ rowSprintsCount: parseInt(e.target.value, 10) || 5 });
                                   }}
-                                  style={{ width: '100%', padding: '6px', textAlign: 'center', border: '1px solid #ef4444', borderLeft: 'none', borderRight: 'none', fontWeight: '900', fontSize: '12px', background: '#ffffff' }}
+                                  style={{ width: '100%', padding: '6px', textAlign: 'center', border: '1px solid var(--accent-red)', borderLeft: 'none', borderRight: 'none', fontWeight: '900', fontSize: '12px', background: 'var(--bg-surface-secondary)', color: 'var(--text-main)' }}
                                 />
                                 <button
                                   type="button"
@@ -769,15 +767,15 @@ export default function CardioLogger({
                                     setRowSprintsCount(String(next));
                                     notifyChange({ rowSprintsCount: next });
                                   }}
-                                  style={{ width: '28px', height: '30px', border: '1px solid #fca5a5', background: '#fff', borderRadius: '0 6px 6px 0', fontWeight: '900', cursor: 'pointer' }}
+                                  style={{ width: '28px', height: '30px', border: '1px solid var(--border-subtle)', background: 'var(--bg-surface-secondary)', color: 'var(--text-main)', borderRadius: '0 6px 6px 0', fontWeight: '900', cursor: 'pointer' }}
                                 >+</button>
                               </div>
                             </div>
                             <div>
-                              <label style={{ display: 'block', fontSize: '10px', fontWeight: '800', color: '#991b1b', marginBottom: '3px' }}>
+                              <label style={{ display: 'block', fontSize: '10px', fontWeight: '800', color: 'var(--accent-red)', marginBottom: '3px' }}>
                                 🎯 Intervalo Sprint:
                               </label>
-                              <div style={{ padding: '6px', textAlign: 'center', borderRadius: '8px', background: '#fff', border: '1.5px solid #fca5a5', fontWeight: '900', fontSize: '11px', color: '#b91c1c' }}>
+                              <div style={{ padding: '6px', textAlign: 'center', borderRadius: '8px', background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', fontWeight: '900', fontSize: '11px', color: 'var(--accent-red)' }}>
                                 20s Max / 40s Suave
                               </div>
                             </div>
@@ -785,22 +783,22 @@ export default function CardioLogger({
                         </div>
 
                         {/* Fase 2: NEAT / LISS */}
-                        <div style={{ padding: '12px', background: '#ecfdf5', border: '1.5px solid #34d399', borderRadius: '14px' }}>
+                        <div style={{ padding: '12px', background: 'var(--accent-emerald-subtle)', border: '1px solid var(--accent-emerald)', borderRadius: '14px' }}>
                           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
-                            <strong style={{ fontSize: '12px', color: '#065f46', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <strong style={{ fontSize: '12px', color: 'var(--accent-emerald)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                               🌊 Fase 2: NEAT / LISS Continuo ({rowPhase2Mins} min)
                             </strong>
-                            <span style={{ fontSize: '10px', background: '#d1fae5', color: '#047857', padding: '2px 8px', borderRadius: '6px', fontWeight: '800' }}>
+                            <span style={{ fontSize: '10px', background: 'var(--accent-emerald)', color: '#000000', padding: '2px 8px', borderRadius: '6px', fontWeight: '800' }}>
                               Enfriamiento Activo
                             </span>
                           </div>
-                          <p style={{ fontSize: '11px', color: '#064e3b', margin: '0 0 10px 0', lineHeight: '1.4' }}>
+                          <p style={{ fontSize: '11px', color: 'var(--text-secondary)', margin: '0 0 10px 0', lineHeight: '1.4' }}>
                             20 a 25 minutos continuos a intensidad muy baja. Funciona como enfriamiento activo y suma gasto calórico sin fatiga metabólica.
                           </p>
 
                           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
                             <div>
-                              <label style={{ display: 'block', fontSize: '10px', fontWeight: '800', color: '#065f46', marginBottom: '3px' }}>
+                              <label style={{ display: 'block', fontSize: '10px', fontWeight: '800', color: 'var(--accent-emerald)', marginBottom: '3px' }}>
                                 ⏱️ Minutos Fase 2:
                               </label>
                               <input
@@ -811,14 +809,14 @@ export default function CardioLogger({
                                   const total = (parseFloat(rowPhase1Mins) || 0) + (parseFloat(e.target.value) || 0);
                                   notifyChange({ rowPhase2Mins: parseFloat(e.target.value) || 0, duration: total });
                                 }}
-                                style={{ width: '100%', padding: '6px', textAlign: 'center', borderRadius: '8px', border: '1.5px solid #10b981', fontWeight: '900', fontSize: '12.5px', background: '#ffffff' }}
+                                style={{ width: '100%', padding: '6px', textAlign: 'center', borderRadius: '8px', border: '1px solid var(--accent-emerald)', fontWeight: '900', fontSize: '12.5px', background: 'var(--bg-surface-secondary)', color: 'var(--text-main)' }}
                               />
                             </div>
                             <div>
-                              <label style={{ display: 'block', fontSize: '10px', fontWeight: '800', color: '#065f46', marginBottom: '3px' }}>
+                              <label style={{ display: 'block', fontSize: '10px', fontWeight: '800', color: 'var(--accent-emerald)', marginBottom: '3px' }}>
                                 ⏱️ Duración Total Sesión:
                               </label>
-                              <div style={{ padding: '6px', textAlign: 'center', borderRadius: '8px', background: '#fff', border: '1.5px solid #a7f3d0', fontWeight: '900', fontSize: '12px', color: '#047857' }}>
+                              <div style={{ padding: '6px', textAlign: 'center', borderRadius: '8px', background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', fontWeight: '900', fontSize: '12px', color: 'var(--accent-emerald)' }}>
                                 {(parseFloat(rowPhase1Mins) || 0) + (parseFloat(rowPhase2Mins) || 0)} min en total
                               </div>
                             </div>
@@ -829,24 +827,24 @@ export default function CardioLogger({
 
                     {/* DETALLE OPCIÓN B: SESIÓN PURA NEAT */}
                     {rowOption === 'B' && (
-                      <div style={{ padding: '14px', background: '#ecfdf5', border: '1.5px solid #10b981', borderRadius: '16px' }}>
+                      <div style={{ padding: '14px', background: 'var(--accent-emerald-subtle)', border: '1px solid var(--accent-emerald)', borderRadius: '16px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-                          <strong style={{ fontSize: '13px', color: '#065f46', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <strong style={{ fontSize: '13px', color: 'var(--accent-emerald)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                             🚶‍♂️ Sesión Pura de NEAT (LISS en Máquina de Remo)
                           </strong>
-                          <span style={{ fontSize: '10.5px', background: '#d1fae5', color: '#047857', padding: '2px 8px', borderRadius: '8px', fontWeight: '900' }}>
+                          <span style={{ fontSize: '10.5px', background: 'var(--accent-emerald)', color: '#000000', padding: '2px 8px', borderRadius: '8px', fontWeight: '900' }}>
                             Talk Test: RPE 12-13 / 20
                           </span>
                         </div>
 
-                        <p style={{ fontSize: '11.5px', color: '#064e3b', margin: '0 0 10px 0', lineHeight: '1.4' }}>
+                        <p style={{ fontSize: '11.5px', color: 'var(--text-secondary)', margin: '0 0 10px 0', lineHeight: '1.4' }}>
                           <strong>Talk Test:</strong> Debes poder mantener una conversación fluida o respirar cómodamente por la nariz sin jadear.<br />
                           <strong>Objetivo:</strong> Simular los pasos y la actividad que no realizas por tu trabajo sedentario. No debes terminar exhausto ni con los músculos ardiendo.
                         </p>
 
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
                           <div>
-                            <label style={{ display: 'block', fontSize: '11px', fontWeight: '800', color: '#065f46', marginBottom: '3px' }}>
+                            <label style={{ display: 'block', fontSize: '11px', fontWeight: '800', color: 'var(--accent-emerald)', marginBottom: '3px' }}>
                               ⏱️ Minutos de Sesión:
                             </label>
                             <input
@@ -856,14 +854,14 @@ export default function CardioLogger({
                                 setRowLissMins(e.target.value);
                                 notifyChange({ rowLissMins: parseFloat(e.target.value) || 0, duration: parseFloat(e.target.value) || 0 });
                               }}
-                              style={{ width: '100%', padding: '8px', textAlign: 'center', borderRadius: '10px', border: '1.5px solid #10b981', fontWeight: '900', fontSize: '13.5px', background: '#ffffff' }}
+                              style={{ width: '100%', padding: '8px', textAlign: 'center', borderRadius: '10px', border: '1px solid var(--accent-emerald)', fontWeight: '900', fontSize: '13.5px', background: 'var(--bg-surface-secondary)', color: 'var(--text-main)' }}
                             />
                           </div>
                           <div>
-                            <label style={{ display: 'block', fontSize: '11px', fontWeight: '800', color: '#065f46', marginBottom: '3px' }}>
+                            <label style={{ display: 'block', fontSize: '11px', fontWeight: '800', color: 'var(--accent-emerald)', marginBottom: '3px' }}>
                               🗣️ Esfuerzo Percibido:
                             </label>
-                            <div style={{ padding: '8px', textAlign: 'center', borderRadius: '10px', background: '#fff', border: '1.5px solid #a7f3d0', fontWeight: '900', fontSize: '12px', color: '#047857' }}>
+                            <div style={{ padding: '8px', textAlign: 'center', borderRadius: '10px', background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', fontWeight: '900', fontSize: '12px', color: 'var(--accent-emerald)' }}>
                               RPE 12-13 (Conversación fluida)
                             </div>
                           </div>
@@ -874,7 +872,7 @@ export default function CardioLogger({
                     {/* TELEMETRÍA DEL ERGÓMETRO DE REMO */}
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(105px, 1fr))', gap: '8px' }}>
                       <div>
-                        <label style={{ display: 'block', fontSize: '10.5px', fontWeight: '800', color: '#334155', marginBottom: '3px' }}>
+                        <label style={{ display: 'block', fontSize: '10.5px', fontWeight: '800', color: 'var(--text-muted)', marginBottom: '3px' }}>
                           ⚙️ Damper (Palanca):
                         </label>
                         <input
@@ -887,12 +885,12 @@ export default function CardioLogger({
                             setRowDamper(e.target.value);
                             notifyChange({ damperLevel: parseFloat(e.target.value) || 5 });
                           }}
-                          style={{ width: '100%', padding: '7px', textAlign: 'center', borderRadius: '10px', border: '1.5px solid #cbd5e1', fontWeight: '900', fontSize: '13px' }}
+                          style={{ width: '100%', padding: '7px', textAlign: 'center', borderRadius: '10px', border: '1px solid var(--border-subtle)', background: 'var(--bg-surface-secondary)', color: 'var(--text-main)', fontWeight: '900', fontSize: '13px' }}
                         />
                       </div>
 
                       <div>
-                        <label style={{ display: 'block', fontSize: '10.5px', fontWeight: '800', color: '#334155', marginBottom: '3px' }}>
+                        <label style={{ display: 'block', fontSize: '10.5px', fontWeight: '800', color: 'var(--text-muted)', marginBottom: '3px' }}>
                           🔄 SPM (Paladas/min):
                         </label>
                         <input
@@ -902,12 +900,12 @@ export default function CardioLogger({
                             setRowSpm(e.target.value);
                             notifyChange({ strokesPerMin: parseFloat(e.target.value) || 24 });
                           }}
-                          style={{ width: '100%', padding: '7px', textAlign: 'center', borderRadius: '10px', border: '1.5px solid #cbd5e1', fontWeight: '900', fontSize: '13px' }}
+                          style={{ width: '100%', padding: '7px', textAlign: 'center', borderRadius: '10px', border: '1px solid var(--border-subtle)', background: 'var(--bg-surface-secondary)', color: 'var(--text-main)', fontWeight: '900', fontSize: '13px' }}
                         />
                       </div>
 
                       <div>
-                        <label style={{ display: 'block', fontSize: '10.5px', fontWeight: '800', color: '#334155', marginBottom: '3px' }}>
+                        <label style={{ display: 'block', fontSize: '10.5px', fontWeight: '800', color: 'var(--text-muted)', marginBottom: '3px' }}>
                           📍 Metros Recorridos:
                         </label>
                         <input
@@ -918,12 +916,12 @@ export default function CardioLogger({
                             setRowDistanceMeters(e.target.value);
                             notifyChange({ distanceMeters: parseFloat(e.target.value) || 0, distanceKm: (parseFloat(e.target.value) || 0) / 1000 });
                           }}
-                          style={{ width: '100%', padding: '7px', textAlign: 'center', borderRadius: '10px', border: '1.5px solid #cbd5e1', fontWeight: '900', fontSize: '13px' }}
+                          style={{ width: '100%', padding: '7px', textAlign: 'center', borderRadius: '10px', border: '1px solid var(--border-subtle)', background: 'var(--bg-surface-secondary)', color: 'var(--text-main)', fontWeight: '900', fontSize: '13px' }}
                         />
                       </div>
 
                       <div>
-                        <label style={{ display: 'block', fontSize: '10.5px', fontWeight: '800', color: '#334155', marginBottom: '3px' }}>
+                        <label style={{ display: 'block', fontSize: '10.5px', fontWeight: '800', color: 'var(--text-muted)', marginBottom: '3px' }}>
                           ⏱️ Split /500m:
                         </label>
                         <input
@@ -934,7 +932,7 @@ export default function CardioLogger({
                             notifyChange({ split500m: e.target.value });
                           }}
                           placeholder="2:15"
-                          style={{ width: '100%', padding: '7px', textAlign: 'center', borderRadius: '10px', border: '1.5px solid #cbd5e1', fontWeight: '900', fontSize: '13px' }}
+                          style={{ width: '100%', padding: '7px', textAlign: 'center', borderRadius: '10px', border: '1px solid var(--border-subtle)', background: 'var(--bg-surface-secondary)', color: 'var(--text-main)', fontWeight: '900', fontSize: '13px' }}
                         />
                       </div>
                     </div>
@@ -945,7 +943,7 @@ export default function CardioLogger({
                 {machineType === 'treadmill' && (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     {/* Selector de Modo: Bifásico (Oficial Adonis) vs Simple */}
-                    <div style={{ display: 'flex', gap: '6px', background: '#e2e8f0', padding: '3px', borderRadius: '12px' }}>
+                    <div style={{ display: 'flex', gap: '6px', background: 'var(--bg-surface-secondary)', border: '1px solid var(--border-subtle)', padding: '3px', borderRadius: '12px' }}>
                       <button
                         type="button"
                         onClick={() => {
@@ -1008,25 +1006,25 @@ export default function CardioLogger({
                     {isDualPhase ? (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                         {/* FASE A: 30 MIN INCLINADA */}
-                        <div style={{ background: '#f0f9ff', border: '1.5px solid #7dd3fc', borderRadius: '14px', padding: '10px 12px' }}>
+                        <div style={{ background: 'var(--bg-card)', border: '1px solid var(--accent-blue)', borderRadius: '14px', padding: '10px 12px' }}>
                           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px', flexWrap: 'wrap', gap: '4px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                               <span style={{ fontSize: '12px' }}>🟢</span>
-                              <strong style={{ fontSize: '12px', fontWeight: '900', color: '#0369a1' }}>
+                              <strong style={{ fontSize: '12px', fontWeight: '900', color: 'var(--accent-blue)' }}>
                                 Fase A: Rampa Inclinada ({phaseMinutesA} min)
                               </strong>
                             </div>
-                            <span style={{ fontSize: '10px', background: '#e0f2fe', color: '#0284c7', padding: '2px 8px', borderRadius: '8px', fontWeight: '800' }}>
+                            <span style={{ fontSize: '10px', background: 'var(--accent-blue-light)', color: 'var(--accent-blue)', padding: '2px 8px', borderRadius: '8px', fontWeight: '800' }}>
                               Zona 2 Lipolítica & Cero Impacto
                             </span>
                           </div>
-                          <p style={{ fontSize: '10.5px', color: '#0369a1', margin: '0 0 8px 0', lineHeight: '1.3' }}>
+                          <p style={{ fontSize: '10.5px', color: 'var(--text-muted)', margin: '0 0 8px 0', lineHeight: '1.3' }}>
                             A 120-135 BPM, las mitocondrias oxidan ácidos grasos libres sin vaciar reservas glucolíticas requeridas para el estudio. La pendiente reduce drásticamente el impacto articular.
                           </p>
 
                           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '6px' }}>
                             <div>
-                              <label style={{ display: 'block', fontSize: '10px', fontWeight: '800', color: '#334155', marginBottom: '2px' }}>
+                              <label style={{ display: 'block', fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', marginBottom: '2px' }}>
                                 ⏱️ Minutos:
                               </label>
                               <input
@@ -1040,12 +1038,12 @@ export default function CardioLogger({
                                     duration: totalM
                                   });
                                 }}
-                                style={{ width: '100%', padding: '6px', textAlign: 'center', borderRadius: '8px', border: '1.5px solid #0284c7', fontWeight: '900', fontSize: '12px', background: '#ffffff' }}
+                                style={{ width: '100%', padding: '6px', textAlign: 'center', borderRadius: '8px', border: '1px solid var(--accent-blue)', fontWeight: '900', fontSize: '12px', background: 'var(--bg-surface-secondary)', color: 'var(--text-main)' }}
                               />
                             </div>
 
                             <div>
-                              <label style={{ display: 'block', fontSize: '10px', fontWeight: '800', color: '#334155', marginBottom: '2px' }}>
+                              <label style={{ display: 'block', fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', marginBottom: '2px' }}>
                                 📐 Inclinación %:
                               </label>
                               <input
@@ -1056,12 +1054,12 @@ export default function CardioLogger({
                                   setPhaseInclineA(e.target.value);
                                   notifyChange({ phaseInclineA: parseFloat(e.target.value) || 0 });
                                 }}
-                                style={{ width: '100%', padding: '6px', textAlign: 'center', borderRadius: '8px', border: '1.5px solid #0284c7', fontWeight: '900', fontSize: '12px', background: '#ffffff' }}
+                                style={{ width: '100%', padding: '6px', textAlign: 'center', borderRadius: '8px', border: '1px solid var(--accent-blue)', fontWeight: '900', fontSize: '12px', background: 'var(--bg-surface-secondary)', color: 'var(--text-main)' }}
                               />
                             </div>
 
                             <div>
-                              <label style={{ display: 'block', fontSize: '10px', fontWeight: '800', color: '#334155', marginBottom: '2px' }}>
+                              <label style={{ display: 'block', fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', marginBottom: '2px' }}>
                                 ⚡ Vel km/h:
                               </label>
                               <input
@@ -1072,13 +1070,13 @@ export default function CardioLogger({
                                   setPhaseSpeedA(e.target.value);
                                   notifyChange({ phaseSpeedA: parseFloat(e.target.value) || 0 });
                                 }}
-                                style={{ width: '100%', padding: '6px', textAlign: 'center', borderRadius: '8px', border: '1.5px solid #0284c7', fontWeight: '900', fontSize: '12px', background: '#ffffff' }}
+                                style={{ width: '100%', padding: '6px', textAlign: 'center', borderRadius: '8px', border: '1px solid var(--accent-blue)', fontWeight: '900', fontSize: '12px', background: 'var(--bg-surface-secondary)', color: 'var(--text-main)' }}
                               />
                             </div>
                           </div>
 
                           <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '6px', flexWrap: 'wrap' }}>
-                            <span style={{ fontSize: '9.5px', color: '#64748b', fontWeight: '800' }}>Inclinación Rápida:</span>
+                            <span style={{ fontSize: '9.5px', color: 'var(--text-muted)', fontWeight: '800' }}>Inclinación Rápida:</span>
                             {['10', '11', '11.5', '12'].map(inc => (
                               <button
                                 key={inc}
@@ -1090,9 +1088,9 @@ export default function CardioLogger({
                                 style={{
                                   padding: '2px 7px',
                                   borderRadius: '6px',
-                                  border: phaseInclineA === inc ? '1.5px solid #0284c7' : '1px solid #cbd5e1',
-                                  background: phaseInclineA === inc ? '#e0f2fe' : '#ffffff',
-                                  color: phaseInclineA === inc ? '#0284c7' : '#475569',
+                                  border: phaseInclineA === inc ? '1px solid var(--accent-blue)' : '1px solid var(--border-subtle)',
+                                  background: phaseInclineA === inc ? 'var(--accent-blue-light)' : 'var(--bg-surface-secondary)',
+                                  color: phaseInclineA === inc ? 'var(--accent-blue)' : 'var(--text-muted)',
                                   fontSize: '10px',
                                   fontWeight: '800',
                                   cursor: 'pointer'
@@ -1101,7 +1099,7 @@ export default function CardioLogger({
                                 {inc}%
                               </button>
                             ))}
-                            <span style={{ fontSize: '9.5px', color: '#64748b', fontWeight: '800', marginLeft: '6px' }}>Vel:</span>
+                            <span style={{ fontSize: '9.5px', color: 'var(--text-muted)', fontWeight: '800', marginLeft: '6px' }}>Vel:</span>
                             {['3.8', '4.0', '4.2'].map(spd => (
                               <button
                                 key={spd}
@@ -1113,9 +1111,9 @@ export default function CardioLogger({
                                 style={{
                                   padding: '2px 7px',
                                   borderRadius: '6px',
-                                  border: phaseSpeedA === spd ? '1.5px solid #0284c7' : '1px solid #cbd5e1',
-                                  background: phaseSpeedA === spd ? '#e0f2fe' : '#ffffff',
-                                  color: phaseSpeedA === spd ? '#0284c7' : '#475569',
+                                  border: phaseSpeedA === spd ? '1px solid var(--accent-blue)' : '1px solid var(--border-subtle)',
+                                  background: phaseSpeedA === spd ? 'var(--accent-blue-light)' : 'var(--bg-surface-secondary)',
+                                  color: phaseSpeedA === spd ? 'var(--accent-blue)' : 'var(--text-muted)',
                                   fontSize: '10px',
                                   fontWeight: '800',
                                   cursor: 'pointer'
@@ -1128,25 +1126,25 @@ export default function CardioLogger({
                         </div>
 
                         {/* FASE B: 30 MIN PLANOS */}
-                        <div style={{ background: '#ecfdf5', border: '1.5px solid #6ee7b7', borderRadius: '14px', padding: '10px 12px' }}>
+                        <div style={{ background: 'var(--bg-card)', border: '1px solid var(--accent-emerald)', borderRadius: '14px', padding: '10px 12px' }}>
                           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px', flexWrap: 'wrap', gap: '4px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                               <span style={{ fontSize: '12px' }}>🔵</span>
-                              <strong style={{ fontSize: '12px', fontWeight: '900', color: '#047857' }}>
+                              <strong style={{ fontSize: '12px', fontWeight: '900', color: 'var(--accent-emerald)' }}>
                                 Fase B: Terreno Plano ({phaseMinutesB} min)
                               </strong>
                             </div>
-                            <span style={{ fontSize: '10px', background: '#d1fae5', color: '#065f46', padding: '2px 8px', borderRadius: '8px', fontWeight: '800' }}>
+                            <span style={{ fontSize: '10px', background: 'var(--accent-emerald-subtle)', color: 'var(--accent-emerald)', padding: '2px 8px', borderRadius: '8px', fontWeight: '800' }}>
                               Descarga Aquiles & Sóleo
                             </span>
                           </div>
-                          <p style={{ fontSize: '10.5px', color: '#047857', margin: '0 0 8px 0', lineHeight: '1.3' }}>
+                          <p style={{ fontSize: '10.5px', color: 'var(--text-muted)', margin: '0 0 8px 0', lineHeight: '1.3' }}>
                             Evita sobrecarga excéntrica en tendón de Aquiles tras 30 min continuos en pendiente, normaliza el ángulo tibio-tarsiano y promueve el retorno venoso y aclaramiento de lactato.
                           </p>
 
                           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '6px' }}>
                             <div>
-                              <label style={{ display: 'block', fontSize: '10px', fontWeight: '800', color: '#334155', marginBottom: '2px' }}>
+                              <label style={{ display: 'block', fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', marginBottom: '2px' }}>
                                 ⏱️ Minutos:
                               </label>
                               <input
@@ -1160,12 +1158,12 @@ export default function CardioLogger({
                                     duration: totalM
                                   });
                                 }}
-                                style={{ width: '100%', padding: '6px', textAlign: 'center', borderRadius: '8px', border: '1.5px solid #059669', fontWeight: '900', fontSize: '12px', background: '#ffffff' }}
+                                style={{ width: '100%', padding: '6px', textAlign: 'center', borderRadius: '8px', border: '1px solid var(--accent-emerald)', fontWeight: '900', fontSize: '12px', background: 'var(--bg-surface-secondary)', color: 'var(--text-main)' }}
                               />
                             </div>
 
                             <div>
-                              <label style={{ display: 'block', fontSize: '10px', fontWeight: '800', color: '#334155', marginBottom: '2px' }}>
+                              <label style={{ display: 'block', fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', marginBottom: '2px' }}>
                                 📐 Inclinación %:
                               </label>
                               <input
@@ -1176,12 +1174,12 @@ export default function CardioLogger({
                                   setPhaseInclineB(e.target.value);
                                   notifyChange({ phaseInclineB: parseFloat(e.target.value) || 0 });
                                 }}
-                                style={{ width: '100%', padding: '6px', textAlign: 'center', borderRadius: '8px', border: '1.5px solid #059669', fontWeight: '900', fontSize: '12px', background: '#ffffff' }}
+                                style={{ width: '100%', padding: '6px', textAlign: 'center', borderRadius: '8px', border: '1px solid var(--accent-emerald)', fontWeight: '900', fontSize: '12px', background: 'var(--bg-surface-secondary)', color: 'var(--text-main)' }}
                               />
                             </div>
 
                             <div>
-                              <label style={{ display: 'block', fontSize: '10px', fontWeight: '800', color: '#334155', marginBottom: '2px' }}>
+                              <label style={{ display: 'block', fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', marginBottom: '2px' }}>
                                 ⚡ Vel km/h:
                               </label>
                               <input
@@ -1192,13 +1190,13 @@ export default function CardioLogger({
                                   setPhaseSpeedB(e.target.value);
                                   notifyChange({ phaseSpeedB: parseFloat(e.target.value) || 0 });
                                 }}
-                                style={{ width: '100%', padding: '6px', textAlign: 'center', borderRadius: '8px', border: '1.5px solid #059669', fontWeight: '900', fontSize: '12px', background: '#ffffff' }}
+                                style={{ width: '100%', padding: '6px', textAlign: 'center', borderRadius: '8px', border: '1px solid var(--accent-emerald)', fontWeight: '900', fontSize: '12px', background: 'var(--bg-surface-secondary)', color: 'var(--text-main)' }}
                               />
                             </div>
                           </div>
 
                           <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '6px', flexWrap: 'wrap' }}>
-                            <span style={{ fontSize: '9.5px', color: '#64748b', fontWeight: '800' }}>Inclinación:</span>
+                            <span style={{ fontSize: '9.5px', color: 'var(--text-muted)', fontWeight: '800' }}>Inclinación:</span>
                             <button
                               type="button"
                               onClick={() => {
@@ -1208,9 +1206,9 @@ export default function CardioLogger({
                               style={{
                                 padding: '2px 7px',
                                 borderRadius: '6px',
-                                border: phaseInclineB === '0' ? '1.5px solid #059669' : '1px solid #cbd5e1',
-                                background: phaseInclineB === '0' ? '#d1fae5' : '#ffffff',
-                                color: phaseInclineB === '0' ? '#047857' : '#475569',
+                                border: phaseInclineB === '0' ? '1px solid var(--accent-emerald)' : '1px solid var(--border-subtle)',
+                                background: phaseInclineB === '0' ? 'var(--accent-emerald-subtle)' : 'var(--bg-surface-secondary)',
+                                color: phaseInclineB === '0' ? 'var(--accent-emerald)' : 'var(--text-muted)',
                                 fontSize: '10px',
                                 fontWeight: '800',
                                 cursor: 'pointer'
@@ -1218,7 +1216,7 @@ export default function CardioLogger({
                             >
                               0% Plano (Oficial)
                             </button>
-                            <span style={{ fontSize: '9.5px', color: '#64748b', fontWeight: '800', marginLeft: '6px' }}>Vel:</span>
+                            <span style={{ fontSize: '9.5px', color: 'var(--text-muted)', fontWeight: '800', marginLeft: '6px' }}>Vel:</span>
                             {['4.5', '4.8', '5.0', '5.2'].map(spd => (
                               <button
                                 key={spd}
@@ -1230,9 +1228,9 @@ export default function CardioLogger({
                                 style={{
                                   padding: '2px 7px',
                                   borderRadius: '6px',
-                                  border: phaseSpeedB === spd ? '1.5px solid #059669' : '1px solid #cbd5e1',
-                                  background: phaseSpeedB === spd ? '#d1fae5' : '#ffffff',
-                                  color: phaseSpeedB === spd ? '#047857' : '#475569',
+                                  border: phaseSpeedB === spd ? '1px solid var(--accent-emerald)' : '1px solid var(--border-subtle)',
+                                  background: phaseSpeedB === spd ? 'var(--accent-emerald-subtle)' : 'var(--bg-surface-secondary)',
+                                  color: phaseSpeedB === spd ? 'var(--accent-emerald)' : 'var(--text-muted)',
                                   fontSize: '10px',
                                   fontWeight: '800',
                                   cursor: 'pointer'
@@ -1245,10 +1243,10 @@ export default function CardioLogger({
                         </div>
 
                         {/* RESUMEN CONSOLIDADO BIFÁSICO */}
-                        <div style={{ background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: '12px', padding: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <div style={{ background: 'var(--bg-surface-secondary)', border: '1px solid var(--border-subtle)', borderRadius: '12px', padding: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '6px' }}>
                             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                              <span style={{ fontSize: '11px', fontWeight: '900', color: '#0f172a' }}>
+                              <span style={{ fontSize: '11px', fontWeight: '900', color: 'var(--text-main)' }}>
                                 ⏱️ Total: {(parseFloat(phaseMinutesA) || 0) + (parseFloat(phaseMinutesB) || 0)} min
                               </span>
                               <span style={{ fontSize: '11px', fontWeight: '800', color: '#0369a1' }}>
@@ -1266,7 +1264,7 @@ export default function CardioLogger({
                           </div>
 
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <label style={{ fontSize: '10.5px', color: '#475569', fontWeight: '800', whiteSpace: 'nowrap' }}>
+                            <label style={{ fontSize: '10.5px', color: 'var(--text-muted)', fontWeight: '800', whiteSpace: 'nowrap' }}>
                               📍 Distancia Pantalla Gym:
                             </label>
                             <input
@@ -1278,9 +1276,9 @@ export default function CardioLogger({
                                 setTreadmillDistance(e.target.value);
                                 notifyChange({ distanceKm: parseFloat(e.target.value) || 0 });
                               }}
-                              style={{ width: '100px', padding: '5px 8px', borderRadius: '8px', border: '1.5px solid #cbd5e1', fontSize: '11px', fontWeight: '800', textAlign: 'center' }}
+                              style={{ width: '100px', padding: '5px 8px', borderRadius: '8px', border: '1px solid var(--border-subtle)', background: 'var(--bg-surface-secondary)', color: 'var(--text-main)', fontSize: '11px', fontWeight: '800', textAlign: 'center' }}
                             />
-                            <span style={{ fontSize: '10px', color: '#64748b' }}>(Opcional, si difiere de la estimación)</span>
+                            <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>(Opcional, si difiere de la estimación)</span>
                           </div>
                         </div>
                       </div>
@@ -1289,7 +1287,7 @@ export default function CardioLogger({
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '8px' }}>
                           <div>
-                            <label style={{ display: 'block', fontSize: '10.5px', fontWeight: '800', color: '#334155', marginBottom: '3px' }}>
+                            <label style={{ display: 'block', fontSize: '10.5px', fontWeight: '800', color: 'var(--text-muted)', marginBottom: '3px' }}>
                               ⏱️ Minutos:
                             </label>
                             <input
@@ -1299,12 +1297,12 @@ export default function CardioLogger({
                                 setDuration(e.target.value);
                                 notifyChange({ duration: parseFloat(e.target.value) || 0 });
                               }}
-                              style={{ width: '100%', padding: '7px', textAlign: 'center', borderRadius: '10px', border: '1.5px solid #0284c7', fontWeight: '900', fontSize: '13px' }}
+                              style={{ width: '100%', padding: '7px', textAlign: 'center', borderRadius: '10px', border: '1px solid var(--accent-blue)', background: 'var(--bg-surface-secondary)', color: 'var(--text-main)', fontWeight: '900', fontSize: '13px' }}
                             />
                           </div>
 
                           <div>
-                            <label style={{ display: 'block', fontSize: '10.5px', fontWeight: '800', color: '#334155', marginBottom: '3px' }}>
+                            <label style={{ display: 'block', fontSize: '10.5px', fontWeight: '800', color: 'var(--text-muted)', marginBottom: '3px' }}>
                               📐 Inclinación %:
                             </label>
                             <input
@@ -1315,12 +1313,12 @@ export default function CardioLogger({
                                 notifyChange({ inclinePct: parseFloat(e.target.value) || 0 });
                               }}
                               placeholder="11.5"
-                              style={{ width: '100%', padding: '7px', textAlign: 'center', borderRadius: '10px', border: '1.5px solid #cbd5e1', fontWeight: '900', fontSize: '13px' }}
+                              style={{ width: '100%', padding: '7px', textAlign: 'center', borderRadius: '10px', border: '1px solid var(--border-subtle)', background: 'var(--bg-surface-secondary)', color: 'var(--text-main)', fontWeight: '900', fontSize: '13px' }}
                             />
                           </div>
 
                           <div>
-                            <label style={{ display: 'block', fontSize: '10.5px', fontWeight: '800', color: '#334155', marginBottom: '3px' }}>
+                            <label style={{ display: 'block', fontSize: '10.5px', fontWeight: '800', color: 'var(--text-muted)', marginBottom: '3px' }}>
                               ⚡ Velocidad km/h:
                             </label>
                             <input
@@ -1332,12 +1330,12 @@ export default function CardioLogger({
                                 notifyChange({ speedKmh: parseFloat(e.target.value) || 0 });
                               }}
                               placeholder="4.0"
-                              style={{ width: '100%', padding: '7px', textAlign: 'center', borderRadius: '10px', border: '1.5px solid #cbd5e1', fontWeight: '900', fontSize: '13px' }}
+                              style={{ width: '100%', padding: '7px', textAlign: 'center', borderRadius: '10px', border: '1px solid var(--border-subtle)', background: 'var(--bg-surface-secondary)', color: 'var(--text-main)', fontWeight: '900', fontSize: '13px' }}
                             />
                           </div>
 
                           <div>
-                            <label style={{ display: 'block', fontSize: '10.5px', fontWeight: '800', color: '#334155', marginBottom: '3px' }}>
+                            <label style={{ display: 'block', fontSize: '10.5px', fontWeight: '800', color: 'var(--text-muted)', marginBottom: '3px' }}>
                               📍 Distancia (km):
                             </label>
                             <input
@@ -1349,14 +1347,14 @@ export default function CardioLogger({
                                 setTreadmillDistance(e.target.value);
                                 notifyChange({ distanceKm: parseFloat(e.target.value) || 0 });
                               }}
-                              style={{ width: '100%', padding: '7px', textAlign: 'center', borderRadius: '10px', border: '1.5px solid #cbd5e1', fontWeight: '900', fontSize: '13px' }}
+                              style={{ width: '100%', padding: '7px', textAlign: 'center', borderRadius: '10px', border: '1px solid var(--border-subtle)', background: 'var(--bg-surface-secondary)', color: 'var(--text-main)', fontWeight: '900', fontSize: '13px' }}
                             />
                           </div>
                         </div>
 
                         {/* Accesos rápidos de inclinación */}
                         <div style={{ display: 'flex', alignItems: 'center', gap: '5px', flexWrap: 'wrap' }}>
-                          <span style={{ fontSize: '10px', color: '#64748b', fontWeight: '800' }}>Inclinación:</span>
+                          <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '800' }}>Inclinación:</span>
                           {[0, 5, 8, 10, 11.5, 12, 15].map(inc => (
                             <button
                               key={inc}
@@ -1368,9 +1366,9 @@ export default function CardioLogger({
                               style={{
                                 padding: '3px 8px',
                                 borderRadius: '8px',
-                                border: treadmillIncline === String(inc) ? '1.5px solid #0284c7' : '1px solid #cbd5e1',
-                                background: treadmillIncline === String(inc) ? '#e0f2fe' : '#ffffff',
-                                color: treadmillIncline === String(inc) ? '#0284c7' : '#475569',
+                                border: treadmillIncline === String(inc) ? '1px solid var(--accent-blue)' : '1px solid var(--border-subtle)',
+                                background: treadmillIncline === String(inc) ? 'var(--accent-blue-light)' : 'var(--bg-surface-secondary)',
+                                color: treadmillIncline === String(inc) ? 'var(--accent-blue)' : 'var(--text-muted)',
                                 fontSize: '10.5px',
                                 fontWeight: '800',
                                 cursor: 'pointer'
@@ -1380,7 +1378,7 @@ export default function CardioLogger({
                             </button>
                           ))}
                           {metrics.elevationMeters > 0 && (
-                            <span style={{ fontSize: '10.5px', color: '#059669', fontWeight: '800', marginLeft: 'auto' }}>
+                            <span style={{ fontSize: '10.5px', color: 'var(--accent-emerald)', fontWeight: '800', marginLeft: 'auto' }}>
                               ⛰️ +{metrics.elevationMeters}m elevación ganada
                             </span>
                           )}
@@ -1395,7 +1393,7 @@ export default function CardioLogger({
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr 1fr', gap: '6px' }}>
                       <div>
-                        <label style={{ display: 'block', fontSize: '10px', fontWeight: '800', color: '#334155', marginBottom: '3px' }}>
+                        <label style={{ display: 'block', fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', marginBottom: '3px' }}>
                           ⏱️ Minutos:
                         </label>
                         <input
@@ -1405,12 +1403,12 @@ export default function CardioLogger({
                             setDuration(e.target.value);
                             notifyChange({ duration: parseFloat(e.target.value) || 0 });
                           }}
-                          style={{ width: '100%', padding: '6px', textAlign: 'center', borderRadius: '10px', border: '1.5px solid #0284c7', fontWeight: '900', fontSize: '12.5px' }}
+                          style={{ width: '100%', padding: '6px', textAlign: 'center', borderRadius: '10px', border: '1px solid var(--accent-blue)', background: 'var(--bg-surface-secondary)', color: 'var(--text-main)', fontWeight: '900', fontSize: '12.5px' }}
                         />
                       </div>
 
                       <div>
-                        <label style={{ display: 'block', fontSize: '10px', fontWeight: '800', color: '#334155', marginBottom: '3px' }}>
+                        <label style={{ display: 'block', fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', marginBottom: '3px' }}>
                           ⚙️ Nivel Res.:
                         </label>
                         <input
@@ -1421,12 +1419,12 @@ export default function CardioLogger({
                             notifyChange({ resistanceLevel: parseFloat(e.target.value) || 0 });
                           }}
                           placeholder="6"
-                          style={{ width: '100%', padding: '6px', textAlign: 'center', borderRadius: '10px', border: '1.5px solid #cbd5e1', fontWeight: '900', fontSize: '12.5px' }}
+                          style={{ width: '100%', padding: '6px', textAlign: 'center', borderRadius: '10px', border: '1px solid var(--border-subtle)', background: 'var(--bg-surface-secondary)', color: 'var(--text-main)', fontWeight: '900', fontSize: '12.5px' }}
                         />
                       </div>
 
                       <div>
-                        <label style={{ display: 'block', fontSize: '10px', fontWeight: '800', color: '#334155', marginBottom: '3px' }}>
+                        <label style={{ display: 'block', fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', marginBottom: '3px' }}>
                           ⚡ Vel km/h:
                         </label>
                         <input
@@ -1438,12 +1436,12 @@ export default function CardioLogger({
                             notifyChange({ avgSpeedKmh: parseFloat(e.target.value) || 0 });
                           }}
                           placeholder="22"
-                          style={{ width: '100%', padding: '6px', textAlign: 'center', borderRadius: '10px', border: '1.5px solid #cbd5e1', fontWeight: '900', fontSize: '12.5px' }}
+                          style={{ width: '100%', padding: '6px', textAlign: 'center', borderRadius: '10px', border: '1px solid var(--border-subtle)', background: 'var(--bg-surface-secondary)', color: 'var(--text-main)', fontWeight: '900', fontSize: '12.5px' }}
                         />
                       </div>
 
                       <div>
-                        <label style={{ display: 'block', fontSize: '10px', fontWeight: '800', color: '#334155', marginBottom: '3px' }}>
+                        <label style={{ display: 'block', fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', marginBottom: '3px' }}>
                           📍 Dist (km):
                         </label>
                         <input
@@ -1455,12 +1453,12 @@ export default function CardioLogger({
                             setBikeDistance(e.target.value);
                             notifyChange({ distanceKm: parseFloat(e.target.value) || 0 });
                           }}
-                          style={{ width: '100%', padding: '6px', textAlign: 'center', borderRadius: '10px', border: '1.5px solid #cbd5e1', fontWeight: '900', fontSize: '12.5px' }}
+                          style={{ width: '100%', padding: '6px', textAlign: 'center', borderRadius: '10px', border: '1px solid var(--border-subtle)', background: 'var(--bg-surface-secondary)', color: 'var(--text-main)', fontWeight: '900', fontSize: '12.5px' }}
                         />
                       </div>
 
                       <div>
-                        <label style={{ display: 'block', fontSize: '10px', fontWeight: '800', color: '#334155', marginBottom: '3px' }}>
+                        <label style={{ display: 'block', fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', marginBottom: '3px' }}>
                           🔄 RPM:
                         </label>
                         <input
@@ -1471,14 +1469,14 @@ export default function CardioLogger({
                             notifyChange({ cadenceRpm: parseFloat(e.target.value) || 0 });
                           }}
                           placeholder="75"
-                          style={{ width: '100%', padding: '6px', textAlign: 'center', borderRadius: '10px', border: '1.5px solid #cbd5e1', fontWeight: '900', fontSize: '12.5px' }}
+                          style={{ width: '100%', padding: '6px', textAlign: 'center', borderRadius: '10px', border: '1px solid var(--border-subtle)', background: 'var(--bg-surface-secondary)', color: 'var(--text-main)', fontWeight: '900', fontSize: '12.5px' }}
                         />
                       </div>
                     </div>
 
                     {/* Presets de resistencia */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: '5px', flexWrap: 'wrap' }}>
-                      <span style={{ fontSize: '10px', color: '#64748b', fontWeight: '800' }}>Resistencia:</span>
+                      <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '800' }}>Resistencia:</span>
                       {[3, 4, 5, 6, 7, 8, 10].map(lvl => (
                         <button
                           key={lvl}
@@ -1490,9 +1488,9 @@ export default function CardioLogger({
                           style={{
                             padding: '3px 8px',
                             borderRadius: '8px',
-                            border: bikeResistance === String(lvl) ? '1.5px solid #0284c7' : '1px solid #cbd5e1',
-                            background: bikeResistance === String(lvl) ? '#e0f2fe' : '#ffffff',
-                            color: bikeResistance === String(lvl) ? '#0284c7' : '#475569',
+                            border: bikeResistance === String(lvl) ? '1px solid var(--accent-blue)' : '1px solid var(--border-subtle)',
+                            background: bikeResistance === String(lvl) ? 'var(--accent-blue-light)' : 'var(--bg-surface-secondary)',
+                            color: bikeResistance === String(lvl) ? 'var(--accent-blue)' : 'var(--text-muted)',
                             fontSize: '10.5px',
                             fontWeight: '800',
                             cursor: 'pointer'
@@ -1501,7 +1499,7 @@ export default function CardioLogger({
                           Niv {lvl}
                         </button>
                       ))}
-                      <span style={{ fontSize: '10.5px', color: '#d97706', fontWeight: '800', marginLeft: 'auto' }}>
+                      <span style={{ fontSize: '10.5px', color: 'var(--accent-amber)', fontWeight: '800', marginLeft: 'auto' }}>
                         ⚡ ~{Math.round((parseFloat(bikeResistance || 6) * 14) + ((parseFloat(bikeCadence || 75) - 50) * 1.5))} Watts estimados
                       </span>
                     </div>
@@ -1512,24 +1510,24 @@ export default function CardioLogger({
                 {machineType === 'elliptical' && (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                     <div style={{
-                      background: '#eff6ff',
-                      border: '1px solid #bfdbfe',
+                      background: 'var(--accent-blue-light)',
+                      border: '1px solid var(--accent-blue)',
                       borderRadius: '10px',
                       padding: '6px 10px',
                       fontSize: '11px',
-                      color: '#1e40af',
+                      color: 'var(--accent-blue)',
                       fontWeight: '700',
                       display: 'flex',
                       alignItems: 'center',
                       gap: '6px'
                     }}>
-                      <Info size={14} color="#1d4ed8" />
+                      <Info size={14} color="var(--accent-blue)" />
                       Modalidad Sólo Piernas: Brazos fijos en manillar. Aislamiento articular inferior puro (sin impulso de tren superior).
                     </div>
 
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '8px' }}>
                       <div>
-                        <label style={{ display: 'block', fontSize: '10.5px', fontWeight: '800', color: '#334155', marginBottom: '3px' }}>
+                        <label style={{ display: 'block', fontSize: '10.5px', fontWeight: '800', color: 'var(--text-muted)', marginBottom: '3px' }}>
                           ⏱️ Minutos:
                         </label>
                         <input
@@ -1539,12 +1537,12 @@ export default function CardioLogger({
                             setDuration(e.target.value);
                             notifyChange({ duration: parseFloat(e.target.value) || 0 });
                           }}
-                          style={{ width: '100%', padding: '7px', textAlign: 'center', borderRadius: '10px', border: '1.5px solid #0284c7', fontWeight: '900', fontSize: '13px' }}
+                          style={{ width: '100%', padding: '7px', textAlign: 'center', borderRadius: '10px', border: '1px solid var(--accent-blue)', background: 'var(--bg-surface-secondary)', color: 'var(--text-main)', fontWeight: '900', fontSize: '13px' }}
                         />
                       </div>
 
                       <div>
-                        <label style={{ display: 'block', fontSize: '10.5px', fontWeight: '800', color: '#334155', marginBottom: '3px' }}>
+                        <label style={{ display: 'block', fontSize: '10.5px', fontWeight: '800', color: 'var(--text-muted)', marginBottom: '3px' }}>
                           ⚙️ Nivel Res.:
                         </label>
                         <input
@@ -1555,12 +1553,12 @@ export default function CardioLogger({
                             notifyChange({ resistanceLevel: parseFloat(e.target.value) || 0 });
                           }}
                           placeholder="5"
-                          style={{ width: '100%', padding: '7px', textAlign: 'center', borderRadius: '10px', border: '1.5px solid #cbd5e1', fontWeight: '900', fontSize: '13px' }}
+                          style={{ width: '100%', padding: '7px', textAlign: 'center', borderRadius: '10px', border: '1px solid var(--border-subtle)', background: 'var(--bg-surface-secondary)', color: 'var(--text-main)', fontWeight: '900', fontSize: '13px' }}
                         />
                       </div>
 
                       <div>
-                        <label style={{ display: 'block', fontSize: '10.5px', fontWeight: '800', color: '#334155', marginBottom: '3px' }}>
+                        <label style={{ display: 'block', fontSize: '10.5px', fontWeight: '800', color: 'var(--text-muted)', marginBottom: '3px' }}>
                           🚶 Zancadas (SPM):
                         </label>
                         <input
@@ -1571,12 +1569,12 @@ export default function CardioLogger({
                             notifyChange({ stridesPerMin: parseFloat(e.target.value) || 0 });
                           }}
                           placeholder="60"
-                          style={{ width: '100%', padding: '7px', textAlign: 'center', borderRadius: '10px', border: '1.5px solid #cbd5e1', fontWeight: '900', fontSize: '13px' }}
+                          style={{ width: '100%', padding: '7px', textAlign: 'center', borderRadius: '10px', border: '1px solid var(--border-subtle)', background: 'var(--bg-surface-secondary)', color: 'var(--text-main)', fontWeight: '900', fontSize: '13px' }}
                         />
                       </div>
 
                       <div>
-                        <label style={{ display: 'block', fontSize: '10.5px', fontWeight: '800', color: '#334155', marginBottom: '3px' }}>
+                        <label style={{ display: 'block', fontSize: '10.5px', fontWeight: '800', color: 'var(--text-muted)', marginBottom: '3px' }}>
                           📍 Distancia (km):
                         </label>
                         <input
@@ -1588,7 +1586,7 @@ export default function CardioLogger({
                             setEllipticalDistance(e.target.value);
                             notifyChange({ distanceKm: parseFloat(e.target.value) || 0 });
                           }}
-                          style={{ width: '100%', padding: '7px', textAlign: 'center', borderRadius: '10px', border: '1.5px solid #cbd5e1', fontWeight: '900', fontSize: '13px' }}
+                          style={{ width: '100%', padding: '7px', textAlign: 'center', borderRadius: '10px', border: '1px solid var(--border-subtle)', background: 'var(--bg-surface-secondary)', color: 'var(--text-main)', fontWeight: '900', fontSize: '13px' }}
                         />
                       </div>
                     </div>
@@ -1598,26 +1596,26 @@ export default function CardioLogger({
 
               {/* BLOQUE SEPARADO: SESIÓN ESPECÍFICA DE CARDIO EN TU RELOJ & CONSOLA */}
               <div style={{
-                background: '#ffffff',
-                border: '1.5px solid #cbd5e1',
+                background: 'var(--bg-surface-secondary)',
+                border: '1px solid var(--border-subtle)',
                 borderRadius: '16px',
                 padding: '14px'
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px', flexWrap: 'wrap', gap: '6px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <Watch size={18} color="#7c3aed" />
-                    <span style={{ fontSize: '12.5px', fontWeight: '900', color: '#1e1b4b' }}>
+                    <Watch size={18} color="var(--accent-purple)" />
+                    <span style={{ fontSize: '12.5px', fontWeight: '900', color: 'var(--text-main)' }}>
                       Sesión Independiente de Cardio en tu Reloj & Máquina
                     </span>
                   </div>
-                  <span style={{ fontSize: '10px', background: '#f5f3ff', color: '#6d28d9', padding: '2px 8px', borderRadius: '8px', fontWeight: '800' }}>
+                  <span style={{ fontSize: '10px', background: 'rgba(124, 58, 237, 0.15)', color: '#c084fc', border: '1px solid rgba(168, 85, 247, 0.3)', padding: '2px 8px', borderRadius: '8px', fontWeight: '800' }}>
                     Actividad separada de pesas
                   </span>
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '10px', marginBottom: '10px' }}>
                   <div>
-                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '800', color: '#ef4444', marginBottom: '4px' }}>
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '800', color: 'var(--accent-red)', marginBottom: '4px' }}>
                       ❤️ FC Promedio (BPM):
                     </label>
                     <input
@@ -1628,12 +1626,12 @@ export default function CardioLogger({
                         setWatchHrAvg(e.target.value);
                         notifyChange({ heartRate: parseInt(e.target.value, 10) || 0 });
                       }}
-                      style={{ width: '100%', padding: '8px', textAlign: 'center', borderRadius: '10px', border: '1.5px solid #fca5a5', fontWeight: '900', fontSize: '14px', color: '#dc2626' }}
+                      style={{ width: '100%', padding: '8px', textAlign: 'center', borderRadius: '10px', border: '1px solid var(--accent-red)', background: 'var(--bg-card)', fontWeight: '900', fontSize: '14px', color: 'var(--accent-red)' }}
                     />
                   </div>
 
                   <div>
-                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '800', color: '#b91c1c', marginBottom: '4px' }}>
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '800', color: 'var(--accent-red)', marginBottom: '4px' }}>
                       ⚡ FC Máxima (BPM):
                     </label>
                     <input
@@ -1644,12 +1642,12 @@ export default function CardioLogger({
                         setWatchHrMax(e.target.value);
                         notifyChange({ watch: { ...currentCardioState.watch, maxHeartRate: parseInt(e.target.value, 10) || 0 } });
                       }}
-                      style={{ width: '100%', padding: '8px', textAlign: 'center', borderRadius: '10px', border: '1.5px solid #cbd5e1', fontWeight: '900', fontSize: '14px' }}
+                      style={{ width: '100%', padding: '8px', textAlign: 'center', borderRadius: '10px', border: '1px solid var(--border-subtle)', background: 'var(--bg-card)', color: 'var(--text-main)', fontWeight: '900', fontSize: '14px' }}
                     />
                   </div>
 
                   <div>
-                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '800', color: '#7c3aed', marginBottom: '4px' }}>
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '800', color: 'var(--accent-purple)', marginBottom: '4px' }}>
                       ⌚ Kcal Reloj (Cardio):
                     </label>
                     <input
@@ -1660,12 +1658,12 @@ export default function CardioLogger({
                         setWatchKcal(e.target.value);
                         notifyChange({ watchCalories: parseFloat(e.target.value) || null });
                       }}
-                      style={{ width: '100%', padding: '8px', textAlign: 'center', borderRadius: '10px', border: '1.5px solid #ddd6fe', fontWeight: '900', fontSize: '14px', color: '#6d28d9' }}
+                      style={{ width: '100%', padding: '8px', textAlign: 'center', borderRadius: '10px', border: '1px solid rgba(168, 85, 247, 0.4)', background: 'var(--bg-card)', fontWeight: '900', fontSize: '14px', color: '#c084fc' }}
                     />
                   </div>
 
                   <div>
-                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '800', color: '#475569', marginBottom: '4px' }}>
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '800', color: 'var(--text-muted)', marginBottom: '4px' }}>
                       🖥️ Kcal Máquina:
                     </label>
                     <input
@@ -1676,7 +1674,7 @@ export default function CardioLogger({
                         setMachineKcal(e.target.value);
                         notifyChange({ machineCalories: parseFloat(e.target.value) || null });
                       }}
-                      style={{ width: '100%', padding: '8px', textAlign: 'center', borderRadius: '10px', border: '1.5px solid #cbd5e1', fontWeight: '900', fontSize: '14px' }}
+                      style={{ width: '100%', padding: '8px', textAlign: 'center', borderRadius: '10px', border: '1px solid var(--border-subtle)', background: 'var(--bg-card)', color: 'var(--text-main)', fontWeight: '900', fontSize: '14px' }}
                     />
                   </div>
                 </div>
@@ -1685,8 +1683,8 @@ export default function CardioLogger({
                 <div style={{
                   padding: '8px 12px',
                   borderRadius: '10px',
-                  background: metrics.zone2Status === 'optimal' ? '#ecfdf5' : metrics.zone2Status === 'high' ? '#fffbeb' : '#f8fafc',
-                  border: metrics.zone2Status === 'optimal' ? '1px solid #a7f3d0' : metrics.zone2Status === 'high' ? '1px solid #fde68a' : '1px solid #e2e8f0',
+                  background: metrics.zone2Status === 'optimal' ? 'var(--accent-emerald-subtle)' : metrics.zone2Status === 'high' ? 'var(--accent-amber-subtle)' : 'var(--bg-card)',
+                  border: metrics.zone2Status === 'optimal' ? '1px solid var(--accent-emerald)' : metrics.zone2Status === 'high' ? '1px solid var(--accent-amber)' : '1px solid var(--border-subtle)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
@@ -1694,15 +1692,15 @@ export default function CardioLogger({
                   gap: '6px'
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <Flame size={15} color={metrics.zone2Status === 'optimal' ? '#059669' : '#d97706'} />
-                    <span style={{ fontSize: '11.5px', fontWeight: '800', color: metrics.zone2Status === 'optimal' ? '#047857' : '#92400e' }}>
+                    <Flame size={15} color={metrics.zone2Status === 'optimal' ? 'var(--accent-emerald)' : 'var(--accent-amber)'} />
+                    <span style={{ fontSize: '11.5px', fontWeight: '800', color: metrics.zone2Status === 'optimal' ? 'var(--accent-emerald)' : 'var(--accent-amber)' }}>
                       {metrics.zone2Status === 'optimal' && '🟢 Zona 2 Óptima (118-138 BPM): Máxima oxidación de ácidos grasos (FATmax) sin fatiga muscular.'}
                       {metrics.zone2Status === 'high' && '🟡 Alerta Zona 3 (>138 BPM): Intensidad elevada. Podría restar recuperación a las piernas para las pesas.'}
                       {metrics.zone2Status === 'low' && '🔵 Zona 1 (<118 BPM): Recuperación activa, desinflamación y retorno venoso.'}
                       {metrics.zone2Status === 'unknown' && 'Introduce tus pulsaciones para auditar si estuviste en Zona 2.'}
                     </span>
                   </div>
-                  <span style={{ fontSize: '11px', fontWeight: '900', color: '#475569' }}>
+                  <span style={{ fontSize: '11px', fontWeight: '900', color: 'var(--text-muted)' }}>
                     {metrics.met} METs
                   </span>
                 </div>

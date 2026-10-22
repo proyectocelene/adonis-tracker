@@ -292,17 +292,18 @@ export default function MachineConfigModal({
     >
       <div 
         style={{
-          background: '#ffffff',
-          borderRadius: '22px',
+          background: 'var(--bg-surface)',
+          border: '1px solid var(--border-subtle)',
+          borderRadius: '24px',
           maxWidth: '480px',
           width: '100%',
           margin: 'auto 0',
-          boxShadow: '0 20px 40px rgba(0, 0, 0, 0.25)',
-          padding: '20px',
+          boxShadow: 'var(--shadow-ios)',
+          padding: '18px',
           position: 'relative',
           display: 'flex',
           flexDirection: 'column',
-          gap: '14px'
+          gap: '12px'
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -310,22 +311,22 @@ export default function MachineConfigModal({
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '8px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <div style={{
-              width: '38px',
-              height: '38px',
-              borderRadius: '12px',
-              background: '#eff6ff',
-              color: '#0066ff',
+              width: '36px',
+              height: '36px',
+              borderRadius: '10px',
+              background: 'var(--accent-blue-light)',
+              color: 'var(--accent-blue)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center'
             }}>
-              <Settings2 size={22} />
+              <Settings2 size={20} />
             </div>
             <div>
-              <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '900', color: '#0f172a' }}>
+              <h3 style={{ margin: 0, fontSize: '15px', fontWeight: '900', color: 'var(--text-main)' }}>
                 Gestor de Máquinas & Calibración
               </h3>
-              <span style={{ fontSize: '11px', color: '#64748b', fontWeight: '700' }}>
+              <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: '700' }}>
                 {exerciseName}
               </span>
             </div>
@@ -334,24 +335,24 @@ export default function MachineConfigModal({
             type="button"
             onClick={onClose}
             style={{
-              background: '#f1f5f9',
-              border: 'none',
-              borderRadius: '10px',
-              width: '32px',
-              height: '32px',
+              background: 'var(--bg-surface-secondary)',
+              border: '1px solid var(--border-subtle)',
+              borderRadius: '50%',
+              width: '30px',
+              height: '30px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               cursor: 'pointer',
-              color: '#64748b'
+              color: 'var(--text-secondary)'
             }}
           >
-            <X size={18} />
+            <X size={16} />
           </button>
         </div>
 
         {/* 1. SELECTOR Y GESTOR DE MÁQUINAS (MULTI-PERFILES) */}
-        <div style={{ background: '#f8fafc', border: '1.5px solid #e2e8f0', borderRadius: '14px', padding: '12px' }}>
+        <div style={{ background: 'var(--bg-surface-secondary)', border: '1px solid var(--border-subtle)', borderRadius: '14px', padding: '12px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
             <label style={{ fontSize: '11px', fontWeight: '900', color: '#334155', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '4px' }}>
               <Sliders size={13} color="#0066ff" /> Mis Máquinas Guardadas:
@@ -362,9 +363,9 @@ export default function MachineConfigModal({
               style={{
                 padding: '3px 8px',
                 borderRadius: '8px',
-                background: '#eff6ff',
-                border: '1px solid #bfdbfe',
-                color: '#0066ff',
+                background: 'var(--accent-blue-light)',
+                border: '1px solid var(--accent-blue)',
+                color: 'var(--accent-blue)',
                 fontSize: '10.5px',
                 fontWeight: '900',
                 cursor: 'pointer',
@@ -389,9 +390,9 @@ export default function MachineConfigModal({
                   style={{
                     padding: '6px 10px',
                     borderRadius: '10px',
-                    border: isSelected ? '2px solid #0066ff' : '1px solid #cbd5e1',
-                    background: isSelected ? '#eff6ff' : '#ffffff',
-                    color: isSelected ? '#0066ff' : '#475569',
+                    border: isSelected ? '1px solid var(--accent-blue)' : '1px solid var(--border-subtle)',
+                    background: isSelected ? 'var(--accent-blue)' : 'var(--bg-card)',
+                    color: isSelected ? '#ffffff' : 'var(--text-muted)',
                     fontWeight: isSelected ? '900' : '700',
                     fontSize: '11px',
                     cursor: 'pointer',
@@ -399,7 +400,7 @@ export default function MachineConfigModal({
                     display: 'flex',
                     alignItems: 'center',
                     gap: '4px',
-                    boxShadow: isSelected ? '0 2px 6px rgba(0,102,255,0.15)' : 'none'
+                    boxShadow: isSelected ? '0 2px 6px rgba(0,102,255,0.25)' : 'none'
                   }}
                 >
                   {prof.isDefault && <Star size={11} fill="#f59e0b" color="#f59e0b" />}
@@ -420,10 +421,11 @@ export default function MachineConfigModal({
                 flex: 1,
                 padding: '7px 10px',
                 borderRadius: '8px',
-                border: '1.5px solid #cbd5e1',
+                border: '1.5px solid var(--border-subtle)',
                 fontSize: '11.5px',
                 fontWeight: '800',
-                background: '#ffffff'
+                color: 'var(--text-main)',
+                background: 'var(--bg-card)'
               }}
             />
             {profileList.length > 1 && (
@@ -467,9 +469,9 @@ export default function MachineConfigModal({
                     style={{
                       padding: '3px 6px',
                       borderRadius: '6px',
-                      border: seat === num ? '1.5px solid #16a34a' : '1px solid #cbd5e1',
-                      background: seat === num ? '#dcfce7' : '#ffffff',
-                      color: seat === num ? '#166534' : '#475569',
+                      border: seat === num ? '1px solid var(--accent-emerald)' : '1px solid var(--border-subtle)',
+                      background: seat === num ? 'var(--accent-emerald-subtle)' : 'var(--bg-card)',
+                      color: seat === num ? 'var(--accent-emerald)' : 'var(--text-muted)',
                       fontSize: '10px',
                       fontWeight: '800',
                       cursor: 'pointer'
@@ -488,7 +490,9 @@ export default function MachineConfigModal({
                   width: '100%',
                   padding: '5px 8px',
                   borderRadius: '6px',
-                  border: '1px solid #cbd5e1',
+                  border: '1px solid var(--border-subtle)',
+                  background: 'var(--bg-surface-secondary)',
+                  color: 'var(--text-main)',
                   fontSize: '11px',
                   fontWeight: '700',
                   boxSizing: 'border-box'
@@ -498,7 +502,7 @@ export default function MachineConfigModal({
 
             {/* RESPALDO */}
             <div>
-              <span style={{ fontSize: '10.5px', fontWeight: '800', color: '#14532d', display: 'block', marginBottom: '3px' }}>
+              <span style={{ fontSize: '10.5px', fontWeight: '800', color: 'var(--accent-emerald)', display: 'block', marginBottom: '3px' }}>
                 📐 Respaldo / Inclinación:
               </span>
               <div style={{ display: 'flex', gap: '3px', flexWrap: 'wrap', marginBottom: '4px' }}>
@@ -510,9 +514,9 @@ export default function MachineConfigModal({
                     style={{
                       padding: '3px 6px',
                       borderRadius: '6px',
-                      border: backrest === opt ? '1.5px solid #16a34a' : '1px solid #cbd5e1',
-                      background: backrest === opt ? '#dcfce7' : '#ffffff',
-                      color: backrest === opt ? '#166534' : '#475569',
+                      border: backrest === opt ? '1px solid var(--accent-emerald)' : '1px solid var(--border-subtle)',
+                      background: backrest === opt ? 'var(--accent-emerald-subtle)' : 'var(--bg-card)',
+                      color: backrest === opt ? 'var(--accent-emerald)' : 'var(--text-muted)',
                       fontSize: '10px',
                       fontWeight: '800',
                       cursor: 'pointer'
@@ -531,7 +535,9 @@ export default function MachineConfigModal({
                   width: '100%',
                   padding: '5px 8px',
                   borderRadius: '6px',
-                  border: '1px solid #cbd5e1',
+                  border: '1px solid var(--border-subtle)',
+                  background: 'var(--bg-surface-secondary)',
+                  color: 'var(--text-main)',
                   fontSize: '11px',
                   fontWeight: '700',
                   boxSizing: 'border-box'
@@ -541,7 +547,7 @@ export default function MachineConfigModal({
 
             {/* MUESCA / PIN POLEA */}
             <div>
-              <span style={{ fontSize: '10.5px', fontWeight: '800', color: '#14532d', display: 'block', marginBottom: '3px' }}>
+              <span style={{ fontSize: '10.5px', fontWeight: '800', color: 'var(--accent-emerald)', display: 'block', marginBottom: '3px' }}>
                 📍 Muesca / Pin de Polea:
               </span>
               <div style={{ display: 'flex', gap: '3px', flexWrap: 'wrap', marginBottom: '4px' }}>
@@ -553,9 +559,9 @@ export default function MachineConfigModal({
                     style={{
                       padding: '3px 6px',
                       borderRadius: '6px',
-                      border: notch === opt ? '1.5px solid #16a34a' : '1px solid #cbd5e1',
-                      background: notch === opt ? '#dcfce7' : '#ffffff',
-                      color: notch === opt ? '#166534' : '#475569',
+                      border: notch === opt ? '1px solid var(--accent-emerald)' : '1px solid var(--border-subtle)',
+                      background: notch === opt ? 'var(--accent-emerald-subtle)' : 'var(--bg-card)',
+                      color: notch === opt ? 'var(--accent-emerald)' : 'var(--text-muted)',
                       fontSize: '10px',
                       fontWeight: '800',
                       cursor: 'pointer'
@@ -574,7 +580,9 @@ export default function MachineConfigModal({
                   width: '100%',
                   padding: '5px 8px',
                   borderRadius: '6px',
-                  border: '1px solid #cbd5e1',
+                  border: '1px solid var(--border-subtle)',
+                  background: 'var(--bg-surface-secondary)',
+                  color: 'var(--text-main)',
                   fontSize: '11px',
                   fontWeight: '700',
                   boxSizing: 'border-box'
@@ -584,7 +592,7 @@ export default function MachineConfigModal({
 
             {/* RODILLO / SOPORTE MUSLOS */}
             <div>
-              <span style={{ fontSize: '10.5px', fontWeight: '800', color: '#14532d', display: 'block', marginBottom: '3px' }}>
+              <span style={{ fontSize: '10.5px', fontWeight: '800', color: 'var(--accent-emerald)', display: 'block', marginBottom: '3px' }}>
                 🦵 Rodillo / Soporte Muslos:
               </span>
               <div style={{ display: 'flex', gap: '3px', flexWrap: 'wrap', marginBottom: '4px' }}>
@@ -596,9 +604,9 @@ export default function MachineConfigModal({
                     style={{
                       padding: '3px 6px',
                       borderRadius: '6px',
-                      border: pad === opt ? '1.5px solid #16a34a' : '1px solid #cbd5e1',
-                      background: pad === opt ? '#dcfce7' : '#ffffff',
-                      color: pad === opt ? '#166534' : '#475569',
+                      border: pad === opt ? '1px solid var(--accent-emerald)' : '1px solid var(--border-subtle)',
+                      background: pad === opt ? 'var(--accent-emerald-subtle)' : 'var(--bg-card)',
+                      color: pad === opt ? 'var(--accent-emerald)' : 'var(--text-muted)',
                       fontSize: '10px',
                       fontWeight: '800',
                       cursor: 'pointer'
@@ -617,7 +625,9 @@ export default function MachineConfigModal({
                   width: '100%',
                   padding: '5px 8px',
                   borderRadius: '6px',
-                  border: '1px solid #cbd5e1',
+                  border: '1px solid var(--border-subtle)',
+                  background: 'var(--bg-surface-secondary)',
+                  color: 'var(--text-main)',
                   fontSize: '11px',
                   fontWeight: '700',
                   boxSizing: 'border-box'
@@ -628,10 +638,10 @@ export default function MachineConfigModal({
         </div>
 
         {/* 3. UBICACIÓN Y ESTACIÓN EN EL GIMNASIO */}
-        <div style={{ background: '#f8fafc', border: '1.5px solid #e2e8f0', borderRadius: '14px', padding: '12px' }}>
+        <div style={{ background: 'var(--bg-surface-secondary)', border: '1px solid var(--border-subtle)', borderRadius: '14px', padding: '12px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
-            <Building2 size={15} color="#7c3aed" />
-            <label style={{ fontSize: '11px', fontWeight: '900', color: '#334155', textTransform: 'uppercase' }}>
+            <Building2 size={15} color="#a78bfa" />
+            <label style={{ fontSize: '11px', fontWeight: '900', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>
               Piso / Estación:
             </label>
           </div>
@@ -647,9 +657,9 @@ export default function MachineConfigModal({
                 style={{
                   padding: '7px 6px',
                   borderRadius: '10px',
-                  border: floor === fl.id ? '2px solid #7c3aed' : '1px solid #cbd5e1',
-                  background: floor === fl.id ? '#f5f3ff' : '#ffffff',
-                  color: floor === fl.id ? '#7c3aed' : '#334155',
+                  border: floor === fl.id ? '2px solid #8b5cf6' : '1px solid var(--border-subtle)',
+                  background: floor === fl.id ? 'rgba(139, 92, 246, 0.15)' : 'var(--bg-card)',
+                  color: floor === fl.id ? '#a78bfa' : 'var(--text-secondary)',
                   fontWeight: floor === fl.id ? '900' : '700',
                   fontSize: '11px',
                   cursor: 'pointer',
@@ -670,9 +680,9 @@ export default function MachineConfigModal({
                 style={{
                   padding: '3px 7px',
                   borderRadius: '7px',
-                  border: station === st ? '1.5px solid #0066ff' : '1px solid #cbd5e1',
-                  background: station === st ? '#eff6ff' : '#ffffff',
-                  color: station === st ? '#0066ff' : '#64748b',
+                  border: station === st ? '1.5px solid var(--accent-blue)' : '1px solid var(--border-subtle)',
+                  background: station === st ? 'var(--accent-blue-light)' : 'var(--bg-card)',
+                  color: station === st ? 'var(--accent-blue)' : 'var(--text-muted)',
                   fontSize: '9.5px',
                   fontWeight: '800',
                   cursor: 'pointer'
@@ -692,18 +702,19 @@ export default function MachineConfigModal({
               width: '100%',
               padding: '6px 10px',
               borderRadius: '8px',
-              border: '1.5px solid #cbd5e1',
+              border: '1.5px solid var(--border-subtle)',
               fontSize: '11px',
               fontWeight: '700',
               boxSizing: 'border-box',
-              background: '#ffffff'
+              color: 'var(--text-main)',
+              background: 'var(--bg-card)'
             }}
           />
         </div>
 
         {/* 4. TIPO DE RESISTENCIA Y CARGAS */}
         <div>
-          <label style={{ display: 'block', fontSize: '11px', fontWeight: '900', color: '#334155', textTransform: 'uppercase', marginBottom: '6px' }}>
+          <label style={{ display: 'block', fontSize: '11px', fontWeight: '900', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '6px' }}>
             Tipo de Resistencia / Cargas:
           </label>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px' }}>
@@ -719,9 +730,9 @@ export default function MachineConfigModal({
                 style={{
                   padding: '8px 4px',
                   borderRadius: '10px',
-                  border: type === m.id ? '2px solid #0066ff' : '1px solid #cbd5e1',
-                  background: type === m.id ? '#eff6ff' : '#f8fafc',
-                  color: type === m.id ? '#0066ff' : '#475569',
+                  border: type === m.id ? '2px solid var(--accent-blue)' : '1px solid var(--border-subtle)',
+                  background: type === m.id ? 'var(--accent-blue-light)' : 'var(--bg-card)',
+                  color: type === m.id ? 'var(--accent-blue)' : 'var(--text-secondary)',
                   fontWeight: type === m.id ? '900' : '700',
                   fontSize: '11px',
                   cursor: 'pointer',
@@ -740,13 +751,13 @@ export default function MachineConfigModal({
 
         {/* PARÁMETROS SEGÚN TIPO */}
         {type === 'stack' && (
-          <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '12px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <div style={{ background: 'var(--bg-surface-secondary)', border: '1px solid var(--border-subtle)', borderRadius: '12px', padding: '12px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                <span style={{ fontSize: '11px', fontWeight: '800', color: '#1e293b' }}>
+                <span style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-main)' }}>
                   Placa #1 (Cabezal inicial):
                 </span>
-                <span style={{ fontSize: '11px', fontWeight: '900', color: '#0066ff' }}>
+                <span style={{ fontSize: '11px', fontWeight: '900', color: 'var(--accent-blue)' }}>
                   {firstPlate} lbs
                 </span>
               </div>
@@ -760,9 +771,9 @@ export default function MachineConfigModal({
                       flex: '1 1 auto',
                       padding: '5px 8px',
                       borderRadius: '8px',
-                      border: firstPlate === fp ? '2px solid #0066ff' : '1px solid #cbd5e1',
-                      background: firstPlate === fp ? '#eff6ff' : '#ffffff',
-                      color: firstPlate === fp ? '#0066ff' : '#334155',
+                      border: firstPlate === fp ? '1px solid var(--accent-blue)' : '1px solid var(--border-subtle)',
+                      background: firstPlate === fp ? 'var(--accent-blue-light)' : 'var(--bg-card)',
+                      color: firstPlate === fp ? 'var(--accent-blue)' : 'var(--text-muted)',
                       fontWeight: '800',
                       fontSize: '10.5px',
                       cursor: 'pointer'
@@ -776,10 +787,10 @@ export default function MachineConfigModal({
 
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                <span style={{ fontSize: '11px', fontWeight: '800', color: '#1e293b' }}>
+                <span style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-main)' }}>
                   Salto por placa:
                 </span>
-                <span style={{ fontSize: '11px', fontWeight: '900', color: '#0066ff' }}>
+                <span style={{ fontSize: '11px', fontWeight: '900', color: 'var(--accent-blue)' }}>
                   +{plateStep} lbs
                 </span>
               </div>
@@ -793,9 +804,9 @@ export default function MachineConfigModal({
                       flex: '1 1 auto',
                       padding: '5px 8px',
                       borderRadius: '8px',
-                      border: plateStep === step ? '2px solid #0066ff' : '1px solid #cbd5e1',
-                      background: plateStep === step ? '#eff6ff' : '#ffffff',
-                      color: plateStep === step ? '#0066ff' : '#334155',
+                      border: plateStep === step ? '1px solid var(--accent-blue)' : '1px solid var(--border-subtle)',
+                      background: plateStep === step ? 'var(--accent-blue-light)' : 'var(--bg-card)',
+                      color: plateStep === step ? 'var(--accent-blue)' : 'var(--text-muted)',
                       fontWeight: '800',
                       fontSize: '10.5px',
                       cursor: 'pointer'
@@ -809,10 +820,10 @@ export default function MachineConfigModal({
 
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                <span style={{ fontSize: '11px', fontWeight: '800', color: '#1e293b' }}>
+                <span style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-main)' }}>
                   Micro-cargas extra:
                 </span>
-                <span style={{ fontSize: '11px', fontWeight: '900', color: '#10b981' }}>
+                <span style={{ fontSize: '11px', fontWeight: '900', color: 'var(--accent-emerald)' }}>
                   {microWeight > 0 ? `+${microWeight} lbs` : 'Ninguna'}
                 </span>
               </div>
@@ -830,9 +841,9 @@ export default function MachineConfigModal({
                       flex: 1,
                       padding: '6px 2px',
                       borderRadius: '8px',
-                      border: microWeight === item.val ? '2px solid #10b981' : '1px solid #cbd5e1',
-                      background: microWeight === item.val ? '#ecfdf5' : '#ffffff',
-                      color: microWeight === item.val ? '#065f46' : '#334155',
+                      border: microWeight === item.val ? '1px solid var(--accent-emerald)' : '1px solid var(--border-subtle)',
+                      background: microWeight === item.val ? 'var(--accent-emerald-subtle)' : 'var(--bg-card)',
+                      color: microWeight === item.val ? 'var(--accent-emerald)' : 'var(--text-muted)',
                       fontWeight: '900',
                       fontSize: '11px',
                       cursor: 'pointer'
@@ -847,13 +858,13 @@ export default function MachineConfigModal({
         )}
 
         {type === 'plates' && (
-          <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '12px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <div style={{ background: 'var(--bg-surface-secondary)', border: '1px solid var(--border-subtle)', borderRadius: '12px', padding: '12px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                <span style={{ fontSize: '11px', fontWeight: '800', color: '#1e293b' }}>
+                <span style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-secondary)' }}>
                   Peso base trineo / máquina vacía:
                 </span>
-                <span style={{ fontSize: '11px', fontWeight: '900', color: '#0066ff' }}>
+                <span className="font-mono-tech" style={{ fontSize: '11.5px', fontWeight: '900', color: 'var(--accent-blue)' }}>
                   {baseWeight} lbs
                 </span>
               </div>
@@ -863,13 +874,14 @@ export default function MachineConfigModal({
                     key={bw}
                     type="button"
                     onClick={() => setBaseWeight(bw)}
+                    className="font-mono-tech"
                     style={{
                       flex: '1 1 auto',
                       padding: '5px 8px',
                       borderRadius: '8px',
-                      border: baseWeight === bw ? '2px solid #0066ff' : '1px solid #cbd5e1',
-                      background: baseWeight === bw ? '#eff6ff' : '#ffffff',
-                      color: baseWeight === bw ? '#0066ff' : '#334155',
+                      border: baseWeight === bw ? '2px solid var(--accent-blue)' : '1px solid var(--border-subtle)',
+                      background: baseWeight === bw ? 'var(--accent-blue-light)' : 'var(--bg-card)',
+                      color: baseWeight === bw ? 'var(--accent-blue)' : 'var(--text-secondary)',
                       fontWeight: '800',
                       fontSize: '10.5px',
                       cursor: 'pointer'
@@ -882,7 +894,7 @@ export default function MachineConfigModal({
             </div>
 
             <div>
-              <span style={{ display: 'block', fontSize: '11px', fontWeight: '800', color: '#1e293b', marginBottom: '4px' }}>
+              <span style={{ display: 'block', fontSize: '11px', fontWeight: '800', color: 'var(--text-secondary)', marginBottom: '4px' }}>
                 Discos disponibles:
               </span>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '4px' }}>
@@ -893,12 +905,13 @@ export default function MachineConfigModal({
                       key={p}
                       type="button"
                       onClick={() => togglePlate(p)}
+                      className="font-mono-tech"
                       style={{
                         padding: '6px 2px',
                         borderRadius: '8px',
-                        border: isChecked ? '2px solid #10b981' : '1px solid #cbd5e1',
-                        background: isChecked ? '#ecfdf5' : '#ffffff',
-                        color: isChecked ? '#065f46' : '#94a3b8',
+                        border: isChecked ? '2px solid var(--accent-emerald)' : '1px solid var(--border-subtle)',
+                        background: isChecked ? 'var(--accent-emerald-subtle)' : 'var(--bg-card)',
+                        color: isChecked ? 'var(--accent-emerald)' : 'var(--text-muted)',
                         fontWeight: '900',
                         fontSize: '11px',
                         cursor: 'pointer',
@@ -915,8 +928,8 @@ export default function MachineConfigModal({
         )}
 
         {type === 'dumbbells' && (
-          <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '12px' }}>
-            <span style={{ display: 'block', fontSize: '11px', fontWeight: '800', color: '#1e293b', marginBottom: '4px' }}>
+          <div style={{ background: 'var(--bg-surface-secondary)', border: '1px solid var(--border-subtle)', borderRadius: '12px', padding: '12px' }}>
+            <span style={{ display: 'block', fontSize: '11px', fontWeight: '800', color: 'var(--text-secondary)', marginBottom: '4px' }}>
               Salto disponible de mancuernas:
             </span>
             <div style={{ display: 'flex', gap: '8px' }}>
@@ -932,9 +945,9 @@ export default function MachineConfigModal({
                     flex: 1,
                     padding: '8px',
                     borderRadius: '8px',
-                    border: dumbbellStep === item.val ? '2px solid #0066ff' : '1px solid #cbd5e1',
-                    background: dumbbellStep === item.val ? '#eff6ff' : '#ffffff',
-                    color: dumbbellStep === item.val ? '#0066ff' : '#334155',
+                    border: dumbbellStep === item.val ? '2px solid var(--accent-blue)' : '1px solid var(--border-subtle)',
+                    background: dumbbellStep === item.val ? 'var(--accent-blue-light)' : 'var(--bg-card)',
+                    color: dumbbellStep === item.val ? 'var(--accent-blue)' : 'var(--text-secondary)',
                     fontWeight: '900',
                     fontSize: '10.5px',
                     cursor: 'pointer'
@@ -958,21 +971,22 @@ export default function MachineConfigModal({
               width: '100%',
               padding: '6px 10px',
               borderRadius: '8px',
-              border: '1.5px solid #cbd5e1',
+              border: '1.5px solid var(--border-subtle)',
               fontSize: '11px',
               fontWeight: '700',
               boxSizing: 'border-box',
-              background: '#ffffff',
+              color: 'var(--text-main)',
+              background: 'var(--bg-card)',
               marginBottom: '8px'
             }}
           />
 
-          <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11.5px', fontWeight: '800', color: '#334155', cursor: 'pointer' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11.5px', fontWeight: '800', color: 'var(--text-main)', cursor: 'pointer' }}>
             <input
               type="checkbox"
               checked={isDefault}
               onChange={(e) => setIsDefault(e.target.checked)}
-              style={{ width: '16px', height: '16px', accentColor: '#0066ff' }}
+              style={{ width: '16px', height: '16px', accentColor: 'var(--accent-blue)' }}
             />
             ⭐ Usar siempre como máquina predeterminada para este ejercicio
           </label>
@@ -986,9 +1000,9 @@ export default function MachineConfigModal({
                 type="button"
                 onClick={handleReset}
                 style={{
-                  background: '#f1f5f9',
-                  color: '#64748b',
-                  border: '1px solid #cbd5e1',
+                  background: 'var(--bg-surface-secondary)',
+                  color: 'var(--text-muted)',
+                  border: '1px solid var(--border-subtle)',
                   borderRadius: '12px',
                   padding: '11px 14px',
                   fontSize: '11.5px',

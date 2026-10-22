@@ -102,47 +102,47 @@ export default function GymMembershipReminder({ compact = false }) {
 
   // Determinar tema visual y mensaje
   let statusBadge = {
-    bg: '#eff6ff',
-    border: '#bfdbfe',
-    color: '#1d4ed8',
-    icon: <Calendar size={18} color="#0066ff" />,
+    bg: 'var(--accent-blue-light)',
+    border: 'var(--accent-blue)',
+    color: 'var(--accent-blue)',
+    icon: <Calendar size={18} color="var(--accent-blue)" />,
     title: `Próximo Pago: ${targetDateFormatted}`,
     subtitle: isTargetPaid ? `✅ Ciclo pagado` : `Faltan ${daysRemaining} días para tu corte`
   };
 
   if (isTargetPaid) {
     statusBadge = {
-      bg: '#ecfdf5',
-      border: '#a7f3d0',
-      color: '#047857',
-      icon: <CheckCircle2 size={18} color="#059669" />,
+      bg: 'var(--accent-emerald-subtle)',
+      border: 'var(--accent-emerald)',
+      color: 'var(--accent-emerald)',
+      icon: <CheckCircle2 size={18} color="var(--accent-emerald)" />,
       title: `Membresía al Día (${targetDateFormatted})`,
       subtitle: `✅ Ya pagaste este ciclo. Próximo recordatorio el siguiente mes.`
     };
   } else if (isOverdue) {
     statusBadge = {
-      bg: '#fef2f2',
-      border: '#fecaca',
-      color: '#b91c1c',
-      icon: <AlertCircle size={18} color="#dc2626" />,
+      bg: 'var(--accent-red-subtle)',
+      border: 'var(--accent-red)',
+      color: 'var(--accent-red)',
+      icon: <AlertCircle size={18} color="var(--accent-red)" />,
       title: `🚨 Pago Pendiente (${paymentDay} de ${monthNames[currentMonth]})`,
       subtitle: `Pasó el día ${paymentDay} y no has marcado el pago de este mes.`
     };
   } else if (daysRemaining === 0) {
     statusBadge = {
-      bg: '#fff1f2',
-      border: '#f43f5e',
-      color: '#e11d48',
-      icon: <Bell size={18} color="#e11d48" />,
+      bg: 'var(--accent-red-subtle)',
+      border: 'var(--accent-red)',
+      color: 'var(--accent-red)',
+      icon: <Bell size={18} color="var(--accent-red)" />,
       title: `🚨 ¡HOY ES DÍA ${paymentDay}! Toca pagar el Gym`,
       subtitle: `Recuerda realizar tu pago de membresía hoy para no perder acceso.`
     };
   } else if (daysRemaining <= (membershipSettings.reminderDaysBefore || 5)) {
     statusBadge = {
-      bg: '#fffbeb',
-      border: '#fde68a',
-      color: '#b45309',
-      icon: <Clock size={18} color="#d97706" />,
+      bg: 'var(--accent-amber-subtle)',
+      border: 'var(--accent-amber)',
+      color: 'var(--accent-amber)',
+      icon: <Clock size={18} color="var(--accent-amber)" />,
       title: `⚠️ Pago Próximo en ${daysRemaining} días (${targetDateFormatted})`,
       subtitle: `Prepara tu pago de membresía para el día ${paymentDay}.`
     };
@@ -218,14 +218,14 @@ export default function GymMembershipReminder({ compact = false }) {
     >
       <div className="flex-between" style={{ alignItems: 'flex-start', marginBottom: '12px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{ width: '40px', height: '40px', borderRadius: '14px', background: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
+          <div style={{ width: '40px', height: '40px', borderRadius: '14px', background: 'var(--bg-surface-secondary)', border: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             {statusBadge.icon}
           </div>
           <div>
             <span style={{ fontSize: '11px', color: statusBadge.color, fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
               💳 Recordatorio de Membresía • {membershipSettings.gymName || 'Gym'}
             </span>
-            <h3 style={{ margin: '2px 0 0 0', fontSize: '15px', fontWeight: '900', color: '#0f172a' }}>
+            <h3 style={{ margin: '2px 0 0 0', fontSize: '15px', fontWeight: '900', color: 'var(--text-main)' }}>
               {statusBadge.title}
             </h3>
           </div>
@@ -236,19 +236,19 @@ export default function GymMembershipReminder({ compact = false }) {
           onClick={() => setShowConfigModal(true)}
           title="Ajustar fecha de pago"
           style={{
-            background: 'rgba(255,255,255,0.8)',
+            background: 'var(--bg-surface-secondary)',
             border: `1px solid ${statusBadge.border}`,
             borderRadius: '10px',
             padding: '6px',
             cursor: 'pointer',
-            color: '#64748b'
+            color: 'var(--text-muted)'
           }}
         >
           <Settings2 size={16} />
         </button>
       </div>
 
-      <p style={{ margin: '0 0 14px 0', fontSize: '12px', color: statusBadge.color, fontWeight: '600', lineHeight: '1.4' }}>
+      <p style={{ margin: '0 0 14px 0', fontSize: '12px', color: 'var(--text-muted)', fontWeight: '600', lineHeight: '1.4' }}>
         {statusBadge.subtitle}
       </p>
 
@@ -258,7 +258,7 @@ export default function GymMembershipReminder({ compact = false }) {
           onClick={handleTogglePaid}
           style={{
             flex: 1,
-            background: isTargetPaid ? '#059669' : '#0066ff',
+            background: isTargetPaid ? 'var(--accent-emerald)' : 'var(--accent-blue)',
             color: '#ffffff',
             border: 'none',
             borderRadius: '12px',
@@ -285,7 +285,7 @@ export default function GymMembershipReminder({ compact = false }) {
           style={{
             position: 'fixed',
             inset: 0,
-            background: 'rgba(0,0,0,0.6)',
+            background: 'rgba(0,0,0,0.75)',
             backdropFilter: 'blur(4px)',
             display: 'flex',
             alignItems: 'center',
@@ -294,18 +294,18 @@ export default function GymMembershipReminder({ compact = false }) {
             zIndex: 9999
           }}
         >
-          <div className="card animate-scale-up" style={{ width: '100%', maxWidth: '400px', padding: '22px', background: '#ffffff', borderRadius: '24px' }}>
+          <div className="card animate-scale-up" style={{ width: '100%', maxWidth: '400px', padding: '22px', background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', borderRadius: '24px' }}>
             <div className="flex-between" style={{ marginBottom: '16px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Calendar size={20} color="#0066ff" />
-                <h3 style={{ margin: 0, fontSize: '17px', fontWeight: '900', color: '#0f172a' }}>
+                <Calendar size={20} color="var(--accent-blue)" />
+                <h3 style={{ margin: 0, fontSize: '17px', fontWeight: '900', color: 'var(--text-main)' }}>
                   Configurar Membresía
                 </h3>
               </div>
               <button 
                 type="button"
                 onClick={() => setShowConfigModal(false)}
-                style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '18px', cursor: 'pointer' }}
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: '18px', cursor: 'pointer' }}
               >
                 ✕
               </button>
@@ -313,7 +313,7 @@ export default function GymMembershipReminder({ compact = false }) {
 
             <form onSubmit={handleSaveConfig} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: '800', color: '#334155', marginBottom: '6px' }}>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '800', color: 'var(--text-main)', marginBottom: '6px' }}>
                   Día de cobro del mes (1 al 31)
                 </label>
                 <input 
@@ -322,16 +322,16 @@ export default function GymMembershipReminder({ compact = false }) {
                   max="31"
                   value={tempDay}
                   onChange={e => setTempDay(e.target.value)}
-                  style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1.5px solid #cbd5e1', fontSize: '15px', fontWeight: '800' }}
+                  style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid var(--border-subtle)', background: 'var(--bg-surface-secondary)', color: 'var(--text-main)', fontSize: '15px', fontWeight: '800' }}
                   required
                 />
-                <span style={{ fontSize: '11px', color: '#64748b', marginTop: '4px', display: 'block' }}>
+                <span style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px', display: 'block' }}>
                   Configurado actualmente para el día {paymentDay} de cada mes.
                 </span>
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: '800', color: '#334155', marginBottom: '6px' }}>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '800', color: 'var(--text-main)', marginBottom: '6px' }}>
                   Nombre del Gimnasio
                 </label>
                 <input 
@@ -339,12 +339,12 @@ export default function GymMembershipReminder({ compact = false }) {
                   value={tempGymName}
                   onChange={e => setTempGymName(e.target.value)}
                   placeholder="Ej. Smart Fit / Gimnasio Local"
-                  style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1.5px solid #cbd5e1', fontSize: '14px', fontWeight: '700' }}
+                  style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid var(--border-subtle)', background: 'var(--bg-surface-secondary)', color: 'var(--text-main)', fontSize: '14px', fontWeight: '700' }}
                 />
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: '800', color: '#334155', marginBottom: '6px' }}>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '800', color: 'var(--text-main)', marginBottom: '6px' }}>
                   Monto mensual (opcional)
                 </label>
                 <input 
@@ -352,7 +352,7 @@ export default function GymMembershipReminder({ compact = false }) {
                   value={tempAmount}
                   onChange={e => setTempAmount(e.target.value)}
                   placeholder="Ej. $600"
-                  style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1.5px solid #cbd5e1', fontSize: '14px', fontWeight: '700' }}
+                  style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid var(--border-subtle)', background: 'var(--bg-surface-secondary)', color: 'var(--text-main)', fontSize: '14px', fontWeight: '700' }}
                 />
               </div>
 

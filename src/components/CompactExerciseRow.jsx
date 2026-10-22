@@ -37,7 +37,7 @@ export default function CompactExerciseRow({
           setTargetTime(null);
           if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
         }
-      }, 500); // Check twice a second for better visual accuracy when unlocking
+      }, 500);
     }
     return () => clearInterval(interval);
   }, [isTimerActive, targetTime]);
@@ -57,7 +57,6 @@ export default function CompactExerciseRow({
   })();
 
   const isFullyCompleted = completedSetsCount === totalSets && totalSets > 0;
-
   const exerciseNote = exerciseData.note || '';
 
   const inputFixedStyle = {
@@ -68,10 +67,11 @@ export default function CompactExerciseRow({
     borderRadius: '6px',
     padding: '0 4px',
     fontSize: '13px',
-    fontWeight: '600',
+    fontWeight: '700',
     textAlign: 'center',
-    border: '1px solid #cbd5e1',
-    background: '#f8fafc',
+    border: '1px solid var(--border-strong)',
+    background: 'var(--bg-surface-secondary)',
+    color: 'var(--text-main)',
     width: '100%',
     boxSizing: 'border-box',
     outline: 'none'
@@ -85,261 +85,352 @@ export default function CompactExerciseRow({
     borderRadius: '6px',
     padding: '0 4px',
     fontSize: '11px',
-    fontWeight: '600',
+    fontWeight: '700',
     textAlign: 'center',
-    border: '1px solid #cbd5e1',
-    background: '#f8fafc',
+    border: '1px solid var(--border-strong)',
+    background: 'var(--bg-surface-secondary)',
+    color: 'var(--text-main)',
     width: '100%',
     boxSizing: 'border-box',
     outline: 'none'
   };
 
   return (
-    <div className="mb-3 rounded-2xl bg-white border border-slate-200 shadow-sm overflow-hidden">
+    <div 
+      className="card" 
+      style={{ 
+        marginBottom: '10px', 
+        borderRadius: 'var(--radius-md)', 
+        background: 'var(--bg-surface)', 
+        border: '1px solid var(--border-subtle)', 
+        overflow: 'hidden' 
+      }}
+    >
       {/* CABECERA ULTRA COMPACTA CON REORDENAMIENTO */}
-      <div className="p-3 flex items-center justify-between gap-2.5 bg-white border-b border-slate-100">
-        {/* BOTONES DE REORDENAR (GIMNASIO FLEXIBLE: MÁQUINA OCUPADA) */}
-        <div className="flex flex-col gap-0.5 shrink-0">
+      <div 
+        style={{ 
+          padding: '8px 10px', 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'space-between', 
+          gap: '8px', 
+          background: 'var(--bg-surface)', 
+          borderBottom: isExpanded ? '1px solid var(--border-subtle)' : 'none' 
+        }}
+      >
+        {/* BOTONES DE REORDENAR */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', flexShrink: 0 }}>
           <button
             type="button"
             disabled={isFirst}
             onClick={onMoveUp}
-            title="Mover arriba en la rutina"
-            className={`w-6 h-5 rounded border-none flex items-center justify-center cursor-pointer transition-colors ${
-              isFirst ? 'bg-slate-100 text-slate-300 cursor-not-allowed' : 'bg-blue-50 text-blue-600 hover:bg-blue-100'
-            }`}
+            title="Mover arriba"
+            style={{
+              width: '24px',
+              height: '18px',
+              borderRadius: '4px',
+              border: 'none',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: isFirst ? 'not-allowed' : 'pointer',
+              background: isFirst ? 'var(--bg-surface-secondary)' : 'var(--accent-blue-light)',
+              color: isFirst ? 'var(--text-muted)' : 'var(--accent-blue)'
+            }}
           >
-            <ArrowUp size={12} />
+            <ArrowUp size={11} />
           </button>
           <button
             type="button"
             disabled={isLast}
             onClick={onMoveDown}
-            title="Mover abajo (si la máquina está ocupada)"
-            className={`w-6 h-5 rounded border-none flex items-center justify-center cursor-pointer transition-colors ${
-              isLast ? 'bg-slate-100 text-slate-300 cursor-not-allowed' : 'bg-blue-50 text-blue-600 hover:bg-blue-100'
-            }`}
+            title="Mover abajo"
+            style={{
+              width: '24px',
+              height: '18px',
+              borderRadius: '4px',
+              border: 'none',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: isLast ? 'not-allowed' : 'pointer',
+              background: isLast ? 'var(--bg-surface-secondary)' : 'var(--accent-blue-light)',
+              color: isLast ? 'var(--text-muted)' : 'var(--accent-blue)'
+            }}
           >
-            <ArrowDown size={12} />
+            <ArrowDown size={11} />
           </button>
         </div>
 
         {/* NOMBRE Y GRUPO MUSCULAR */}
-        <div className="flex-1 min-w-0 cursor-pointer" onClick={onToggleExpand}>
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <strong className="text-sm text-slate-800 font-bold leading-tight">
+        <div style={{ flex: 1, minWidth: 0, cursor: 'pointer' }} onClick={onToggleExpand}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '5px', flexWrap: 'wrap' }}>
+            <strong style={{ fontSize: '13px', color: 'var(--text-main)', fontWeight: '800', lineHeight: '1.25' }}>
               {exercise.name}
             </strong>
             {isFullyCompleted && (
-              <span className="text-[10px] bg-emerald-100 text-emerald-700 py-0.5 px-1.5 rounded-md font-semibold">✓ Listo</span>
+              <span className="font-mono-tech" style={{ fontSize: '9px', background: 'var(--accent-emerald-subtle)', color: 'var(--accent-emerald)', border: '1px solid var(--accent-emerald)', padding: '1px 5px', borderRadius: '4px', fontWeight: '800' }}>
+                ✓ Listo
+              </span>
             )}
           </div>
-          <div className="text-[11px] text-slate-500 font-medium mt-0.5 flex gap-2 flex-wrap">
+          <div className="font-mono-tech" style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '600', marginTop: '1px', display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
             <span>{exercise.muscleGroup}</span>
             <span>• {completedSetsCount}/{totalSets} series ({targetReps} reps)</span>
           </div>
         </div>
 
         {/* CONTROLES RÁPIDOS Y EXPANDIR */}
-        <div className="flex items-center gap-1.5 shrink-0">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '5px', flexShrink: 0 }}>
           {isTimerActive ? (
-            <span className="text-xs font-bold text-red-600 bg-red-50 py-1 px-2 rounded-lg">
+            <span className="font-mono-tech" style={{ fontSize: '11px', fontWeight: '800', color: 'var(--accent-red)', background: 'var(--accent-red-subtle)', padding: '3px 6px', borderRadius: '6px' }}>
               ⏱️ {restTimerSeconds}s
             </span>
           ) : (
             <button
               type="button"
               onClick={() => startRestTimer(parseInt(restPrescribed) || 90)}
-              className="bg-slate-100 border-none rounded-lg py-1 px-2 text-slate-600 text-[11px] font-semibold cursor-pointer flex items-center gap-1 hover:bg-slate-200 transition-colors"
+              className="font-mono-tech"
+              style={{
+                background: 'var(--bg-surface-secondary)',
+                border: '1px solid var(--border-subtle)',
+                borderRadius: '6px',
+                padding: '3px 6px',
+                color: 'var(--accent-cyan)',
+                fontSize: '10px',
+                fontWeight: '700',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '3px'
+              }}
             >
-              <Clock size={12} /> {restPrescribed}
+              <Clock size={11} /> {restPrescribed}
             </button>
           )}
 
           <button
             type="button"
             onClick={onToggleExpand}
-            className="bg-transparent border-none cursor-pointer text-slate-400 hover:text-slate-600 p-1"
+            style={{
+              background: 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+              color: 'var(--text-muted)',
+              padding: '2px'
+            }}
           >
-            {isExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+            {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
           </button>
         </div>
       </div>
 
       {isExpanded && (
-        <>
-      <div className="mt-3 flex flex-col w-full bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-        {/* Encabezados */}
-        <div className="grid grid-cols-[2.2rem_3.8rem_1fr_1fr_4.8rem_2.2rem] gap-2 items-center px-3 py-1.5 bg-slate-50 border-b border-slate-200">
-          <div className="text-[10px] font-bold text-slate-500 text-center tracking-wide">SET</div>
-          <div className="text-[10px] font-bold text-slate-500 text-center tracking-wide">PREV</div>
-          <div className="text-[10px] font-bold text-slate-500 text-center tracking-wide">LBS</div>
-          <div className="text-[10px] font-bold text-slate-500 text-center tracking-wide">REPS</div>
-          <div className="text-[10px] font-bold text-slate-500 text-center tracking-wide">RPE</div>
-          <div></div>
-        </div>
-
-        {Array.from({ length: totalSets }).map((_, sIdx) => {
-          const setNum = sIdx + 1;
-          const setVal = exerciseData[setNum] || {};
-          const prevVal = previousData[setNum] || {};
-          const isDone = !!setVal.completed;
-
-          return (
-            <div
-              key={setNum}
-              className={`grid grid-cols-[2.2rem_3.8rem_1fr_1fr_4.8rem_2.2rem] gap-2 items-center px-3 py-1.5 border-b border-slate-100 last:border-0 transition-colors ${
-                isDone ? 'bg-emerald-50/40' : 'bg-white'
-              }`}
-            >
-              {/* No. Serie */}
-              <div className="flex justify-center items-center">
-                <span className={`text-sm font-bold ${isDone ? 'text-emerald-600' : 'text-slate-600'}`}>
-                  {setNum}
-                </span>
-              </div>
-
-              {/* Referencia previa */}
-              <div className="flex flex-col items-center justify-center text-center">
-                {prevVal.weight ? (
-                  <>
-                    <span className="text-[11px] font-semibold text-slate-600 leading-none">{prevVal.weight}</span>
-                    <span className="text-[9px] font-semibold text-slate-400 mt-0.5 leading-none">x {prevVal.reps || '?'}</span>
-                  </>
-                ) : (
-                  <span className="text-xs font-semibold text-slate-300">—</span>
-                )}
-              </div>
-
-              {/* Peso Input */}
-              <div>
-                <input
-                  type="number"
-                  placeholder="-"
-                  value={setVal.weight === null || setVal.weight === undefined || setVal.weight === 'null' ? '' : setVal.weight}
-                  onChange={(e) => {
-                    onUpdateSet(setNum, { ...setVal, weight: e.target.value });
-                  }}
-                  style={{
-                    ...inputFixedStyle,
-                    ...(isDone ? { background: '#ecfdf5', borderColor: '#86efac', color: '#064e3b' } : {})
-                  }}
-                />
-              </div>
-
-              {/* Reps Input */}
-              <div>
-                <input
-                  type="number"
-                  placeholder="-"
-                  value={setVal.reps === null || setVal.reps === undefined || setVal.reps === 'null' ? '' : setVal.reps}
-                  onChange={(e) => {
-                    onUpdateSet(setNum, { ...setVal, reps: e.target.value });
-                  }}
-                  style={{
-                    ...inputFixedStyle,
-                    ...(isDone ? { background: '#ecfdf5', borderColor: '#86efac', color: '#064e3b' } : {})
-                  }}
-                />
-              </div>
-
-              {/* RPE Selector */}
-              <div>
-                <select
-                  value={setVal.rpe || '8'}
-                  onChange={(e) => {
-                    onUpdateSet(setNum, { ...setVal, rpe: e.target.value });
-                  }}
-                  style={{
-                    ...selectFixedStyle,
-                    ...(isDone
-                      ? { background: '#ecfdf5', borderColor: '#86efac', color: '#065f46' }
-                      : setVal.rpe === '8'
-                        ? { background: '#eff6ff', borderColor: '#93c5fd', color: '#2563eb' }
-                        : {})
-                  }}
-                >
-                  <option value="6">RPE 6</option>
-                  <option value="7">RPE 7</option>
-                  <option value="8">RPE 8</option>
-                  <option value="8.5">RPE 8.5</option>
-                  <option value="9">RPE 9</option>
-                  <option value="9.5">RPE 9.5</option>
-                  <option value="10">RPE 10</option>
-                </select>
-              </div>
-
-              {/* Checkbox de serie lista */}
-              <div className="flex justify-center items-center">
-                <button
-                  type="button"
-                  onClick={() => {
-                    const newCompleted = !isDone;
-                    onUpdateSet(setNum, {
-                      ...setVal,
-                      completed: newCompleted,
-                      weight: setVal.weight || prevVal.weight || '',
-                      reps: setVal.reps || prevVal.reps || parseInt(targetReps) || 10
-                    });
-                    if (newCompleted && !isTimerActive) {
-                      startRestTimer(parseInt(restPrescribed) || 90);
-                    }
-                  }}
-                  className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
-                    isDone 
-                      ? 'bg-emerald-500 text-white shadow-sm' 
-                      : 'bg-slate-100 text-slate-400 hover:bg-slate-200'
-                  }`}
-                >
-                  <Check size={14} strokeWidth={3.5} />
-                </button>
-              </div>
+        <div style={{ padding: '8px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', width: '100%', background: 'var(--bg-surface)', borderRadius: '8px', border: '1px solid var(--border-subtle)', overflow: 'hidden' }}>
+            {/* Encabezados */}
+            <div style={{ display: 'grid', gridTemplateColumns: '2rem 3.5rem 1fr 1fr 4.2rem 2.2rem', gap: '6px', alignItems: 'center', padding: '4px 8px', background: 'var(--bg-surface-secondary)', borderBottom: '1px solid var(--border-subtle)' }}>
+              <div className="font-mono-tech" style={{ fontSize: '9px', fontWeight: '800', color: 'var(--text-muted)', textAlign: 'center' }}>SET</div>
+              <div className="font-mono-tech" style={{ fontSize: '9px', fontWeight: '800', color: 'var(--text-muted)', textAlign: 'center' }}>PREV</div>
+              <div className="font-mono-tech" style={{ fontSize: '9px', fontWeight: '800', color: 'var(--text-muted)', textAlign: 'center' }}>LBS</div>
+              <div className="font-mono-tech" style={{ fontSize: '9px', fontWeight: '800', color: 'var(--text-muted)', textAlign: 'center' }}>REPS</div>
+              <div className="font-mono-tech" style={{ fontSize: '9px', fontWeight: '800', color: 'var(--text-muted)', textAlign: 'center' }}>RPE</div>
+              <div></div>
             </div>
-          );
-        })}
-      </div>
 
-      {/* NOTA BIOMECÁNICA EXPANDIBLE (SOLO SI SE EXPANDE) */}
-      {exercise.biomechanics && (
-        <div className="mt-3 p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700">
-          <div className="flex items-center gap-1.5 mb-1 text-blue-600 font-bold">
-            <Info size={14} />
-            <span>Técnica & Biomecánica:</span>
-          </div>
-          <p className="m-0 leading-relaxed text-slate-600">
-            {exercise.biomechanics}
-          </p>
-        </div>
-      )}
+            {Array.from({ length: totalSets }).map((_, sIdx) => {
+              const setNum = sIdx + 1;
+              const setVal = exerciseData[setNum] || {};
+              const prevVal = previousData[setNum] || {};
+              const isDone = !!setVal.completed;
 
-      {/* SECCIÓN MULTIMEDIA & NOTAS (SOLO SI SE EXPANDE) */}
-        <div className="mt-3 p-3 bg-slate-50 border border-slate-200 rounded-xl">
-          <div className="flex items-center gap-1.5 mb-2 text-slate-700 text-xs font-semibold">
-            <MessageSquare size={14} className="text-slate-500" />
-            <span>Notas del Ejercicio</span>
+              return (
+                <div
+                  key={setNum}
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: '2rem 3.5rem 1fr 1fr 4.2rem 2.2rem',
+                    gap: '6px',
+                    alignItems: 'center',
+                    padding: '4px 8px',
+                    borderBottom: '1px solid var(--border-subtle)',
+                    background: isDone ? 'var(--accent-emerald-subtle)' : 'var(--bg-surface)'
+                  }}
+                >
+                  {/* No. Serie */}
+                  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                    <span className="font-mono-tech" style={{ fontSize: '12px', fontWeight: '900', color: isDone ? 'var(--accent-emerald)' : 'var(--text-secondary)' }}>
+                      {setNum}
+                    </span>
+                  </div>
+
+                  {/* Referencia previa */}
+                  <div className="font-mono-tech" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
+                    {prevVal.weight ? (
+                      <>
+                        <span style={{ fontSize: '10.5px', fontWeight: '700', color: 'var(--text-main)', lineHeight: 1 }}>{prevVal.weight}</span>
+                        <span style={{ fontSize: '8.5px', fontWeight: '700', color: 'var(--text-muted)', marginTop: '1px', lineHeight: 1 }}>×{prevVal.reps || '?'}</span>
+                      </>
+                    ) : (
+                      <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>—</span>
+                    )}
+                  </div>
+
+                  {/* Peso Input */}
+                  <div>
+                    <input
+                      type="number"
+                      placeholder="-"
+                      value={setVal.weight === null || setVal.weight === undefined || setVal.weight === 'null' ? '' : setVal.weight}
+                      onChange={(e) => {
+                        onUpdateSet(setNum, { ...setVal, weight: e.target.value });
+                      }}
+                      className="font-mono-tech"
+                      style={{
+                        ...inputFixedStyle,
+                        ...(isDone ? { borderColor: 'var(--accent-emerald)', color: 'var(--accent-emerald)' } : {})
+                      }}
+                    />
+                  </div>
+
+                  {/* Reps Input */}
+                  <div>
+                    <input
+                      type="number"
+                      placeholder="-"
+                      value={setVal.reps === null || setVal.reps === undefined || setVal.reps === 'null' ? '' : setVal.reps}
+                      onChange={(e) => {
+                        onUpdateSet(setNum, { ...setVal, reps: e.target.value });
+                      }}
+                      className="font-mono-tech"
+                      style={{
+                        ...inputFixedStyle,
+                        ...(isDone ? { borderColor: 'var(--accent-emerald)', color: 'var(--accent-emerald)' } : {})
+                      }}
+                    />
+                  </div>
+
+                  {/* RPE Selector */}
+                  <div>
+                    <select
+                      value={setVal.rpe || '8'}
+                      onChange={(e) => {
+                        onUpdateSet(setNum, { ...setVal, rpe: e.target.value });
+                      }}
+                      className="font-mono-tech"
+                      style={{
+                        ...selectFixedStyle,
+                        ...(isDone ? { borderColor: 'var(--accent-emerald)', color: 'var(--accent-emerald)' } : {})
+                      }}
+                    >
+                      <option value="6">RPE 6</option>
+                      <option value="7">RPE 7</option>
+                      <option value="8">RPE 8</option>
+                      <option value="8.5">RPE 8.5</option>
+                      <option value="9">RPE 9</option>
+                      <option value="9.5">RPE 9.5</option>
+                      <option value="10">RPE 10</option>
+                    </select>
+                  </div>
+
+                  {/* Checkbox de serie lista */}
+                  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newCompleted = !isDone;
+                        onUpdateSet(setNum, {
+                          ...setVal,
+                          completed: newCompleted,
+                          weight: setVal.weight || prevVal.weight || '',
+                          reps: setVal.reps || prevVal.reps || parseInt(targetReps) || 10
+                        });
+                        if (newCompleted && !isTimerActive) {
+                          startRestTimer(parseInt(restPrescribed) || 90);
+                        }
+                      }}
+                      style={{
+                        width: '28px',
+                        height: '28px',
+                        borderRadius: '6px',
+                        border: 'none',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: 'pointer',
+                        background: isDone ? 'var(--accent-emerald)' : 'var(--bg-surface-secondary)',
+                        color: isDone ? '#000000' : 'var(--text-muted)',
+                        transition: 'all 0.15s ease'
+                      }}
+                    >
+                      <Check size={14} strokeWidth={3.5} />
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
           </div>
-          <textarea
-            rows={2}
-            placeholder="Añade observaciones sobre técnica, peso..."
-            value={exerciseNote}
-            onChange={(e) => onUpdateExerciseMeta(exercise.id, { note: e.target.value })}
-            className="w-full p-2.5 rounded-lg border border-slate-200 text-sm bg-white text-slate-800 resize-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 outline-none transition-colors"
-          />
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '6px' }}>
-            <button
-              type="button"
-              onClick={() => {
-                if (onUpdateExerciseMeta) {
-                  onUpdateExerciseMeta(exercise.id, { note: exerciseNote });
-                }
+
+          {/* NOTA BIOMECÁNICA EXPANDIBLE */}
+          {exercise.biomechanics && (
+            <div style={{ marginTop: '8px', padding: '8px 10px', background: 'var(--bg-surface-secondary)', border: '1px solid var(--border-subtle)', borderRadius: '8px', fontSize: '11px', color: 'var(--text-secondary)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '3px', color: 'var(--accent-blue)', fontWeight: '800' }}>
+                <Info size={13} />
+                <span>Técnica & Biomecánica:</span>
+              </div>
+              <p style={{ margin: 0, lineHeight: 1.4, color: 'var(--text-muted)', fontSize: '11px' }}>
+                {exercise.biomechanics}
+              </p>
+            </div>
+          )}
+
+          {/* SECCIÓN NOTAS */}
+          <div style={{ marginTop: '8px', padding: '8px 10px', background: 'var(--bg-surface-secondary)', border: '1px solid var(--border-subtle)', borderRadius: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '6px', color: 'var(--text-secondary)', fontSize: '11px', fontWeight: '700' }}>
+              <MessageSquare size={13} color="var(--text-muted)" />
+              <span>Notas del Ejercicio</span>
+            </div>
+            <textarea
+              rows={2}
+              placeholder="Observaciones de técnica, sensaciones..."
+              value={exerciseNote}
+              onChange={(e) => onUpdateExerciseMeta(exercise.id, { note: e.target.value })}
+              style={{
+                width: '100%',
+                padding: '6px 8px',
+                borderRadius: '6px',
+                border: '1px solid var(--border-strong)',
+                fontSize: '12px',
+                background: 'var(--bg-surface)',
+                color: 'var(--text-main)',
+                resize: 'none',
+                outline: 'none'
               }}
-              className="bg-slate-900 text-white text-xs px-3 py-1.5 rounded-lg hover:bg-slate-800 transition-colors font-medium"
-            >
-              Guardar
-            </button>
+            />
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '5px' }}>
+              <button
+                type="button"
+                onClick={() => {
+                  if (onUpdateExerciseMeta) {
+                    onUpdateExerciseMeta(exercise.id, { note: exerciseNote });
+                  }
+                }}
+                style={{
+                  background: 'var(--accent-blue)',
+                  color: '#000000',
+                  fontSize: '11px',
+                  fontWeight: '800',
+                  padding: '4px 10px',
+                  borderRadius: '6px',
+                  border: 'none',
+                  cursor: 'pointer'
+                }}
+              >
+                Guardar
+              </button>
+            </div>
           </div>
         </div>
-        </>
       )}
     </div>
   );

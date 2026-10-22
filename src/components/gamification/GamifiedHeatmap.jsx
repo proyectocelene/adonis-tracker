@@ -192,25 +192,25 @@ export default function GamifiedHeatmap({ workoutHistory = [] }) {
   };
 
   const getCellBg = (cell) => {
-    if (cell.isFuture) return '#f8fafc';
+    if (cell.isFuture) return 'var(--bg-surface-secondary)';
     if (cell.hasWorkout) {
       if (cell.volume >= 15000) return '#059669'; // Muy alto
-      if (cell.volume >= 8000) return '#10b981'; // Alto
+      if (cell.volume >= 8000) return 'var(--accent-emerald)'; // Alto
       return '#34d399'; // Regular
     }
-    if (cell.isRestDay) return '#cbd5e1'; // Gris azulado de descanso
-    if (cell.isMissedDay) return '#fca5a5'; // Rojo tenue de falta
-    if (cell.isToday) return '#eff6ff'; // Azul tenue de hoy
-    return '#f1f5f9'; // Sin registro pasado
+    if (cell.isRestDay) return 'var(--bg-card)'; // Descanso
+    if (cell.isMissedDay) return 'var(--accent-red)'; // Falta
+    if (cell.isToday) return 'var(--accent-blue-light)'; // Hoy
+    return 'var(--bg-surface-secondary)'; // Sin registro pasado
   };
 
   return (
     <div style={{
-      background: '#ffffff',
-      border: '1.5px solid #dcfce7',
+      background: 'var(--bg-surface)',
+      border: '1px solid var(--border-subtle)',
       borderRadius: '20px',
       padding: '16px',
-      boxShadow: '0 4px 16px rgba(16, 185, 129, 0.05)',
+      boxShadow: 'var(--shadow-ios)',
       marginBottom: '14px'
     }}>
       {/* CABECERA */}
@@ -220,26 +220,26 @@ export default function GamifiedHeatmap({ workoutHistory = [] }) {
             width: '36px',
             height: '36px',
             borderRadius: '12px',
-            background: '#dcfce7',
+            background: 'var(--accent-emerald-subtle)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            color: '#059669'
+            color: 'var(--accent-emerald)'
           }}>
             <Flame size={20} />
           </div>
           <div>
-            <h3 style={{ margin: 0, fontSize: '15px', fontWeight: '900', color: '#064e3b' }}>
+            <h3 style={{ margin: 0, fontSize: '15px', fontWeight: '900', color: 'var(--text-main)' }}>
               Heatmap de Constancia
             </h3>
-            <span style={{ fontSize: '10.5px', color: '#059669', fontWeight: '700' }}>
+            <span style={{ fontSize: '10.5px', color: 'var(--accent-emerald)', fontWeight: '700' }}>
               Historial real • Verde: Entreno • Gris: Descanso • Rojo: Falta
             </span>
           </div>
         </div>
 
         {/* TOGGLE VISTA */}
-        <div style={{ display: 'inline-flex', background: '#f1f5f9', padding: '2px', borderRadius: '10px' }}>
+        <div style={{ display: 'inline-flex', background: 'var(--bg-surface-secondary)', border: '1px solid var(--border-subtle)', padding: '2px', borderRadius: '10px' }}>
           <button
             type="button"
             onClick={() => setActiveTab('matrix')}
@@ -247,8 +247,8 @@ export default function GamifiedHeatmap({ workoutHistory = [] }) {
               padding: '4px 10px',
               borderRadius: '8px',
               border: 'none',
-              background: activeTab === 'matrix' ? '#10b981' : 'transparent',
-              color: activeTab === 'matrix' ? '#ffffff' : '#64748b',
+              background: activeTab === 'matrix' ? 'var(--accent-emerald)' : 'transparent',
+              color: activeTab === 'matrix' ? '#ffffff' : 'var(--text-muted)',
               fontSize: '11px',
               fontWeight: '800',
               cursor: 'pointer'
@@ -263,8 +263,8 @@ export default function GamifiedHeatmap({ workoutHistory = [] }) {
               padding: '4px 10px',
               borderRadius: '8px',
               border: 'none',
-              background: activeTab === 'week' ? '#10b981' : 'transparent',
-              color: activeTab === 'week' ? '#ffffff' : '#64748b',
+              background: activeTab === 'week' ? 'var(--accent-emerald)' : 'transparent',
+              color: activeTab === 'week' ? '#ffffff' : 'var(--text-muted)',
               fontSize: '11px',
               fontWeight: '800',
               cursor: 'pointer'
@@ -282,16 +282,16 @@ export default function GamifiedHeatmap({ workoutHistory = [] }) {
             display: 'flex',
             justifyContent: 'space-between',
             gap: '4px',
-            background: '#f8fafc',
+            background: 'var(--bg-surface-secondary)',
             padding: '10px 8px',
             borderRadius: '14px',
-            border: '1px solid #e2e8f0',
+            border: '1px solid var(--border-subtle)',
             overflowX: 'auto'
           }}>
             {/* Etiquetas de días de la semana */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', justifyContent: 'space-between', paddingRight: '4px' }}>
               {dayAbbreviations.map((abbr, i) => (
-                <span key={i} style={{ fontSize: '9px', fontWeight: '800', color: '#94a3b8', height: '18px', display: 'flex', alignItems: 'center' }}>
+                <span key={i} style={{ fontSize: '9px', fontWeight: '800', color: 'var(--text-muted)', height: '18px', display: 'flex', alignItems: 'center' }}>
                   {abbr}
                 </span>
               ))}
@@ -315,7 +315,7 @@ export default function GamifiedHeatmap({ workoutHistory = [] }) {
                         height: '18px',
                         borderRadius: '4px',
                         background: getCellBg(cell),
-                        border: cell.isToday ? '2px solid #0066ff' : (cell.isRestDay ? '1px dashed #94a3b8' : (cell.isMissedDay ? '1px solid #ef4444' : '1px solid rgba(0,0,0,0.04)')),
+                        border: cell.isToday ? '2px solid var(--accent-blue)' : (cell.isRestDay ? '1px dashed var(--border-subtle)' : (cell.isMissedDay ? '1px solid var(--accent-red)' : '1px solid var(--border-subtle)')),
                         cursor: 'pointer',
                         transition: 'transform 0.15s ease',
                         boxShadow: cell.hasWorkout ? '0 1px 3px rgba(16,185,129,0.2)' : 'none',
@@ -335,21 +335,21 @@ export default function GamifiedHeatmap({ workoutHistory = [] }) {
           </div>
 
           {/* LEYENDA CLARA DEL HEATMAP */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '10px', marginTop: '8px', fontSize: '10px', color: '#64748b', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '10px', marginTop: '8px', fontSize: '10px', color: 'var(--text-muted)', flexWrap: 'wrap' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
               <div style={{ width: '10px', height: '10px', borderRadius: '3px', background: '#34d399' }} />
               <span>Entreno</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <div style={{ width: '10px', height: '10px', borderRadius: '3px', background: '#cbd5e1', border: '1px dashed #94a3b8' }} />
+              <div style={{ width: '10px', height: '10px', borderRadius: '3px', background: 'var(--bg-card)', border: '1px dashed var(--border-subtle)' }} />
               <span>Descanso 💤</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <div style={{ width: '10px', height: '10px', borderRadius: '3px', background: '#fca5a5', border: '1px solid #ef4444' }} />
+              <div style={{ width: '10px', height: '10px', borderRadius: '3px', background: 'var(--accent-red)' }} />
               <span>Faltó ✕</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <div style={{ width: '10px', height: '10px', borderRadius: '3px', background: '#eff6ff', border: '1.5px solid #0066ff' }} />
+              <div style={{ width: '10px', height: '10px', borderRadius: '3px', background: 'var(--accent-blue-light)', border: '1.5px solid var(--accent-blue)' }} />
               <span>Hoy</span>
             </div>
           </div>
@@ -363,29 +363,29 @@ export default function GamifiedHeatmap({ workoutHistory = [] }) {
           textAlign: 'center'
         }}>
           {currentWeekDays.map((d) => {
-            let bg = '#ffffff';
-            let border = '1px solid #e2e8f0';
+            let bg = 'var(--bg-card)';
+            let border = '1px solid var(--border-subtle)';
             let statusIcon = '⚪️';
             let statusText = 'Sin sesión';
 
             if (d.hasWorkout) {
-              bg = '#ecfdf5';
-              border = '1.5px solid #10b981';
+              bg = 'var(--accent-emerald-subtle)';
+              border = '1.5px solid var(--accent-emerald)';
               statusIcon = '✅';
               statusText = `${Math.round(d.volume / 1000)}k lbs`;
             } else if (d.isRestDay) {
-              bg = '#f1f5f9';
-              border = '1.5px dashed #94a3b8';
+              bg = 'var(--bg-card)';
+              border = '1.5px dashed var(--border-subtle)';
               statusIcon = '💤';
               statusText = 'Descanso';
             } else if (d.isMissedDay) {
-              bg = '#fef2f2';
-              border = '1.5px solid #f87171';
+              bg = 'var(--accent-red-subtle)';
+              border = '1.5px solid var(--accent-red)';
               statusIcon = '❌';
               statusText = 'Faltó';
             } else if (d.isToday) {
-              bg = '#eff6ff';
-              border = '2px solid #0066ff';
+              bg = 'var(--accent-blue-light)';
+              border = '2px solid var(--accent-blue)';
               statusIcon = '⭐️';
               statusText = 'Hoy';
             }
@@ -402,16 +402,16 @@ export default function GamifiedHeatmap({ workoutHistory = [] }) {
                   cursor: 'pointer'
                 }}
               >
-                <span style={{ fontSize: '10px', fontWeight: '800', color: d.isToday ? '#0066ff' : '#64748b', display: 'block' }}>
+                <span style={{ fontSize: '10px', fontWeight: '800', color: d.isToday ? 'var(--accent-blue)' : 'var(--text-muted)', display: 'block' }}>
                   {d.abbr}
                 </span>
-                <strong style={{ fontSize: '14px', fontWeight: '900', color: '#0f172a', display: 'block' }}>
+                <strong className="font-mono-tech" style={{ fontSize: '14px', fontWeight: '900', color: 'var(--text-main)', display: 'block' }}>
                   {d.dateNumber}
                 </strong>
                 <span style={{ fontSize: '11px', display: 'block', marginTop: '2px' }}>
                   {statusIcon}
                 </span>
-                <span style={{ fontSize: '8.5px', color: '#64748b', fontWeight: '700', display: 'block', marginTop: '1px' }}>
+                <span className="font-mono-tech" style={{ fontSize: '8.5px', color: 'var(--text-muted)', fontWeight: '700', display: 'block', marginTop: '1px' }}>
                   {statusText}
                 </span>
               </div>

@@ -10,7 +10,7 @@ import {
   Tooltip,
   ReferenceArea
 } from 'recharts';
-import { TrendingUp, Sparkles, Filter, Info, Scale, Dumbbell } from 'lucide-react';
+import { TrendingUp, Sparkles, Filter, Info, Scale, Dumbbell, Calendar } from 'lucide-react';
 import { getHistoricalRecordsForExercise, matchExercise, parseUnifiedCode } from '../../utils/exerciseMatcher.js';
 import { calculate1RM, roundToAttainableWeight, getNextAttainableWeight } from '../../hooks/useWorkoutCalculations.js';
 
@@ -35,7 +35,7 @@ export const PROGRESSION_COLORS = {
 };
 
 function StationDot(props) {
-  const { cx, cy, payload, baseColor = PROGRESSION_COLORS.peakWeight, isFamilyView = false } = props;
+  const { cx, cy, payload, baseColor = PROGRESSION_COLORS.peakWeight, isFamilyView = false, isDense = false } = props;
   if (!cx || !cy || !payload || payload.isProjected) return null;
   const sType = payload.stationType || 'machine';
   const isDeload = Boolean(payload.isDeloadSession);
@@ -44,17 +44,22 @@ function StationDot(props) {
   if (isDeload) {
     return (
       <g>
-        <circle cx={cx} cy={cy} r={6.5} fill="#ecfdf5" stroke={PROGRESSION_COLORS.deloadBorder} strokeWidth={2.2} />
-        <circle cx={cx} cy={cy} r={3} fill={PROGRESSION_COLORS.deload} />
+        <circle cx={cx} cy={cy} r={isDense ? 4.5 : 6.5} fill="#ecfdf5" stroke={PROGRESSION_COLORS.deloadBorder} strokeWidth={isDense ? 1.5 : 2.2} />
+        <circle cx={cx} cy={cy} r={isDense ? 2 : 3} fill={PROGRESSION_COLORS.deload} />
       </g>
     );
+  }
+
+  // En modo denso (muchos puntos históricos), usar radio reducido sin saturar el eje
+  if (isDense) {
+    return <circle cx={cx} cy={cy} r={2} fill={baseColor} stroke="#ffffff" strokeWidth={1} />;
   }
 
   if (!isFamilyView) {
     return <circle cx={cx} cy={cy} r={3.5} fill={baseColor} stroke="#ffffff" strokeWidth={1.5} />;
   }
 
-  // En vista de familia, distinguir estaciones por forma geométrica
+  // En vista focalizada de familia, distinguir estaciones por forma geométrica
   if (sType === 'dumbbell') {
     return (
       <rect
@@ -114,6 +119,21 @@ export default function ExerciseProgressionChart({
 }) {
   // Modo de Alcance: 'family' (Toda la familia biomecánica, predeterminada) o 'station' (Solo esta máquina exacta)
   const [scopeMode, setScopeMode] = useState(defaultScope);
+  // Modo de Alcance Temporal Eje X: 'all' (Desde siempre / Histórico), '6m', '3m', '1m', '10ses' (10 sesiones), '5ses' (5 sesiones)
+  const [timeframe, setTimeframe] = useState(() => {
+    try {
+      return localStorage.getItem('coachv2_chart_timeframe') || '10ses';
+    } catch (e) {
+      return '10ses';
+    }
+  });
+
+  const handleSetTimeframe = (tf) => {
+    setTimeframe(tf);
+    try {
+      localStorage.setItem('coachv2_chart_timeframe', tf);
+    } catch (e) {}
+  };
   // Modo de Carga: 'band' (Banda Min-Max con Promedio Ponderado en medio), 'peak' (Carga Máxima), 'avg' (Promedio), 'both' (Líneas)
   const [weightMode, setWeightMode] = useState('band');
   const [showWeight, setShowWeight] = useState(true);
@@ -227,8 +247,8 @@ export default function ExerciseProgressionChart({
   const isAutoFamily = stationStats.count === 0 && scopeMode === 'station';
 
   // Procesar puntos reales + proyecciones matemáticas
-  const { chartData, transitionDate, lastProjectedDate, hasHistory, realPointsCount, peakWeight, avgPeakWeight, currentWeight, currentAvgWeight, lastRealPoint, isFamilyView, deloadWindows } = useMemo(() => {
-    if (!exercise) return { chartData: [], transitionDate: null, lastProjectedDate: null, hasHistory: false, realPointsCount: 0, peakWeight: 0, avgPeakWeight: 0, currentWeight: 0, currentAvgWeight: 0, lastRealPoint: null, isFamilyView: false, deloadWindows: [] };
+  const { chartData, transitionDate, lastProjectedDate, hasHistory, totalRealPointsCount, visibleRealPointsCount, peakWeight, avgPeakWeight, currentWeight, currentAvgWeight, lastRealPoint, isFamilyView, deloadWindows, isDense } = useMemo(() => {
+    if (!exercise) return { chartData: [], transitionDate: null, lastProjectedDate: null, hasHistory: false, totalRealPointsCount: 0, visibleRealPointsCount: 0, peakWeight: 0, avgPeakWeight: 0, currentWeight: 0, currentAvgWeight: 0, lastRealPoint: null, isFamilyView: false, deloadWindows: [], isDense: false };
 
     // 1. Extraer historial real usando el motor de matching tolerante a alias y familias
     const records = getHistoricalRecordsForExercise(exercise, workoutHistory, { 
@@ -626,13 +646,42 @@ export default function ExerciseProgressionChart({
       };
     });
 
-    const combinedData = [...realPoints, ...projectedPoints];
-    const lastProj = projectedPoints[projectedPoints.length - 1]?.date || null;
+    // 4. Filtrado focalizado del eje X según el rango temporal seleccionado
+    let visibleRealPoints = realPoints;
+    if (timeframe === '5ses') {
+      visibleRealPoints = realPoints.slice(-5);
+    } else if (timeframe === '10ses') {
+      visibleRealPoints = realPoints.slice(-10);
+    } else if (timeframe === '1m' || timeframe === '3m' || timeframe === '6m') {
+      let daysBack = 30;
+      if (timeframe === '3m') daysBack = 90;
+      if (timeframe === '6m') daysBack = 180;
 
-    // Calcular intervalos continuos de sesiones marcadas como Deload para sombrear en la gráfica
+      let anchorTime = Date.now();
+      const lastWithDate = [...realPoints].reverse().find(p => p.dateRaw);
+      if (lastWithDate && lastWithDate.dateRaw) {
+        const parsedAnchor = new Date(`${lastWithDate.dateRaw}T12:00:00`).getTime();
+        if (!isNaN(parsedAnchor)) anchorTime = parsedAnchor;
+      }
+
+      const cutoffTime = anchorTime - (daysBack * 24 * 60 * 60 * 1000);
+      const filtered = realPoints.filter(p => {
+        if (!p.dateRaw) return true;
+        const pTime = new Date(`${p.dateRaw}T12:00:00`).getTime();
+        return isNaN(pTime) || pTime >= cutoffTime;
+      });
+
+      visibleRealPoints = filtered.length >= 3 ? filtered : realPoints.slice(-Math.min(5, realPoints.length));
+    }
+
+    const combinedData = showProjections ? [...visibleRealPoints, ...projectedPoints] : [...visibleRealPoints];
+    const lastProj = showProjections && projectedPoints.length > 0 ? projectedPoints[projectedPoints.length - 1]?.date : null;
+
+    // Calcular intervalos continuos de sesiones marcadas como Deload dentro del rango visible
+    const visibleDatesSet = new Set(visibleRealPoints.map(p => p.date));
     const deloadWindows = [];
     let currentWindow = null;
-    realPoints.forEach(p => {
+    visibleRealPoints.forEach(p => {
       if (p.isDeloadSession) {
         if (!currentWindow) {
           currentWindow = { start: p.date, end: p.date, count: 1 };
@@ -651,21 +700,33 @@ export default function ExerciseProgressionChart({
       deloadWindows.push(currentWindow);
     }
 
+    const isDense = combinedData.length > 18;
+
     return {
       chartData: combinedData,
       transitionDate: transDate,
       lastProjectedDate: lastProj,
       hasHistory: realPoints.length > 0,
-      realPointsCount: realPoints.length,
+      totalRealPointsCount: realPoints.length,
+      visibleRealPointsCount: visibleRealPoints.length,
       peakWeight: maxHistorical,
       avgPeakWeight: maxAvgHistorical,
       currentWeight: lastRealPoint.weight,
       currentAvgWeight: lastRealPoint.avgWeight,
       lastRealPoint: lastRealPoint || null,
       isFamilyView,
-      deloadWindows
+      deloadWindows,
+      isDense
     };
-  }, [exercise, workoutHistory, todayWorkoutData, scopeMode, machineConfig, targetRange.max, isDeloadMode]);
+  }, [exercise, workoutHistory, todayWorkoutData, scopeMode, machineConfig, targetRange.max, isDeloadMode, timeframe, showProjections]);
+
+  // Intervalo dinámico para el eje X que previene amontonamiento de fechas
+  const dynamicXInterval = useMemo(() => {
+    if (!chartData || chartData.length <= 8) return 0;
+    if (chartData.length <= 15) return 1;
+    if (chartData.length <= 25) return 2;
+    return Math.ceil(chartData.length / 6);
+  }, [chartData?.length]);
 
   // Sincronizador de punto activo para la Caja de Auditoría inferior (elimina tooltips flotantes que tapen la curva)
   const CustomTooltipReceiver = ({ active, payload }) => {
@@ -683,13 +744,13 @@ export default function ExerciseProgressionChart({
       <div style={{
         padding: '24px 14px',
         textAlign: 'center',
-        background: '#f8fafc',
+        background: 'var(--bg-surface-secondary)',
         borderRadius: '16px',
-        border: '1.5px dashed #cbd5e1',
-        color: '#64748b'
+        border: '1.5px dashed var(--border-subtle)',
+        color: 'var(--text-muted)'
       }}>
-        <TrendingUp size={32} color="#94a3b8" style={{ margin: '0 auto 8px auto', display: 'block' }} />
-        <h4 style={{ margin: '0 0 4px 0', fontSize: '13px', fontWeight: '900', color: '#1e293b' }}>
+        <TrendingUp size={32} color="var(--border-strong)" style={{ margin: '0 auto 8px auto', display: 'block' }} />
+        <h4 style={{ margin: '0 0 4px 0', fontSize: '13px', fontWeight: '900', color: 'var(--text-main)' }}>
           Sin Historial de Sobrecarga Aún
         </h4>
         <p style={{ margin: 0, fontSize: '11px', lineHeight: '1.4' }}>
@@ -706,11 +767,11 @@ export default function ExerciseProgressionChart({
 
   return (
     <div style={{
-      background: '#ffffff',
+      background: 'var(--bg-card)',
       borderRadius: '18px',
-      border: '1px solid #e2e8f0',
+      border: '1px solid var(--border-subtle)',
       padding: compact ? '10px' : '14px',
-      boxShadow: '0 4px 14px rgba(0,0,0,0.03)',
+      boxShadow: 'var(--shadow-ios-sm)',
       width: '100%',
       boxSizing: 'border-box'
     }}>
@@ -722,7 +783,7 @@ export default function ExerciseProgressionChart({
         flexWrap: 'wrap',
         gap: '6px',
         marginBottom: '10px',
-        borderBottom: '1px solid #f1f5f9',
+        borderBottom: '1px solid var(--border-subtle)',
         paddingBottom: '8px'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -739,10 +800,10 @@ export default function ExerciseProgressionChart({
             <TrendingUp size={14} />
           </div>
           <div>
-            <span style={{ fontSize: '11.5px', fontWeight: '900', color: '#0f172a', display: 'block', lineHeight: '1.1' }}>
+            <span style={{ fontSize: '11.5px', fontWeight: '900', color: 'var(--text-main)', display: 'block', lineHeight: '1.1' }}>
               {metricMode === 'tonnage' ? 'Tonelaje Acumulado' : 'Sobrecarga Progresiva'}
             </span>
-            <span style={{ fontSize: '9px', color: '#64748b', fontWeight: '700' }}>
+            <span style={{ fontSize: '9px', color: 'var(--text-muted)', fontWeight: '700' }}>
               Meta: {targetRange.label} reps • Calentamientos aislados
             </span>
           </div>
@@ -752,7 +813,7 @@ export default function ExerciseProgressionChart({
         <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap' }}>
           {/* Selector de Alcance: Toda la Familia vs Esta Máquina */}
           {machineKey && (
-            <div style={{ display: 'inline-flex', background: '#e0e7ff', borderRadius: '8px', padding: '2px', border: '1px solid #c7d2fe' }}>
+            <div style={{ display: 'inline-flex', background: 'var(--bg-surface-secondary)', borderRadius: '8px', padding: '2px', border: '1px solid var(--border-subtle)' }}>
               <button
                 type="button"
                 onClick={() => setScopeMode('family')}
@@ -760,12 +821,12 @@ export default function ExerciseProgressionChart({
                   padding: '3px 7px',
                   borderRadius: '6px',
                   border: 'none',
-                  background: scopeMode === 'family' ? '#4f46e5' : 'transparent',
-                  color: scopeMode === 'family' ? '#ffffff' : '#4338ca',
+                  background: scopeMode === 'family' ? 'var(--accent-blue)' : 'transparent',
+                  color: scopeMode === 'family' ? '#000000' : 'var(--text-secondary)',
                   fontWeight: '900',
                   fontSize: '9.5px',
                   cursor: 'pointer',
-                  boxShadow: scopeMode === 'family' ? '0 1px 3px rgba(79,70,229,0.3)' : 'none'
+                  boxShadow: scopeMode === 'family' ? '0 1px 4px rgba(56,189,248,0.3)' : 'none'
                 }}
                 title={`Ver progreso agrupado de toda la estación biomecánica (${machineKey})`}
               >
@@ -778,12 +839,12 @@ export default function ExerciseProgressionChart({
                   padding: '3px 7px',
                   borderRadius: '6px',
                   border: 'none',
-                  background: scopeMode === 'station' ? '#4f46e5' : 'transparent',
-                  color: scopeMode === 'station' ? '#ffffff' : '#4338ca',
+                  background: scopeMode === 'station' ? 'var(--accent-blue)' : 'transparent',
+                  color: scopeMode === 'station' ? '#000000' : 'var(--text-secondary)',
                   fontWeight: '900',
                   fontSize: '9.5px',
                   cursor: 'pointer',
-                  boxShadow: scopeMode === 'station' ? '0 1px 3px rgba(79,70,229,0.3)' : 'none'
+                  boxShadow: scopeMode === 'station' ? '0 1px 4px rgba(56,189,248,0.3)' : 'none'
                 }}
                 title="Filtrar datos exclusivamente para esta máquina física específica"
               >
@@ -793,7 +854,7 @@ export default function ExerciseProgressionChart({
           )}
 
           {/* Toggle Métrica: Cargas vs Tonelaje */}
-          <div style={{ display: 'inline-flex', background: '#f1f5f9', borderRadius: '8px', padding: '2px' }}>
+          <div style={{ display: 'inline-flex', background: 'var(--bg-surface-secondary)', borderRadius: '8px', padding: '2px', border: '1px solid var(--border-subtle)' }}>
             <button
               type="button"
               onClick={() => setMetricMode('weights')}
@@ -801,12 +862,12 @@ export default function ExerciseProgressionChart({
                 padding: '3px 7px',
                 borderRadius: '6px',
                 border: 'none',
-                background: metricMode === 'weights' ? '#ffffff' : 'transparent',
-                color: metricMode === 'weights' ? '#0066ff' : '#64748b',
+                background: metricMode === 'weights' ? 'var(--accent-blue)' : 'transparent',
+                color: metricMode === 'weights' ? '#000000' : 'var(--text-secondary)',
                 fontWeight: '900',
                 fontSize: '9.5px',
                 cursor: 'pointer',
-                boxShadow: metricMode === 'weights' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'
+                boxShadow: metricMode === 'weights' ? '0 1px 4px rgba(56,189,248,0.3)' : 'none'
               }}
               title="Ver curvas de peso (Pico / Promedio) y repeticiones"
             >
@@ -819,12 +880,12 @@ export default function ExerciseProgressionChart({
                 padding: '3px 7px',
                 borderRadius: '6px',
                 border: 'none',
-                background: metricMode === 'tonnage' ? '#f59e0b' : 'transparent',
-                color: metricMode === 'tonnage' ? '#ffffff' : '#64748b',
+                background: metricMode === 'tonnage' ? 'var(--accent-amber)' : 'transparent',
+                color: metricMode === 'tonnage' ? '#000000' : 'var(--text-secondary)',
                 fontWeight: '900',
                 fontSize: '9.5px',
                 cursor: 'pointer',
-                boxShadow: metricMode === 'tonnage' ? '0 1px 3px rgba(245,158,11,0.3)' : 'none'
+                boxShadow: metricMode === 'tonnage' ? '0 1px 4px rgba(255,179,0,0.3)' : 'none'
               }}
               title="Ver volumen total de trabajo (peso × reps) de series efectivas"
             >
@@ -835,12 +896,12 @@ export default function ExerciseProgressionChart({
           {metricMode === 'weights' && (
             <>
               {/* Selector de Modo de Carga: Banda | Pico | Prom | Líneas */}
-              <div style={{ display: 'inline-flex', background: '#eff6ff', borderRadius: '8px', padding: '2px', border: '1px solid #bfdbfe' }}>
+              <div style={{ display: 'inline-flex', background: 'var(--bg-surface-secondary)', borderRadius: '8px', padding: '2px', border: '1px solid var(--border-subtle)' }}>
                 {[
-                  { id: 'band', label: 'Banda', bg: PROGRESSION_COLORS.peakWeight, title: 'Ver área sombreada entre Carga Mínima y Pico con Promedio Ponderado en medio' },
-                  { id: 'peak', label: 'Pico', bg: PROGRESSION_COLORS.peakWeight, title: 'Ver solo la Carga Máxima (Top Set)' },
-                  { id: 'avg', label: 'Prom', bg: PROGRESSION_COLORS.avgWeight, title: 'Ver la Carga Promedio Efectiva' },
-                  { id: 'both', label: 'Líneas', bg: '#0f172a', title: 'Ver curvas de Pico y Promedio' }
+                  { id: 'band', label: 'Banda', bg: 'var(--accent-blue)', color: '#000000', title: 'Ver área sombreada entre Carga Mínima y Pico con Promedio Ponderado en medio' },
+                  { id: 'peak', label: 'Pico', bg: 'var(--accent-blue)', color: '#000000', title: 'Ver solo la Carga Máxima (Top Set)' },
+                  { id: 'avg', label: 'Prom', bg: 'var(--accent-blue)', color: '#000000', title: 'Ver la Carga Promedio Efectiva' },
+                  { id: 'both', label: 'Líneas', bg: 'var(--accent-blue)', color: '#000000', title: 'Ver curvas de Pico y Promedio' }
                 ].map(wm => (
                   <button
                     key={wm.id}
@@ -854,7 +915,7 @@ export default function ExerciseProgressionChart({
                       borderRadius: '6px',
                       border: 'none',
                       background: weightMode === wm.id ? wm.bg : 'transparent',
-                      color: weightMode === wm.id ? '#ffffff' : '#1e40af',
+                      color: weightMode === wm.id ? wm.color : 'var(--text-secondary)',
                       fontWeight: '900',
                       fontSize: '9px',
                       cursor: 'pointer'
@@ -867,15 +928,15 @@ export default function ExerciseProgressionChart({
               </div>
 
               {/* Toggle Reps */}
-              <div style={{ display: 'inline-flex', borderRadius: '8px', overflow: 'hidden', border: showReps ? `1.5px solid ${PROGRESSION_COLORS.repsTop}` : '1px solid #cbd5e1' }}>
+              <div style={{ display: 'inline-flex', borderRadius: '8px', overflow: 'hidden', border: showReps ? `1.5px solid var(--accent-emerald)` : '1px solid var(--border-subtle)' }}>
                 <button
                   type="button"
                   onClick={() => setShowReps(prev => !prev)}
                   style={{
                     padding: '3px 6px',
                     border: 'none',
-                    background: showReps ? '#ecfdf5' : '#f8fafc',
-                    color: showReps ? PROGRESSION_COLORS.repsTop : '#94a3b8',
+                    background: showReps ? 'var(--accent-emerald-subtle)' : 'var(--bg-surface-secondary)',
+                    color: showReps ? 'var(--accent-emerald)' : 'var(--text-muted)',
                     fontSize: '9.5px',
                     fontWeight: '900',
                     cursor: 'pointer',
@@ -885,7 +946,7 @@ export default function ExerciseProgressionChart({
                   }}
                   title="Activar/Desactivar curva de repeticiones"
                 >
-                  <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: showReps ? PROGRESSION_COLORS.repsTop : '#94a3b8' }} />
+                  <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: showReps ? 'var(--accent-emerald)' : 'var(--text-muted)' }} />
                   Reps
                 </button>
                 {showReps && (
@@ -895,9 +956,9 @@ export default function ExerciseProgressionChart({
                     style={{
                       padding: '3px 6px',
                       border: 'none',
-                      borderLeft: '1px solid #fed7aa',
-                      background: repsMode === 'avg' ? '#fef3c7' : '#ecfdf5',
-                      color: repsMode === 'avg' ? PROGRESSION_COLORS.repsAvg : PROGRESSION_COLORS.repsTop,
+                      borderLeft: '1px solid var(--border-subtle)',
+                      background: repsMode === 'avg' ? 'var(--accent-amber-subtle)' : 'var(--accent-emerald-subtle)',
+                      color: repsMode === 'avg' ? 'var(--accent-amber)' : 'var(--accent-emerald)',
                       fontSize: '9px',
                       fontWeight: '900',
                       cursor: 'pointer'
@@ -916,9 +977,9 @@ export default function ExerciseProgressionChart({
                 style={{
                   padding: '3px 7px',
                   borderRadius: '8px',
-                  border: show1RM ? `1.5px solid ${PROGRESSION_COLORS.est1RM}` : '1px solid #cbd5e1',
-                  background: show1RM ? '#ecfeff' : '#f8fafc',
-                  color: show1RM ? PROGRESSION_COLORS.est1RM : '#94a3b8',
+                  border: show1RM ? `1.5px solid var(--accent-cyan)` : '1px solid var(--border-subtle)',
+                  background: show1RM ? 'var(--accent-cyan-subtle)' : 'var(--bg-surface-secondary)',
+                  color: show1RM ? 'var(--accent-cyan)' : 'var(--text-muted)',
                   fontSize: '9.5px',
                   fontWeight: '900',
                   cursor: 'pointer',
@@ -928,7 +989,7 @@ export default function ExerciseProgressionChart({
                 }}
                 title="Curva de 1RM Estimado por fórmula de Epley"
               >
-                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: show1RM ? PROGRESSION_COLORS.est1RM : '#94a3b8' }} />
+                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: show1RM ? 'var(--accent-cyan)' : 'var(--text-muted)' }} />
                 1RM
               </button>
 
@@ -939,9 +1000,9 @@ export default function ExerciseProgressionChart({
                 style={{
                   padding: '3px 7px',
                   borderRadius: '8px',
-                  border: showRPE ? `1.5px solid ${PROGRESSION_COLORS.rpe}` : '1px solid #cbd5e1',
-                  background: showRPE ? '#fef2f2' : '#f8fafc',
-                  color: showRPE ? PROGRESSION_COLORS.rpe : '#94a3b8',
+                  border: showRPE ? `1.5px solid var(--accent-red)` : '1px solid var(--border-subtle)',
+                  background: showRPE ? 'var(--accent-red-subtle)' : 'var(--bg-surface-secondary)',
+                  color: showRPE ? 'var(--accent-red)' : 'var(--text-muted)',
                   fontSize: '9.5px',
                   fontWeight: '900',
                   cursor: 'pointer',
@@ -951,7 +1012,7 @@ export default function ExerciseProgressionChart({
                 }}
                 title="Curva de Esfuerzo Percibido (RPE 6-10 / RIR)"
               >
-                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: showRPE ? PROGRESSION_COLORS.rpe : '#94a3b8' }} />
+                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: showRPE ? 'var(--accent-red)' : 'var(--text-muted)' }} />
                 🔥 RPE
               </button>
             </>
@@ -964,9 +1025,9 @@ export default function ExerciseProgressionChart({
             style={{
               padding: '3px 7px',
               borderRadius: '8px',
-              border: showProjections ? `1.5px solid ${PROGRESSION_COLORS.projection}` : '1px solid #cbd5e1',
-              background: showProjections ? '#fdf2f8' : '#f8fafc',
-              color: showProjections ? PROGRESSION_COLORS.projection : '#94a3b8',
+              border: showProjections ? `1.5px solid #ec4899` : '1px solid var(--border-subtle)',
+              background: showProjections ? 'rgba(236, 72, 153, 0.15)' : 'var(--bg-surface-secondary)',
+              color: showProjections ? '#f472b6' : 'var(--text-muted)',
               fontSize: '9.5px',
               fontWeight: '900',
               cursor: 'pointer',
@@ -976,12 +1037,12 @@ export default function ExerciseProgressionChart({
             }}
             title="Mostrar u ocultar proyecciones científicas (próxima sesión, 2 sesiones, 1m, 3m y 6 meses)"
           >
-            <Sparkles size={11} color={showProjections ? PROGRESSION_COLORS.projection : '#94a3b8'} />
+            <Sparkles size={11} color={showProjections ? '#f472b6' : 'var(--text-muted)'} />
             Metas
           </button>
 
           {/* Selector de Escala Vertical Eje Y: Rango de trabajo vs Desde 0 */}
-          <div style={{ display: 'inline-flex', background: '#f1f5f9', borderRadius: '8px', padding: '2px', border: '1px solid #cbd5e1' }}>
+          <div style={{ display: 'inline-flex', background: 'var(--bg-surface-secondary)', borderRadius: '8px', padding: '2px', border: '1px solid var(--border-subtle)' }}>
             <button
               type="button"
               onClick={() => handleSetYAxisScale('dynamic')}
@@ -989,12 +1050,12 @@ export default function ExerciseProgressionChart({
                 padding: '3px 7px',
                 borderRadius: '6px',
                 border: 'none',
-                background: yAxisScale === 'dynamic' ? '#ffffff' : 'transparent',
-                color: yAxisScale === 'dynamic' ? '#0f172a' : '#64748b',
+                background: yAxisScale === 'dynamic' ? 'var(--accent-blue)' : 'transparent',
+                color: yAxisScale === 'dynamic' ? '#000000' : 'var(--text-secondary)',
                 fontWeight: '900',
                 fontSize: '9.5px',
                 cursor: 'pointer',
-                boxShadow: yAxisScale === 'dynamic' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'
+                boxShadow: yAxisScale === 'dynamic' ? '0 1px 4px rgba(56,189,248,0.3)' : 'none'
               }}
               title="Escala Rango: Enfoca la gráfica en tus pesos de trabajo reales con holgura fisiológica"
             >
@@ -1007,12 +1068,12 @@ export default function ExerciseProgressionChart({
                 padding: '3px 7px',
                 borderRadius: '6px',
                 border: 'none',
-                background: yAxisScale === 'zero' ? '#0f172a' : 'transparent',
-                color: yAxisScale === 'zero' ? '#ffffff' : '#64748b',
+                background: yAxisScale === 'zero' ? 'var(--accent-blue)' : 'transparent',
+                color: yAxisScale === 'zero' ? '#000000' : 'var(--text-secondary)',
                 fontWeight: '900',
                 fontSize: '9.5px',
                 cursor: 'pointer',
-                boxShadow: yAxisScale === 'zero' ? '0 1px 3px rgba(15,23,42,0.2)' : 'none'
+                boxShadow: yAxisScale === 'zero' ? '0 1px 4px rgba(56,189,248,0.3)' : 'none'
               }}
               title="Escala Completa: Inicia el eje vertical desde 0 para ver la proporción real de los cambios sin dramatismo visual"
             >
@@ -1022,11 +1083,70 @@ export default function ExerciseProgressionChart({
         </div>
       </div>
 
+      {/* 📅 FOCALIZADOR DEL EJE TEMPORAL (X-AXIS ZOOM & RESOLUCIÓN) */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: '6px',
+        marginBottom: '10px',
+        background: '#0a0d14',
+        padding: '5px 8px',
+        borderRadius: '12px',
+        border: '1px solid #1e293b',
+        flexWrap: 'wrap'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <Calendar size={13} color="var(--accent-blue)" />
+          <span style={{ fontSize: '10px', fontWeight: '900', color: '#cbd5e1', textTransform: 'uppercase', letterSpacing: '0.5px', fontFamily: 'monospace' }}>
+            Eje Temporal:
+          </span>
+          <span style={{ fontSize: '9px', background: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', padding: '1px 6px', borderRadius: '4px', fontWeight: '800' }}>
+            {visibleRealPointsCount || chartData.length} de {totalRealPointsCount || chartData.length} ses
+          </span>
+        </div>
+
+        <div style={{ display: 'inline-flex', gap: '2px', background: '#000000', padding: '2px', borderRadius: '8px', border: '1px solid #1e293b', flexWrap: 'wrap' }}>
+          {[
+            { id: 'all', label: '🌐 Desde Siempre', title: 'Ver historial completo desde la primera sesión registrada' },
+            { id: '6m', label: '6M', title: 'Últimos 6 meses' },
+            { id: '3m', label: '3M', title: 'Últimos 3 meses (Trimestre)' },
+            { id: '1m', label: '1M', title: 'Último mes (4 semanas)' },
+            { id: '10ses', label: '⚡ 10 Ses', title: 'Últimas 10 sesiones (Resolución nítida sin amontonamiento)' },
+            { id: '5ses', label: '🎯 5 Ses', title: 'Últimas 5 sesiones (Enfoque microciclo ultra focalizado)' }
+          ].map(tf => {
+            const isSel = timeframe === tf.id;
+            return (
+              <button
+                key={tf.id}
+                type="button"
+                onClick={() => handleSetTimeframe(tf.id)}
+                style={{
+                  padding: '3px 7px',
+                  borderRadius: '6px',
+                  border: 'none',
+                  background: isSel ? 'var(--accent-blue)' : 'transparent',
+                  color: isSel ? '#000000' : '#94a3b8',
+                  fontWeight: isSel ? '900' : '700',
+                  fontSize: '9.5px',
+                  cursor: 'pointer',
+                  boxShadow: isSel ? '0 1px 6px rgba(56, 189, 248, 0.35)' : 'none',
+                  transition: 'all 0.15s ease'
+                }}
+                title={tf.title}
+              >
+                {tf.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       {/* AVISO INTELIGENTE DE MOTOR CANÓNICO / FAMILIA BIOMECÁNICA */}
       {isFamilyView && (
         <div style={{
-          background: '#f5f3ff',
-          border: '1px solid #ddd6fe',
+          background: 'rgba(124, 58, 237, 0.12)',
+          border: '1px solid rgba(168, 85, 247, 0.25)',
           borderRadius: '10px',
           padding: '5px 10px',
           marginBottom: '8px',
@@ -1034,17 +1154,17 @@ export default function ExerciseProgressionChart({
           alignItems: 'center',
           justifyContent: 'space-between',
           fontSize: '10px',
-          color: '#6d28d9',
+          color: '#c084fc',
           fontWeight: '700'
         }}>
           <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-            <Sparkles size={12} color="#7c3aed" />
+            <Sparkles size={12} color="#a855f7" />
             {isAutoFamily 
               ? `Motor Inteligente: Sin registros en esta estación física. Graficando historial de la familia ${machineKey || 'biomecánica'}`
               : `Modo Familia Activo: Historial consolidado de la estación ${machineKey || ''}`}
           </span>
-          <span style={{ fontSize: '9px', background: '#ede9fe', padding: '1px 6px', borderRadius: '5px', color: '#5b21b6', fontWeight: '800' }}>
-            {realPointsCount} sesiones
+          <span style={{ fontSize: '9px', background: 'rgba(124, 58, 237, 0.2)', padding: '1px 6px', borderRadius: '5px', color: '#e9d5ff', fontWeight: '800' }}>
+            {totalRealPointsCount} sesiones
           </span>
         </div>
       )}
@@ -1121,7 +1241,7 @@ export default function ExerciseProgressionChart({
             )}
 
             {isFamilyView && (
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: '#64748b', fontSize: '9px', background: '#f8fafc', padding: '1px 6px', borderRadius: '4px', border: '1px solid #e2e8f0' }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: 'var(--text-secondary)', fontSize: '9px', background: 'var(--bg-surface-secondary)', padding: '1px 6px', borderRadius: '4px', border: '1px solid var(--border-subtle)' }}>
                 <span style={{ fontWeight: '800' }}>Estación:</span>
                 <span>■ Mancuerna</span>
                 <span>◆ Polea</span>
@@ -1131,8 +1251,8 @@ export default function ExerciseProgressionChart({
             )}
 
             {deloadWindows && deloadWindows.length > 0 && (
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: PROGRESSION_COLORS.deloadBorder, fontWeight: '800', background: '#ecfdf5', padding: '1px 6px', borderRadius: '4px', border: '1px solid #a7f3d0' }}>
-                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: PROGRESSION_COLORS.deload, border: '1.5px solid #059669' }} /> 🧘 Deload (80% / RIR 3-4)
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: 'var(--accent-emerald)', fontWeight: '800', background: 'var(--accent-emerald-subtle)', padding: '1px 6px', borderRadius: '4px', border: '1px solid var(--accent-emerald)' }}>
+                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: PROGRESSION_COLORS.deload, border: '1.5px solid var(--accent-emerald)' }} /> 🧘 Deload (80% / RIR 3-4)
               </span>
             )}
           </div>
@@ -1208,13 +1328,13 @@ export default function ExerciseProgressionChart({
               </linearGradient>
             </defs>
 
-            <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--border-subtle)" opacity={0.6} />
 
             <XAxis
               dataKey="date"
-              interval="preserveStartEnd"
-              tick={{ fontSize: 9.5, fontWeight: '700', fill: '#64748b' }}
-              axisLine={{ stroke: '#cbd5e1' }}
+              interval={dynamicXInterval}
+              tick={{ fontSize: 9.5, fontWeight: '700', fill: 'var(--text-muted)' }}
+              axisLine={{ stroke: 'var(--border-subtle)' }}
               tickLine={false}
               tickFormatter={(val) => (typeof val === 'string' ? val.replace(/\s*\(\s*#?\d+\s*\)$/, '') : val)}
             />
@@ -1325,8 +1445,8 @@ export default function ExerciseProgressionChart({
                   stroke={PROGRESSION_COLORS.tonnage}
                   strokeWidth={2.5}
                   fill="url(#gradientTonnage)"
-                  dot={{ r: 3.5, fill: PROGRESSION_COLORS.tonnage, stroke: '#ffffff', strokeWidth: 1.5 }}
-                  activeDot={{ r: 5, fill: PROGRESSION_COLORS.tonnage }}
+                  dot={isDense ? { r: 1.8, fill: PROGRESSION_COLORS.tonnage } : { r: 3.5, fill: PROGRESSION_COLORS.tonnage, stroke: '#ffffff', strokeWidth: 1.5 }}
+                  activeDot={{ r: isDense ? 4 : 5.5, fill: PROGRESSION_COLORS.tonnage }}
                   connectNulls={false}
                 />
                 {showProjections && (
@@ -1339,8 +1459,8 @@ export default function ExerciseProgressionChart({
                     strokeWidth={2}
                     strokeDasharray="5 5"
                     fill="url(#gradientProj)"
-                    dot={{ r: 3.5, fill: PROGRESSION_COLORS.projection, stroke: '#ffffff', strokeWidth: 1.5 }}
-                    activeDot={{ r: 5, fill: PROGRESSION_COLORS.projection }}
+                    dot={isDense ? { r: 1.8, fill: PROGRESSION_COLORS.projection } : { r: 3.5, fill: PROGRESSION_COLORS.projection, stroke: '#ffffff', strokeWidth: 1.5 }}
+                    activeDot={{ r: isDense ? 4 : 5.5, fill: PROGRESSION_COLORS.projection }}
                     connectNulls
                   />
                 )}
@@ -1373,8 +1493,8 @@ export default function ExerciseProgressionChart({
                     stroke={PROGRESSION_COLORS.peakWeight}
                     strokeWidth={2.5}
                     fill={weightMode === 'peak' ? 'url(#gradientWeight)' : 'none'}
-                    dot={(dotProps) => <StationDot {...dotProps} baseColor={PROGRESSION_COLORS.peakWeight} isFamilyView={isFamilyView} />}
-                    activeDot={{ r: 5, fill: PROGRESSION_COLORS.peakWeight }}
+                    dot={(dotProps) => <StationDot {...dotProps} baseColor={PROGRESSION_COLORS.peakWeight} isFamilyView={isFamilyView} isDense={isDense} />}
+                    activeDot={{ r: isDense ? 4 : 5.5, fill: PROGRESSION_COLORS.peakWeight }}
                     connectNulls={false}
                   />
                 )}
@@ -1389,8 +1509,8 @@ export default function ExerciseProgressionChart({
                     stroke={PROGRESSION_COLORS.avgWeight}
                     strokeWidth={2.5}
                     strokeDasharray={weightMode === 'band' ? 'none' : '4 3'}
-                    dot={(dotProps) => <StationDot {...dotProps} baseColor={PROGRESSION_COLORS.avgWeight} isFamilyView={isFamilyView} />}
-                    activeDot={{ r: 5, fill: PROGRESSION_COLORS.avgWeight }}
+                    dot={(dotProps) => <StationDot {...dotProps} baseColor={PROGRESSION_COLORS.avgWeight} isFamilyView={isFamilyView} isDense={isDense} />}
+                    activeDot={{ r: isDense ? 4 : 5.5, fill: PROGRESSION_COLORS.avgWeight }}
                     connectNulls={false}
                   />
                 )}
@@ -1405,8 +1525,8 @@ export default function ExerciseProgressionChart({
                     stroke={PROGRESSION_COLORS.minWeight}
                     strokeWidth={1.8}
                     strokeDasharray="3 3"
-                    dot={(dotProps) => <StationDot {...dotProps} baseColor={PROGRESSION_COLORS.minWeight} isFamilyView={isFamilyView} />}
-                    activeDot={{ r: 4, fill: PROGRESSION_COLORS.minWeight }}
+                    dot={(dotProps) => <StationDot {...dotProps} baseColor={PROGRESSION_COLORS.minWeight} isFamilyView={isFamilyView} isDense={isDense} />}
+                    activeDot={{ r: isDense ? 3.5 : 4.5, fill: PROGRESSION_COLORS.minWeight }}
                     connectNulls={false}
                   />
                 )}
@@ -1421,8 +1541,8 @@ export default function ExerciseProgressionChart({
                     stroke={PROGRESSION_COLORS.repsTop}
                     strokeWidth={2.5}
                     fill="url(#gradientReps)"
-                    dot={{ r: 3.5, fill: PROGRESSION_COLORS.repsTop, stroke: '#ffffff', strokeWidth: 1.5 }}
-                    activeDot={{ r: 5, fill: PROGRESSION_COLORS.repsTop }}
+                    dot={isDense ? { r: 1.8, fill: PROGRESSION_COLORS.repsTop } : { r: 3.5, fill: PROGRESSION_COLORS.repsTop, stroke: '#ffffff', strokeWidth: 1.5 }}
+                    activeDot={{ r: isDense ? 4 : 5.5, fill: PROGRESSION_COLORS.repsTop }}
                     connectNulls={false}
                   />
                 )}
@@ -1436,8 +1556,8 @@ export default function ExerciseProgressionChart({
                     stroke={PROGRESSION_COLORS.repsAvg}
                     strokeWidth={2.2}
                     strokeDasharray={repsMode === 'both' ? '4 3' : 'none'}
-                    dot={{ r: 3.5, fill: PROGRESSION_COLORS.repsAvg, stroke: '#ffffff', strokeWidth: 1.5 }}
-                    activeDot={{ r: 5, fill: PROGRESSION_COLORS.repsAvg }}
+                    dot={isDense ? { r: 1.8, fill: PROGRESSION_COLORS.repsAvg } : { r: 3.5, fill: PROGRESSION_COLORS.repsAvg, stroke: '#ffffff', strokeWidth: 1.5 }}
+                    activeDot={{ r: isDense ? 4 : 5.5, fill: PROGRESSION_COLORS.repsAvg }}
                     connectNulls={false}
                   />
                 )}
@@ -1452,7 +1572,7 @@ export default function ExerciseProgressionChart({
                     stroke={PROGRESSION_COLORS.est1RM}
                     strokeWidth={2}
                     strokeDasharray="3 3"
-                    dot={{ r: 2.5, fill: PROGRESSION_COLORS.est1RM }}
+                    dot={isDense ? { r: 1.5, fill: PROGRESSION_COLORS.est1RM } : { r: 2.5, fill: PROGRESSION_COLORS.est1RM }}
                     activeDot={{ r: 4 }}
                     connectNulls={false}
                   />
@@ -1467,8 +1587,8 @@ export default function ExerciseProgressionChart({
                     name="RPE Promedio"
                     stroke={PROGRESSION_COLORS.rpe}
                     strokeWidth={2.5}
-                    dot={(dotProps) => <StationDot {...dotProps} baseColor={PROGRESSION_COLORS.rpe} isFamilyView={isFamilyView} />}
-                    activeDot={{ r: 5, fill: PROGRESSION_COLORS.rpe }}
+                    dot={(dotProps) => <StationDot {...dotProps} baseColor={PROGRESSION_COLORS.rpe} isFamilyView={isFamilyView} isDense={isDense} />}
+                    activeDot={{ r: isDense ? 4 : 5.5, fill: PROGRESSION_COLORS.rpe }}
                     connectNulls
                   />
                 )}
@@ -1484,8 +1604,8 @@ export default function ExerciseProgressionChart({
                     strokeWidth={2}
                     strokeDasharray="5 5"
                     fill="url(#gradientProj)"
-                    dot={{ r: 3.5, fill: PROGRESSION_COLORS.projection, stroke: '#ffffff', strokeWidth: 1.5 }}
-                    activeDot={{ r: 5, fill: PROGRESSION_COLORS.projection }}
+                    dot={isDense ? { r: 2, fill: PROGRESSION_COLORS.projection } : { r: 3.5, fill: PROGRESSION_COLORS.projection, stroke: '#ffffff', strokeWidth: 1.5 }}
+                    activeDot={{ r: isDense ? 4 : 5.5, fill: PROGRESSION_COLORS.projection }}
                     connectNulls
                   />
                 )}
@@ -1737,26 +1857,26 @@ export default function ExerciseProgressionChart({
       <div style={{
         marginTop: '8px',
         paddingTop: '8px',
-        borderTop: '1px solid #f1f5f9',
+        borderTop: '1px solid var(--border-subtle)',
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
         flexWrap: 'wrap',
         gap: '6px',
         fontSize: '10px',
-        color: '#64748b'
+        color: 'var(--text-muted)'
       }}>
         <div>
           <span>
             Último Pico: <strong style={{ color: PROGRESSION_COLORS.peakWeight }}>{currentWeight} lbs</strong> (Récord: <strong style={{ color: '#15803d' }}>{peakWeight}#</strong>)
           </span>
           {currentAvgWeight > 0 && (
-            <span style={{ marginLeft: '6px', borderLeft: '1px solid #cbd5e1', paddingLeft: '6px' }}>
+            <span style={{ marginLeft: '6px', borderLeft: '1px solid var(--border-subtle)', paddingLeft: '6px' }}>
               Último Prom: <strong style={{ color: PROGRESSION_COLORS.avgWeight }}>{currentAvgWeight} lbs</strong>
             </span>
           )}
         </div>
-        <span style={{ fontStyle: 'italic', color: '#94a3b8' }}>
+        <span style={{ fontStyle: 'italic', color: 'var(--text-muted)' }}>
           Toca o pasa el cursor para auditar cada punto
         </span>
       </div>

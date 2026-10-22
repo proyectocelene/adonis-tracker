@@ -16,9 +16,9 @@ export default function RoutineActiveView({
           onClick={handleCopyText}
           style={{
             flex: 1,
-            background: '#f8fafc',
-            color: '#0f172a',
-            border: '1.5px solid #cbd5e1',
+            background: 'var(--bg-surface-secondary)',
+            color: 'var(--text-main)',
+            border: '1px solid var(--border-subtle)',
             padding: '10px 14px',
             borderRadius: '12px',
             fontSize: '12px',
@@ -30,7 +30,7 @@ export default function RoutineActiveView({
             gap: '6px'
           }}
         >
-          {copied ? <Check size={16} color="#10b981" /> : <Copy size={16} color="#0066ff" />}
+          {copied ? <Check size={16} color="var(--accent-emerald)" /> : <Copy size={16} color="var(--accent-blue)" />}
           {copied ? '¡Copiado al Portapapeles!' : '📋 Copiar Formato de Texto'}
         </button>
 
@@ -38,9 +38,9 @@ export default function RoutineActiveView({
           type="button"
           onClick={handleResetToDefault}
           style={{
-            background: '#fff1f2',
-            color: '#e11d48',
-            border: '1.5px solid #fecdd3',
+            background: 'var(--accent-red-subtle)',
+            color: 'var(--accent-red)',
+            border: '1px solid var(--accent-red)',
             padding: '10px 14px',
             borderRadius: '12px',
             fontSize: '12px',
@@ -62,9 +62,9 @@ export default function RoutineActiveView({
           const allEx = [...(day.exercises || []), ...customs];
 
           return (
-            <div key={day.id || dIdx} style={{ background: '#f8fafc', border: '1.5px solid #e2e8f0', borderRadius: '16px', padding: '14px' }}>
+            <div key={day.id || dIdx} style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', borderRadius: '16px', padding: '14px' }}>
               <div className="flex-between" style={{ marginBottom: '8px' }}>
-                <strong style={{ fontSize: '13px', color: '#0f172a', fontWeight: '900' }}>
+                <strong style={{ fontSize: '13px', color: 'var(--text-main)', fontWeight: '900' }}>
                   {day.name}
                 </strong>
                 <span className="badge badge-blue" style={{ fontSize: '10px', fontWeight: '800' }}>
@@ -73,17 +73,17 @@ export default function RoutineActiveView({
               </div>
 
               {allEx.length === 0 ? (
-                <span style={{ fontSize: '11px', color: '#64748b', fontStyle: 'italic' }}>
+                <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontStyle: 'italic' }}>
                   Día de descanso muscular programado.
                 </span>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   {allEx.map((ex, eIdx) => (
-                    <div key={ex.id || eIdx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#ffffff', padding: '6px 10px', borderRadius: '10px', border: '1px solid #e2e8f0', fontSize: '11px' }}>
-                      <span style={{ fontWeight: '700', color: '#1e293b' }}>
+                    <div key={ex.id || eIdx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-surface-secondary)', padding: '6px 10px', borderRadius: '10px', border: '1px solid var(--border-subtle)', fontSize: '11px' }}>
+                      <span style={{ fontWeight: '700', color: 'var(--text-main)' }}>
                         {eIdx + 1}. {ex.name}
                       </span>
-                      <span style={{ color: '#0066ff', fontWeight: '800' }}>
+                      <span style={{ color: 'var(--accent-blue)', fontWeight: '800' }}>
                         {ex.sets}x{ex.reps} ({ex.restTime || '90s'})
                       </span>
                     </div>

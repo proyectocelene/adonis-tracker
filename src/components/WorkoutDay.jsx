@@ -18,7 +18,7 @@ import SmartRescheduleModal from './workout/SmartRescheduleModal';
 import SundayRecoveryDashboard from './workout/SundayRecoveryDashboard';
 import PendingExercisesBanner from './workout/PendingExercisesBanner';
 import DeloadMonitoringCard from './workout/DeloadMonitoringCard';
-import { detectFatigueStatus, isSplitOverrideActive, createDeloadCycle, calculateDeloadProgress } from '../utils/adaptiveRoutineEngine';
+import { detectFatigueStatus, isSplitOverrideActive, createDeloadCycle, calculateDeloadProgress, distributePendingExercisesAcrossDays } from '../utils/adaptiveRoutineEngine';
 import { detectUnfinishedExercisesFromPreviousSession } from '../utils/pendingExercisesDetector';
 import { executeCleanSlate } from '../services/cleanSlateService';
 import { useAuth } from '../contexts/AuthContext';
@@ -180,8 +180,8 @@ export default function WorkoutDay() {
 
   // === ANÁLISIS CLÍNICO DE FATIGA Y RECOMENDACIÓN DE DESCARGA ===
   const fatigueStatus = useMemo(() => {
-    return detectFatigueStatus(workoutHistory, currentWeek);
-  }, [workoutHistory, currentWeek]);
+    return detectFatigueStatus(workoutHistory, currentWeek, deloadCycleConfig);
+  }, [workoutHistory, currentWeek, deloadCycleConfig]);
 
   // Progreso y cálculo exacto del ciclo de descarga (7 días completos)
   const deloadProgress = useMemo(() => {
@@ -192,15 +192,29 @@ export default function WorkoutDay() {
   // Si el ciclo de 7 días se completó y expiró, finalizar descarga automáticamente
   useEffect(() => {
     if (isDeloadMode && deloadProgress?.isCompleted) {
+      const completedConfig = {
+        ...(deloadCycleConfig || {}),
+        isActive: false,
+        manuallyExited: false,
+        exitedWeek: currentWeek,
+        completedAt: new Date().toISOString()
+      };
       setIsDeloadMode(false);
-      setDeloadCycleConfig(prev => prev ? { ...prev, isActive: false, completedAt: new Date().toISOString() } : null);
+      setDeloadCycleConfig(completedConfig);
+
+      // Persistir de forma atómica en idb-keyval y Firestore
+      import('idb-keyval').then(({ set }) => {
+        set('coachv2_deload_active', false).catch(() => {});
+        set('coachv2_deload_cycle_config', completedConfig).catch(() => {});
+      }).catch(() => {});
+
       modal.showAlert({
         title: "⚡ ¡Semana de Descarga Completada!",
         message: "Has completado exitosamente el microciclo de 7 días de recuperación activa y supercompensación. Tu sistema nervioso y articulaciones están al 100%. ¡Iniciando nueva fase de sobrecarga progresiva pesada!",
         variant: "success"
       });
     }
-  }, [isDeloadMode, deloadProgress?.isCompleted]);
+  }, [isDeloadMode, deloadProgress?.isCompleted, currentWeek, deloadCycleConfig]);
 
   const handleToggleDeload = () => {
     if (!isDeloadMode) {
@@ -221,9 +235,37 @@ export default function WorkoutDay() {
         confirmText: "Sí, Volver a Pesado",
         cancelText: "Mantener Descarga",
         variant: "warning",
-        onConfirm: () => {
+        onConfirm: async () => {
+          const exitedConfig = {
+            isActive: false,
+            manuallyExited: true,
+            exitedWeek: currentWeek,
+            exitedAt: new Date().toISOString(),
+            completedAt: new Date().toISOString()
+          };
           setIsDeloadMode(false);
-          setDeloadCycleConfig(prev => prev ? { ...prev, isActive: false } : null);
+          setDeloadCycleConfig(exitedConfig);
+
+          // Asegurar persistencia directa en idb-keyval y Firestore para evitar cualquier condición de carrera
+          try {
+            const { set } = await import('idb-keyval');
+            await set('coachv2_deload_active', false);
+            await set('coachv2_deload_cycle_config', exitedConfig);
+            if (currentUser) {
+              const { doc, setDoc } = await import('firebase/firestore');
+              const { db } = await import('../services/firebase');
+              await setDoc(doc(db, 'users', currentUser.uid, 'store', 'coachv2_deload_active'), { value: false }, { merge: true });
+              await setDoc(doc(db, 'users', currentUser.uid, 'store', 'coachv2_deload_cycle_config'), { value: exitedConfig }, { merge: true });
+            }
+          } catch (err) {
+            console.warn('[Deload Exit] Error en sincronización directa:', err);
+          }
+
+          modal.showAlert({
+            title: "💪 Modo Deload Finalizado",
+            message: "Se ha registrado la salida del microciclo de descarga. El modo pesado queda restablecido y no se reactivará durante esta semana.",
+            variant: "success"
+          });
         }
       });
     }
@@ -279,29 +321,30 @@ export default function WorkoutDay() {
     });
   };
 
-  // === DETECCIÓN INTELIGENTE DE EJERCICIOS PENDIENTES DE LA SESIÓN PREVIA ===
+  // === DETECCIÓN INTELIGENTE DE EJERCICIOS PENDIENTES DE LA SESIÓN PREVIA O FALTAS ===
   const pendingPreviousData = useMemo(() => {
     if (isViewingHistory) return null;
     return detectUnfinishedExercisesFromPreviousSession({
       selectedDateKey,
       activeDays,
       workoutHistory,
-      dismissedAlerts: dismissedPendingAlerts
+      dismissedAlerts: dismissedPendingAlerts,
+      customExercisesMap
     });
-  }, [selectedDateKey, activeDays, workoutHistory, dismissedPendingAlerts, isViewingHistory]);
+  }, [selectedDateKey, activeDays, workoutHistory, dismissedPendingAlerts, isViewingHistory, customExercisesMap]);
 
   const handleImportPendingToToday = (exercisesToImport) => {
     if (!exercisesToImport || exercisesToImport.length === 0) return;
     const dayKey = baseDay.id;
     const existingCustoms = customExercisesMap[dayKey] || [];
     const newAdds = exercisesToImport.map(ex => ({
-      id: `pending_${Date.now()}_${ex.id}`,
+      id: `pending_${Date.now()}_${ex.id || Math.random().toString(36).substr(2, 6)}`,
       name: ex.name,
       muscleGroup: ex.muscleGroup || 'General',
       sets: ex.sets || 3,
       reps: ex.reps || '10-12',
       restTime: ex.restTime || '90 s',
-      biomechanics: ex.biomechanics || 'Trabajo recuperado de sesión anterior para balance de volumen semanal.',
+      biomechanics: ex.biomechanics || 'Trabajo recuperado de sesión pendiente para balance de volumen semanal.',
       unifiedCode: ex.unifiedCode,
       isCustom: true
     }));
@@ -319,6 +362,70 @@ export default function WorkoutDay() {
     modal.showAlert({
       title: "✅ Ejercicios Incorporados",
       message: `Se agregaron ${newAdds.length} ejercicio(s) al final de tu rutina de hoy (${baseDay.name}) como remate para completar tu volumen semanal.`,
+      variant: "success"
+    });
+  };
+
+  const handleDistributePendingAcrossWeek = (exercisesToDistribute) => {
+    if (!exercisesToDistribute || exercisesToDistribute.length === 0) return;
+
+    // Identificar los días de entrenamiento disponibles en la semana activa a partir de hoy (effectiveDayIndex)
+    const currentDayPos = effectiveDayIndex;
+    const remainingDays = activeDays.filter((d, idx) => {
+      if (!d || d.type === 'rest' || d.id === 'd7') return false;
+      return idx >= currentDayPos;
+    });
+
+    const candidateDays = remainingDays.length > 0
+      ? remainingDays
+      : activeDays.filter(d => d && d.type !== 'rest' && d.id !== 'd7');
+
+    const { distributionMap, summaryItems } = distributePendingExercisesAcrossDays({
+      pendingExercises: exercisesToDistribute,
+      remainingDays: candidateDays,
+      existingCustomsMap: customExercisesMap
+    });
+
+    if (summaryItems.length === 0) {
+      modal.showAlert({
+        title: "⚠️ Sin días disponibles",
+        message: "No se encontraron días de entrenamiento restantes para redistribuir en esta semana. Puedes sumarlos a la sesión de hoy.",
+        variant: "warning"
+      });
+      return;
+    }
+
+    // Actualizar customExercisesMap integrando las nuevas asignaciones
+    setCustomExercisesMap(prev => {
+      const nextMap = { ...(prev || {}) };
+      Object.entries(distributionMap).forEach(([dayId, items]) => {
+        if (items && items.length > 0) {
+          nextMap[dayId] = [...(nextMap[dayId] || []), ...items];
+        }
+      });
+      return nextMap;
+    });
+
+    // Descartar la alerta para la fecha actual
+    setDismissedPendingAlerts(prev => ({
+      ...prev,
+      [selectedDateKey]: true
+    }));
+
+    // Agrupar resumen por día asignado
+    const groupedSummary = {};
+    summaryItems.forEach(item => {
+      if (!groupedSummary[item.targetDayName]) groupedSummary[item.targetDayName] = [];
+      groupedSummary[item.targetDayName].push(item.exerciseName);
+    });
+
+    const summaryList = Object.entries(groupedSummary)
+      .map(([dayName, exNames]) => `• ${dayName}: ${exNames.join(', ')}`)
+      .join('\n');
+
+    modal.showAlert({
+      title: "⚡ Distribución Inteligente Completada",
+      message: `Se distribuyeron ${summaryItems.length} ejercicio(s) pendiente(s) respetando sinergia muscular y un límite seguro de 1-2 ejercicios por sesión:\n\n${summaryList}\n\n✅ Tu volumen semanal queda totalmente salvaguardado sin sobrecargar ninguna sesión.`,
       variant: "success"
     });
   };
@@ -1637,7 +1744,7 @@ export default function WorkoutDay() {
   return (
     <div className="container" style={{ paddingBottom: '90px' }}>
       {/* BARRA SUPERIOR DE SELECTOR DE MODO (MUTUAMENTE EXCLUSIVO) */}
-      <div style={{ display: 'flex', background: '#e2e8f0', padding: '4px', borderRadius: '18px', marginBottom: '14px' }}>
+      <div style={{ display: 'flex', background: 'var(--bg-surface-secondary)', border: '1px solid var(--border-subtle)', padding: '4px', borderRadius: '18px', marginBottom: '14px' }}>
         <button
           type="button"
           onClick={() => setShowMonthlyCalendar(true)}
@@ -1646,12 +1753,12 @@ export default function WorkoutDay() {
             padding: '10px',
             border: 'none',
             borderRadius: '14px',
-            background: showMonthlyCalendar ? '#ffffff' : 'transparent',
-            color: showMonthlyCalendar ? '#0066ff' : '#64748b',
+            background: showMonthlyCalendar ? 'var(--accent-blue)' : 'transparent',
+            color: showMonthlyCalendar ? '#ffffff' : 'var(--text-secondary)',
             fontWeight: '900',
             fontSize: '13px',
             cursor: 'pointer',
-            boxShadow: showMonthlyCalendar ? '0 2px 8px rgba(0,0,0,0.08)' : 'none',
+            boxShadow: showMonthlyCalendar ? '0 2px 10px rgba(56, 189, 248, 0.25)' : 'none',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -1669,12 +1776,12 @@ export default function WorkoutDay() {
             padding: '10px',
             border: 'none',
             borderRadius: '14px',
-            background: !showMonthlyCalendar ? '#0066ff' : 'transparent',
-            color: !showMonthlyCalendar ? '#ffffff' : '#64748b',
+            background: !showMonthlyCalendar ? 'var(--accent-blue)' : 'transparent',
+            color: !showMonthlyCalendar ? '#ffffff' : 'var(--text-secondary)',
             fontWeight: '900',
             fontSize: '13px',
             cursor: 'pointer',
-            boxShadow: !showMonthlyCalendar ? '0 4px 12px rgba(0, 102, 255, 0.3)' : 'none',
+            boxShadow: !showMonthlyCalendar ? '0 2px 10px rgba(56, 189, 248, 0.25)' : 'none',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -1713,9 +1820,9 @@ export default function WorkoutDay() {
             onClick={() => setShowGlosarioModal(true)}
             style={{
               width: '100%',
-              background: '#eff6ff',
-              color: '#0066ff',
-              border: '1.5px solid #bfdbfe',
+              background: 'var(--accent-blue-light)',
+              color: 'var(--accent-blue)',
+              border: '1px solid var(--border-subtle)',
               padding: '14px',
               borderRadius: '18px',
               fontSize: '13px',
@@ -1789,10 +1896,10 @@ export default function WorkoutDay() {
                 isViewingHistory={isViewingHistory}
               />
             ) : (
-              <div className="card card-success" style={{ padding: '32px 20px', textAlign: 'center', margin: '16px 0' }}>
-                <CheckCircle size={48} color="#00b464" style={{ margin: '0 auto 12px auto' }} />
-                <h2 style={{ color: '#0f172a', fontSize: '19px', fontWeight: '800' }}>Día de Síntesis Muscular & Descanso</h2>
-                <p style={{ marginTop: '8px', color: '#475569', fontSize: '13px', lineHeight: '1.6' }}>
+              <div className="card" style={{ padding: '32px 20px', textAlign: 'center', margin: '16px 0', background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', borderTop: '3px solid var(--accent-emerald)' }}>
+                <CheckCircle size={48} color="var(--accent-emerald)" style={{ margin: '0 auto 12px auto' }} />
+                <h2 style={{ color: 'var(--text-main)', fontSize: '19px', fontWeight: '800' }}>Día de Síntesis Muscular & Descanso</h2>
+                <p style={{ marginTop: '8px', color: 'var(--text-secondary)', fontSize: '13px', lineHeight: '1.6' }}>
                   Descanso absoluto programado. La reparación de fibras musculares ocurre fuera del gimnasio.
                 </p>
               </div>
@@ -1807,11 +1914,14 @@ export default function WorkoutDay() {
                 />
               )}
 
-              {/* BANNER INTELIGENTE DE EJERCICIOS PENDIENTES DE LA SESIÓN ANTERIOR */}
+              {/* BANNER INTELIGENTE DE EJERCICIOS PENDIENTES DE LA SESIÓN ANTERIOR O FALTAS */}
               {pendingPreviousData && (
                 <PendingExercisesBanner
                   pendingData={pendingPreviousData}
+                  todayDayName={baseDay.name}
+                  onDistributeAcrossWeek={handleDistributePendingAcrossWeek}
                   onImportToToday={handleImportPendingToToday}
+                  onRollingShift={handleRollingShift}
                   onOpenRescheduleModal={() => setShowRescheduleModal(true)}
                   onDismiss={() => {
                     setDismissedPendingAlerts(prev => ({
@@ -1840,61 +1950,60 @@ export default function WorkoutDay() {
                     }}
                     style={{
                       background: isCardioDone 
-                        ? 'linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)' 
-                        : 'linear-gradient(135deg, #f0fdf4 0%, #e0f2fe 100%)',
-                      border: isCardioDone ? '1.5px solid #34d399' : '1.5px solid #0284c7',
-                      borderRadius: '20px',
-                      padding: '12px 16px',
-                      marginBottom: '12px',
+                        ? 'var(--accent-emerald-subtle)' 
+                        : 'var(--bg-surface)',
+                      border: isCardioDone ? '1px solid var(--accent-emerald)' : '1px solid var(--accent-blue)',
+                      borderRadius: '12px',
+                      padding: '8px 12px',
+                      marginBottom: '10px',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'space-between',
                       cursor: 'pointer',
-                      userSelect: 'none',
-                      boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
+                      userSelect: 'none'
                     }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <div style={{ 
-                        width: '38px', 
-                        height: '38px', 
-                        borderRadius: '12px', 
-                        background: isCardioDone ? '#059669' : 'linear-gradient(135deg, #0284c7 0%, #0f766e 100%)', 
-                        color: '#fff', 
+                        width: '32px', 
+                        height: '32px', 
+                        borderRadius: '8px', 
+                        background: isCardioDone ? 'var(--accent-emerald)' : 'var(--accent-blue-light)', 
+                        color: isCardioDone ? '#000000' : 'var(--accent-blue)', 
                         display: 'flex', 
                         alignItems: 'center', 
                         justifyContent: 'center', 
                         flexShrink: 0,
-                        fontSize: '18px'
+                        fontSize: '16px'
                       }}>
                         {isRower ? '🚣‍♂️' : '🫀'}
                       </div>
                       <div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-                          <h4 style={{ margin: 0, fontSize: '13.5px', fontWeight: '900', color: isCardioDone ? '#065f46' : '#0369a1' }}>
-                            {isRower ? '☀️ Protocolo Matutino: Remo (Cardio vs. NEAT)' : '☀️ Cardio Aeróbico en Zona 2'}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '5px', flexWrap: 'wrap' }}>
+                          <h4 style={{ margin: 0, fontSize: '13px', fontWeight: '800', color: isCardioDone ? 'var(--accent-emerald)' : 'var(--text-main)' }}>
+                            {isRower ? '☀️ Protocolo Matutino: Remo' : '☀️ Cardio Aeróbico en Zona 2'}
                           </h4>
-                          <span style={{ fontSize: '10px', background: isCardioDone ? '#d1fae5' : '#fef3c7', color: isCardioDone ? '#065f46' : '#92400e', padding: '1px 7px', borderRadius: '6px', fontWeight: '900' }}>
-                            ≥ 6h antes de pesas
+                          <span style={{ fontSize: '9px', background: isCardioDone ? 'var(--accent-emerald-subtle)' : 'var(--accent-amber-subtle)', color: isCardioDone ? 'var(--accent-emerald)' : 'var(--accent-amber)', padding: '1px 6px', borderRadius: '5px', fontWeight: '800' }}>
+                            ≥ 6h antes
                           </span>
                         </div>
-                        <span style={{ fontSize: '11px', color: isCardioDone ? '#047857' : '#475569', fontWeight: '700' }}>
+                        <span style={{ fontSize: '10.5px', color: isCardioDone ? 'var(--accent-emerald)' : 'var(--text-muted)', fontWeight: '600' }}>
                           {isCardioDone 
                             ? `✓ Completado • ${morningCardioData?.cardioKcal || 0} kcal registradas` 
-                            : 'Realizar por la mañana para anular interferencia AMPK/mTOR • Toca para abrir'}
+                            : 'Realizar por la mañana para anular interferencia AMPK/mTOR'}
                         </span>
                       </div>
                     </div>
                     <span style={{
-                      fontSize: '11px',
-                      fontWeight: '900',
-                      padding: '4px 10px',
-                      borderRadius: '10px',
-                      background: isCardioDone ? '#059669' : '#0284c7',
-                      color: '#ffffff',
+                      fontSize: '10.5px',
+                      fontWeight: '800',
+                      padding: '3px 8px',
+                      borderRadius: '8px',
+                      background: isCardioDone ? 'var(--accent-emerald)' : 'var(--accent-blue)',
+                      color: '#000000',
                       flexShrink: 0
                     }}>
-                      {isCardioDone ? '✓ LISTO' : 'ABRIR CARDIO'}
+                      {isCardioDone ? '✓ LISTO' : 'ABRIR'}
                     </span>
                   </div>
                 );
@@ -1922,11 +2031,11 @@ export default function WorkoutDay() {
                     }
                   }}
                   style={{
-                    background: isWarmupDone ? '#ecfdf5' : '#fffbeb',
-                    border: isWarmupDone ? '1.5px solid #34d399' : '1.5px solid #f59e0b',
-                    borderRadius: '20px',
-                    padding: '14px 16px',
-                    marginBottom: '16px',
+                    background: isWarmupDone ? 'var(--accent-emerald-subtle)' : 'var(--bg-surface)',
+                    border: isWarmupDone ? '1px solid var(--accent-emerald)' : '1px dashed var(--accent-amber)',
+                    borderRadius: '12px',
+                    padding: '8px 12px',
+                    marginBottom: '10px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
@@ -1934,21 +2043,29 @@ export default function WorkoutDay() {
                     userSelect: 'none'
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <div style={{ width: '38px', height: '38px', borderRadius: '19px', background: isWarmupDone ? '#10b981' : '#f59e0b', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      {isWarmupDone ? <Check size={20} /> : <Flame size={20} />}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: isWarmupDone ? 'var(--accent-emerald)' : 'var(--accent-amber-subtle)', color: isWarmupDone ? '#000000' : 'var(--accent-amber)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      {isWarmupDone ? <Check size={16} strokeWidth={3} /> : <Flame size={16} />}
                     </div>
                     <div>
-                      <h4 style={{ margin: 0, fontSize: '14px', fontWeight: '800', color: isWarmupDone ? '#065f46' : '#78350f' }}>
+                      <h4 style={{ margin: 0, fontSize: '13px', fontWeight: '800', color: isWarmupDone ? 'var(--accent-emerald)' : 'var(--text-main)' }}>
                         Paso 0: Calentamiento & Movilidad (5-10 min)
                       </h4>
-                      <span style={{ fontSize: '11px', color: isWarmupDone ? '#047857' : '#92400e', fontWeight: '600' }}>
+                      <span style={{ fontSize: '10.5px', color: 'var(--text-muted)', fontWeight: '600' }}>
                         Caminata/bici suave + movimientos articulares
                       </span>
                     </div>
                   </div>
-                  <span className={`badge ${isWarmupDone ? 'badge-green' : 'badge-warning'}`} style={{ fontWeight: '800', fontSize: '11px' }}>
-                    {isWarmupDone ? '✅ LISTO' : 'MARCAR'}
+                  <span className="font-mono-tech" style={{ 
+                    fontWeight: '800', 
+                    fontSize: '10.5px',
+                    background: isWarmupDone ? 'var(--accent-emerald-subtle)' : 'var(--accent-amber-subtle)',
+                    color: isWarmupDone ? 'var(--accent-emerald)' : 'var(--accent-amber)',
+                    border: `1px solid ${isWarmupDone ? 'var(--accent-emerald)' : 'var(--accent-amber)'}`,
+                    padding: '2px 7px',
+                    borderRadius: '6px'
+                  }}>
+                    {isWarmupDone ? '✓ LISTO' : 'MARCAR'}
                   </span>
                 </div>
               )}
@@ -2071,25 +2188,25 @@ export default function WorkoutDay() {
         <div className="card animate-fade" style={{
           padding: '16px 18px',
           marginBottom: '16px',
-          background: aiAnalysisResult.isDeloadMode ? 'linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 100%)' : '#f3e8ff',
-          border: aiAnalysisResult.isDeloadMode ? '1.5px solid #34d399' : '1.5px solid #d8b4fe',
+          background: aiAnalysisResult.isDeloadMode ? 'var(--accent-emerald-subtle)' : 'rgba(168, 85, 247, 0.12)',
+          border: aiAnalysisResult.isDeloadMode ? '1px solid var(--accent-emerald)' : '1px solid rgba(168, 85, 247, 0.3)',
           borderRadius: '20px',
-          boxShadow: '0 4px 16px rgba(0,0,0,0.06)'
+          boxShadow: 'var(--shadow-ios)'
         }}>
           <div className="flex-between" style={{ marginBottom: '10px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              {aiAnalysisResult.isDeloadMode ? <Sparkles size={20} color="#059669" /> : <Sparkles size={20} color="#7c3aed" />}
-              <strong style={{ fontSize: '15px', color: aiAnalysisResult.isDeloadMode ? '#065f46' : '#4c1d95', fontWeight: '900' }}>
+              {aiAnalysisResult.isDeloadMode ? <Sparkles size={20} color="var(--accent-emerald)" /> : <Sparkles size={20} color="#c084fc" />}
+              <strong style={{ fontSize: '15px', color: aiAnalysisResult.isDeloadMode ? 'var(--accent-emerald)' : '#c084fc', fontWeight: '900' }}>
                 {aiAnalysisResult.isDeloadMode ? '🧘 Auditoría de Descarga del Coach' : 'Reporte de Sobrecarga AI'}
               </strong>
             </div>
             <button type="button" onClick={() => setAiAnalysisResult(null)} style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}>
-              <X size={18} color="#64748b" />
+              <X size={18} color="var(--text-muted)" />
             </button>
           </div>
           <p style={{
             fontSize: '13px',
-            color: aiAnalysisResult.isDeloadMode ? '#047857' : '#581c87',
+            color: 'var(--text-main)',
             margin: 0,
             lineHeight: '1.6',
             fontWeight: '600',

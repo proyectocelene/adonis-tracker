@@ -192,19 +192,19 @@ export default function ConsistencyHeatmap({ workoutHistory = [] }) {
   };
 
   return (
-    <div className="card" style={{ padding: '18px', marginBottom: '22px', borderTop: '4px solid #00b464' }}>
+    <div className="card" style={{ padding: '18px', marginBottom: '22px', borderTop: '3px solid var(--accent-emerald)', background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)' }}>
       
       {/* Cabecera del Heatmap Centrada e Intuitiva */}
       <div className="flex-between" style={{ marginBottom: '14px', flexWrap: 'wrap', gap: '8px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <div style={{ width: '36px', height: '36px', borderRadius: '12px', background: '#ecfdf5', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#10b981' }}>
+          <div style={{ width: '36px', height: '36px', borderRadius: '12px', background: 'var(--accent-emerald-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--accent-emerald)' }}>
             <Award size={20} />
           </div>
           <div>
-            <h3 style={{ margin: 0, fontSize: '17px', fontWeight: '800', color: '#0f172a' }}>
+            <h3 style={{ margin: 0, fontSize: '17px', fontWeight: '800', color: 'var(--text-main)' }}>
               Consistencia & Disciplina
             </h3>
-            <span style={{ fontSize: '11px', color: '#64748b', fontWeight: '600', display: 'block' }}>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: '600', display: 'block' }}>
               Sin simulaciones • Toca un día para ver detalles
             </span>
           </div>
@@ -216,9 +216,9 @@ export default function ConsistencyHeatmap({ workoutHistory = [] }) {
             style={{
               padding: '6px 12px',
               borderRadius: '12px',
-              border: 'none',
-              background: activeTab === 'week' ? '#10b981' : '#f1f5f9',
-              color: activeTab === 'week' ? '#ffffff' : '#475569',
+              border: '1px solid var(--border-subtle)',
+              background: activeTab === 'week' ? 'var(--accent-emerald)' : 'var(--bg-surface-secondary)',
+              color: activeTab === 'week' ? '#ffffff' : 'var(--text-muted)',
               fontSize: '12px',
               fontWeight: '800',
               cursor: 'pointer',
@@ -232,9 +232,9 @@ export default function ConsistencyHeatmap({ workoutHistory = [] }) {
             style={{
               padding: '6px 12px',
               borderRadius: '12px',
-              border: 'none',
-              background: activeTab === 'matrix' ? '#0066ff' : '#f1f5f9',
-              color: activeTab === 'matrix' ? '#ffffff' : '#475569',
+              border: '1px solid var(--border-subtle)',
+              background: activeTab === 'matrix' ? 'var(--accent-blue)' : 'var(--bg-surface-secondary)',
+              color: activeTab === 'matrix' ? '#ffffff' : 'var(--text-muted)',
               fontSize: '12px',
               fontWeight: '800',
               cursor: 'pointer',
@@ -250,17 +250,17 @@ export default function ConsistencyHeatmap({ workoutHistory = [] }) {
         /* ================= VISTA INTUITIVA: ESTA SEMANA CENTRADA EN HOY ================= */
         <div className="animate-fade">
           <div style={{
-            background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
+            background: 'var(--bg-surface-secondary)',
             borderRadius: '20px',
             padding: '14px',
             marginBottom: '16px',
-            border: '1px solid #cbd5e1'
+            border: '1px solid var(--border-subtle)'
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-              <strong style={{ fontSize: '13px', color: '#1e293b', fontWeight: '800' }}>
+              <strong style={{ fontSize: '13px', color: 'var(--text-main)', fontWeight: '800' }}>
                 🗓️ Semana en curso (Lunes a Domingo)
               </strong>
-              <span className="badge" style={{ background: '#dcfce7', color: '#166534', fontSize: '11px', fontWeight: '800' }}>
+              <span className="badge" style={{ background: 'var(--accent-emerald-subtle)', color: 'var(--accent-emerald)', fontSize: '11px', fontWeight: '800' }}>
                 {workoutsThisWeek} de 5 sesiones logradas
               </span>
             </div>
@@ -273,28 +273,28 @@ export default function ConsistencyHeatmap({ workoutHistory = [] }) {
               textAlign: 'center' 
             }}>
               {weekDays.map((d) => {
-                let cardBg = '#ffffff';
-                let cardBorder = '1px solid #e2e8f0';
+                let cardBg = 'var(--bg-card)';
+                let cardBorder = '1px solid var(--border-subtle)';
                 let statusBadge = null;
 
                 if (d.hasWorkout) {
-                  cardBg = '#ecfdf5';
-                  cardBorder = '1.5px solid #10b981';
-                  statusBadge = <CheckCircle2 size={20} color="#10b981" />;
+                  cardBg = 'var(--accent-emerald-subtle)';
+                  cardBorder = '1.5px solid var(--accent-emerald)';
+                  statusBadge = <CheckCircle2 size={20} color="var(--accent-emerald)" />;
                 } else if (d.isRestDay) {
-                  cardBg = '#f1f5f9';
-                  cardBorder = '1.5px dashed #94a3b8';
+                  cardBg = 'var(--bg-card)';
+                  cardBorder = '1.5px dashed var(--border-subtle)';
                   statusBadge = <span style={{ fontSize: '14px', lineHeight: 1 }}>💤</span>;
                 } else if (d.isMissedDay) {
-                  cardBg = '#fef2f2';
-                  cardBorder = '1.5px solid #f87171';
-                  statusBadge = <span style={{ fontSize: '14px', lineHeight: 1, color: '#ef4444', fontWeight: '900' }}>✕</span>;
+                  cardBg = 'var(--accent-red-subtle)';
+                  cardBorder = '1.5px solid var(--accent-red)';
+                  statusBadge = <span style={{ fontSize: '14px', lineHeight: 1, color: 'var(--accent-red)', fontWeight: '900' }}>✕</span>;
                 } else if (d.isToday) {
-                  cardBg = '#eff6ff';
-                  cardBorder = '2.5px solid #0066ff';
-                  statusBadge = <div style={{ width: '10px', height: '10px', borderRadius: '5px', background: '#0066ff', animation: 'pulse 1.5s infinite' }} />;
+                  cardBg = 'var(--accent-blue-light)';
+                  cardBorder = '2px solid var(--accent-blue)';
+                  statusBadge = <div style={{ width: '10px', height: '10px', borderRadius: '5px', background: 'var(--accent-blue)', animation: 'pulse 1.5s infinite' }} />;
                 } else {
-                  statusBadge = <div style={{ width: '8px', height: '8px', borderRadius: '4px', background: '#cbd5e1' }} />;
+                  statusBadge = <div style={{ width: '8px', height: '8px', borderRadius: '4px', background: 'var(--border-subtle)' }} />;
                 }
 
                 return (
@@ -307,7 +307,7 @@ export default function ConsistencyHeatmap({ workoutHistory = [] }) {
                       borderRadius: '16px',
                       padding: '10px 4px',
                       cursor: 'pointer',
-                      boxShadow: d.isToday ? '0 6px 16px rgba(0, 102, 255, 0.2)' : 'none',
+                      boxShadow: d.isToday ? '0 4px 16px rgba(0, 102, 255, 0.25)' : 'none',
                       position: 'relative',
                       transition: 'all 0.2s ease',
                       transform: d.isToday ? 'scale(1.05)' : 'none',
@@ -321,7 +321,7 @@ export default function ConsistencyHeatmap({ workoutHistory = [] }) {
                         top: '-9px',
                         left: '50%',
                         transform: 'translateX(-50%)',
-                        background: '#0066ff',
+                        background: 'var(--accent-blue)',
                         color: '#fff',
                         fontSize: '9px',
                         fontWeight: '900',
@@ -338,17 +338,17 @@ export default function ConsistencyHeatmap({ workoutHistory = [] }) {
                     <span style={{ 
                       fontSize: '11px', 
                       fontWeight: '800', 
-                      color: d.isToday ? '#0066ff' : (d.isRestDay ? '#64748b' : (d.isMissedDay ? '#ef4444' : '#64748b')), 
+                      color: d.isToday ? 'var(--accent-blue)' : (d.isRestDay ? 'var(--text-muted)' : (d.isMissedDay ? 'var(--accent-red)' : 'var(--text-muted)')), 
                       display: 'block', 
                       marginTop: d.isToday ? '4px' : '0' 
                     }}>
                       {d.abbr}
                     </span>
 
-                    <strong style={{ 
+                    <strong className="font-mono-tech" style={{ 
                       fontSize: '16px', 
                       fontWeight: '800', 
-                      color: '#0f172a', 
+                      color: 'var(--text-main)', 
                       display: 'block', 
                       margin: '4px 0' 
                     }}>
@@ -364,8 +364,8 @@ export default function ConsistencyHeatmap({ workoutHistory = [] }) {
             </div>
           </div>
 
-          <p style={{ fontSize: '12px', color: '#475569', margin: '0', lineHeight: '1.5', background: '#f8fafc', padding: '10px 14px', borderRadius: '12px', border: '1px solid #f1f5f9' }}>
-            💡 <strong>Sugerencia de Lectura:</strong> Las casillas en verde (✓) corresponden únicamente a sesiones completadas. Los días de descanso programado (💤) se respetan y no se confunden con entrenamientos. La tarjeta azul destaca el día de <strong>Hoy</strong>.
+          <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: '0', lineHeight: '1.5', background: 'var(--bg-surface-secondary)', padding: '10px 14px', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
+            💡 <strong style={{ color: 'var(--text-main)' }}>Sugerencia de Lectura:</strong> Las casillas en verde (✓) corresponden únicamente a sesiones completadas. Los días de descanso programado (💤) se respetan y no se confunden con entrenamientos. La tarjeta azul destaca el día de <strong style={{ color: 'var(--accent-blue)' }}>Hoy</strong>.
           </p>
         </div>
       ) : (
@@ -376,7 +376,7 @@ export default function ConsistencyHeatmap({ workoutHistory = [] }) {
             {/* Nombres de filas LUN - DOM */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', paddingTop: '20px', flexShrink: 0 }}>
               {dayAbbreviations.map((name, i) => (
-                <div key={i} style={{ height: '24px', display: 'flex', alignItems: 'center', fontSize: '10px', fontWeight: '800', color: '#64748b', paddingRight: '4px' }}>
+                <div key={i} style={{ height: '24px', display: 'flex', alignItems: 'center', fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', paddingRight: '4px' }}>
                   {name}
                 </div>
               ))}
@@ -388,31 +388,31 @@ export default function ConsistencyHeatmap({ workoutHistory = [] }) {
                 const isCurrentWeek = colIdx === weeksMatrix.length - 1;
                 return (
                   <div key={colIdx} style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1 }}>
-                    <div style={{ fontSize: '10px', fontWeight: '800', color: isCurrentWeek ? '#0066ff' : '#64748b', textAlign: 'center', height: '14px' }}>
+                    <div style={{ fontSize: '10px', fontWeight: '800', color: isCurrentWeek ? 'var(--accent-blue)' : 'var(--text-muted)', textAlign: 'center', height: '14px' }}>
                       {isCurrentWeek ? 'ESTA' : `S${colIdx + 1}`}
                     </div>
                     {col.map((cell) => {
-                      let cellBg = '#f1f5f9';
-                      let cellBorder = '1px solid #e2e8f0';
+                      let cellBg = 'var(--bg-surface-secondary)';
+                      let cellBorder = '1px solid var(--border-subtle)';
                       let cellIcon = null;
 
                       if (cell.hasWorkout) {
-                        cellBg = '#10b981';
-                        cellBorder = '1px solid #059669';
+                        cellBg = 'var(--accent-emerald)';
+                        cellBorder = '1px solid var(--accent-emerald)';
                       } else if (cell.isRestDay) {
-                        cellBg = '#cbd5e1';
-                        cellBorder = '1px dashed #94a3b8';
+                        cellBg = 'var(--bg-card)';
+                        cellBorder = '1px dashed var(--border-subtle)';
                         cellIcon = <span style={{ fontSize: '9px', lineHeight: 1 }}>💤</span>;
                       } else if (cell.isMissedDay) {
-                        cellBg = '#fca5a5';
-                        cellBorder = '1px solid #ef4444';
-                        cellIcon = <span style={{ fontSize: '9px', lineHeight: 1, color: '#991b1b', fontWeight: '900' }}>✕</span>;
+                        cellBg = 'var(--accent-red)';
+                        cellBorder = '1px solid var(--accent-red)';
+                        cellIcon = <span style={{ fontSize: '9px', lineHeight: 1, color: '#ffffff', fontWeight: '900' }}>✕</span>;
                       } else if (cell.isToday) {
-                        cellBg = '#eff6ff';
-                        cellBorder = '2px solid #0066ff';
-                        cellIcon = <div style={{ width: '6px', height: '6px', borderRadius: '3px', background: '#0066ff' }} />;
+                        cellBg = 'var(--accent-blue-light)';
+                        cellBorder = '2px solid var(--accent-blue)';
+                        cellIcon = <div style={{ width: '6px', height: '6px', borderRadius: '3px', background: 'var(--accent-blue)' }} />;
                       } else if (cell.isFuture) {
-                        cellBg = '#f8fafc';
+                        cellBg = 'var(--bg-surface-secondary)';
                       }
 
                       return (
@@ -445,22 +445,22 @@ export default function ConsistencyHeatmap({ workoutHistory = [] }) {
           </div>
 
           {/* Leyenda Visual */}
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '14px', marginTop: '14px', flexWrap: 'wrap', fontSize: '11px', color: '#475569', fontWeight: '700' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '14px', marginTop: '14px', flexWrap: 'wrap', fontSize: '11px', color: 'var(--text-muted)', fontWeight: '700' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <div style={{ width: '14px', height: '14px', borderRadius: '4px', background: '#10b981' }} />
+              <div style={{ width: '14px', height: '14px', borderRadius: '4px', background: 'var(--accent-emerald)' }} />
               <span>Entrenado</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <div style={{ width: '14px', height: '14px', borderRadius: '4px', background: '#cbd5e1', border: '1px dashed #94a3b8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '8px' }}>💤</div>
+              <div style={{ width: '14px', height: '14px', borderRadius: '4px', background: 'var(--bg-card)', border: '1px dashed var(--border-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '8px' }}>💤</div>
               <span>Descanso</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <div style={{ width: '14px', height: '14px', borderRadius: '4px', background: '#fca5a5', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '8px', color: '#991b1b', fontWeight: 'bold' }}>✕</div>
+              <div style={{ width: '14px', height: '14px', borderRadius: '4px', background: 'var(--accent-red)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '8px', color: '#ffffff', fontWeight: 'bold' }}>✕</div>
               <span>Faltó</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <div style={{ width: '14px', height: '14px', borderRadius: '4px', background: '#eff6ff', border: '2px solid #0066ff' }} />
-              <span style={{ color: '#0066ff', fontWeight: '800' }}>Hoy</span>
+              <div style={{ width: '14px', height: '14px', borderRadius: '4px', background: 'var(--accent-blue-light)', border: '2px solid var(--accent-blue)' }} />
+              <span style={{ color: 'var(--accent-blue)', fontWeight: '800' }}>Hoy</span>
             </div>
           </div>
         </div>

@@ -64,10 +64,10 @@ export const ModalProvider = ({ children }) => {
 
   const getBadgeColor = () => {
     switch(modalState.variant) {
-      case 'success': return { bg: '#dcfce7', text: '#15803d', border: '#86efac' };
-      case 'warning': return { bg: '#fef3c7', text: '#b45309', border: '#fde047' };
-      case 'danger':  return { bg: '#fee2e2', text: '#b91c1c', border: '#fca5a5' };
-      default:        return { bg: '#eff6ff', text: '#1d4ed8', border: '#bfdbfe' };
+      case 'success': return { bg: 'var(--accent-emerald-subtle)', text: 'var(--accent-emerald)', border: 'var(--accent-emerald)' };
+      case 'warning': return { bg: 'var(--accent-amber-subtle)', text: 'var(--accent-amber)', border: 'var(--accent-amber)' };
+      case 'danger':  return { bg: 'var(--accent-red-subtle)', text: 'var(--accent-red)', border: 'var(--accent-red)' };
+      default:        return { bg: 'var(--accent-blue-light)', text: 'var(--accent-blue)', border: 'var(--accent-blue)' };
     }
   };
 
@@ -92,37 +92,36 @@ export const ModalProvider = ({ children }) => {
           animation: 'fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1)'
         }}>
           <div style={{
-            background: '#ffffff',
+            background: 'var(--bg-surface)',
             width: '100%',
-            maxWidth: '420px',
-            borderRadius: '28px',
-            padding: '26px 22px',
-            boxShadow: '0 25px 60px rgba(0, 0, 0, 0.35)',
+            maxWidth: '400px',
+            borderRadius: '20px',
+            padding: '22px 18px',
+            boxShadow: '0 20px 50px rgba(0, 0, 0, 0.6)',
             textAlign: 'center',
-            border: '1px solid rgba(255, 255, 255, 0.5)',
+            border: '1px solid var(--border-subtle)',
             transform: 'scale(1)',
-            transition: 'all 0.3s ease'
+            transition: 'all 0.25s ease'
           }}>
             <div style={{
-              width: '68px',
-              height: '68px',
-              borderRadius: '34px',
+              width: '60px',
+              height: '60px',
+              borderRadius: '30px',
               background: getBadgeColor().bg,
               border: `2px solid ${getBadgeColor().border}`,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              margin: '0 auto 16px auto',
-              boxShadow: '0 10px 20px rgba(0,0,0,0.05)'
+              margin: '0 auto 14px auto'
             }}>
               {getIcon()}
             </div>
 
             <h3 style={{
-              margin: '0 0 10px 0',
-              fontSize: '19px',
+              margin: '0 0 8px 0',
+              fontSize: '17px',
               fontWeight: '800',
-              color: '#0f172a',
+              color: 'var(--text-main)',
               lineBreak: 'strict',
               whiteSpace: 'normal'
             }}>
@@ -130,15 +129,15 @@ export const ModalProvider = ({ children }) => {
             </h3>
 
             <div style={{
-              fontSize: '14px',
-              color: '#475569',
-              lineHeight: '1.55',
-              marginBottom: '24px',
+              fontSize: '13px',
+              color: 'var(--text-secondary)',
+              lineHeight: '1.5',
+              marginBottom: '20px',
               textAlign: 'left',
-              background: '#f8fafc',
-              padding: '14px',
-              borderRadius: '16px',
-              border: '1px solid #e2e8f0',
+              background: 'var(--bg-surface-secondary)',
+              padding: '12px',
+              borderRadius: '12px',
+              border: '1px solid var(--border-subtle)',
               whiteSpace: 'pre-line'
             }}>
               {modalState.message}
@@ -147,19 +146,19 @@ export const ModalProvider = ({ children }) => {
             <div style={{ 
               display: 'grid', 
               gridTemplateColumns: modalState.type === 'confirm' ? '1fr 1.3fr' : '1fr', 
-              gap: '12px' 
+              gap: '10px' 
             }}>
               {modalState.type === 'confirm' && (
                 <button
                   type="button"
                   onClick={modalState.onCancel}
                   style={{
-                    padding: '14px 10px',
-                    borderRadius: '18px',
-                    border: '1.5px solid #cbd5e1',
-                    background: '#f8fafc',
-                    color: '#475569',
-                    fontSize: '14px',
+                    padding: '12px 10px',
+                    borderRadius: '12px',
+                    border: '1px solid var(--border-strong)',
+                    background: 'var(--bg-surface-secondary)',
+                    color: 'var(--text-secondary)',
+                    fontSize: '13px',
                     fontWeight: '800',
                     cursor: 'pointer',
                     transition: 'all 0.2s ease'
@@ -173,15 +172,14 @@ export const ModalProvider = ({ children }) => {
                 type="button"
                 onClick={modalState.onConfirm}
                 style={{
-                  padding: '14px 16px',
-                  borderRadius: '18px',
+                  padding: '12px 14px',
+                  borderRadius: '12px',
                   border: 'none',
-                  background: modalState.variant === 'danger' ? '#dc2626' : (modalState.variant === 'success' ? '#00b464' : '#0066ff'),
-                  color: '#ffffff',
-                  fontSize: '14px',
+                  background: modalState.variant === 'danger' ? 'var(--accent-red)' : (modalState.variant === 'success' ? 'var(--accent-emerald)' : 'var(--accent-blue)'),
+                  color: modalState.variant === 'success' ? '#000000' : '#ffffff',
+                  fontSize: '13px',
                   fontWeight: '800',
                   cursor: 'pointer',
-                  boxShadow: modalState.variant === 'danger' ? '0 6px 18px rgba(220, 38, 38, 0.35)' : '0 6px 18px rgba(0, 102, 255, 0.35)',
                   transition: 'all 0.2s ease'
                 }}
               >
@@ -216,26 +214,25 @@ export function LiquidDropdown({ options, value, onChange, label, icon: CustomIc
         onClick={() => setIsOpen(!isOpen)}
         style={{
           width: '100%',
-          padding: '14px 16px',
-          background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
-          border: isOpen ? '2px solid #0066ff' : '1.5px solid #cbd5e1',
-          borderRadius: '18px',
+          padding: '11px 14px',
+          background: 'var(--bg-surface)',
+          border: isOpen ? '1.5px solid var(--accent-blue)' : '1px solid var(--border-strong)',
+          borderRadius: '12px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
           cursor: 'pointer',
-          boxShadow: isOpen ? '0 8px 20px rgba(0, 102, 255, 0.15)' : '0 2px 8px rgba(0,0,0,0.03)',
-          transition: 'all 0.25s ease',
+          transition: 'all 0.2s ease',
           textAlign: 'left'
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
-          {CustomIcon && <CustomIcon size={18} color="#0066ff" style={{ flexShrink: 0 }} />}
-          <span style={{ fontSize: '14px', fontWeight: '800', color: '#0f172a', whiteSpace: 'normal', lineBreak: 'strict' }}>
+          {CustomIcon && <CustomIcon size={16} color="var(--accent-blue)" style={{ flexShrink: 0 }} />}
+          <span style={{ fontSize: '13.5px', fontWeight: '800', color: 'var(--text-main)', whiteSpace: 'normal', lineBreak: 'strict' }}>
             {selectedOption.label}
           </span>
         </div>
-        <ChevronDown size={20} color={isOpen ? '#0066ff' : '#64748b'} style={{ transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.25s ease', flexShrink: 0 }} />
+        <ChevronDown size={18} color={isOpen ? 'var(--accent-blue)' : 'var(--text-muted)'} style={{ transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease', flexShrink: 0 }} />
       </button>
 
       {/* Modal / Drawer para lista de opciones en móvil */}
@@ -248,7 +245,7 @@ export function LiquidDropdown({ options, value, onChange, label, icon: CustomIc
             left: 0,
             right: 0,
             bottom: 0,
-            backgroundColor: 'rgba(15, 23, 42, 0.55)',
+            backgroundColor: 'rgba(0, 0, 0, 0.75)',
             backdropFilter: 'blur(8px)',
             WebkitBackdropFilter: 'blur(8px)',
             zIndex: 9998,
@@ -261,29 +258,30 @@ export function LiquidDropdown({ options, value, onChange, label, icon: CustomIc
           <div 
             onClick={(e) => e.stopPropagation()}
             style={{
-              background: '#ffffff',
+              background: 'var(--bg-surface)',
               width: '100%',
               maxWidth: '520px',
-              borderTopLeftRadius: '28px',
-              borderTopRightRadius: '28px',
-              padding: '24px 20px',
-              boxShadow: '0 -10px 40px rgba(0,0,0,0.25)',
+              borderTopLeftRadius: '20px',
+              borderTopRightRadius: '20px',
+              padding: '18px 16px',
+              borderTop: '1px solid var(--border-subtle)',
+              boxShadow: '0 -10px 40px rgba(0,0,0,0.5)',
               maxHeight: '75vh',
               overflowY: 'auto',
-              animation: 'slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1)'
+              animation: 'slideUp 0.2s cubic-bezier(0.16, 1, 0.3, 1)'
             }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', borderBottom: '1.5px solid #f1f5f9', paddingBottom: '12px' }}>
-              <strong style={{ fontSize: '16px', fontWeight: '800', color: '#0f172a' }}>Selecciona una opción</strong>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '10px' }}>
+              <strong style={{ fontSize: '15px', fontWeight: '800', color: 'var(--text-main)' }}>Selecciona una opción</strong>
               <button 
                 onClick={() => setIsOpen(false)}
-                style={{ width: '32px', height: '32px', borderRadius: '16px', background: '#f1f5f9', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                style={{ width: '28px', height: '28px', borderRadius: '8px', background: 'var(--bg-surface-secondary)', border: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
               >
-                <X size={18} color="#64748b" />
+                <X size={16} color="var(--text-muted)" />
               </button>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               {options.map((opt) => {
                 const isSelected = opt.value === value;
                 return (
@@ -295,10 +293,10 @@ export function LiquidDropdown({ options, value, onChange, label, icon: CustomIc
                       setIsOpen(false);
                     }}
                     style={{
-                      padding: '14px 16px',
-                      borderRadius: '16px',
-                      border: isSelected ? '1.5px solid #0066ff' : '1px solid #e2e8f0',
-                      background: isSelected ? '#eff6ff' : '#ffffff',
+                      padding: '11px 14px',
+                      borderRadius: '10px',
+                      border: isSelected ? '1px solid var(--accent-blue)' : '1px solid var(--border-subtle)',
+                      background: isSelected ? 'var(--accent-blue-light)' : 'var(--bg-surface-secondary)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'space-between',
@@ -307,7 +305,7 @@ export function LiquidDropdown({ options, value, onChange, label, icon: CustomIc
                       textAlign: 'left'
                     }}
                   >
-                    <span style={{ fontSize: '14px', fontWeight: isSelected ? '800' : '600', color: isSelected ? '#0066ff' : '#1e293b' }}>
+                    <span style={{ fontSize: '13px', fontWeight: isSelected ? '800' : '600', color: isSelected ? 'var(--accent-blue)' : 'var(--text-main)' }}>
                       {opt.label}
                     </span>
                     {isSelected && <Check size={20} color="#0066ff" />}
@@ -330,8 +328,8 @@ export function UnitToggle({ value, onChange }) {
   return (
     <div style={{ 
       display: 'inline-flex', 
-      background: '#f1f5f9', 
-      border: '1.5px solid #cbd5e1', 
+      background: 'var(--bg-surface-secondary)', 
+      border: '1px solid var(--border-subtle)', 
       borderRadius: '12px', 
       padding: '2px',
       overflow: 'hidden'
@@ -342,9 +340,9 @@ export function UnitToggle({ value, onChange }) {
         style={{
           padding: '6px 10px',
           border: 'none',
-          background: value === 'lbs' ? '#0066ff' : 'transparent',
-          color: value === 'lbs' ? '#ffffff' : '#64748b',
-          fontWeight: '800',
+          background: value === 'lbs' ? 'var(--accent-blue)' : 'transparent',
+          color: value === 'lbs' ? '#ffffff' : 'var(--text-muted)',
+          fontWeight: '900',
           fontSize: '11px',
           borderRadius: '10px',
           cursor: 'pointer',
@@ -359,9 +357,9 @@ export function UnitToggle({ value, onChange }) {
         style={{
           padding: '6px 10px',
           border: 'none',
-          background: value === 'kg' ? '#0066ff' : 'transparent',
-          color: value === 'kg' ? '#ffffff' : '#64748b',
-          fontWeight: '800',
+          background: value === 'kg' ? 'var(--accent-blue)' : 'transparent',
+          color: value === 'kg' ? '#ffffff' : 'var(--text-muted)',
+          fontWeight: '900',
           fontSize: '11px',
           borderRadius: '10px',
           cursor: 'pointer',
@@ -516,29 +514,30 @@ export function PwaInstallBanner() {
           padding: '20px'
         }}>
           <div style={{
-            background: '#ffffff',
+            background: 'var(--bg-surface)',
             maxWidth: '400px',
             width: '100%',
             borderRadius: '28px',
             padding: '24px',
             textAlign: 'center',
-            boxShadow: '0 20px 60px rgba(0,0,0,0.3)'
+            boxShadow: 'var(--shadow-ios-lg)',
+            border: '1px solid var(--border-subtle)'
           }}>
-            <div style={{ width: '56px', height: '56px', borderRadius: '16px', background: '#eff6ff', margin: '0 auto 16px auto', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Share size={28} color="#0066ff" />
+            <div style={{ width: '56px', height: '56px', borderRadius: '16px', background: 'var(--accent-blue-light)', margin: '0 auto 16px auto', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Share size={28} color="var(--accent-blue)" />
             </div>
 
-            <h3 style={{ margin: '0 0 12px 0', fontSize: '18px', fontWeight: '800', color: '#0f172a' }}>
+            <h3 style={{ margin: '0 0 12px 0', fontSize: '18px', fontWeight: '800', color: 'var(--text-main)' }}>
               🍏 Instalar en iPhone / iPad
             </h3>
 
-            <div style={{ textAlign: 'left', fontSize: '14px', color: '#334155', lineHeight: '1.6', marginBottom: '20px', background: '#f8fafc', padding: '16px', borderRadius: '18px', border: '1px solid #e2e8f0' }}>
+            <div style={{ textAlign: 'left', fontSize: '14px', color: 'var(--text-secondary)', lineHeight: '1.6', marginBottom: '20px', background: 'var(--bg-surface-secondary)', padding: '16px', borderRadius: '18px', border: '1px solid var(--border-subtle)' }}>
               <p style={{ margin: '0 0 10px 0' }}>Sigue estos 2 simples pasos en Safari:</p>
               <p style={{ margin: '0 0 10px 0' }}>
-                1️⃣ Toca el botón <strong>Compartir (Share ⎋)</strong> en la barra inferior de Safari.
+                1️⃣ Toca el botón <strong style={{ color: 'var(--text-main)' }}>Compartir (Share ⎋)</strong> en la barra inferior de Safari.
               </p>
               <p style={{ margin: 0 }}>
-                2️⃣ Desliza el menú hacia arriba y selecciona <strong>"Añadir a pantalla de inicio" (+)</strong>.
+                2️⃣ Desliza el menú hacia arriba y selecciona <strong style={{ color: 'var(--text-main)' }}>"Añadir a pantalla de inicio" (+)</strong>.
               </p>
             </div>
 
@@ -547,7 +546,7 @@ export function PwaInstallBanner() {
               style={{
                 width: '100%',
                 padding: '14px',
-                background: '#0066ff',
+                background: 'var(--accent-blue)',
                 color: '#ffffff',
                 border: 'none',
                 borderRadius: '16px',

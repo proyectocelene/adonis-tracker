@@ -9,21 +9,21 @@ export default function RestTimer({
 
   return (
     <div style={{
-      background: '#f8fafc',
-      color: '#334155',
-      padding: '7px 12px',
-      borderRadius: '12px',
-      marginBottom: '10px',
-      border: '1px solid #e2e8f0',
+      background: 'var(--bg-surface-secondary)',
+      color: 'var(--text-secondary)',
+      padding: '6px 10px',
+      borderRadius: '8px',
+      marginBottom: '8px',
+      border: '1px solid var(--border-subtle)',
       display: 'flex',
       alignItems: 'center',
-      gap: '8px',
+      gap: '6px',
       width: '100%',
       boxSizing: 'border-box'
     }}>
-      <Clock size={15} color="#0284c7" />
-      <span style={{ fontSize: '12px', fontWeight: '600', color: '#475569' }}>
-        Descanso recomendado: <strong style={{ color: '#0369a1', fontWeight: '800' }}>{restTimeDisplay}</strong>
+      <Clock size={13} color="var(--accent-cyan)" />
+      <span style={{ fontSize: '11px', fontWeight: '600', color: 'var(--text-muted)' }}>
+        Descanso recomendado: <strong className="font-mono-tech" style={{ color: 'var(--accent-cyan)', fontWeight: '800' }}>{restTimeDisplay}</strong>
       </span>
     </div>
   );

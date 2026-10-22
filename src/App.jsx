@@ -8,6 +8,7 @@ import { Loader2 } from 'lucide-react';
 import { setMany } from 'idb-keyval';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { GlobalTimerProvider } from './contexts/GlobalTimerContext';
+import { ThemeProvider } from './contexts/ThemeContext';
 import LoginScreen from './components/LoginScreen';
 
 async function migrateLocalStorageToIndexedDB() {
@@ -262,13 +263,15 @@ function AppContent() {
 function App() {
   return (
     <ErrorBoundary>
-      <AuthProvider>
-        <GlobalTimerProvider>
-          <ModalProvider>
-            <AppContent />
-          </ModalProvider>
-        </GlobalTimerProvider>
-      </AuthProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <GlobalTimerProvider>
+            <ModalProvider>
+              <AppContent />
+            </ModalProvider>
+          </GlobalTimerProvider>
+        </AuthProvider>
+      </ThemeProvider>
     </ErrorBoundary>
   );
 }

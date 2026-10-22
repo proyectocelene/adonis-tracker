@@ -35,7 +35,7 @@ export default function OverloadScienceModal({
       style={{
         position: 'fixed',
         inset: 0,
-        backgroundColor: 'rgba(15, 23, 42, 0.75)',
+        backgroundColor: 'rgba(0, 0, 0, 0.75)',
         backdropFilter: 'blur(5px)',
         zIndex: 99999,
         display: 'flex',
@@ -51,13 +51,14 @@ export default function OverloadScienceModal({
     >
       <div 
         style={{
-          background: '#ffffff',
-          borderRadius: '22px',
+          background: 'var(--bg-surface)',
+          border: '1px solid var(--border-subtle)',
+          borderRadius: '24px',
           maxWidth: '460px',
           width: '100%',
           margin: 'auto 0',
-          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.35)',
-          padding: '20px',
+          boxShadow: 'var(--shadow-ios)',
+          padding: '18px',
           position: 'relative',
           display: 'flex',
           flexDirection: 'column',
@@ -69,10 +70,10 @@ export default function OverloadScienceModal({
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '8px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <div style={{
-              width: '40px',
-              height: '40px',
+              width: '38px',
+              height: '38px',
               borderRadius: '12px',
-              background: 'linear-gradient(135deg, #0066ff 0%, #0284c7 100%)',
+              background: 'linear-gradient(135deg, var(--accent-blue) 0%, #0284c7 100%)',
               color: '#ffffff',
               display: 'flex',
               alignItems: 'center',
@@ -80,18 +81,18 @@ export default function OverloadScienceModal({
               boxShadow: '0 4px 12px rgba(0, 102, 255, 0.25)',
               flexShrink: 0
             }}>
-              <Brain size={22} />
+              <Brain size={20} />
             </div>
             <div>
-              <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '900', color: '#0f172a', lineHeight: '1.2' }}>
+              <h3 style={{ margin: 0, fontSize: '15px', fontWeight: '900', color: 'var(--text-main)', lineHeight: '1.2' }}>
                 Entrenador Inteligente
               </h3>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px', flexWrap: 'wrap' }}>
-                <span style={{ fontSize: '11px', color: '#475569', fontWeight: '800' }}>
+                <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: '800' }}>
                   {exerciseName}
                 </span>
                 {machineLocation && (
-                  <span style={{ fontSize: '9.5px', background: '#f5f3ff', color: '#7c3aed', padding: '1px 6px', borderRadius: '6px', fontWeight: '800' }}>
+                  <span style={{ fontSize: '9.5px', background: 'var(--bg-surface-secondary)', color: 'var(--accent-cyan)', border: '1px solid var(--border-subtle)', padding: '1px 6px', borderRadius: '6px', fontWeight: '800' }}>
                     🏢 {machineLocation}
                   </span>
                 )}
@@ -103,27 +104,27 @@ export default function OverloadScienceModal({
             type="button"
             onClick={onClose}
             style={{
-              background: '#f1f5f9',
-              border: 'none',
-              borderRadius: '10px',
-              width: '32px',
-              height: '32px',
+              background: 'var(--bg-surface-secondary)',
+              border: '1px solid var(--border-subtle)',
+              borderRadius: '50%',
+              width: '30px',
+              height: '30px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               cursor: 'pointer',
-              color: '#64748b',
+              color: 'var(--text-secondary)',
               flexShrink: 0
             }}
           >
-            <X size={18} />
+            <X size={16} />
           </button>
         </div>
 
         {/* 1. FICHA TÉCNICA DEL APARATO Y CALIBRACIÓN FÍSICA */}
         <div style={{
-          background: '#f8fafc',
-          border: '1px solid #e2e8f0',
+          background: 'var(--bg-surface-secondary)',
+          border: '1px solid var(--border-subtle)',
           borderRadius: '12px',
           padding: '8px 12px',
           display: 'flex',
@@ -131,19 +132,19 @@ export default function OverloadScienceModal({
           justifyContent: 'space-between',
           fontSize: '11px'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#334155', fontWeight: '700' }}>
-            <Layers size={14} color="#0066ff" />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-secondary)', fontWeight: '700' }}>
+            <Layers size={14} color="var(--accent-blue)" />
             <span>{machineTypeLabel}</span>
           </div>
-          <div style={{ color: '#0369a1', fontWeight: '800' }}>
+          <div className="font-mono-tech" style={{ color: 'var(--accent-cyan)', fontWeight: '800' }}>
             Incrementos: ±{minIncrement} lbs
           </div>
         </div>
 
         {/* 2. DIAGNÓSTICO CIENTÍFICO GLOBAL DEL EJERCICIO */}
         <div style={{
-          background: analysis.isExcessiveLoad ? '#fffbeb' : (analysis.isSpreadHigh ? '#fffbeb' : '#f0f9ff'),
-          border: `1.5px solid ${analysis.isExcessiveLoad ? '#fde68a' : (analysis.isSpreadHigh ? '#fde68a' : '#bae6fd')}`,
+          background: 'var(--bg-card)',
+          border: '1px solid var(--border-subtle)',
           borderRadius: '14px',
           padding: '12px',
           display: 'flex',
@@ -152,20 +153,20 @@ export default function OverloadScienceModal({
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             {analysis.isExcessiveLoad ? (
-              <AlertTriangle size={16} color="#b45309" />
+              <AlertTriangle size={16} color="var(--accent-amber)" />
             ) : analysis.isSpreadHigh ? (
-              <AlertTriangle size={16} color="#b45309" />
+              <AlertTriangle size={16} color="var(--accent-amber)" />
             ) : (
-              <Target size={16} color="#0284c7" />
+              <Target size={16} color="var(--accent-cyan)" />
             )}
-            <strong style={{ fontSize: '12.5px', color: (analysis.isExcessiveLoad || analysis.isSpreadHigh) ? '#92400e' : '#0369a1', fontWeight: '900' }}>
+            <strong style={{ fontSize: '12.5px', color: (analysis.isExcessiveLoad || analysis.isSpreadHigh) ? 'var(--accent-amber)' : 'var(--accent-cyan)', fontWeight: '900' }}>
               {analysis.isExcessiveLoad 
                 ? '⚠️ Diagnóstico: Carga Excesiva (Fuera de Hipertrofia)' 
                 : (analysis.canProgressWeight ? '🚀 ¡Sobrecarga Progresiva Alcanzada!' : 'Diagnóstico y Meta de Hipertrofia')}
             </strong>
           </div>
 
-          <p style={{ margin: 0, fontSize: '11.5px', color: '#334155', lineHeight: '1.45', fontWeight: '600' }}>
+          <p style={{ margin: 0, fontSize: '11.5px', color: 'var(--text-secondary)', lineHeight: '1.45', fontWeight: '600' }}>
             {analysis.isExcessiveLoad ? (
               <>
                 En la sesión previa la carga fue excesiva para el rango prescrito ({analysis.minReps}-{analysis.maxReps} reps). Ajustamos el peso de trabajo a <strong>{analysis.adjustedLoad} lbs</strong> para acumular tensión mecánica limpia y efectiva.
@@ -186,7 +187,7 @@ export default function OverloadScienceModal({
           </p>
 
           {analysis.isFatigueDrop && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '10.5px', color: '#b45309', fontWeight: '700', marginTop: '2px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '10.5px', color: 'var(--accent-amber)', fontWeight: '700', marginTop: '2px' }}>
               <Clock size={12} />
               <span>Fatiga detectada en series finales previas. Añade +30 a 45s de descanso entre series.</span>
             </div>
@@ -195,7 +196,7 @@ export default function OverloadScienceModal({
 
         {/* 3. DESGLOSE SERIE POR SERIE EN VIVO (ANTERIOR VS HOY) */}
         <div>
-          <label style={{ display: 'block', fontSize: '11px', fontWeight: '900', color: '#334155', textTransform: 'uppercase', marginBottom: '6px' }}>
+          <label style={{ display: 'block', fontSize: '11px', fontWeight: '900', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '6px' }}>
             🎯 Comparativa Serie por Serie (Historial vs Hoy):
           </label>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -220,15 +221,15 @@ export default function OverloadScienceModal({
               let statusBadge = null;
               if (isTodayDone) {
                 if (deltaW > 0) {
-                  statusBadge = { text: `🚀 +${deltaW} lbs!`, color: '#15803d', bg: '#dcfce7' };
+                  statusBadge = { text: `🚀 +${deltaW} lbs!`, color: 'var(--accent-emerald)', bg: 'var(--accent-emerald-subtle)' };
                 } else if (deltaW === 0 && deltaR > 0) {
-                  statusBadge = { text: `⚡ +${deltaR} reps!`, color: '#0369a1', bg: '#e0f2fe' };
+                  statusBadge = { text: `⚡ +${deltaR} reps!`, color: 'var(--accent-cyan)', bg: 'var(--accent-cyan-subtle)' };
                 } else if (deltaW === 0 && deltaR === 0) {
-                  statusBadge = { text: `✓ Consolidado`, color: '#15803d', bg: '#f0fdf4' };
+                  statusBadge = { text: `✓ Consolidado`, color: 'var(--accent-emerald)', bg: 'var(--accent-emerald-subtle)' };
                 } else if (isExtraSet) {
-                  statusBadge = { text: `➕ Extra`, color: '#7c3aed', bg: '#f5f3ff' };
+                  statusBadge = { text: `➕ Extra`, color: '#a78bfa', bg: 'rgba(139, 92, 246, 0.15)' };
                 } else {
-                  statusBadge = { text: `⚖️ Fatiga`, color: '#b45309', bg: '#fef3c7' };
+                  statusBadge = { text: `⚖️ Fatiga`, color: 'var(--accent-amber)', bg: 'var(--accent-warning-light)' };
                 }
               }
 
@@ -236,8 +237,8 @@ export default function OverloadScienceModal({
                 <div 
                   key={sNum}
                   style={{
-                    background: isTodayDone ? '#f0fdf4' : '#f8fafc',
-                    border: `1.5px solid ${isTodayDone ? '#86efac' : '#cbd5e1'}`,
+                    background: isTodayDone ? 'var(--accent-emerald-subtle)' : 'var(--bg-card)',
+                    border: `1px solid ${isTodayDone ? 'var(--accent-emerald-border)' : 'var(--border-subtle)'}`,
                     borderRadius: '12px',
                     padding: '8px 10px',
                     display: 'flex',
@@ -247,9 +248,10 @@ export default function OverloadScienceModal({
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ 
-                      background: isTodayDone ? '#15803d' : '#0f172a', 
-                      color: '#ffffff', 
+                    <span className="font-mono-tech" style={{ 
+                      background: isTodayDone ? 'var(--accent-emerald)' : 'var(--bg-surface-secondary)', 
+                      color: isTodayDone ? '#ffffff' : 'var(--text-secondary)', 
+                      border: '1px solid var(--border-subtle)',
                       fontSize: '10px', 
                       fontWeight: '900', 
                       padding: '2px 6px', 
@@ -258,15 +260,15 @@ export default function OverloadScienceModal({
                       S{sNum}
                     </span>
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
-                      <span style={{ fontSize: '11px', color: '#64748b' }}>
+                      <span className="font-mono-tech" style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
                         Previo: {prevWeight > 0 ? <strong>{prevWeight}# × {prevReps}r</strong> : '— (Primera vez)'}
                       </span>
                       {isTodayDone ? (
-                        <span style={{ fontSize: '11.5px', color: '#0f172a', fontWeight: '800' }}>
+                        <span className="font-mono-tech" style={{ fontSize: '11.5px', color: 'var(--text-main)', fontWeight: '800' }}>
                           Hoy: {todayWeight}# × {todayReps}r {todayRpe ? `(RPE ${todayRpe})` : ''}
                         </span>
                       ) : (
-                        <span style={{ fontSize: '11px', color: '#0284c7', fontWeight: '700' }}>
+                        <span className="font-mono-tech" style={{ fontSize: '11px', color: 'var(--accent-cyan)', fontWeight: '700' }}>
                           Meta: {rec?.suggestedWeight || unified.targetWeight || 100}# × {unified.targetReps || `${analysis.minReps}-${analysis.maxReps}`} reps
                         </span>
                       )}
@@ -274,7 +276,7 @@ export default function OverloadScienceModal({
                   </div>
 
                   {statusBadge && (
-                    <span style={{
+                    <span className="font-mono-tech" style={{
                       fontSize: '10px',
                       fontWeight: '900',
                       color: statusBadge.color,
@@ -293,12 +295,12 @@ export default function OverloadScienceModal({
         </div>
 
         {/* 4. REGLAS DE AUTORREGULACIÓN INTRA-ENTRENO */}
-        <div style={{ background: '#faf5ff', border: '1px solid #e9d5ff', borderRadius: '14px', padding: '10px 12px' }}>
-          <strong style={{ fontSize: '11.5px', color: '#7c3aed', display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '4px' }}>
-            <Sparkles size={14} /> Pautas de Acción Inmediata en el Gym:
+        <div style={{ background: 'var(--bg-surface-secondary)', border: '1px solid var(--border-subtle)', borderRadius: '14px', padding: '10px 12px' }}>
+          <strong style={{ fontSize: '11.5px', color: '#c4b5fd', display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '4px' }}>
+            <Sparkles size={14} color="#a78bfa" /> Pautas de Acción Inmediata en el Gym:
           </strong>
-          <ul style={{ margin: 0, paddingLeft: '16px', fontSize: '11px', color: '#475569', lineHeight: '1.45' }}>
-            <li><strong>Si superas el rango máximo (ej: 13-15 reps con RPE ≤ 8):</strong> Tienes dominio neuromuscular pleno. Sube en la siguiente serie <strong>+{minIncrement} lbs</strong> (el siguiente salto físico de la máquina).</li>
+          <ul style={{ margin: 0, paddingLeft: '16px', fontSize: '11px', color: 'var(--text-secondary)', lineHeight: '1.45' }}>
+            <li><strong>Si superas el rango máximo (ej: 13-15 reps con RPE ≤ 8):</strong> Tienes dominio neuromuscular pleno. Sube en la siguiente serie <strong className="font-mono-tech">+{minIncrement} lbs</strong> (el siguiente salto físico de la máquina).</li>
             <li><strong>Si sientes fatiga prematura en S3/S4:</strong> No sacrifiques el peso ancla de golpe. Añade <strong>60 segundos adicionales de descanso</strong> antes de comenzar para resintetizar fosfocreatina muscular.</li>
           </ul>
         </div>
@@ -308,7 +310,7 @@ export default function OverloadScienceModal({
           type="button"
           onClick={onClose}
           style={{
-            background: 'linear-gradient(135deg, #0066ff 0%, #0052cc 100%)',
+            background: 'linear-gradient(135deg, var(--accent-blue) 0%, #0052cc 100%)',
             color: '#ffffff',
             border: 'none',
             borderRadius: '12px',

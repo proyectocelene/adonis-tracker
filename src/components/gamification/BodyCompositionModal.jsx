@@ -109,14 +109,14 @@ export default function BodyCompositionModal({
       overflowY: 'auto'
     }}>
       <div style={{
-        background: '#ffffff',
+        background: 'var(--bg-surface)',
         borderRadius: '24px',
         width: '100%',
         maxWidth: '520px',
         margin: '20px auto',
         padding: '20px',
-        boxShadow: '0 20px 40px rgba(0,0,0,0.2)',
-        border: '1.5px solid #cbd5e1'
+        boxShadow: 'var(--shadow-ios-lg)',
+        border: '1px solid var(--border-subtle)'
       }}>
         {/* CABECERA */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
@@ -125,19 +125,19 @@ export default function BodyCompositionModal({
               width: '38px',
               height: '38px',
               borderRadius: '12px',
-              background: '#eff6ff',
+              background: 'var(--accent-blue-light)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: '#0066ff'
+              color: 'var(--accent-blue)'
             }}>
               <Scale size={22} />
             </div>
             <div>
-              <h3 style={{ margin: 0, fontSize: '17px', fontWeight: '900', color: '#0f172a' }}>
+              <h3 style={{ margin: 0, fontSize: '17px', fontWeight: '900', color: 'var(--text-main)' }}>
                 Composición Corporal & Báscula
               </h3>
-              <span style={{ fontSize: '11px', color: '#64748b', fontWeight: '700' }}>
+              <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: '700' }}>
                 Datos bioimpedancia y medidas para tiempos verdaderos
               </span>
             </div>
@@ -147,8 +147,8 @@ export default function BodyCompositionModal({
             type="button"
             onClick={onClose}
             style={{
-              background: '#f1f5f9',
-              border: 'none',
+              background: 'var(--bg-surface-secondary)',
+              border: '1px solid var(--border-subtle)',
               borderRadius: '50%',
               width: '32px',
               height: '32px',
@@ -158,12 +158,12 @@ export default function BodyCompositionModal({
               cursor: 'pointer'
             }}
           >
-            <X size={18} color="#64748b" />
+            <X size={18} color="var(--text-muted)" />
           </button>
         </div>
 
         {/* SELECTOR DE PESTAÑAS DEL FORMULARIO */}
-        <div style={{ display: 'flex', background: '#f1f5f9', padding: '3px', borderRadius: '14px', marginBottom: '16px' }}>
+        <div style={{ display: 'flex', background: 'var(--bg-surface-secondary)', padding: '3px', borderRadius: '14px', marginBottom: '16px', border: '1px solid var(--border-subtle)' }}>
           <button
             type="button"
             onClick={() => setActiveTab('scale')}
@@ -172,12 +172,12 @@ export default function BodyCompositionModal({
               padding: '8px',
               borderRadius: '10px',
               border: 'none',
-              background: activeTab === 'scale' ? '#ffffff' : 'transparent',
-              color: activeTab === 'scale' ? '#0066ff' : '#64748b',
+              background: activeTab === 'scale' ? 'var(--accent-blue)' : 'transparent',
+              color: activeTab === 'scale' ? '#ffffff' : 'var(--text-muted)',
               fontWeight: '900',
               fontSize: '11.5px',
               cursor: 'pointer',
-              boxShadow: activeTab === 'scale' ? '0 2px 6px rgba(0,0,0,0.08)' : 'none'
+              boxShadow: activeTab === 'scale' ? '0 2px 6px rgba(0,0,0,0.3)' : 'none'
             }}
           >
             ⚖️ Báscula
@@ -190,12 +190,12 @@ export default function BodyCompositionModal({
               padding: '8px',
               borderRadius: '10px',
               border: 'none',
-              background: activeTab === 'tape' ? '#ffffff' : 'transparent',
-              color: activeTab === 'tape' ? '#0066ff' : '#64748b',
+              background: activeTab === 'tape' ? 'var(--accent-blue)' : 'transparent',
+              color: activeTab === 'tape' ? '#ffffff' : 'var(--text-muted)',
               fontWeight: '900',
               fontSize: '11.5px',
               cursor: 'pointer',
-              boxShadow: activeTab === 'tape' ? '0 2px 6px rgba(0,0,0,0.08)' : 'none'
+              boxShadow: activeTab === 'tape' ? '0 2px 6px rgba(0,0,0,0.3)' : 'none'
             }}
           >
             📏 Medidas
@@ -208,12 +208,12 @@ export default function BodyCompositionModal({
               padding: '8px',
               borderRadius: '10px',
               border: 'none',
-              background: activeTab === 'goals' ? '#ffffff' : 'transparent',
-              color: activeTab === 'goals' ? '#0066ff' : '#64748b',
+              background: activeTab === 'goals' ? 'var(--accent-blue)' : 'transparent',
+              color: activeTab === 'goals' ? '#ffffff' : 'var(--text-muted)',
               fontWeight: '900',
               fontSize: '11.5px',
               cursor: 'pointer',
-              boxShadow: activeTab === 'goals' ? '0 2px 6px rgba(0,0,0,0.08)' : 'none'
+              boxShadow: activeTab === 'goals' ? '0 2px 6px rgba(0,0,0,0.3)' : 'none'
             }}
           >
             🎯 Metas
@@ -226,7 +226,7 @@ export default function BodyCompositionModal({
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '55vh', overflowY: 'auto', paddingRight: '4px' }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                 <div>
-                  <label style={{ fontSize: '11px', fontWeight: '800', color: '#1e293b', display: 'block', marginBottom: '3px' }}>
+                  <label style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-main)', display: 'block', marginBottom: '3px' }}>
                     Peso Total (kg):
                   </label>
                   <input
@@ -240,7 +240,7 @@ export default function BodyCompositionModal({
                   />
                 </div>
                 <div>
-                  <label style={{ fontSize: '11px', fontWeight: '800', color: '#1e293b', display: 'block', marginBottom: '3px' }}>
+                  <label style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-main)', display: 'block', marginBottom: '3px' }}>
                     Estatura / Altura (cm):
                   </label>
                   <input
@@ -257,7 +257,7 @@ export default function BodyCompositionModal({
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                 <div>
-                  <label style={{ fontSize: '11px', fontWeight: '800', color: '#1e293b', display: 'block', marginBottom: '3px' }}>
+                  <label style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-main)', display: 'block', marginBottom: '3px' }}>
                     % Grasa Corporal:
                   </label>
                   <input
@@ -270,7 +270,7 @@ export default function BodyCompositionModal({
                   />
                 </div>
                 <div>
-                  <label style={{ fontSize: '11px', fontWeight: '800', color: '#1e293b', display: 'block', marginBottom: '3px' }}>
+                  <label style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-main)', display: 'block', marginBottom: '3px' }}>
                     Peso Grasa (kg):
                   </label>
                   <input
@@ -286,7 +286,7 @@ export default function BodyCompositionModal({
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                 <div>
-                  <label style={{ fontSize: '11px', fontWeight: '800', color: '#1e293b', display: 'block', marginBottom: '3px' }}>
+                  <label style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-main)', display: 'block', marginBottom: '3px' }}>
                     % Músculo Esquelético:
                   </label>
                   <input
@@ -299,7 +299,7 @@ export default function BodyCompositionModal({
                   />
                 </div>
                 <div>
-                  <label style={{ fontSize: '11px', fontWeight: '800', color: '#1e293b', display: 'block', marginBottom: '3px' }}>
+                  <label style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-main)', display: 'block', marginBottom: '3px' }}>
                     Músculo Esquelético (kg):
                   </label>
                   <input
@@ -315,7 +315,7 @@ export default function BodyCompositionModal({
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                 <div>
-                  <label style={{ fontSize: '11px', fontWeight: '800', color: '#1e293b', display: 'block', marginBottom: '3px' }}>
+                  <label style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-main)', display: 'block', marginBottom: '3px' }}>
                     Masa sin grasa / Magra (kg):
                   </label>
                   <input
@@ -328,7 +328,7 @@ export default function BodyCompositionModal({
                   />
                 </div>
                 <div>
-                  <label style={{ fontSize: '11px', fontWeight: '800', color: '#1e293b', display: 'block', marginBottom: '3px' }}>
+                  <label style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-main)', display: 'block', marginBottom: '3px' }}>
                     % Agua Corporal:
                   </label>
                   <input
@@ -344,7 +344,7 @@ export default function BodyCompositionModal({
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                 <div>
-                  <label style={{ fontSize: '11px', fontWeight: '800', color: '#1e293b', display: 'block', marginBottom: '3px' }}>
+                  <label style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-main)', display: 'block', marginBottom: '3px' }}>
                     Grasa Visceral (Nivel 1-15):
                   </label>
                   <input
@@ -357,7 +357,7 @@ export default function BodyCompositionModal({
                   />
                 </div>
                 <div>
-                  <label style={{ fontSize: '11px', fontWeight: '800', color: '#1e293b', display: 'block', marginBottom: '3px' }}>
+                  <label style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-main)', display: 'block', marginBottom: '3px' }}>
                     Metabolismo Basal BMR (kcal):
                   </label>
                   <input
@@ -373,7 +373,7 @@ export default function BodyCompositionModal({
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                 <div>
-                  <label style={{ fontSize: '11px', fontWeight: '800', color: '#1e293b', display: 'block', marginBottom: '3px' }}>
+                  <label style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-main)', display: 'block', marginBottom: '3px' }}>
                     Edad Real (Años):
                   </label>
                   <input
@@ -384,7 +384,7 @@ export default function BodyCompositionModal({
                   />
                 </div>
                 <div>
-                  <label style={{ fontSize: '11px', fontWeight: '800', color: '#1e293b', display: 'block', marginBottom: '3px' }}>
+                  <label style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-main)', display: 'block', marginBottom: '3px' }}>
                     Edad Metabólica (Años):
                   </label>
                   <input
@@ -398,7 +398,7 @@ export default function BodyCompositionModal({
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                 <div>
-                  <label style={{ fontSize: '11px', fontWeight: '800', color: '#1e293b', display: 'block', marginBottom: '3px' }}>
+                  <label style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-main)', display: 'block', marginBottom: '3px' }}>
                     Masa Ósea / Hueso (kg):
                   </label>
                   <input
@@ -411,7 +411,7 @@ export default function BodyCompositionModal({
                   />
                 </div>
                 <div>
-                  <label style={{ fontSize: '11px', fontWeight: '800', color: '#1e293b', display: 'block', marginBottom: '3px' }}>
+                  <label style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-main)', display: 'block', marginBottom: '3px' }}>
                     % Proteína:
                   </label>
                   <input
@@ -431,23 +431,23 @@ export default function BodyCompositionModal({
           {activeTab === 'tape' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <div style={{
-                background: '#eff6ff',
-                border: '1px solid #bfdbfe',
+                background: 'var(--accent-blue-light)',
+                border: '1px solid rgba(56, 189, 248, 0.25)',
                 borderRadius: '12px',
                 padding: '10px',
                 fontSize: '11px',
-                color: '#1e40af',
+                color: 'var(--text-main)',
                 lineHeight: 1.4
               }}>
                 📐 <strong>Proporción Áurea Adonis (1.618):</strong> Mide tu circunferencia de hombros en el punto más ancho y cintura en el ombligo.
-                <div style={{ marginTop: '4px', fontSize: '10.5px', color: '#64748b' }}>
+                <div style={{ marginTop: '4px', fontSize: '10.5px', color: 'var(--text-muted)' }}>
                   💡 <em>Opcional: Si no tienes cinta métrica a la mano, déjalos en blanco. La app NO inventará medidas genéricas.</em>
                 </div>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                 <div>
-                  <label style={{ fontSize: '11px', fontWeight: '800', color: '#1e293b', display: 'block', marginBottom: '3px' }}>
+                  <label style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-main)', display: 'block', marginBottom: '3px' }}>
                     Cintura Umbilical (cm):
                   </label>
                   <input
@@ -460,7 +460,7 @@ export default function BodyCompositionModal({
                   />
                 </div>
                 <div>
-                  <label style={{ fontSize: '11px', fontWeight: '800', color: '#1e293b', display: 'block', marginBottom: '3px' }}>
+                  <label style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-main)', display: 'block', marginBottom: '3px' }}>
                     Hombros Clavicular (cm):
                   </label>
                   <input
@@ -476,7 +476,7 @@ export default function BodyCompositionModal({
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                 <div>
-                  <label style={{ fontSize: '11px', fontWeight: '800', color: '#1e293b', display: 'block', marginBottom: '3px' }}>
+                  <label style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-main)', display: 'block', marginBottom: '3px' }}>
                     Pecho / Pectoral (cm):
                   </label>
                   <input
@@ -489,7 +489,7 @@ export default function BodyCompositionModal({
                   />
                 </div>
                 <div>
-                  <label style={{ fontSize: '11px', fontWeight: '800', color: '#1e293b', display: 'block', marginBottom: '3px' }}>
+                  <label style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-main)', display: 'block', marginBottom: '3px' }}>
                     Brazo Flexionado (cm):
                   </label>
                   <input
@@ -511,7 +511,7 @@ export default function BodyCompositionModal({
               
               {/* PRESETS BASADOS EN CIENCIA DEPORTIVA */}
               <div>
-                <label style={{ fontSize: '11px', fontWeight: '800', color: '#1e293b', display: 'block', marginBottom: '6px' }}>
+                <label style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-main)', display: 'block', marginBottom: '6px' }}>
                   🎯 Presets Científicos para tu Estatura ({formData.heightCm || 174} cm):
                 </label>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -526,15 +526,15 @@ export default function BodyCompositionModal({
                       textAlign: 'left',
                       padding: '8px 12px',
                       borderRadius: '12px',
-                      border: goalData.targetWeightKg === '72.0' ? '2px solid #0066ff' : '1px solid #cbd5e1',
-                      background: goalData.targetWeightKg === '72.0' ? '#eff6ff' : '#f8fafc',
+                      border: goalData.targetWeightKg === '72.0' ? '1px solid var(--accent-blue)' : '1px solid var(--border-subtle)',
+                      background: goalData.targetWeightKg === '72.0' ? 'var(--accent-blue-light)' : 'var(--bg-surface-secondary)',
                       cursor: 'pointer'
                     }}
                   >
-                    <div style={{ fontSize: '12px', fontWeight: '900', color: '#0066ff' }}>
+                    <div style={{ fontSize: '12px', fontWeight: '900', color: 'var(--accent-blue)' }}>
                       ⭐ 72.0 kg al 12% Grasa (Recomendado Adonis)
                     </div>
-                    <div style={{ fontSize: '10.5px', color: '#64748b' }}>
+                    <div style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>
                       Equilibrio perfecto de V-Taper, hombros anchos, cintura estrecha y salud visceral óptima.
                     </div>
                   </button>
@@ -550,15 +550,15 @@ export default function BodyCompositionModal({
                       textAlign: 'left',
                       padding: '8px 12px',
                       borderRadius: '12px',
-                      border: goalData.targetWeightKg === '70.0' ? '2px solid #0066ff' : '1px solid #cbd5e1',
-                      background: goalData.targetWeightKg === '70.0' ? '#eff6ff' : '#f8fafc',
+                      border: goalData.targetWeightKg === '70.0' ? '1px solid var(--accent-amber)' : '1px solid var(--border-subtle)',
+                      background: goalData.targetWeightKg === '70.0' ? 'var(--accent-amber-subtle)' : 'var(--bg-surface-secondary)',
                       cursor: 'pointer'
                     }}
                   >
-                    <div style={{ fontSize: '12px', fontWeight: '900', color: '#d97706' }}>
+                    <div style={{ fontSize: '12px', fontWeight: '900', color: 'var(--accent-amber)' }}>
                       ⚡ 70.0 kg al 10.5% Grasa (Definición Máxima / Six-Pack)
                     </div>
-                    <div style={{ fontSize: '10.5px', color: '#64748b' }}>
+                    <div style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>
                       Máxima vascularidad y separación muscular profunda, grasa visceral mínima.
                     </div>
                   </button>
@@ -574,15 +574,15 @@ export default function BodyCompositionModal({
                       textAlign: 'left',
                       padding: '8px 12px',
                       borderRadius: '12px',
-                      border: goalData.targetWeightKg === '74.5' ? '2px solid #0066ff' : '1px solid #cbd5e1',
-                      background: goalData.targetWeightKg === '74.5' ? '#eff6ff' : '#f8fafc',
+                      border: goalData.targetWeightKg === '74.5' ? '1px solid var(--accent-emerald)' : '1px solid var(--border-subtle)',
+                      background: goalData.targetWeightKg === '74.5' ? 'var(--accent-emerald-subtle)' : 'var(--bg-surface-secondary)',
                       cursor: 'pointer'
                     }}
                   >
-                    <div style={{ fontSize: '12px', fontWeight: '900', color: '#059669' }}>
+                    <div style={{ fontSize: '12px', fontWeight: '900', color: 'var(--accent-emerald)' }}>
                       💪 74.5 kg al 13.5% Grasa (Volumen Atlético Denso)
                     </div>
-                    <div style={{ fontSize: '10.5px', color: '#64748b' }}>
+                    <div style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>
                       Mayor porte y fuerza bruta manteniendo un abdomen firme y controlado.
                     </div>
                   </button>
@@ -592,7 +592,7 @@ export default function BodyCompositionModal({
               {/* INPUTS DE PESO Y % GRASA META */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                 <div>
-                  <label style={{ fontSize: '11px', fontWeight: '800', color: '#1e293b', display: 'block', marginBottom: '4px' }}>
+                  <label style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-main)', display: 'block', marginBottom: '4px' }}>
                     Peso Meta Deseado (kg):
                   </label>
                   <input
@@ -608,7 +608,7 @@ export default function BodyCompositionModal({
                 </div>
 
                 <div>
-                  <label style={{ fontSize: '11px', fontWeight: '800', color: '#1e293b', display: 'block', marginBottom: '4px' }}>
+                  <label style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-main)', display: 'block', marginBottom: '4px' }}>
                     % Grasa Meta (%):
                   </label>
                   <input
@@ -625,7 +625,7 @@ export default function BodyCompositionModal({
               </div>
 
               <div>
-                <label style={{ fontSize: '11px', fontWeight: '800', color: '#1e293b', display: 'block', marginBottom: '4px' }}>
+                <label style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-main)', display: 'block', marginBottom: '4px' }}>
                   Fase Estratégica:
                 </label>
                 <select
@@ -642,20 +642,20 @@ export default function BodyCompositionModal({
               {/* ANÁLISIS EN VIVO DE LA META */}
               {formData.weightKg && (
                 <div style={{
-                  background: '#f8fafc',
-                  border: '1.5px solid #e2e8f0',
+                  background: 'var(--bg-surface-secondary)',
+                  border: '1px solid var(--border-subtle)',
                   borderRadius: '14px',
                   padding: '10px 12px',
                   fontSize: '11.5px',
                   lineHeight: 1.4
                 }}>
-                  <div style={{ fontWeight: '900', color: '#0f172a', marginBottom: '2px' }}>
+                  <div style={{ fontWeight: '900', color: 'var(--text-main)', marginBottom: '2px' }}>
                     📊 Resumen Fisiológico de tu Meta:
                   </div>
-                  <div style={{ color: '#475569' }}>
+                  <div style={{ color: 'var(--text-secondary)' }}>
                     • Peso Actual: <strong>{formData.weightKg} kg</strong> ({formData.bodyFatPct || 24.5}% grasa) ➔ Meta: <strong>{goalData.targetWeightKg || 72} kg</strong> ({goalData.targetFatPct}% grasa)
                   </div>
-                  <div style={{ color: '#059669', fontWeight: '800', marginTop: '2px' }}>
+                  <div style={{ color: 'var(--accent-emerald)', fontWeight: '800', marginTop: '2px' }}>
                     • Fase 1 (Reducción Visceral): ~14 a 18 semanas de déficit moderado para normalizar tu grasa visceral (de 11.5 a &lt; 6) y recuperar tu edad metabólica real.
                   </div>
                 </div>
@@ -673,9 +673,9 @@ export default function BodyCompositionModal({
                 flex: 1,
                 padding: '10px',
                 borderRadius: '12px',
-                border: '1px solid #cbd5e1',
-                background: '#f8fafc',
-                color: '#64748b',
+                border: '1px solid var(--border-subtle)',
+                background: 'var(--bg-surface-secondary)',
+                color: 'var(--text-muted)',
                 fontWeight: '800',
                 fontSize: '13px',
                 cursor: 'pointer'
@@ -690,7 +690,7 @@ export default function BodyCompositionModal({
                 padding: '10px',
                 borderRadius: '12px',
                 border: 'none',
-                background: 'linear-gradient(135deg, #0066ff 0%, #0052cc 100%)',
+                background: 'var(--accent-blue)',
                 color: '#ffffff',
                 fontWeight: '900',
                 fontSize: '13px',
@@ -715,9 +715,9 @@ const inputStyle = {
   width: '100%',
   padding: '8px 10px',
   borderRadius: '10px',
-  border: '1.5px solid #cbd5e1',
+  border: '1px solid var(--border-subtle)',
   fontSize: '13px',
   fontWeight: '800',
-  color: '#0f172a',
-  background: '#ffffff'
+  color: 'var(--text-main)',
+  background: 'var(--bg-surface-secondary)'
 };

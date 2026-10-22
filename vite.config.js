@@ -5,11 +5,15 @@ import { VitePWA } from 'vite-plugin-pwa'
 export default defineConfig({
   base: './',
   server: {
+    host: true,
+    allowedHosts: true,
     headers: {
       'Cross-Origin-Opener-Policy': 'same-origin-allow-popups'
     }
   },
   preview: {
+    host: true,
+    allowedHosts: true,
     headers: {
       'Cross-Origin-Opener-Policy': 'same-origin-allow-popups'
     }

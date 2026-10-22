@@ -125,6 +125,28 @@ export function mergeStoreValues(key, localVal, cloudVal) {
     return localVal || cloudVal;
   }
 
+  // 7. Estado y ciclo de descarga (Deload)
+  if (key === 'coachv2_deload_active') {
+    // Si el usuario desactivó manualmente el Deload en local (false), NUNCA dejar que un true antiguo de la nube lo reactive
+    if (localVal === false) return false;
+    if (cloudVal === false && localVal === undefined) return false;
+    return Boolean(localVal ?? cloudVal);
+  }
+
+  if (key === 'coachv2_deload_cycle_config') {
+    if (!localVal && !cloudVal) return null;
+    if (!localVal) return cloudVal;
+    if (!cloudVal) return localVal;
+    // Si el ciclo local fue marcado inactivo o cancelado manualmente, respetarlo
+    if (localVal.isActive === false || localVal.manuallyExited) return localVal;
+    if (cloudVal.isActive === false || cloudVal.manuallyExited) return cloudVal;
+    return { ...cloudVal, ...localVal };
+  }
+
+  // Tratamiento estricto de booleanos para evitar que `false` sea evaluado como ausente
+  if (typeof localVal === 'boolean') return localVal;
+  if (typeof cloudVal === 'boolean') return cloudVal;
+
   if (cloudVal && (!localVal || (Array.isArray(localVal) && localVal.length === 0))) return cloudVal;
   if (localVal && (!cloudVal || (Array.isArray(cloudVal) && cloudVal.length === 0))) return localVal;
 

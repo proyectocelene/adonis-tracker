@@ -21,10 +21,9 @@ export default function ExerciseHeader({
   onDeferExercise,
   onDeleteCustomExercise
 }) {
-
   return (
     <>
-      {/* 1. CABECERA STICKY EN EL CELULAR: TITULO COMPLETO 100% ANCHO + GESTO DEJAR PRESIONADO */}
+      {/* CABECERA COMPACTA CYBER-CLINICAL (STICKY ANTI-REFLEJO) */}
       <div 
         onTouchStart={startLongPress}
         onTouchEnd={cancelLongPress}
@@ -35,33 +34,36 @@ export default function ExerciseHeader({
         style={{ 
           position: 'sticky', 
           top: '0px', 
-          zIndex: 50, 
-          background: isFullyCompleted ? '#f0fdf4' : '#ffffff', 
-          padding: '12px 14px', 
-          borderRadius: isExpanded ? '22px 22px 0 0' : '22px', 
-          borderBottom: isExpanded ? '2px solid #cbd5e1' : 'none',
-          boxShadow: '0 4px 12px rgba(15, 23, 42, 0.08)',
+          zIndex: 40, 
+          background: 'var(--bg-surface)', 
+          padding: '8px 10px', 
+          borderRadius: isExpanded ? 'var(--radius-lg) var(--radius-lg) 0 0' : 'var(--radius-lg)', 
+          borderBottom: isExpanded ? '1px solid var(--border-subtle)' : 'none',
+          borderLeft: isFullyCompleted ? '3.5px solid var(--accent-emerald)' : '3.5px solid var(--border-strong)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          gap: '10px',
-          userSelect: 'none'
+          gap: '8px',
+          userSelect: 'none',
+          transition: 'border-color 0.2s ease, background 0.2s ease'
         }}
       >
-        {/* ICONO DE AGARRE O BOTÓN DE REORDENAR AL DEJAR PRESIONADO */}
+        {/* ICONO DE AGARRE O REORDENAR */}
         <button
           type="button"
           onClick={() => {
             setIsReorderMode(!isReorderMode);
-            if (navigator.vibrate) navigator.vibrate(40);
+            if (navigator.vibrate) {
+              try { navigator.vibrate(30); } catch (e) {}
+            }
           }}
           title="Mantén presionado para reordenar"
           style={{
-            background: isReorderMode ? '#6366f1' : '#f1f5f9',
-            color: isReorderMode ? '#ffffff' : '#64748b',
-            border: 'none',
-            borderRadius: '10px',
-            padding: '6px 4px',
+            background: isReorderMode ? 'var(--accent-blue)' : 'var(--bg-surface-secondary)',
+            color: isReorderMode ? '#000000' : 'var(--text-muted)',
+            border: '1px solid var(--border-subtle)',
+            borderRadius: '6px',
+            padding: '4px 3px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -69,64 +71,72 @@ export default function ExerciseHeader({
             flexShrink: 0
           }}
         >
-          <GripVertical size={20} />
+          <GripVertical size={16} />
         </button>
 
-        {/* NOMBRE DEL EJERCICIO A TODO EL ANCHO */}
+        {/* NOMBRE DEL EJERCICIO Y METAS COMPACTAS */}
         <div style={{ flex: 1, minWidth: 0, cursor: 'pointer' }} onClick={onToggleExpand}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap', marginBottom: '2px' }}>
-            <strong style={{ fontSize: '15px', color: '#0f172a', fontWeight: '900', lineHeight: '1.3' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '5px', flexWrap: 'wrap', marginBottom: '1px' }}>
+            <strong style={{ fontSize: '13.5px', color: 'var(--text-main)', fontWeight: '800', lineHeight: '1.25' }}>
               {exercise.name}
             </strong>
             {isFullyCompleted && (
-              <span style={{ fontSize: '10px', background: '#10b981', color: '#ffffff', padding: '2px 8px', borderRadius: '8px', fontWeight: '900' }}>
-                ✓ Completo
+              <span className="font-mono-tech" style={{ 
+                fontSize: '9px', 
+                background: 'var(--accent-emerald-subtle)', 
+                color: 'var(--accent-emerald)', 
+                border: '1px solid var(--accent-emerald)', 
+                padding: '1px 5px', 
+                borderRadius: '5px', 
+                fontWeight: '800' 
+              }}>
+                ✓ LISTO
               </span>
             )}
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-            <span style={{ 
-              fontSize: '11px', 
-              background: isFullyCompleted ? '#10b981' : '#0066ff', 
-              color: '#ffffff', 
-              padding: '2px 8px', 
-              borderRadius: '8px', 
-              fontWeight: '800',
-              boxShadow: isFullyCompleted ? '0 2px 6px rgba(16,185,129,0.25)' : '0 2px 6px rgba(0,102,255,0.2)'
+          <div style={{ display: 'flex', alignItems: 'center', gap: '5px', flexWrap: 'wrap' }}>
+            <span className="font-mono-tech" style={{ 
+              fontSize: '10px', 
+              background: isFullyCompleted ? 'var(--accent-emerald-subtle)' : 'var(--bg-surface-secondary)', 
+              color: isFullyCompleted ? 'var(--accent-emerald)' : 'var(--text-secondary)', 
+              border: '1px solid var(--border-subtle)',
+              padding: '1px 6px', 
+              borderRadius: '5px', 
+              fontWeight: '700'
             }}>
-              {totalSets} series x {targetReps} reps {completedSetsCount > 0 && `(${completedSetsCount}/${totalSets})`}
+              {totalSets}×{targetReps} {completedSetsCount > 0 && `(${completedSetsCount}/${totalSets})`}
             </span>
             {exercise.restTime && (
-              <span style={{ 
-                fontSize: '11px', 
-                background: '#eff6ff', 
-                color: '#1d4ed8', 
-                border: '1px solid #bfdbfe',
-                padding: '2px 8px', 
-                borderRadius: '8px', 
-                fontWeight: '800',
+              <span className="font-mono-tech" style={{ 
+                fontSize: '10px', 
+                background: 'var(--bg-surface-secondary)', 
+                color: 'var(--accent-cyan)', 
+                border: '1px solid var(--border-subtle)',
+                padding: '1px 6px', 
+                borderRadius: '5px', 
+                fontWeight: '700',
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: '3px'
+                gap: '2px'
               }}>
-                ⏱️ {exercise.restTime} reposo
+                ⏱️ {exercise.restTime}
               </span>
             )}
             {isDeferred && (
-              <span style={{ fontSize: '10px', background: '#fef3c7', color: '#b45309', border: '1px solid #fde68a', padding: '1px 6px', borderRadius: '6px', fontWeight: '800' }}>
+              <span style={{ fontSize: '9.5px', background: 'var(--accent-amber-subtle)', color: 'var(--accent-amber)', border: '1px solid var(--accent-amber)', padding: '1px 5px', borderRadius: '5px', fontWeight: '800' }}>
                 ⏱️ Pospuesto
               </span>
             )}
             {(exercise.isCustom || exercise.isTemporaryToday || exercise.id?.startsWith('custom_') || exercise.id?.startsWith('temp_today_')) && (
-              <span style={{ fontSize: '10px', background: exercise.isTemporaryToday ? '#eff6ff' : '#f5f3ff', color: exercise.isTemporaryToday ? '#1d4ed8' : '#6d28d9', border: `1px solid ${exercise.isTemporaryToday ? '#bfdbfe' : '#ddd6fe'}`, padding: '1px 6px', borderRadius: '6px', fontWeight: '800' }}>
+              <span style={{ fontSize: '9.5px', background: 'var(--accent-blue-light)', color: 'var(--accent-blue)', border: '1px solid var(--border-strong)', padding: '1px 5px', borderRadius: '5px', fontWeight: '800' }}>
                 {exercise.isTemporaryToday ? '📌 Solo Hoy' : '🔄 Extra'}
               </span>
             )}
           </div>
         </div>
 
-        {/* BOTÓN ELIMINAR SI ES PERSONALIZADO / TEMPORAL */}
+        {/* BOTÓN ELIMINAR SI ES PERSONALIZADO */}
         {onDeleteCustomExercise && (exercise.isCustom || exercise.isTemporaryToday || exercise.id?.startsWith('custom_') || exercise.id?.startsWith('temp_today_')) && (
           <button
             type="button"
@@ -136,80 +146,125 @@ export default function ExerciseHeader({
             }}
             title="Eliminar este ejercicio"
             style={{
-              width: '36px',
-              height: '36px',
-              borderRadius: '12px',
+              width: '28px',
+              height: '28px',
+              borderRadius: '6px',
               border: 'none',
-              background: '#fee2e2',
-              color: '#dc2626',
+              background: 'var(--accent-red-subtle)',
+              color: 'var(--accent-red)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               cursor: 'pointer',
-              flexShrink: 0,
-              transition: 'all 0.2s'
+              flexShrink: 0
             }}
           >
-            <Trash2 size={16} />
+            <Trash2 size={13} />
           </button>
         )}
 
-        {/* CHEVRON COMPACTO PARA EXPANDIR */}
+        {/* CHEVRON COMPACTO */}
         <button
           type="button"
           onClick={onToggleExpand}
           style={{
-            width: '36px',
-            height: '36px',
-            borderRadius: '12px',
+            width: '28px',
+            height: '28px',
+            borderRadius: '6px',
             border: 'none',
-            background: isExpanded ? '#0066ff' : '#f1f5f9',
-            color: isExpanded ? '#ffffff' : '#64748b',
+            background: isExpanded ? 'var(--accent-blue)' : 'var(--bg-surface-secondary)',
+            color: isExpanded ? '#000000' : 'var(--text-muted)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             cursor: 'pointer',
             flexShrink: 0,
-            transition: 'all 0.2s'
+            transition: 'all 0.15s ease'
           }}
         >
-          {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+          {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
         </button>
       </div>
 
-      {/* BARRA FLOTANTE DE REORDENAMIENTO (APARECE AL DEJAR PRESIONADO O TOCAR EL ICONO DE AGARRE) */}
+      {/* BARRA FLOTANTE DE REORDENAMIENTO */}
       {isReorderMode && (
-        <div className="animate-fade" style={{ background: '#6366f1', color: '#ffffff', padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
-          <span style={{ fontSize: '12px', fontWeight: '900' }}>
-            🔀 Reordenar Ejercicio:
+        <div className="animate-fade" style={{ 
+          background: 'var(--bg-surface-elevated)', 
+          border: '1px solid var(--accent-blue)', 
+          color: 'var(--text-main)', 
+          padding: '8px 10px', 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'space-between', 
+          gap: '6px' 
+        }}>
+          <span style={{ fontSize: '11px', fontWeight: '800', color: 'var(--accent-blue)' }}>
+            🔀 Reordenar:
           </span>
-          <div style={{ display: 'flex', gap: '6px' }}>
+          <div style={{ display: 'flex', gap: '5px' }}>
             <button
               type="button"
               disabled={isFirst}
               onClick={() => {
                 onMoveUp();
-                if (navigator.vibrate) navigator.vibrate(30);
+                if (navigator.vibrate) {
+                  try { navigator.vibrate(20); } catch (e) {}
+                }
               }}
-              style={{ background: isFirst ? 'rgba(255,255,255,0.3)' : '#ffffff', color: isFirst ? '#94a3b8' : '#4338ca', border: 'none', borderRadius: '8px', padding: '6px 12px', fontSize: '12px', fontWeight: '900', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+              style={{ 
+                background: isFirst ? 'var(--bg-surface-secondary)' : 'var(--accent-blue)', 
+                color: isFirst ? 'var(--text-muted)' : '#000000', 
+                border: 'none', 
+                borderRadius: '6px', 
+                padding: '4px 8px', 
+                fontSize: '11px', 
+                fontWeight: '800', 
+                cursor: isFirst ? 'not-allowed' : 'pointer', 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '2px' 
+              }}
             >
-              <ArrowUp size={14} /> Mover Arriba
+              <ArrowUp size={12} /> Arriba
             </button>
             <button
               type="button"
               disabled={isLast}
               onClick={() => {
                 onMoveDown();
-                if (navigator.vibrate) navigator.vibrate(30);
+                if (navigator.vibrate) {
+                  try { navigator.vibrate(20); } catch (e) {}
+                }
               }}
-              style={{ background: isLast ? 'rgba(255,255,255,0.3)' : '#ffffff', color: isLast ? '#94a3b8' : '#4338ca', border: 'none', borderRadius: '8px', padding: '6px 12px', fontSize: '12px', fontWeight: '900', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+              style={{ 
+                background: isLast ? 'var(--bg-surface-secondary)' : 'var(--accent-blue)', 
+                color: isLast ? 'var(--text-muted)' : '#000000', 
+                border: 'none', 
+                borderRadius: '6px', 
+                padding: '4px 8px', 
+                fontSize: '11px', 
+                fontWeight: '800', 
+                cursor: isLast ? 'not-allowed' : 'pointer', 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '2px' 
+              }}
             >
-              <ArrowDown size={14} /> Mover Abajo
+              <ArrowDown size={12} /> Abajo
             </button>
             <button
               type="button"
               onClick={() => setIsReorderMode(false)}
-              style={{ background: '#10b981', color: '#ffffff', border: 'none', borderRadius: '8px', padding: '6px 12px', fontSize: '12px', fontWeight: '900', cursor: 'pointer' }}
+              style={{ 
+                background: 'var(--accent-emerald)', 
+                color: '#000000', 
+                border: 'none', 
+                borderRadius: '6px', 
+                padding: '4px 10px', 
+                fontSize: '11px', 
+                fontWeight: '900', 
+                cursor: 'pointer' 
+              }}
             >
               ✓ Listo
             </button>

@@ -151,26 +151,26 @@ export default function BodyCompositionCard({
       const dropFromStart = Math.round((currentW - d.peso) * 10) / 10;
       return (
         <div style={{
-          background: '#0f172a',
-          color: '#ffffff',
+          background: 'var(--bg-surface)',
+          color: 'var(--text-main)',
           padding: '10px 14px',
           borderRadius: '12px',
-          boxShadow: '0 8px 24px rgba(0,0,0,0.3)',
-          border: '1.5px solid #38bdf8',
+          boxShadow: 'var(--shadow-ios-lg)',
+          border: '1px solid var(--border-subtle)',
           fontSize: '11px'
         }}>
-          <div style={{ color: '#94a3b8', fontWeight: '800', marginBottom: '2px' }}>
+          <div style={{ color: 'var(--text-muted)', fontWeight: '800', marginBottom: '2px' }}>
             📅 {d.week === 0 ? 'Punto de Partida (Hoy)' : `Semana ${d.week}`} • {d.phase}
           </div>
-          <div style={{ fontSize: '18px', fontWeight: '900', color: '#38bdf8' }}>
+          <div className="font-mono-tech" style={{ fontSize: '18px', fontWeight: '900', color: 'var(--accent-blue)' }}>
             {d.peso} kg
           </div>
           {dropFromStart > 0 && (
-            <div style={{ color: '#34d399', fontWeight: '800', marginTop: '2px' }}>
+            <div style={{ color: 'var(--accent-emerald)', fontWeight: '800', marginTop: '2px' }}>
               🔥 -{dropFromStart} kg grasa pura acumulada
             </div>
           )}
-          <div style={{ color: '#cbd5e1', fontSize: '10px', marginTop: '4px' }}>
+          <div style={{ color: 'var(--text-muted)', fontSize: '10px', marginTop: '4px' }}>
             Meta final: {finalTargetW} kg
           </div>
         </div>
@@ -184,11 +184,11 @@ export default function BodyCompositionCard({
       className="card" 
       style={{
         borderRadius: '24px',
-        background: '#ffffff',
-        border: '1.5px solid #e2e8f0',
+        background: 'var(--bg-surface)',
+        border: '1px solid var(--border-subtle)',
         padding: '18px',
         marginBottom: '20px',
-        boxShadow: '0 4px 16px rgba(0,0,0,0.03)'
+        boxShadow: 'var(--shadow-ios)'
       }}
     >
       {/* CABECERA CON BOTÓN PARA ABRIR BÁSCULA */}
@@ -198,16 +198,16 @@ export default function BodyCompositionCard({
             width: '36px',
             height: '36px',
             borderRadius: '12px',
-            background: 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)',
+            background: 'var(--accent-blue-light)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            color: '#0066ff'
+            color: 'var(--accent-blue)'
           }}>
             <Scale size={20} />
           </div>
           <div>
-            <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '900', color: '#0f172a' }}>
+            <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '900', color: 'var(--text-main)' }}>
               Báscula Inteligente & Bioimpedancia
             </h3>
             <span style={{ fontSize: '11px', color: '#64748b', fontWeight: '700' }}>
@@ -242,79 +242,79 @@ export default function BodyCompositionCard({
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '8px', marginBottom: '14px' }}>
         
         {/* GRASA CORPORAL */}
-        <div style={{ background: '#f8fafc', padding: '10px 12px', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
+        <div style={{ background: 'var(--bg-card)', padding: '10px 12px', borderRadius: '16px', border: '1px solid var(--border-subtle)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
-            <span style={{ fontSize: '10px', fontWeight: '800', color: '#64748b', textTransform: 'uppercase' }}>
+            <span style={{ fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
               Grasa Corporal
             </span>
             <Flame size={14} color="#f97316" />
           </div>
-          <div style={{ fontSize: '18px', fontWeight: '900', color: '#0f172a' }}>
+          <div style={{ fontSize: '18px', fontWeight: '900', color: 'var(--text-main)' }}>
             {comp.bodyFatPct}%
           </div>
-          <div style={{ fontSize: '10.5px', color: '#64748b', fontWeight: '700' }}>
+          <div style={{ fontSize: '10.5px', color: 'var(--text-secondary)', fontWeight: '700' }}>
             {comp.fatMassKg} kg grasa • Meta: {physiqueGoal?.targetFatPct || 12}%
           </div>
         </div>
 
         {/* MÚSCULO ESQUELÉTICO */}
-        <div style={{ background: '#f8fafc', padding: '10px 12px', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
+        <div style={{ background: 'var(--bg-card)', padding: '10px 12px', borderRadius: '16px', border: '1px solid var(--border-subtle)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
-            <span style={{ fontSize: '10px', fontWeight: '800', color: '#64748b', textTransform: 'uppercase' }}>
+            <span style={{ fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
               Músculo Esquelético
             </span>
-            <Dumbbell size={14} color="#0066ff" />
+            <Dumbbell size={14} color="var(--accent-blue)" />
           </div>
-          <div style={{ fontSize: '18px', fontWeight: '900', color: '#0f172a' }}>
+          <div style={{ fontSize: '18px', fontWeight: '900', color: 'var(--text-main)' }}>
             {comp.skeletalMusclePct}%
           </div>
-          <div style={{ fontSize: '10.5px', color: '#64748b', fontWeight: '700' }}>
+          <div style={{ fontSize: '10.5px', color: 'var(--text-secondary)', fontWeight: '700' }}>
             {comp.skeletalMuscleKg} kg (Magra: {comp.fatFreeMassKg} kg)
           </div>
         </div>
 
         {/* PROPORCIÓN ADONIS V-TAPER */}
         {comp.hasTapeMeasurements ? (
-          <div style={{ background: '#eff6ff', padding: '10px 12px', borderRadius: '16px', border: '1px solid #bfdbfe' }}>
+          <div style={{ background: 'var(--accent-blue-light)', padding: '10px 12px', borderRadius: '16px', border: '1px solid var(--accent-blue)' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
-              <span style={{ fontSize: '10px', fontWeight: '900', color: '#1e40af', textTransform: 'uppercase' }}>
+              <span style={{ fontSize: '10px', fontWeight: '900', color: 'var(--accent-blue)', textTransform: 'uppercase' }}>
                 V-Taper Adonis
               </span>
-              <Ruler size={14} color="#1e40af" />
+              <Ruler size={14} color="var(--accent-blue)" />
             </div>
-            <div style={{ fontSize: '18px', fontWeight: '900', color: '#1e3a8a' }}>
-              {comp.adonisRatio} <span style={{ fontSize: '11px', color: '#64748b' }}>/ 1.618</span>
+            <div style={{ fontSize: '18px', fontWeight: '900', color: 'var(--text-main)' }}>
+              {comp.adonisRatio} <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>/ 1.618</span>
             </div>
-            <div style={{ fontSize: '10.5px', color: '#1e40af', fontWeight: '800' }}>
+            <div style={{ fontSize: '10.5px', color: 'var(--accent-blue)', fontWeight: '800' }}>
               Hombro {comp.shouldersCm}cm • Cintura {comp.waistCm}cm
             </div>
           </div>
         ) : (
-          <div style={{ background: '#f8fafc', padding: '10px 12px', borderRadius: '16px', border: '1px dashed #cbd5e1' }}>
+          <div style={{ background: 'var(--bg-card)', padding: '10px 12px', borderRadius: '16px', border: '1px dashed var(--border-subtle)' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
-              <span style={{ fontSize: '10px', fontWeight: '800', color: '#64748b', textTransform: 'uppercase' }}>
+              <span style={{ fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
                 V-Taper Adonis
               </span>
-              <Ruler size={14} color="#94a3b8" />
+              <Ruler size={14} color="var(--text-muted)" />
             </div>
-            <div style={{ fontSize: '14px', fontWeight: '900', color: '#64748b' }}>
+            <div style={{ fontSize: '14px', fontWeight: '900', color: 'var(--text-muted)' }}>
               Sin cinta métrica
             </div>
-            <div style={{ fontSize: '10px', color: '#94a3b8' }}>
+            <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
               Mide hombros y cintura para calcular tu ratio
             </div>
           </div>
         )}
 
         {/* GRASA VISCERAL */}
-        <div style={{ background: '#f8fafc', padding: '10px 12px', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
+        <div style={{ background: 'var(--bg-card)', padding: '10px 12px', borderRadius: '16px', border: '1px solid var(--border-subtle)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
-            <span style={{ fontSize: '10px', fontWeight: '800', color: '#64748b', textTransform: 'uppercase' }}>
+            <span style={{ fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
               Grasa Visceral
             </span>
             <Heart size={14} color="#ef4444" />
           </div>
-          <div style={{ fontSize: '18px', fontWeight: '900', color: '#0f172a' }}>
+          <div style={{ fontSize: '18px', fontWeight: '900', color: 'var(--text-main)' }}>
             Nivel {comp.visceralFat}
           </div>
           <div style={{ fontSize: '10.5px', color: visceralInfo.color, fontWeight: '800' }}>
@@ -323,33 +323,33 @@ export default function BodyCompositionCard({
         </div>
 
         {/* EDAD METABÓLICA */}
-        <div style={{ background: '#f8fafc', padding: '10px 12px', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
+        <div style={{ background: 'var(--bg-card)', padding: '10px 12px', borderRadius: '16px', border: '1px solid var(--border-subtle)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
-            <span style={{ fontSize: '10px', fontWeight: '800', color: '#64748b', textTransform: 'uppercase' }}>
+            <span style={{ fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
               Edad Metabólica
             </span>
-            <Activity size={14} color="#8b5cf6" />
+            <Activity size={14} color="#a855f7" />
           </div>
-          <div style={{ fontSize: '18px', fontWeight: '900', color: '#0f172a' }}>
+          <div style={{ fontSize: '18px', fontWeight: '900', color: 'var(--text-main)' }}>
             {comp.metabolicAge} años
           </div>
-          <div style={{ fontSize: '10.5px', color: comp.metabolicAge <= comp.realAge ? '#059669' : '#d97706', fontWeight: '800' }}>
+          <div style={{ fontSize: '10.5px', color: comp.metabolicAge <= comp.realAge ? 'var(--accent-emerald)' : 'var(--accent-amber)', fontWeight: '800' }}>
             {comp.metabolicAge <= comp.realAge ? `🔥 ${comp.realAge - comp.metabolicAge} años más joven` : `Real: ${comp.realAge} años (+${comp.metabolicAge - comp.realAge})`}
           </div>
         </div>
 
         {/* METABOLISMO BASAL (BMR) */}
-        <div style={{ background: '#f8fafc', padding: '10px 12px', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
+        <div style={{ background: 'var(--bg-card)', padding: '10px 12px', borderRadius: '16px', border: '1px solid var(--border-subtle)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
-            <span style={{ fontSize: '10px', fontWeight: '800', color: '#64748b', textTransform: 'uppercase' }}>
+            <span style={{ fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
               Metabolismo Basal
             </span>
             <Flame size={14} color="#eab308" />
           </div>
-          <div style={{ fontSize: '18px', fontWeight: '900', color: '#0f172a' }}>
-            {comp.bmr} <span style={{ fontSize: '11px', color: '#64748b' }}>kcal</span>
+          <div style={{ fontSize: '18px', fontWeight: '900', color: 'var(--text-main)' }}>
+            {comp.bmr} <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>kcal</span>
           </div>
-          <div style={{ fontSize: '10.5px', color: '#64748b', fontWeight: '700' }}>
+          <div style={{ fontSize: '10.5px', color: 'var(--text-secondary)', fontWeight: '700' }}>
             Katch-McArdle • Agua: {comp.waterPct}%
           </div>
         </div>
@@ -359,10 +359,11 @@ export default function BodyCompositionCard({
       {/* MINI BANNER DE PROYECCIÓN CIENTÍFICA VERDADERA */}
       <div 
         style={{
-          background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
+          background: 'var(--bg-surface-secondary)',
+          border: '1px solid var(--border-subtle)',
           borderRadius: '16px',
           padding: '12px 14px',
-          color: '#ffffff',
+          color: 'var(--text-main)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
@@ -375,22 +376,22 @@ export default function BodyCompositionCard({
             width: '34px',
             height: '34px',
             borderRadius: '10px',
-            background: 'rgba(56, 189, 248, 0.15)',
+            background: 'var(--accent-blue-light)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            color: '#38bdf8'
+            color: 'var(--accent-blue)'
           }}>
             <Target size={18} />
           </div>
           <div>
-            <div style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '800', textTransform: 'uppercase' }}>
+            <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: '800', textTransform: 'uppercase' }}>
               Fase 1: Reducción Visceral & Definición Prioritaria
             </div>
-            <div style={{ fontSize: '13px', fontWeight: '900', color: '#f8fafc', marginTop: '1px' }}>
-              🎯 Meta: {projection.targetWeightKg} kg al {projection.targetFatPct}% grasa • Faltan: <span style={{ color: '#38bdf8' }}>~{projection.phase1Weeks || projection.projectedWeeks} semanas</span>
+            <div style={{ fontSize: '13px', fontWeight: '900', color: 'var(--text-main)', marginTop: '1px' }}>
+              🎯 Meta: {projection.targetWeightKg} kg al {projection.targetFatPct}% grasa • Faltan: <span style={{ color: 'var(--accent-blue)' }}>~{projection.phase1Weeks || projection.projectedWeeks} semanas</span>
             </div>
-            <div style={{ fontSize: '11px', color: '#cbd5e1', marginTop: '2px' }}>
+            <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '2px' }}>
               {projection.fatToLoseKg > 0 ? `🔥 -${projection.fatToLoseKg} kg grasa ` : ''}
               {comp.visceralFat >= 9 ? `• ⚠️ Reducción visceral (de nivel ${comp.visceralFat} a < 6) ` : ''}
               • Ritmo seguro (~{projection.weeklyFatLossRateKg} kg/sem)
@@ -449,9 +450,9 @@ export default function BodyCompositionCard({
         <div style={{
           marginTop: '12px',
           padding: '16px',
-          background: '#f8fafc',
+          background: 'var(--bg-surface-secondary)',
           borderRadius: '16px',
-          border: '1.5px solid #cbd5e1',
+          border: '1px solid var(--border-subtle)',
           animation: 'fadeIn 0.25s ease'
         }}>
           {/* FECHA ESTIMADA DE ALCANCE */}
@@ -460,23 +461,23 @@ export default function BodyCompositionCard({
             alignItems: 'center',
             justifyContent: 'space-between',
             padding: '10px 14px',
-            background: 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)',
+            background: 'var(--accent-blue-light)',
             borderRadius: '12px',
-            border: '1px solid #bfdbfe',
+            border: '1px solid var(--accent-blue)',
             marginBottom: '14px',
             flexWrap: 'wrap',
             gap: '8px'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Calendar size={18} color="#0066ff" />
-              <span style={{ fontSize: '13px', fontWeight: '900', color: '#1e3a8a' }}>
+              <Calendar size={18} color="var(--accent-blue)" />
+              <span style={{ fontSize: '13px', fontWeight: '900', color: 'var(--accent-blue)' }}>
                 Fecha Estimada de Alcance Adonis: {targetDate}
               </span>
             </div>
             <span style={{
               fontSize: '11px',
               fontWeight: '800',
-              background: '#0066ff',
+              background: 'var(--accent-blue)',
               color: '#ffffff',
               padding: '3px 9px',
               borderRadius: '20px'
@@ -487,22 +488,22 @@ export default function BodyCompositionCard({
 
           {/* GRÁFICA DE PROYECCIÓN SEMANA A SEMANA HACIA EL CUERPO ADONIS */}
           <div style={{
-            background: '#ffffff',
+            background: 'var(--bg-card)',
             borderRadius: '16px',
-            border: '1.5px solid #e2e8f0',
+            border: '1px solid var(--border-subtle)',
             padding: '14px 16px',
             marginBottom: '14px',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.03)'
+            boxShadow: 'var(--shadow-ios-sm)'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <TrendingDown size={16} color="#0066ff" />
-                  <span style={{ fontSize: '13px', fontWeight: '900', color: '#0f172a' }}>
+                  <TrendingDown size={16} color="var(--accent-blue)" />
+                  <span style={{ fontSize: '13px', fontWeight: '900', color: 'var(--text-main)' }}>
                     Curva de Proyección Fisiológica ({currentW} kg ➔ {finalTargetW} kg)
                   </span>
                 </div>
-                <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>
+                <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
                   Descenso progresivo estimado a ~0.4 kg/semana protegiendo masa muscular
                 </div>
               </div>
@@ -519,16 +520,16 @@ export default function BodyCompositionCard({
             <div style={{ width: '100%', height: '220px' }}>
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={projectionChartData} margin={{ top: 15, right: 15, left: -20, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border-subtle)" opacity={0.6} />
                   <XAxis 
                     dataKey="label" 
-                    tick={{ fontSize: 10, fill: '#64748b', fontWeight: 700 }}
-                    axisLine={{ stroke: '#cbd5e1' }}
+                    tick={{ fontSize: 10, fill: 'var(--text-muted)', fontWeight: 700 }}
+                    axisLine={{ stroke: 'var(--border-subtle)' }}
                     tickLine={false}
                   />
                   <YAxis 
                     domain={[Math.floor(finalTargetW - 1), Math.ceil(currentW + 1)]}
-                    tick={{ fontSize: 10, fill: '#64748b', fontWeight: 700 }}
+                    tick={{ fontSize: 10, fill: 'var(--text-muted)', fontWeight: 700 }}
                     axisLine={false}
                     tickLine={false}
                     unit="kg"
@@ -591,8 +592,8 @@ export default function BodyCompositionCard({
             
             {/* HITO 1 */}
             <div style={{
-              background: '#ffffff',
-              border: '1.5px solid #e2e8f0',
+              background: 'var(--bg-card)',
+              border: '1px solid var(--border-subtle)',
               borderRadius: '14px',
               padding: '12px',
               position: 'relative'
@@ -601,29 +602,29 @@ export default function BodyCompositionCard({
                 <span style={{
                   fontSize: '10px',
                   fontWeight: '900',
-                  color: '#0284c7',
-                  background: '#e0f2fe',
+                  color: 'var(--accent-blue)',
+                  background: 'var(--accent-blue-light)',
                   padding: '2px 7px',
                   borderRadius: '6px'
                 }}>
                   HITO 1 • SEMANAS 1 - {hito1Weeks}
                 </span>
-                <span style={{ fontSize: '13px', fontWeight: '900', color: '#0f172a' }}>
+                <span style={{ fontSize: '13px', fontWeight: '900', color: 'var(--text-main)' }}>
                   {hito1W} kg
                 </span>
               </div>
-              <div style={{ fontSize: '12px', fontWeight: '800', color: '#1e293b', marginBottom: '4px' }}>
+              <div style={{ fontSize: '12px', fontWeight: '800', color: 'var(--text-main)', marginBottom: '4px' }}>
                 Desinflamación & Reducción Visceral
               </div>
-              <p style={{ margin: 0, fontSize: '11px', color: '#64748b', lineHeight: '1.4' }}>
+              <p style={{ margin: 0, fontSize: '11px', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
                 Pérdida de ~{Math.round((currentW - hito1W) * 10) / 10} kg de grasa pura. Bajada de grasa visceral a nivel &le; 8 y optimización de sensibilidad a la insulina.
               </p>
             </div>
 
             {/* HITO 2 */}
             <div style={{
-              background: '#ffffff',
-              border: '1.5px solid #e2e8f0',
+              background: 'var(--bg-card)',
+              border: '1px solid var(--border-subtle)',
               borderRadius: '14px',
               padding: '12px',
               position: 'relative'
@@ -632,53 +633,52 @@ export default function BodyCompositionCard({
                 <span style={{
                   fontSize: '10px',
                   fontWeight: '900',
-                  color: '#059669',
-                  background: '#dcfce7',
+                  color: 'var(--accent-emerald)',
+                  background: 'var(--accent-emerald-subtle)',
                   padding: '2px 7px',
                   borderRadius: '6px'
                 }}>
                   HITO 2 • SEMANAS {hito1Weeks + 1} - {hito2Weeks}
                 </span>
-                <span style={{ fontSize: '13px', fontWeight: '900', color: '#0f172a' }}>
+                <span style={{ fontSize: '13px', fontWeight: '900', color: 'var(--text-main)' }}>
                   {hito2W} kg
                 </span>
               </div>
-              <div style={{ fontSize: '12px', fontWeight: '800', color: '#1e293b', marginBottom: '4px' }}>
+              <div style={{ fontSize: '12px', fontWeight: '800', color: 'var(--text-main)', marginBottom: '4px' }}>
                 Recomposición Atlética
               </div>
-              <p style={{ margin: 0, fontSize: '11px', color: '#64748b', lineHeight: '1.4' }}>
+              <p style={{ margin: 0, fontSize: '11px', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
                 Grasa visceral en rango saludable (&lt; 6). Grasa corporal cayendo a ~17%. Mayor tono y separación visible en deltoides, pecho y cuádriceps.
               </p>
             </div>
 
             {/* HITO 3 */}
             <div style={{
-              background: '#ffffff',
-              border: '1.5px solid #fed7aa',
+              background: 'var(--bg-card)',
+              border: '1.5px solid var(--accent-amber)',
               borderRadius: '14px',
               padding: '12px',
-              background: 'linear-gradient(180deg, #fffbeb 0%, #ffffff 100%)',
               position: 'relative'
             }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
                 <span style={{
                   fontSize: '10px',
                   fontWeight: '900',
-                  color: '#b45309',
-                  background: '#fef3c7',
+                  color: 'var(--accent-amber)',
+                  background: 'var(--accent-amber-subtle)',
                   padding: '2px 7px',
                   borderRadius: '6px'
                 }}>
                   HITO 3 • SEMANAS {hito2Weeks + 1} - {remainingWeeks}
                 </span>
-                <span style={{ fontSize: '13px', fontWeight: '900', color: '#b45309' }}>
+                <span style={{ fontSize: '13px', fontWeight: '900', color: 'var(--accent-amber)' }}>
                   {finalTargetW} kg
                 </span>
               </div>
-              <div style={{ fontSize: '12px', fontWeight: '800', color: '#78350f', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <Award size={14} color="#d97706" /> Definición Adonis 13-14%
+              <div style={{ fontSize: '12px', fontWeight: '800', color: 'var(--accent-amber)', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <Award size={14} color="var(--accent-amber)" /> Definición Adonis 13-14%
               </div>
-              <p style={{ margin: 0, fontSize: '11px', color: '#92400e', lineHeight: '1.4' }}>
+              <p style={{ margin: 0, fontSize: '11px', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
                 Grasa visceral de nivel atleta (&le; 4). V-Taper estético consolidado, cintura comprimida y definición muscular nítida con fuerza preservada.
               </p>
             </div>
@@ -687,14 +687,14 @@ export default function BodyCompositionCard({
 
           {/* PRESCRIPCIÓN NUTRICIONAL CIENTÍFICA */}
           <div style={{
-            background: '#ffffff',
+            background: 'var(--bg-card)',
             borderRadius: '14px',
-            border: '1.5px solid #e2e8f0',
+            border: '1px solid var(--border-subtle)',
             padding: '12px 14px'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
-              <Utensils size={15} color="#0066ff" />
-              <span style={{ fontSize: '12px', fontWeight: '900', color: '#0f172a' }}>
+              <Utensils size={15} color="var(--accent-blue)" />
+              <span style={{ fontSize: '12px', fontWeight: '900', color: 'var(--text-main)' }}>
                 Prescripción Nutricional Recomposición (Katch-McArdle)
               </span>
             </div>
@@ -703,28 +703,28 @@ export default function BodyCompositionCard({
             </p>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: '8px' }}>
-              <div style={{ background: '#f8fafc', padding: '8px 10px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
-                <div style={{ fontSize: '10px', color: '#64748b', fontWeight: '800' }}>CALORÍAS DIARIAS</div>
-                <div style={{ fontSize: '15px', fontWeight: '900', color: '#0066ff' }}>~{targetCalories} <span style={{ fontSize: '10px' }}>kcal</span></div>
-                <div style={{ fontSize: '9.5px', color: '#94a3b8' }}>Déficit sostenible</div>
+              <div style={{ background: 'var(--bg-card)', padding: '8px 10px', borderRadius: '10px', border: '1px solid var(--border-subtle)' }}>
+                <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '800' }}>CALORÍAS DIARIAS</div>
+                <div style={{ fontSize: '15px', fontWeight: '900', color: '#38bdf8' }}>~{targetCalories} <span style={{ fontSize: '10px' }}>kcal</span></div>
+                <div style={{ fontSize: '9.5px', color: 'var(--text-muted)' }}>Déficit sostenible</div>
               </div>
 
-              <div style={{ background: '#f8fafc', padding: '8px 10px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
-                <div style={{ fontSize: '10px', color: '#64748b', fontWeight: '800' }}>PROTEÍNA MAGRA</div>
-                <div style={{ fontSize: '15px', fontWeight: '900', color: '#059669' }}>~{targetProteinG} <span style={{ fontSize: '10px' }}>g</span></div>
-                <div style={{ fontSize: '9.5px', color: '#94a3b8' }}>2.2g / kg masa magra</div>
+              <div style={{ background: 'var(--bg-card)', padding: '8px 10px', borderRadius: '10px', border: '1px solid var(--border-subtle)' }}>
+                <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '800' }}>PROTEÍNA MAGRA</div>
+                <div style={{ fontSize: '15px', fontWeight: '900', color: '#10b981' }}>~{targetProteinG} <span style={{ fontSize: '10px' }}>g</span></div>
+                <div style={{ fontSize: '9.5px', color: 'var(--text-muted)' }}>2.2g / kg masa magra</div>
               </div>
 
-              <div style={{ background: '#f8fafc', padding: '8px 10px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
-                <div style={{ fontSize: '10px', color: '#64748b', fontWeight: '800' }}>GRASAS SALUDABLES</div>
-                <div style={{ fontSize: '15px', fontWeight: '900', color: '#d97706' }}>~{targetFatG} <span style={{ fontSize: '10px' }}>g</span></div>
-                <div style={{ fontSize: '9.5px', color: '#94a3b8' }}>25% VCT (hormonal)</div>
+              <div style={{ background: 'var(--bg-card)', padding: '8px 10px', borderRadius: '10px', border: '1px solid var(--border-subtle)' }}>
+                <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '800' }}>GRASAS SALUDABLES</div>
+                <div style={{ fontSize: '15px', fontWeight: '900', color: '#f59e0b' }}>~{targetFatG} <span style={{ fontSize: '10px' }}>g</span></div>
+                <div style={{ fontSize: '9.5px', color: 'var(--text-muted)' }}>25% VCT (hormonal)</div>
               </div>
 
-              <div style={{ background: '#f8fafc', padding: '8px 10px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
-                <div style={{ fontSize: '10px', color: '#64748b', fontWeight: '800' }}>CARBOHIDRATOS</div>
-                <div style={{ fontSize: '15px', fontWeight: '900', color: '#7c3aed' }}>~{targetCarbsG} <span style={{ fontSize: '10px' }}>g</span></div>
-                <div style={{ fontSize: '9.5px', color: '#94a3b8' }}>Glucógeno peri-entreno</div>
+              <div style={{ background: 'var(--bg-card)', padding: '8px 10px', borderRadius: '10px', border: '1px solid var(--border-subtle)' }}>
+                <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '800' }}>CARBOHIDRATOS</div>
+                <div style={{ fontSize: '15px', fontWeight: '900', color: '#a855f7' }}>~{targetCarbsG} <span style={{ fontSize: '10px' }}>g</span></div>
+                <div style={{ fontSize: '9.5px', color: 'var(--text-muted)' }}>Glucógeno peri-entreno</div>
               </div>
             </div>
           </div>

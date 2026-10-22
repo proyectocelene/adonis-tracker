@@ -84,10 +84,10 @@ export default function ExerciseRow({
   if (isSkipped) {
     return (
       <div style={{
-        background: '#f8fafc',
-        border: '1.5px dashed #cbd5e1',
-        borderRadius: '20px',
-        padding: '12px 16px',
+        background: 'var(--bg-surface-secondary)',
+        border: '1.5px dashed var(--border-subtle)',
+        borderRadius: '16px',
+        padding: '10px 14px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
@@ -99,14 +99,14 @@ export default function ExerciseRow({
       }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ fontSize: '10.5px', background: '#fee2e2', color: '#dc2626', padding: '1px 6px', borderRadius: '6px', fontWeight: '900' }}>
+            <span style={{ fontSize: '10px', background: 'var(--accent-danger-light)', color: 'var(--accent-danger)', padding: '1px 6px', borderRadius: '6px', fontWeight: '900' }}>
               ⏭️ Omitido
             </span>
-            <strong style={{ fontSize: '13px', color: '#475569', textDecoration: 'line-through' }}>
+            <strong style={{ fontSize: '13px', color: 'var(--text-muted)', textDecoration: 'line-through' }}>
               {exercise.name}
             </strong>
           </div>
-          <span style={{ fontSize: '10px', color: '#d97706', fontWeight: '700' }}>
+          <span style={{ fontSize: '10px', color: 'var(--accent-amber)', fontWeight: '700' }}>
             Motivo: {skipReason || 'Máquina no disponible o descompuesta'}
           </span>
         </div>
@@ -114,13 +114,13 @@ export default function ExerciseRow({
           type="button"
           onClick={() => onSkipExercise && onSkipExercise(exercise.id, null)}
           style={{
-            background: '#ffffff',
-            border: '1.5px solid #cbd5e1',
-            borderRadius: '10px',
-            padding: '6px 12px',
+            background: 'var(--bg-card)',
+            border: '1px solid var(--border-subtle)',
+            borderRadius: '8px',
+            padding: '5px 10px',
             fontSize: '11px',
             fontWeight: '800',
-            color: '#0f172a',
+            color: 'var(--text-main)',
             cursor: 'pointer',
             flexShrink: 0
           }}
@@ -384,18 +384,17 @@ export default function ExerciseRow({
       className="card animate-fade"
       style={{
         padding: '0px',
-        marginBottom: '14px',
-        borderRadius: '24px',
+        marginBottom: '10px',
+        borderRadius: 'var(--radius-lg, 16px)',
         background: isFullyCompleted 
-          ? 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)' 
-          : 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
+          ? 'var(--accent-emerald-subtle)' 
+          : 'var(--bg-surface)',
         border: isReorderMode 
-          ? '2.5px solid #6366f1' 
-          : (isFullyCompleted ? '2.5px solid #10b981' : '2px solid #cbd5e1'),
-        boxShadow: isReorderMode 
-          ? '0 10px 30px rgba(99, 102, 241, 0.3)' 
-          : (isFullyCompleted ? '0 8px 24px rgba(16, 185, 129, 0.18)' : '0 8px 24px rgba(15, 23, 42, 0.08)'),
-        transition: 'all 0.25s ease'
+          ? '2px solid #8b5cf6' 
+          : (isFullyCompleted ? '1.5px solid var(--accent-emerald)' : '1px solid var(--border-subtle)'),
+        boxShadow: 'var(--shadow-ios)',
+        transition: 'all 0.2s ease',
+        overflow: 'hidden'
       }}
     >
       {/* 1. CABECERA STICKY EN EL CELULAR: TITULO COMPLETO 100% ANCHO + GESTO DEJAR PRESIONADO */}
@@ -423,41 +422,39 @@ export default function ExerciseRow({
 
       {/* 2. CONTENIDO EXPANDIDO A 100% FULL-WIDTH SIN MARGENES MALGASTADOS */}
       {isExpanded && (
-        <div className="animate-fade" style={{ padding: '14px', width: '100%' }}>
+        <div className="animate-fade" style={{ padding: '10px 12px', width: '100%' }}>
           {/* NAVEGACIÓN DE MINI-PESTAÑAS INTERNAS A TODO EL ANCHO */}
-          <div style={{ display: 'flex', background: '#e2e8f0', padding: '4px', borderRadius: '16px', marginBottom: '12px', gap: '4px', width: '100%' }}>
+          <div style={{ display: 'flex', background: 'var(--bg-surface-secondary)', border: '1px solid var(--border-subtle)', padding: '3px', borderRadius: '12px', marginBottom: '10px', gap: '4px', width: '100%' }}>
             <button
               type="button"
               onClick={() => setActiveSubTab('logger')}
               style={{
                 flex: 1,
-                padding: '8px',
+                padding: '7px 4px',
                 border: 'none',
-                borderRadius: '12px',
-                background: activeSubTab === 'logger' ? 'linear-gradient(135deg, #0066ff 0%, #0052cc 100%)' : 'transparent',
-                color: activeSubTab === 'logger' ? '#ffffff' : '#64748b',
+                borderRadius: '9px',
+                background: activeSubTab === 'logger' ? 'linear-gradient(135deg, var(--accent-blue) 0%, #0284c7 100%)' : 'transparent',
+                color: activeSubTab === 'logger' ? '#ffffff' : 'var(--text-muted)',
                 fontWeight: '900',
-                fontSize: '12px',
-                cursor: 'pointer',
-                boxShadow: activeSubTab === 'logger' ? '0 4px 10px rgba(0, 102, 255, 0.3)' : 'none'
+                fontSize: '11.5px',
+                cursor: 'pointer'
               }}
             >
-              📊 Series & Cargas
+              📊 Series
             </button>
             <button
               type="button"
               onClick={() => setActiveSubTab('technique')}
               style={{
                 flex: 1,
-                padding: '8px',
+                padding: '7px 4px',
                 border: 'none',
-                borderRadius: '12px',
+                borderRadius: '9px',
                 background: activeSubTab === 'technique' ? 'linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)' : 'transparent',
-                color: activeSubTab === 'technique' ? '#ffffff' : '#64748b',
+                color: activeSubTab === 'technique' ? '#ffffff' : 'var(--text-muted)',
                 fontWeight: '900',
-                fontSize: '12px',
-                cursor: 'pointer',
-                boxShadow: activeSubTab === 'technique' ? '0 4px 10px rgba(124, 58, 237, 0.3)' : 'none'
+                fontSize: '11.5px',
+                cursor: 'pointer'
               }}
             >
               💡 Info
@@ -467,28 +464,27 @@ export default function ExerciseRow({
               onClick={() => setActiveSubTab('swap')}
               style={{
                 flex: 1,
-                padding: '8px',
+                padding: '7px 4px',
                 border: 'none',
-                borderRadius: '12px',
-                background: activeSubTab === 'swap' ? 'linear-gradient(135deg, #059669 0%, #047857 100%)' : 'transparent',
-                color: activeSubTab === 'swap' ? '#ffffff' : '#64748b',
+                borderRadius: '9px',
+                background: activeSubTab === 'swap' ? 'linear-gradient(135deg, var(--accent-emerald) 0%, #059669 100%)' : 'transparent',
+                color: activeSubTab === 'swap' ? '#ffffff' : 'var(--text-muted)',
                 fontWeight: '900',
-                fontSize: '12px',
-                cursor: 'pointer',
-                boxShadow: activeSubTab === 'swap' ? '0 4px 10px rgba(5, 150, 105, 0.3)' : 'none'
+                fontSize: '11.5px',
+                cursor: 'pointer'
               }}
             >
-              🔄 Sustituir
+              🔄 Cambiar
             </button>
             <button
               type="button"
               onClick={handlePromptSkip}
               style={{
-                padding: '8px 10px',
-                border: 'none',
-                borderRadius: '12px',
-                background: '#f8fafc',
-                color: '#64748b',
+                padding: '7px 8px',
+                border: '1px solid var(--border-subtle)',
+                borderRadius: '9px',
+                background: 'var(--bg-card)',
+                color: 'var(--text-muted)',
                 fontWeight: '900',
                 fontSize: '11px',
                 cursor: 'pointer',

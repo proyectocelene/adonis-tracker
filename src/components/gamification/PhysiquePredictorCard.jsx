@@ -49,11 +49,11 @@ export default function PhysiquePredictorCard({
 
   return (
     <div style={{
-      background: '#ffffff',
-      border: '1.5px solid #e0e7ff',
+      background: 'var(--bg-surface)',
+      border: '1px solid var(--border-subtle)',
       borderRadius: '22px',
       padding: '16px',
-      boxShadow: '0 4px 20px rgba(99, 102, 241, 0.08)',
+      boxShadow: 'var(--shadow-ios)',
       marginBottom: '14px',
       position: 'relative'
     }}>
@@ -64,18 +64,18 @@ export default function PhysiquePredictorCard({
             width: '38px',
             height: '38px',
             borderRadius: '12px',
-            background: 'linear-gradient(135deg, #4f46e5 0%, #3730a3 100%)',
+            background: 'var(--accent-blue-light)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            color: '#ffffff',
-            boxShadow: '0 2px 8px rgba(79, 70, 229, 0.3)'
+            color: 'var(--accent-blue)',
+            border: '1px solid var(--border-subtle)'
           }}>
             <Target size={20} />
           </div>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <h3 style={{ margin: 0, fontSize: '15px', fontWeight: '900', color: '#1e1b4b' }}>
+              <h3 style={{ margin: 0, fontSize: '15px', fontWeight: '900', color: 'var(--text-main)' }}>
                 Predictor del Cuerpo Ideal
               </h3>
               <span style={{
@@ -90,7 +90,7 @@ export default function PhysiquePredictorCard({
                 {goalBadge.label}
               </span>
             </div>
-            <span style={{ fontSize: '10.5px', color: '#6366f1', fontWeight: '700' }}>
+            <span style={{ fontSize: '10.5px', color: 'var(--text-muted)', fontWeight: '700' }}>
               Tiempos verdaderos con tu báscula y medidas de cinta
             </span>
           </div>
@@ -100,21 +100,20 @@ export default function PhysiquePredictorCard({
           type="button"
           onClick={() => setIsModalOpen(true)}
           style={{
-            background: 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)',
-            border: '1.5px solid #93c5fd',
+            background: 'var(--accent-blue-light)',
+            border: '1px solid var(--border-subtle)',
             borderRadius: '10px',
             padding: '6px 10px',
             fontSize: '11px',
             fontWeight: '900',
-            color: '#1d4ed8',
+            color: 'var(--accent-blue)',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
-            gap: '5px',
-            boxShadow: '0 1px 3px rgba(0,102,255,0.1)'
+            gap: '5px'
           }}
         >
-          <Scale size={14} color="#1d4ed8" /> Mi Báscula & Medidas ⚙️
+          <Scale size={14} color="var(--accent-blue)" /> Mi Báscula & Medidas ⚙️
         </button>
       </div>
 
@@ -123,20 +122,20 @@ export default function PhysiquePredictorCard({
         display: 'grid',
         gridTemplateColumns: '1fr auto 1fr',
         alignItems: 'center',
-        background: '#f8fafc',
+        background: 'var(--bg-surface-secondary)',
         borderRadius: '16px',
         padding: '12px 14px',
         marginBottom: '12px',
-        border: '1px solid #e2e8f0'
+        border: '1px solid var(--border-subtle)'
       }}>
         <div style={{ textAlign: 'left' }}>
-          <span style={{ fontSize: '10px', color: '#64748b', fontWeight: '800', textTransform: 'uppercase' }}>
+          <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '800', textTransform: 'uppercase' }}>
             Peso Actual
           </span>
-          <strong style={{ fontSize: '20px', color: '#0f172a', fontWeight: '900', display: 'block', lineHeight: 1.1 }}>
+          <strong className="font-mono-tech" style={{ fontSize: '20px', color: 'var(--text-main)', fontWeight: '900', display: 'block', lineHeight: 1.1 }}>
             {current.weightKg} kg
           </strong>
-          <span style={{ fontSize: '10px', color: '#64748b', fontWeight: '700' }}>
+          <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '700' }}>
             IMC: {current.bmi} • {current.bodyFatPct}% Grasa
           </span>
         </div>
@@ -145,25 +144,24 @@ export default function PhysiquePredictorCard({
           width: '30px',
           height: '30px',
           borderRadius: '50%',
-          background: '#ffffff',
+          background: 'var(--bg-card)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          color: '#4f46e5',
-          border: '1px solid #cbd5e1',
-          boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+          color: 'var(--accent-blue)',
+          border: '1px solid var(--border-subtle)'
         }}>
           <ArrowRight size={16} />
         </div>
 
         <div style={{ textAlign: 'right' }}>
-          <span style={{ fontSize: '10px', color: '#4f46e5', fontWeight: '800', textTransform: 'uppercase' }}>
+          <span style={{ fontSize: '10px', color: 'var(--accent-blue)', fontWeight: '800', textTransform: 'uppercase' }}>
             Peso Ideal Adonis
           </span>
-          <strong style={{ fontSize: '20px', color: '#4338ca', fontWeight: '900', display: 'block', lineHeight: 1.1 }}>
+          <strong className="font-mono-tech" style={{ fontSize: '20px', color: 'var(--accent-blue)', fontWeight: '900', display: 'block', lineHeight: 1.1 }}>
             {idealWeightKg} kg
           </strong>
-          <span style={{ fontSize: '10px', color: '#4f46e5', fontWeight: '700' }}>
+          <span style={{ fontSize: '10px', color: 'var(--accent-blue)', fontWeight: '700' }}>
             Meta: {targetFatPct}% Grasa
           </span>
         </div>
@@ -171,38 +169,38 @@ export default function PhysiquePredictorCard({
 
       {/* BLOQUE 2: PROYECCIÓN PRINCIPAL EN SEMANAS VERDADERAS */}
       <div style={{
-        background: 'linear-gradient(135deg, #3730a3 0%, #1e1b4b 100%)',
+        background: 'var(--bg-surface-secondary)',
         borderRadius: '18px',
         padding: '16px',
-        color: '#ffffff',
+        color: 'var(--text-main)',
         marginBottom: '12px',
-        boxShadow: '0 6px 18px rgba(55, 48, 163, 0.25)',
-        border: '1px solid #4338ca'
+        border: '1px solid var(--border-subtle)'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <Clock size={15} color="#a5b4fc" />
-            <span style={{ fontSize: '11px', color: '#c7d2fe', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            <Clock size={15} color="var(--accent-blue)" />
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
               Tiempo Fisiológico Verdadero
             </span>
           </div>
           <span style={{
-            background: 'rgba(255,255,255,0.15)',
+            background: 'var(--bg-card)',
+            border: '1px solid var(--border-subtle)',
             fontSize: '10px',
             fontWeight: '800',
             padding: '2px 8px',
             borderRadius: '8px',
-            color: '#e0e7ff'
+            color: 'var(--text-main)'
           }}>
             {currentWeekWorkouts} días/sem entrenados
           </span>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '10px' }}>
-          <strong style={{ fontSize: '30px', fontWeight: '900', lineHeight: 1, color: '#ffffff' }}>
+          <strong className="font-mono-tech" style={{ fontSize: '30px', fontWeight: '900', lineHeight: 1, color: 'var(--accent-blue)' }}>
             ~{totalEstimatedWeeks} semanas
           </strong>
-          <span style={{ fontSize: '13px', color: '#a5b4fc', fontWeight: '800' }}>
+          <span style={{ fontSize: '13px', color: 'var(--text-muted)', fontWeight: '800' }}>
             ({Math.round((totalEstimatedWeeks / 4.3) * 10) / 10} meses reales)
           </span>
         </div>
@@ -213,32 +211,32 @@ export default function PhysiquePredictorCard({
           gridTemplateColumns: '1fr 1fr',
           gap: '8px',
           paddingTop: '10px',
-          borderTop: '1px solid rgba(255,255,255,0.12)'
+          borderTop: '1px solid var(--border-subtle)'
         }}>
           {/* Vector Grasa */}
-          <div style={{ background: 'rgba(255, 255, 255, 0.08)', borderRadius: '12px', padding: '8px 10px' }}>
+          <div style={{ background: 'var(--bg-card)', borderRadius: '12px', padding: '8px 10px', border: '1px solid var(--border-subtle)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '2px' }}>
-              <TrendingDown size={13} color="#f87171" />
-              <span style={{ fontSize: '10px', color: '#fca5a5', fontWeight: '800' }}>Grasa a Oxidar</span>
+              <TrendingDown size={13} color="var(--accent-red)" />
+              <span style={{ fontSize: '10px', color: 'var(--accent-red)', fontWeight: '800' }}>Grasa a Oxidar</span>
             </div>
-            <strong style={{ fontSize: '14px', color: '#ffffff', fontWeight: '900', display: 'block' }}>
+            <strong className="font-mono-tech" style={{ fontSize: '14px', color: 'var(--text-main)', fontWeight: '900', display: 'block' }}>
               {fatToLoseKg > 0 ? `-${fatToLoseKg} kg` : '0 kg (En rango)'}
             </strong>
-            <span style={{ fontSize: '9.5px', color: '#cbd5e1' }}>
+            <span style={{ fontSize: '9.5px', color: 'var(--text-muted)' }}>
               ~{weeksForFatLoss} semanas ({weeklyFatLossRateKg} kg/sem)
             </span>
           </div>
 
           {/* Vector Músculo */}
-          <div style={{ background: 'rgba(255, 255, 255, 0.08)', borderRadius: '12px', padding: '8px 10px' }}>
+          <div style={{ background: 'var(--bg-card)', borderRadius: '12px', padding: '8px 10px', border: '1px solid var(--border-subtle)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '2px' }}>
-              <TrendingUp size={13} color="#34d399" />
-              <span style={{ fontSize: '10px', color: '#86efac', fontWeight: '800' }}>Músculo Magro</span>
+              <TrendingUp size={13} color="var(--accent-emerald)" />
+              <span style={{ fontSize: '10px', color: 'var(--accent-emerald)', fontWeight: '800' }}>Músculo Magro</span>
             </div>
-            <strong style={{ fontSize: '14px', color: '#ffffff', fontWeight: '900', display: 'block' }}>
+            <strong className="font-mono-tech" style={{ fontSize: '14px', color: 'var(--text-main)', fontWeight: '900', display: 'block' }}>
               +{muscleToGainKg} kg
             </strong>
-            <span style={{ fontSize: '9.5px', color: '#cbd5e1' }}>
+            <span style={{ fontSize: '9.5px', color: 'var(--text-muted)' }}>
               ~{weeksForMuscleGain} semanas ({Math.round(weeklyMuscleGainRateKg * 4.3 * 100) / 100} kg/mes)
             </span>
           </div>
@@ -248,12 +246,12 @@ export default function PhysiquePredictorCard({
         {savedWeeks > 0 && currentWeekWorkouts < 5 && (
           <div style={{
             marginTop: '10px',
-            background: 'rgba(56, 189, 248, 0.15)',
-            border: '1px solid rgba(56, 189, 248, 0.3)',
+            background: 'var(--accent-blue-light)',
+            border: '1px solid var(--border-subtle)',
             borderRadius: '10px',
             padding: '6px 10px',
             fontSize: '10.5px',
-            color: '#e0f2fe',
+            color: 'var(--text-main)',
             fontWeight: '700'
           }}>
             ⚡ <strong>Acelerador:</strong> Si mantienes <strong>5 días consistentes</strong> en el gimnasio, reduces tu tiempo a <strong>~{optimalWeeks} semanas</strong> (¡ahorras ~{savedWeeks} semanas!).
@@ -270,57 +268,57 @@ export default function PhysiquePredictorCard({
       }}>
         {/* Ratio Adonis V-Taper */}
         <div style={{
-          background: '#f5f3ff',
-          border: '1px solid #ddd6fe',
+          background: 'rgba(168, 85, 247, 0.12)',
+          border: '1px solid rgba(168, 85, 247, 0.25)',
           borderRadius: '12px',
           padding: '8px',
           textAlign: 'center'
         }}>
-          <span style={{ fontSize: '9px', color: '#6d28d9', fontWeight: '800', display: 'block', textTransform: 'uppercase' }}>
+          <span style={{ fontSize: '9px', color: '#c084fc', fontWeight: '800', display: 'block', textTransform: 'uppercase' }}>
             Ratio Adonis (H/C)
           </span>
-          <strong style={{ fontSize: '15px', color: '#4c1d95', fontWeight: '900' }}>
+          <strong className="font-mono-tech" style={{ fontSize: '15px', color: 'var(--text-main)', fontWeight: '900' }}>
             {current.hasTapeMeasurements && current.adonisRatio ? current.adonisRatio : '--'}
           </strong>
-          <span style={{ fontSize: '8.5px', color: '#7c3aed', display: 'block', fontWeight: '700' }}>
+          <span style={{ fontSize: '8.5px', color: '#c084fc', display: 'block', fontWeight: '700' }}>
             {current.hasTapeMeasurements ? 'Meta: 1.618' : 'Sin cinta métrica'}
           </span>
         </div>
 
         {/* Grasa Visceral */}
         <div style={{
-          background: current.visceralFat >= 10 ? '#fef2f2' : (current.visceralFat > 8 ? '#fffbeb' : '#ecfdf5'),
-          border: `1px solid ${current.visceralFat >= 10 ? '#fecaca' : (current.visceralFat > 8 ? '#fde68a' : '#a7f3d0')}`,
+          background: current.visceralFat >= 10 ? 'var(--accent-red-subtle)' : (current.visceralFat > 8 ? 'var(--accent-amber-subtle)' : 'var(--accent-emerald-subtle)'),
+          border: `1px solid ${current.visceralFat >= 10 ? 'rgba(239, 68, 68, 0.3)' : (current.visceralFat > 8 ? 'rgba(245, 158, 11, 0.3)' : 'rgba(16, 185, 129, 0.3)')}`,
           borderRadius: '12px',
           padding: '8px',
           textAlign: 'center'
         }}>
-          <span style={{ fontSize: '9px', color: current.visceralFat >= 10 ? '#dc2626' : (current.visceralFat > 8 ? '#d97706' : '#047857'), fontWeight: '800', display: 'block', textTransform: 'uppercase' }}>
+          <span style={{ fontSize: '9px', color: current.visceralFat >= 10 ? 'var(--accent-red)' : (current.visceralFat > 8 ? 'var(--accent-amber)' : 'var(--accent-emerald)'), fontWeight: '800', display: 'block', textTransform: 'uppercase' }}>
             Grasa Visceral
           </span>
-          <strong style={{ fontSize: '15px', color: current.visceralFat >= 10 ? '#991b1b' : (current.visceralFat > 8 ? '#92400e' : '#065f46'), fontWeight: '900' }}>
+          <strong className="font-mono-tech" style={{ fontSize: '15px', color: 'var(--text-main)', fontWeight: '900' }}>
             Nivel {current.visceralFat}
           </strong>
-          <span style={{ fontSize: '8.5px', color: current.visceralFat >= 10 ? '#dc2626' : (current.visceralFat > 8 ? '#d97706' : '#059669'), display: 'block', fontWeight: '700' }}>
+          <span style={{ fontSize: '8.5px', color: current.visceralFat >= 10 ? 'var(--accent-red)' : (current.visceralFat > 8 ? 'var(--accent-amber)' : 'var(--accent-emerald)'), display: 'block', fontWeight: '700' }}>
             {current.visceralFat >= 10 ? '🔴 Alerta Salud' : (current.visceralFat > 8 ? '🟡 Alerta Moderada' : '🟢 Saludable')}
           </span>
         </div>
 
         {/* Edad Metabólica */}
         <div style={{
-          background: '#eff6ff',
-          border: '1px solid #bfdbfe',
+          background: 'var(--accent-blue-light)',
+          border: '1px solid rgba(56, 189, 248, 0.25)',
           borderRadius: '12px',
           padding: '8px',
           textAlign: 'center'
         }}>
-          <span style={{ fontSize: '9px', color: '#1d4ed8', fontWeight: '800', display: 'block', textTransform: 'uppercase' }}>
+          <span style={{ fontSize: '9px', color: 'var(--accent-blue)', fontWeight: '800', display: 'block', textTransform: 'uppercase' }}>
             Edad Metabólica
           </span>
-          <strong style={{ fontSize: '15px', color: '#1e40af', fontWeight: '900' }}>
+          <strong className="font-mono-tech" style={{ fontSize: '15px', color: 'var(--text-main)', fontWeight: '900' }}>
             {current.metabolicAge} años
           </strong>
-          <span style={{ fontSize: '8.5px', color: '#2563eb', display: 'block', fontWeight: '700' }}>
+          <span style={{ fontSize: '8.5px', color: 'var(--accent-blue)', display: 'block', fontWeight: '700' }}>
             Real: {current.realAge} años {current.metabolicAge <= current.realAge ? '✨' : `(+${current.metabolicAge - current.realAge})`}
           </span>
         </div>
@@ -329,20 +327,21 @@ export default function PhysiquePredictorCard({
       {/* BLOQUE 4: BARRA DE PROGRESO Y PRÓXIMO HITO */}
       <div style={{ marginBottom: '10px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginBottom: '4px' }}>
-          <span style={{ color: '#64748b', fontWeight: '800' }}>Composición Física Completada</span>
-          <strong style={{ color: '#4f46e5', fontWeight: '900' }}>{progressPercent}%</strong>
+          <span style={{ color: 'var(--text-muted)', fontWeight: '800' }}>Composición Física Completada</span>
+          <strong className="font-mono-tech" style={{ color: 'var(--accent-blue)', fontWeight: '900' }}>{progressPercent}%</strong>
         </div>
         <div style={{
           width: '100%',
           height: '8px',
-          background: '#e2e8f0',
+          background: 'var(--bg-surface-secondary)',
           borderRadius: '10px',
-          overflow: 'hidden'
+          overflow: 'hidden',
+          border: '1px solid var(--border-subtle)'
         }}>
           <div style={{
             width: `${progressPercent}%`,
             height: '100%',
-            background: 'linear-gradient(90deg, #6366f1 0%, #4f46e5 100%)',
+            background: 'var(--accent-blue)',
             borderRadius: '10px',
             transition: 'width 0.4s ease'
           }} />
@@ -351,16 +350,16 @@ export default function PhysiquePredictorCard({
 
       {/* PRÓXIMO HITO CONCRETO */}
       <div style={{
-        background: '#f8fafc',
-        border: '1px solid #e2e8f0',
+        background: 'var(--bg-surface-secondary)',
+        border: '1px solid var(--border-subtle)',
         borderRadius: '12px',
         padding: '10px',
         display: 'flex',
         alignItems: 'center',
         gap: '8px'
       }}>
-        <Sparkles size={16} color="#4f46e5" style={{ flexShrink: 0 }} />
-        <span style={{ fontSize: '11px', color: '#334155', fontWeight: '700', lineHeight: 1.35 }}>
+        <Sparkles size={16} color="var(--accent-blue)" style={{ flexShrink: 0 }} />
+        <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: '700', lineHeight: 1.35 }}>
           {current.hasTapeMeasurements && current.waistCm ? (
             <><strong>Próximo Hito:</strong> Reducir cintura a {Math.max(76, current.waistCm - 1)} cm y consolidar sobrecarga en hombros para elevar tu Ratio Adonis hacia 1.618.</>
           ) : (

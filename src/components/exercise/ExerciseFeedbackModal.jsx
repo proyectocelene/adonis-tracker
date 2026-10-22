@@ -49,8 +49,8 @@ export default function ExerciseFeedbackModal({
       style={{
         position: 'fixed',
         inset: 0,
-        backgroundColor: 'rgba(15, 23, 42, 0.65)',
-        backdropFilter: 'blur(4px)',
+        backgroundColor: 'rgba(0, 0, 0, 0.75)',
+        backdropFilter: 'blur(5px)',
         zIndex: 9999,
         display: 'flex', alignItems: 'flex-start', justifyContent: 'center', overflowY: 'auto', WebkitOverflowScrolling: 'touch', padding: '16px', paddingTop: 'calc(env(safe-area-inset-top, 0px) + 20px)', paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 40px)'
       }}
@@ -58,15 +58,16 @@ export default function ExerciseFeedbackModal({
     >
       <div 
         style={{
-          background: '#ffffff',
-          borderRadius: '20px', maxWidth: '440px', width: '100%', margin: 'auto 0',
+          background: 'var(--bg-surface)',
+          border: '1px solid var(--border-subtle)',
+          borderRadius: '22px', maxWidth: '440px', width: '100%', margin: 'auto 0',
           overflowY: 'auto',
-          boxShadow: '0 20px 40px rgba(0, 0, 0, 0.25)',
-          padding: '20px',
+          boxShadow: 'var(--shadow-ios)',
+          padding: '18px',
           position: 'relative',
           display: 'flex',
           flexDirection: 'column',
-          gap: '14px'
+          gap: '12px'
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -77,19 +78,20 @@ export default function ExerciseFeedbackModal({
               width: '36px',
               height: '36px',
               borderRadius: '10px',
-              background: '#f3e8ff',
-              color: '#7c3aed',
+              background: 'rgba(139, 92, 246, 0.15)',
+              color: '#c4b5fd',
+              border: '1px solid rgba(139, 92, 246, 0.3)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center'
             }}>
-              <Sparkles size={20} />
+              <Sparkles size={18} />
             </div>
             <div>
-              <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '900', color: '#0f172a' }}>
+              <h3 style={{ margin: 0, fontSize: '15px', fontWeight: '900', color: 'var(--text-main)' }}>
                 Sensaciones & Biofeedback
               </h3>
-              <span style={{ fontSize: '11px', color: '#64748b', fontWeight: '700' }}>
+              <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: '700' }}>
                 {exerciseName}
               </span>
             </div>
@@ -98,25 +100,25 @@ export default function ExerciseFeedbackModal({
             type="button"
             onClick={onClose}
             style={{
-              background: '#f1f5f9',
-              border: 'none',
-              borderRadius: '10px',
-              width: '32px',
-              height: '32px',
+              background: 'var(--bg-surface-secondary)',
+              border: '1px solid var(--border-subtle)',
+              borderRadius: '50%',
+              width: '30px',
+              height: '30px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               cursor: 'pointer',
-              color: '#64748b'
+              color: 'var(--text-secondary)'
             }}
           >
-            <X size={18} />
+            <X size={16} />
           </button>
         </div>
 
         {/* 1. ESFUERZO / RPE REAL PERCIBIDO */}
         <div>
-          <label style={{ display: 'block', fontSize: '11px', fontWeight: '900', color: '#334155', textTransform: 'uppercase', marginBottom: '6px' }}>
+          <label style={{ display: 'block', fontSize: '11px', fontWeight: '900', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '6px' }}>
             🔥 Esfuerzo Real Percibido (RPE):
           </label>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px' }}>
@@ -133,9 +135,9 @@ export default function ExerciseFeedbackModal({
                 style={{
                   padding: '7px 4px',
                   borderRadius: '10px',
-                  border: rpe === item.val ? '2px solid #0066ff' : '1px solid #cbd5e1',
-                  background: rpe === item.val ? '#eff6ff' : '#f8fafc',
-                  color: rpe === item.val ? '#0066ff' : '#334155',
+                  border: rpe === item.val ? '2px solid var(--accent-blue)' : '1px solid var(--border-subtle)',
+                  background: rpe === item.val ? 'var(--accent-blue-light)' : 'var(--bg-card)',
+                  color: rpe === item.val ? 'var(--accent-blue)' : 'var(--text-secondary)',
                   cursor: 'pointer',
                   textAlign: 'center',
                   display: 'flex',
@@ -144,7 +146,7 @@ export default function ExerciseFeedbackModal({
                 }}
               >
                 <strong style={{ fontSize: '11px', fontWeight: '900' }}>{item.label}</strong>
-                <span style={{ fontSize: '8.5px', color: '#64748b', marginTop: '1px' }}>{item.sub}</span>
+                <span style={{ fontSize: '8.5px', color: 'var(--text-muted)', marginTop: '1px' }}>{item.sub}</span>
               </button>
             ))}
           </div>
@@ -152,7 +154,7 @@ export default function ExerciseFeedbackModal({
 
         {/* 2. BOMBEO / CONGESTIÓN MUSCULAR (PUMP) */}
         <div>
-          <label style={{ display: 'block', fontSize: '11px', fontWeight: '900', color: '#334155', textTransform: 'uppercase', marginBottom: '6px' }}>
+          <label style={{ display: 'block', fontSize: '11px', fontWeight: '900', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '6px' }}>
             💪 Congestión / Bombeo (Pump):
           </label>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px' }}>
@@ -169,9 +171,9 @@ export default function ExerciseFeedbackModal({
                 style={{
                   padding: '7px 4px',
                   borderRadius: '10px',
-                  border: pump === item.val ? '2px solid #7c3aed' : '1px solid #cbd5e1',
-                  background: pump === item.val ? '#faf5ff' : '#f8fafc',
-                  color: pump === item.val ? '#7c3aed' : '#334155',
+                  border: pump === item.val ? '2px solid #8b5cf6' : '1px solid var(--border-subtle)',
+                  background: pump === item.val ? 'rgba(139, 92, 246, 0.15)' : 'var(--bg-card)',
+                  color: pump === item.val ? '#c4b5fd' : 'var(--text-secondary)',
                   cursor: 'pointer',
                   textAlign: 'center'
                 }}
@@ -185,14 +187,14 @@ export default function ExerciseFeedbackModal({
 
         {/* 3. CONFORT / DOLOR ARTICULAR */}
         <div>
-          <label style={{ display: 'block', fontSize: '11px', fontWeight: '900', color: '#334155', textTransform: 'uppercase', marginBottom: '6px' }}>
+          <label style={{ display: 'block', fontSize: '11px', fontWeight: '900', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '6px' }}>
             🛡️ Confort Articular:
           </label>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px' }}>
             {[
               { val: 'none', label: '🟢 Cero dolor', sub: 'Articulación limpia' },
               { val: 'mild', label: '🟡 Leve aviso', sub: 'Vigilar agarre/ángulo' },
-              { val: 'pain', label: '🔴 Molestia/Dolor', sub: 'Cambiar ejercicio' }
+              { val: 'pain', label: '🔴 Molestia', sub: 'Cambiar ejercicio' }
             ].map(item => (
               <button
                 key={item.val}
@@ -201,9 +203,9 @@ export default function ExerciseFeedbackModal({
                 style={{
                   padding: '7px 4px',
                   borderRadius: '10px',
-                  border: jointPain === item.val ? '2px solid #10b981' : '1px solid #cbd5e1',
-                  background: jointPain === item.val ? '#ecfdf5' : '#f8fafc',
-                  color: jointPain === item.val ? '#065f46' : '#334155',
+                  border: jointPain === item.val ? '2px solid var(--accent-emerald)' : '1px solid var(--border-subtle)',
+                  background: jointPain === item.val ? 'var(--accent-emerald-subtle)' : 'var(--bg-card)',
+                  color: jointPain === item.val ? 'var(--accent-emerald)' : 'var(--text-secondary)',
                   cursor: 'pointer',
                   textAlign: 'center',
                   display: 'flex',
@@ -212,7 +214,7 @@ export default function ExerciseFeedbackModal({
                 }}
               >
                 <strong style={{ fontSize: '10.5px', fontWeight: '900' }}>{item.label}</strong>
-                <span style={{ fontSize: '8px', color: '#64748b', marginTop: '1px' }}>{item.sub}</span>
+                <span style={{ fontSize: '8px', color: 'var(--text-muted)', marginTop: '1px' }}>{item.sub}</span>
               </button>
             ))}
           </div>
@@ -220,7 +222,7 @@ export default function ExerciseFeedbackModal({
 
         {/* 4. CALIDAD TÉCNICA */}
         <div>
-          <label style={{ display: 'block', fontSize: '11px', fontWeight: '900', color: '#334155', textTransform: 'uppercase', marginBottom: '6px' }}>
+          <label style={{ display: 'block', fontSize: '11px', fontWeight: '900', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '6px' }}>
             📐 Calidad Técnica:
           </label>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px' }}>
@@ -236,9 +238,9 @@ export default function ExerciseFeedbackModal({
                 style={{
                   padding: '7px 4px',
                   borderRadius: '10px',
-                  border: technique === item.val ? '2px solid #f59e0b' : '1px solid #cbd5e1',
-                  background: technique === item.val ? '#fffbeb' : '#f8fafc',
-                  color: technique === item.val ? '#b45309' : '#334155',
+                  border: technique === item.val ? '2px solid var(--accent-amber)' : '1px solid var(--border-subtle)',
+                  background: technique === item.val ? 'var(--accent-warning-light)' : 'var(--bg-card)',
+                  color: technique === item.val ? 'var(--accent-amber)' : 'var(--text-secondary)',
                   cursor: 'pointer',
                   textAlign: 'center',
                   display: 'flex',
@@ -247,7 +249,7 @@ export default function ExerciseFeedbackModal({
                 }}
               >
                 <strong style={{ fontSize: '10.5px', fontWeight: '900' }}>{item.label}</strong>
-                <span style={{ fontSize: '8px', color: '#64748b', marginTop: '1px' }}>{item.sub}</span>
+                <span style={{ fontSize: '8px', color: 'var(--text-muted)', marginTop: '1px' }}>{item.sub}</span>
               </button>
             ))}
           </div>
@@ -255,7 +257,7 @@ export default function ExerciseFeedbackModal({
 
         {/* 5. ACCIÓN SUGERIDA PARA PRÓXIMA SESIÓN */}
         <div>
-          <label style={{ display: 'block', fontSize: '11px', fontWeight: '900', color: '#334155', textTransform: 'uppercase', marginBottom: '6px' }}>
+          <label style={{ display: 'block', fontSize: '11px', fontWeight: '900', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '6px' }}>
             🎯 Acción para Próxima Sesión:
           </label>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '6px' }}>
@@ -272,9 +274,9 @@ export default function ExerciseFeedbackModal({
                 style={{
                   padding: '7px 6px',
                   borderRadius: '10px',
-                  border: actionNext === item.val ? '2px solid #0066ff' : '1px solid #cbd5e1',
-                  background: actionNext === item.val ? '#eff6ff' : '#f8fafc',
-                  color: actionNext === item.val ? '#0066ff' : '#334155',
+                  border: actionNext === item.val ? '2px solid var(--accent-blue)' : '1px solid var(--border-subtle)',
+                  background: actionNext === item.val ? 'var(--accent-blue-light)' : 'var(--bg-card)',
+                  color: actionNext === item.val ? 'var(--accent-blue)' : 'var(--text-secondary)',
                   fontSize: '10.5px',
                   fontWeight: '800',
                   cursor: 'pointer',
@@ -294,9 +296,9 @@ export default function ExerciseFeedbackModal({
               type="button"
               onClick={handleClear}
               style={{
-                background: '#fef2f2',
-                color: '#ef4444',
-                border: '1px solid #fecaca',
+                background: 'var(--accent-danger-light)',
+                color: 'var(--accent-danger)',
+                border: '1px solid rgba(220, 38, 38, 0.3)',
                 borderRadius: '12px',
                 padding: '11px 14px',
                 fontSize: '12px',

@@ -12,14 +12,14 @@ export default function RoutineTextParserView({
 }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-      <div style={{ background: '#eff6ff', border: '1.5px solid #bfdbfe', borderRadius: '14px', padding: '12px' }}>
+      <div style={{ background: 'var(--accent-blue-light)', border: '1px solid var(--accent-blue)', borderRadius: '14px', padding: '12px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
-          <Sparkles size={16} color="#0066ff" />
-          <strong style={{ fontSize: '12px', color: '#1e3a8a', fontWeight: '900' }}>
+          <Sparkles size={16} color="var(--accent-blue)" />
+          <strong style={{ fontSize: '12px', color: 'var(--accent-blue)', fontWeight: '900' }}>
             Pegar Nueva Rutina (Texto Libre o JSON)
           </strong>
         </div>
-        <p style={{ margin: 0, fontSize: '11px', color: '#3b82f6', lineHeight: '1.4' }}>
+        <p style={{ margin: 0, fontSize: '11px', color: 'var(--text-muted)', lineHeight: '1.4' }}>
           Pega el texto de tu coach o plan de entrenamiento. El motor inteligente detectará los días (Lunes, Martes...), nombres de ejercicios, series, repeticiones y descansos automáticamente.
         </p>
       </div>
@@ -36,12 +36,12 @@ export default function RoutineTextParserView({
           width: '100%',
           padding: '12px',
           borderRadius: '14px',
-          border: '1.5px solid #cbd5e1',
+          border: '1px solid var(--border-subtle)',
           fontSize: '12px',
           fontFamily: 'monospace',
           fontWeight: '600',
-          background: '#f8fafc',
-          color: '#0f172a',
+          background: 'var(--bg-surface-secondary)',
+          color: 'var(--text-main)',
           resize: 'vertical'
         }}
       />
@@ -51,7 +51,7 @@ export default function RoutineTextParserView({
         onClick={handleParsePasted}
         disabled={!pastedText.trim()}
         style={{
-          background: '#0066ff',
+          background: 'var(--accent-blue)',
           color: '#ffffff',
           border: 'none',
           padding: '12px',
@@ -91,13 +91,13 @@ export default function RoutineTextParserView({
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '30vh', overflowY: 'auto', marginBottom: '12px' }}>
             {parsedPreview.map((day, idx) => (
-              <div key={idx} style={{ background: '#ffffff', padding: '8px 10px', borderRadius: '10px', border: '1px solid #bbf7d0' }}>
-                <strong style={{ fontSize: '12px', color: '#0f172a', display: 'block', marginBottom: '4px' }}>
+              <div key={idx} style={{ background: 'var(--bg-surface-secondary)', padding: '8px 10px', borderRadius: '10px', border: '1px solid var(--border-subtle)' }}>
+                <strong style={{ fontSize: '12px', color: 'var(--text-main)', display: 'block', marginBottom: '4px' }}>
                   {day.name} ({day.exercises.length} ex)
                 </strong>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
                   {day.exercises.map((ex, eIdx) => (
-                    <span key={eIdx} style={{ background: '#f1f5f9', color: '#334155', padding: '2px 6px', borderRadius: '6px', fontSize: '10px', fontWeight: '700' }}>
+                    <span key={eIdx} style={{ background: 'var(--bg-card)', color: 'var(--text-secondary)', padding: '2px 6px', borderRadius: '6px', fontSize: '10px', fontWeight: '700', border: '1px solid var(--border-subtle)' }}>
                       {ex.name} ({ex.sets}x{ex.reps})
                     </span>
                   ))}

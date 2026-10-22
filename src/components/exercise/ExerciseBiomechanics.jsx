@@ -163,82 +163,82 @@ export default function ExerciseBiomechanics({
 
       {/* 1. TARJETA DE PRESCRIPCIÓN & OBJETIVO CIENTÍFICO ÓPTIMO */}
       <div style={{
-        background: 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)',
-        border: '1.5px solid #bfdbfe',
+        background: 'var(--accent-blue-light)',
+        border: '1.5px solid var(--accent-blue)',
         borderRadius: '16px',
         padding: '12px 14px',
-        boxShadow: '0 2px 8px rgba(0, 102, 255, 0.06)'
+        boxShadow: 'var(--shadow-ios-sm)'
       }}>
         <div className="flex-between" style={{ alignItems: 'flex-start', marginBottom: '8px' }}>
           <div>
-            <span style={{ fontSize: '10px', color: '#1e40af', textTransform: 'uppercase', fontWeight: '900', letterSpacing: '0.5px', display: 'block' }}>
+            <span style={{ fontSize: '10px', color: 'var(--accent-blue)', textTransform: 'uppercase', fontWeight: '900', letterSpacing: '0.5px', display: 'block' }}>
               🎯 Prescripción Científica Oficial
             </span>
-            <strong style={{ fontSize: '14px', color: '#0f172a', fontWeight: '900' }}>
+            <strong style={{ fontSize: '14px', color: 'var(--text-main)', fontWeight: '900' }}>
               Realizar {totalSets} Series Efectivas de Trabajo
             </strong>
           </div>
-          <span style={{ fontSize: '11px', background: '#0066ff', color: '#ffffff', padding: '3px 10px', borderRadius: '10px', fontWeight: '900' }}>
+          <span style={{ fontSize: '11px', background: 'var(--accent-blue)', color: '#ffffff', padding: '3px 10px', borderRadius: '10px', fontWeight: '900' }}>
             Meta: {targetReps} reps
           </span>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', background: '#ffffff', padding: '8px 10px', borderRadius: '12px', border: '1px solid #bfdbfe', marginBottom: '8px' }}>
-          <div style={{ fontSize: '11px', color: '#334155', display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <Clock size={13} color="#0066ff" /> Descanso: <strong style={{ color: '#0066ff' }}>{restPrescribed}</strong>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', background: 'var(--bg-card)', padding: '8px 10px', borderRadius: '12px', border: '1px solid var(--border-subtle)', marginBottom: '8px' }}>
+          <div style={{ fontSize: '11px', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <Clock size={13} color="var(--accent-blue)" /> Descanso: <strong style={{ color: 'var(--accent-blue)' }}>{restPrescribed}</strong>
           </div>
-          <div style={{ fontSize: '11px', color: '#334155' }}>
-            🔥 Esfuerzo: <strong style={{ color: '#d97706' }}>RPE 8-9 (RIR 1-2)</strong>
+          <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
+            🔥 Esfuerzo: <strong style={{ color: 'var(--accent-amber)' }}>RPE 8-9 (RIR 1-2)</strong>
           </div>
         </div>
 
-        <div style={{ fontSize: '11px', color: '#1e3a8a', lineHeight: '1.4', fontWeight: '600' }}>
+        <div style={{ fontSize: '11px', color: 'var(--text-secondary)', lineHeight: '1.4', fontWeight: '600' }}>
           💡 <strong>Estrategia Óptima:</strong> Completa tus {totalSets} series efectivas manteniendo técnica estricta en {targetReps} reps. Si en tu última serie logras el tope superior con RPE &le; 8, aumenta carga (+5 lbs) la próxima sesión.
         </div>
       </div>
 
       {/* 2. NUEVA SECCIÓN: CONEXIÓN MENTE-MÚSCULO & ACTIVACIÓN NEUROMUSCULAR (WULF & SCHOENFELD) */}
       <div style={{
-        background: 'linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%)',
-        border: '1.5px solid #d8b4fe',
+        background: 'rgba(124, 58, 237, 0.08)',
+        border: '1.5px solid rgba(168, 85, 247, 0.25)',
         borderRadius: '16px',
         padding: '12px 14px',
-        boxShadow: '0 4px 12px rgba(168, 85, 247, 0.08)'
+        boxShadow: 'var(--shadow-ios-sm)'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
-          <Brain size={16} color="#7e22ce" />
-          <span style={{ fontSize: '11px', color: '#7e22ce', textTransform: 'uppercase', fontWeight: '900', letterSpacing: '0.5px' }}>
-            Conexión Mente-Músculo ({mindMuscle.title})
+          <Brain size={16} color="#a855f7" />
+          <span style={{ fontSize: '11px', color: '#c084fc', textTransform: 'uppercase', fontWeight: '900', letterSpacing: '0.5px' }}>
+            Conexión Mente-MÚsculo ({mindMuscle.title})
           </span>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           {/* Enfoque Interno */}
-          <div style={{ background: '#ffffff', padding: '8px 10px', borderRadius: '12px', border: '1px solid #e9d5ff' }}>
-            <div style={{ fontSize: '11px', fontWeight: '900', color: '#6b21a8', marginBottom: '2px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <div style={{ background: 'var(--bg-card)', padding: '8px 10px', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
+            <div style={{ fontSize: '11px', fontWeight: '900', color: '#c084fc', marginBottom: '2px', display: 'flex', alignItems: 'center', gap: '4px' }}>
               <span>🧠</span> Enfoque Interno (Siente el Músculo):
             </div>
-            <p style={{ margin: 0, fontSize: '11px', color: '#334155', lineHeight: '1.4', fontWeight: '600' }}>
+            <p style={{ margin: 0, fontSize: '11px', color: 'var(--text-secondary)', lineHeight: '1.4', fontWeight: '600' }}>
               {mindMuscle.internalCue}
             </p>
           </div>
 
           {/* Enfoque Externo */}
-          <div style={{ background: '#ffffff', padding: '8px 10px', borderRadius: '12px', border: '1px solid #e9d5ff' }}>
-            <div style={{ fontSize: '11px', fontWeight: '900', color: '#6b21a8', marginBottom: '2px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <div style={{ background: 'var(--bg-card)', padding: '8px 10px', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
+            <div style={{ fontSize: '11px', fontWeight: '900', color: '#c084fc', marginBottom: '2px', display: 'flex', alignItems: 'center', gap: '4px' }}>
               <span>🎯</span> Enfoque Externo (Vector de Fuerza):
             </div>
-            <p style={{ margin: 0, fontSize: '11px', color: '#334155', lineHeight: '1.4', fontWeight: '600' }}>
+            <p style={{ margin: 0, fontSize: '11px', color: 'var(--text-secondary)', lineHeight: '1.4', fontWeight: '600' }}>
               {mindMuscle.externalCue}
             </p>
           </div>
 
           {/* Control Excéntrico */}
-          <div style={{ background: '#ffffff', padding: '8px 10px', borderRadius: '12px', border: '1px solid #e9d5ff' }}>
-            <div style={{ fontSize: '11px', fontWeight: '900', color: '#6b21a8', marginBottom: '2px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <div style={{ background: 'var(--bg-card)', padding: '8px 10px', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
+            <div style={{ fontSize: '11px', fontWeight: '900', color: '#c084fc', marginBottom: '2px', display: 'flex', alignItems: 'center', gap: '4px' }}>
               <span>⏳</span> Tensión Excéntrica (2-3s):
             </div>
-            <p style={{ margin: 0, fontSize: '11px', color: '#334155', lineHeight: '1.4', fontWeight: '600' }}>
+            <p style={{ margin: 0, fontSize: '11px', color: 'var(--text-secondary)', lineHeight: '1.4', fontWeight: '600' }}>
               {mindMuscle.eccentricCue}
             </p>
           </div>
@@ -252,9 +252,9 @@ export default function ExerciseBiomechanics({
           target="_blank"
           rel="noopener noreferrer"
           style={{
-            background: '#f8fafc',
-            color: '#1e293b',
-            border: '1.5px solid #cbd5e1',
+            background: 'var(--bg-surface-secondary)',
+            color: 'var(--text-main)',
+            border: '1px solid var(--border-subtle)',
             padding: '8px 10px',
             borderRadius: '12px',
             fontSize: '11px',
@@ -266,16 +266,16 @@ export default function ExerciseBiomechanics({
             textDecoration: 'none'
           }}
         >
-          <Search size={14} color="#0066ff" /> Google Imágenes
+          <Search size={14} color="var(--accent-blue)" /> Google Imágenes
         </a>
         <a
           href={youtubeTutorialUrl}
           target="_blank"
           rel="noopener noreferrer"
           style={{
-            background: '#fef2f2',
-            color: '#991b1b',
-            border: '1.5px solid #fecaca',
+            background: 'var(--accent-red-subtle)',
+            color: 'var(--accent-red)',
+            border: '1px solid var(--accent-red)',
             padding: '8px 10px',
             borderRadius: '12px',
             fontSize: '11px',
@@ -287,13 +287,13 @@ export default function ExerciseBiomechanics({
             textDecoration: 'none'
           }}
         >
-          <Video size={14} color="#dc2626" /> Video Tutorial
+          <Video size={14} color="var(--accent-red)" /> Video Tutorial
         </a>
       </div>
 
       {exercise.warmup && (
-        <div style={{ background: '#fffbeb', border: '1.5px solid #f59e0b', padding: '10px 12px', borderRadius: '14px', fontSize: '12px', color: '#78350f', fontWeight: '600', width: '100%' }}>
-          <strong style={{ color: '#b45309', display: 'block', marginBottom: '2px', fontWeight: '900' }}>
+        <div style={{ background: 'var(--accent-amber-subtle)', border: '1.5px solid var(--accent-amber)', padding: '10px 12px', borderRadius: '14px', fontSize: '12px', color: 'var(--accent-amber)', fontWeight: '600', width: '100%' }}>
+          <strong style={{ color: 'var(--accent-amber)', display: 'block', marginBottom: '2px', fontWeight: '900' }}>
             Guía de Calentamiento:
           </strong>
           {exercise.warmup}
@@ -301,19 +301,19 @@ export default function ExerciseBiomechanics({
       )}
 
       {/* 4. BIOMECÁNICA E IAP */}
-      <div style={{ background: '#f8fafc', padding: '10px 12px', borderRadius: '14px', border: '1.5px solid #e2e8f0', width: '100%' }}>
+      <div style={{ background: 'var(--bg-card)', padding: '10px 12px', borderRadius: '14px', border: '1px solid var(--border-subtle)', width: '100%' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
-          <Info size={14} color="#7c3aed" />
-          <strong style={{ fontSize: '12px', color: '#4c1d95', fontWeight: '900' }}>Biomecánica & IAP:</strong>
+          <Info size={14} color="#a855f7" />
+          <strong style={{ fontSize: '12px', color: '#c084fc', fontWeight: '900' }}>Biomecánica & IAP:</strong>
         </div>
-        <p style={{ margin: 0, fontSize: '12px', color: '#334155', lineHeight: '1.5', fontWeight: '600' }}>
+        <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-secondary)', lineHeight: '1.5', fontWeight: '600' }}>
           {exercise.biomechanics || 'Control de la fase excéntrica con respiración rítmica anti-hernia.'}
         </p>
       </div>
 
       {/* 5. CALIBRACIÓN DE MÁQUINA */}
-      <div style={{ background: '#ffffff', padding: '10px', borderRadius: '14px', border: '1.5px solid #cbd5e1', width: '100%' }}>
-        <label className="input-label" style={{ display: 'block', marginBottom: '4px', fontSize: '11px', color: '#0f172a', fontWeight: '900' }}>
+      <div style={{ background: 'var(--bg-card)', padding: '10px', borderRadius: '14px', border: '1px solid var(--border-subtle)', width: '100%' }}>
+        <label className="input-label" style={{ display: 'block', marginBottom: '4px', fontSize: '11px', color: 'var(--text-main)', fontWeight: '900' }}>
           ⚙️ Calibración de Máquina:
         </label>
         <div style={{ display: 'flex', gap: '6px' }}>
@@ -322,7 +322,7 @@ export default function ExerciseBiomechanics({
             placeholder="Ej. Asiento en hoyo 4, polea baja..."
             value={machineSetupInput}
             onChange={(e) => setMachineSetupInput(e.target.value)}
-            style={{ flex: 1, padding: '8px 10px', borderRadius: '10px', border: '1.5px solid #cbd5e1', fontSize: '12px', fontWeight: '700' }}
+            style={{ flex: 1, padding: '8px 10px', borderRadius: '10px', border: '1px solid var(--border-subtle)', background: 'var(--bg-surface-secondary)', color: 'var(--text-main)', fontSize: '12px', fontWeight: '700' }}
           />
           <button
             type="button"

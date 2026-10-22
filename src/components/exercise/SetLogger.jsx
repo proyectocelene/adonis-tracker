@@ -247,13 +247,13 @@ export default function SetLogger({
           <div style={{
             display: 'inline-flex',
             alignItems: 'center',
-            background: '#f1f5f9',
+            background: 'var(--bg-surface-secondary)',
             padding: '4px 8px',
             borderRadius: '10px',
-            border: '1px solid #cbd5e1',
+            border: '1px solid var(--border-subtle)',
             fontSize: '10.5px',
             fontWeight: '800',
-            color: '#475569',
+            color: 'var(--text-secondary)',
             flexShrink: 0
           }}>
             🔗 Barra Bilateral
@@ -261,10 +261,10 @@ export default function SetLogger({
         ) : (
           <div style={{
             display: 'inline-flex',
-            background: '#f1f5f9',
+            background: 'var(--bg-surface-secondary)',
             padding: '2px',
             borderRadius: '10px',
-            border: '1px solid #cbd5e1',
+            border: '1px solid var(--border-subtle)',
             flexShrink: 0
           }}>
             <button
@@ -274,12 +274,12 @@ export default function SetLogger({
                 padding: '4px 8px',
                 borderRadius: '8px',
                 border: 'none',
-                background: !isUnilateral ? '#ffffff' : 'transparent',
-                color: !isUnilateral ? '#0f172a' : '#64748b',
+                background: !isUnilateral ? 'var(--bg-card)' : 'transparent',
+                color: !isUnilateral ? 'var(--text-main)' : 'var(--text-muted)',
                 fontWeight: !isUnilateral ? '900' : '700',
                 fontSize: '10.5px',
                 cursor: 'pointer',
-                boxShadow: !isUnilateral ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+                boxShadow: !isUnilateral ? 'var(--shadow-ios-sm)' : 'none',
                 transition: 'all 0.15s ease'
               }}
             >
@@ -293,7 +293,7 @@ export default function SetLogger({
                 borderRadius: '8px',
                 border: 'none',
                 background: isUnilateral ? '#7c3aed' : 'transparent',
-                color: isUnilateral ? '#ffffff' : '#64748b',
+                color: isUnilateral ? '#ffffff' : 'var(--text-muted)',
                 fontWeight: isUnilateral ? '900' : '700',
                 fontSize: '10.5px',
                 cursor: 'pointer',
@@ -312,8 +312,8 @@ export default function SetLogger({
             type="button"
             onClick={() => setIsMachineConfigOpen(true)}
             style={{
-              background: machineConfig ? '#eff6ff' : '#f8fafc',
-              border: machineConfig ? '1.5px solid #93c5fd' : '1px solid #cbd5e1',
+              background: machineConfig ? 'var(--accent-blue-light)' : 'var(--bg-surface-secondary)',
+              border: machineConfig ? '1.5px solid var(--accent-blue)' : '1px solid var(--border-subtle)',
               borderRadius: '8px',
               padding: '4px 6px',
               cursor: 'pointer',
@@ -324,20 +324,20 @@ export default function SetLogger({
             }}
             title="Calibrar máquina, asiento, respaldo, muesca o saltos de peso"
           >
-            <Settings2 size={13} color={machineConfig ? '#0066ff' : '#64748b'} />
+            <Settings2 size={13} color={machineConfig ? 'var(--accent-blue)' : 'var(--text-muted)'} />
           </button>
 
           <select
             value={machineConfig?.id || (exerciseProfiles[0]?.id) || ''}
             onChange={(e) => handleSelectMachineProfile(e.target.value)}
             style={{
-              background: machineConfig ? '#f5f3ff' : '#ffffff',
-              border: machineConfig ? '1.5px solid #c084fc' : '1px solid #cbd5e1',
+              background: machineConfig ? 'rgba(124, 58, 237, 0.15)' : 'var(--bg-card)',
+              border: machineConfig ? '1.5px solid #a855f7' : '1px solid var(--border-subtle)',
               borderRadius: '8px',
               padding: '4px 5px',
               fontSize: '10px',
               fontWeight: '800',
-              color: machineConfig ? '#7c3aed' : '#475569',
+              color: machineConfig ? '#c084fc' : 'var(--text-main)',
               maxWidth: '145px',
               cursor: 'pointer',
               outline: 'none',
@@ -369,13 +369,13 @@ export default function SetLogger({
               type="button"
               onClick={() => setIsMachineConfigOpen(true)}
               style={{
-                background: '#ecfdf5',
-                border: '1px solid #86efac',
+                background: 'var(--accent-emerald-subtle)',
+                border: '1px solid var(--accent-emerald)',
                 borderRadius: '8px',
                 padding: '3px 5px',
                 fontSize: '9px',
                 fontWeight: '800',
-                color: '#166534',
+                color: 'var(--accent-emerald)',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
@@ -406,15 +406,15 @@ export default function SetLogger({
             display: 'inline-flex',
             alignItems: 'center',
             gap: '3px',
-            background: coachAnalysis.isSpreadHigh ? '#fffbeb' : (coachAnalysis.canProgressWeight ? '#dcfce7' : '#eff6ff'),
-            border: `1.5px solid ${coachAnalysis.isSpreadHigh ? '#fde68a' : (coachAnalysis.canProgressWeight ? '#86efac' : '#bfdbfe')}`,
-            color: coachAnalysis.isSpreadHigh ? '#b45309' : (coachAnalysis.canProgressWeight ? '#15803d' : '#1d4ed8'),
+            background: coachAnalysis.isSpreadHigh ? 'var(--accent-amber-subtle)' : (coachAnalysis.canProgressWeight ? 'var(--accent-emerald-subtle)' : 'var(--accent-blue-light)'),
+            border: `1.5px solid ${coachAnalysis.isSpreadHigh ? 'var(--accent-amber)' : (coachAnalysis.canProgressWeight ? 'var(--accent-emerald)' : 'var(--accent-blue)')}`,
+            color: coachAnalysis.isSpreadHigh ? 'var(--accent-amber)' : (coachAnalysis.canProgressWeight ? 'var(--accent-emerald)' : 'var(--accent-blue)'),
             borderRadius: '9px',
             padding: '4px 8px',
             fontSize: '10.5px',
             fontWeight: '900',
             cursor: 'pointer',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+            boxShadow: 'var(--shadow-ios-sm)',
             flexShrink: 0
           }}
           title="Ver análisis estadístico y estrategia inteligente de este ejercicio"
@@ -428,14 +428,14 @@ export default function SetLogger({
       {/* ALERTA VISUAL SI LA MÁQUINA DE HOY ESTÁ EN OTRO PISO QUE LA GUÍA ANTERIOR */}
       {isFloorMismatch && (
         <div style={{
-          background: '#fffbeb',
-          border: '1px solid #fde68a',
+          background: 'var(--accent-amber-subtle)',
+          border: '1px solid var(--accent-amber)',
           borderRadius: '10px',
           padding: '6px 10px',
           marginBottom: '8px',
           fontSize: '10px',
           fontWeight: '700',
-          color: '#92400e',
+          color: 'var(--accent-amber)',
           display: 'flex',
           alignItems: 'center',
           gap: '6px'
@@ -449,7 +449,7 @@ export default function SetLogger({
 
       {/* SERIES DE CALENTAMIENTO ORGANIZADAS */}
       {shouldRenderWarmup ? (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '8px', width: '100%' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', marginBottom: '8px', width: '100%' }}>
           {(warmupPlan.series.length > 0 ? warmupPlan.series : [{ id: 0, label: 'C1', pct: '60%', defaultWeight: suggestedWarmupWeight || 0, defaultReps: 10, desc: 'Aproximación' }]).map((wSet) => {
             const wVal = exerciseData[wSet.id] || {};
             const isWDone = !!wVal.completed;
@@ -458,10 +458,10 @@ export default function SetLogger({
               <div
                 key={wSet.id}
                 style={{
-                  background: isWDone ? '#fef3c7' : '#fffbeb',
-                  borderRadius: '12px',
-                  border: isWDone ? '1.5px solid #f59e0b' : '1.5px dashed #f59e0b',
-                  padding: '6px 8px',
+                  background: isWDone ? 'var(--accent-amber-subtle)' : 'var(--bg-surface-secondary)',
+                  borderRadius: '10px',
+                  border: isWDone ? '1px solid var(--accent-amber)' : '1px dashed var(--accent-amber)',
+                  padding: '5px 8px',
                   width: '100%',
                   display: 'flex',
                   alignItems: 'center',
@@ -470,14 +470,14 @@ export default function SetLogger({
                 }}
               >
                 {/* IDENTIFICADOR CALENTAMIENTO */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', minWidth: '70px' }}>
-                  <Flame size={14} color="#d97706" />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', minWidth: '65px' }}>
+                  <Flame size={13} color="var(--accent-amber)" />
                   <div>
-                    <strong style={{ fontSize: '11px', color: '#b45309', fontWeight: '900' }}>
+                    <strong className="font-mono-tech" style={{ fontSize: '11px', color: 'var(--accent-amber)', fontWeight: '900' }}>
                       {wSet.label}
                     </strong>
-                    <span style={{ fontSize: '8.5px', color: '#78350f', display: 'block', fontWeight: '700' }}>
-                      {wSet.pct} (~{wSet.defaultWeight || 0} lbs)
+                    <span className="font-mono-tech" style={{ fontSize: '8.5px', color: 'var(--text-muted)', display: 'block', fontWeight: '700' }}>
+                      {wSet.pct} (~{wSet.defaultWeight || 0}#)
                     </span>
                   </div>
                 </div>
@@ -495,27 +495,29 @@ export default function SetLogger({
                         handleSanitizedChange(wSet.id, 'weight', val);
                       }
                     }}
+                    className="font-mono-tech"
                     style={{
-                      width: '50px',
-                      padding: '5px 2px',
-                      borderRadius: '8px',
-                      border: '1.5px solid #f59e0b',
+                      width: '48px',
+                      height: '32px',
+                      padding: '0 2px',
+                      borderRadius: '6px',
+                      border: '1px solid var(--accent-amber)',
                       fontSize: '13px',
-                      fontWeight: '900',
+                      fontWeight: '800',
                       textAlign: 'center',
-                      background: '#ffffff',
-                      color: '#78350f'
+                      background: 'var(--bg-surface)',
+                      color: 'var(--text-main)'
                     }}
                   />
                   <button
                     type="button"
                     onClick={() => setPlateModal({ isOpen: true, setNum: wSet.id, currentWeight: wVal.weight || wSet.defaultWeight || 0 })}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '1px', fontSize: '12px' }}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '1px', fontSize: '12px', lineHeight: 1 }}
                     title="Calculadora de discos y placas"
                   >
                     🏋️
                   </button>
-                  <span style={{ fontSize: '9.5px', color: '#b45309', fontWeight: '800' }}>lbs</span>
+                  <span className="font-mono-tech" style={{ fontSize: '9px', color: 'var(--text-muted)', fontWeight: '700' }}>lbs</span>
                 </div>
 
                 {/* INPUT REPS */}
@@ -531,37 +533,45 @@ export default function SetLogger({
                         handleSanitizedChange(wSet.id, 'reps', val);
                       }
                     }}
+                    className="font-mono-tech"
                     style={{
-                      width: '42px',
-                      padding: '5px 2px',
-                      borderRadius: '8px',
-                      border: '1.5px solid #f59e0b',
+                      width: '40px',
+                      height: '32px',
+                      padding: '0 2px',
+                      borderRadius: '6px',
+                      border: '1px solid var(--accent-amber)',
                       fontSize: '13px',
-                      fontWeight: '900',
+                      fontWeight: '800',
                       textAlign: 'center',
-                      background: '#ffffff',
-                      color: '#78350f'
+                      background: 'var(--bg-surface)',
+                      color: 'var(--text-main)'
                     }}
                   />
-                  <span style={{ fontSize: '9.5px', color: '#b45309', fontWeight: '800' }}>reps</span>
+                  <span className="font-mono-tech" style={{ fontSize: '9px', color: 'var(--text-muted)', fontWeight: '700' }}>reps</span>
                 </div>
 
                 {/* BOTÓN CHECK CALENTAMIENTO */}
                 <button
                   type="button"
-                  onClick={() => toggleSetComplete(wSet.id)}
+                  onClick={() => {
+                    if (navigator.vibrate) {
+                      try { navigator.vibrate(20); } catch (e) {}
+                    }
+                    toggleSetComplete(wSet.id);
+                  }}
                   style={{
                     width: '32px',
                     height: '32px',
                     borderRadius: '8px',
                     border: 'none',
-                    background: isWDone ? '#f59e0b' : '#cbd5e1',
-                    color: '#ffffff',
+                    background: isWDone ? 'var(--accent-amber)' : 'var(--bg-surface-elevated)',
+                    color: isWDone ? '#000000' : 'var(--text-muted)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     cursor: 'pointer',
-                    flexShrink: 0
+                    flexShrink: 0,
+                    transition: 'all 0.15s ease'
                   }}
                 >
                   <Check size={16} strokeWidth={3.5} />
@@ -578,7 +588,7 @@ export default function SetLogger({
             style={{
               background: 'transparent',
               border: 'none',
-              color: '#94a3b8',
+              color: 'var(--text-muted)',
               fontSize: '10px',
               fontWeight: '700',
               cursor: 'pointer',
@@ -595,64 +605,56 @@ export default function SetLogger({
         <div 
           onClick={() => setIsScienceModalOpen(true)}
           style={{
-            background: coachAnalysis.unifiedTarget.isExcessiveLoad 
-              ? 'linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)' 
-              : (coachAnalysis.unifiedTarget.canProgressWeight 
-                  ? 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)' 
-                  : 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)'),
-            border: `1.5px solid ${
+            background: 'var(--bg-surface-secondary)',
+            border: `1px solid ${
               coachAnalysis.unifiedTarget.isExcessiveLoad 
-                ? '#fde68a' 
-                : (coachAnalysis.unifiedTarget.canProgressWeight ? '#86efac' : '#bae6fd')
+                ? 'var(--accent-amber)' 
+                : (coachAnalysis.unifiedTarget.canProgressWeight ? 'var(--accent-emerald)' : 'var(--accent-cyan)')
             }`,
-            borderRadius: '14px',
-            padding: '8px 12px',
-            marginBottom: '10px',
+            borderRadius: '10px',
+            padding: '6px 10px',
+            marginBottom: '8px',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            gap: '8px',
-            boxShadow: '0 2px 6px rgba(0,0,0,0.03)'
+            gap: '6px'
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontSize: '16px' }}>
+            <span style={{ fontSize: '15px' }}>
               {coachAnalysis.unifiedTarget.isExcessiveLoad ? '🔬' : (coachAnalysis.unifiedTarget.canProgressWeight ? '🚀' : '🎯')}
             </span>
             <div>
               <div style={{ 
-                fontSize: '11.5px', 
+                fontSize: '11px', 
                 fontWeight: '900', 
                 color: coachAnalysis.unifiedTarget.isExcessiveLoad 
-                  ? '#92400e' 
-                  : (coachAnalysis.unifiedTarget.canProgressWeight ? '#14532d' : '#0369a1') 
+                  ? 'var(--accent-amber)' 
+                  : (coachAnalysis.unifiedTarget.canProgressWeight ? 'var(--accent-emerald)' : 'var(--accent-cyan)') 
               }}>
                 {coachAnalysis.unifiedTarget.headline}
               </div>
               <div style={{ 
                 fontSize: '9.5px', 
-                color: coachAnalysis.unifiedTarget.isExcessiveLoad 
-                  ? '#b45309' 
-                  : (coachAnalysis.unifiedTarget.canProgressWeight ? '#166534' : '#0284c7'), 
-                fontWeight: '600',
-                marginTop: '1px'
+                color: 'var(--text-muted)', 
+                fontWeight: '600'
               }}>
                 {coachAnalysis.unifiedTarget.note}
               </div>
             </div>
           </div>
           <span style={{ 
-            fontSize: '9.5px', 
+            fontSize: '9px', 
             color: coachAnalysis.unifiedTarget.isExcessiveLoad 
-              ? '#d97706' 
-              : (coachAnalysis.unifiedTarget.canProgressWeight ? '#16a34a' : '#0284c7'), 
+              ? 'var(--accent-amber)' 
+              : (coachAnalysis.unifiedTarget.canProgressWeight ? 'var(--accent-emerald)' : 'var(--accent-cyan)'), 
             fontWeight: '900',
             flexShrink: 0,
-            background: '#ffffff',
-            padding: '2px 7px',
+            background: 'var(--bg-surface)',
+            padding: '2px 6px',
             borderRadius: '6px',
-            border: '1px solid rgba(0,0,0,0.06)'
+            border: '1px solid var(--border-subtle)'
           }}>
             Coach ➔
           </span>
@@ -662,25 +664,24 @@ export default function SetLogger({
       {/* BANNER INFORMATIVO MODO DELOAD */}
       {isDeloadMode && (
         <div style={{
-          background: 'linear-gradient(135deg, #ecfdf5 0%, #e0f2fe 100%)',
-          border: '1.5px solid #059669',
-          borderRadius: '12px',
-          padding: '8px 12px',
-          marginBottom: '10px',
+          background: 'var(--accent-emerald-subtle)',
+          border: '1px solid var(--accent-emerald)',
+          borderRadius: '10px',
+          padding: '6px 10px',
+          marginBottom: '8px',
           display: 'flex',
           alignItems: 'center',
-          gap: '8px',
-          boxShadow: '0 2px 6px rgba(5, 150, 105, 0.08)'
+          gap: '6px'
         }}>
-          <span style={{ fontSize: '16px' }}>🧘</span>
-          <div style={{ fontSize: '11px', color: '#065f46', fontWeight: '800', lineHeight: '1.4' }}>
-            <strong>Modo Deload Activo:</strong> Pesos sugeridos al 80%, objetivo 2 series y RIR 3-4 (sin fallo) para disipar fatiga del SNC.
+          <span style={{ fontSize: '14px' }}>🧘</span>
+          <div style={{ fontSize: '10.5px', color: 'var(--accent-emerald)', fontWeight: '800', lineHeight: '1.3' }}>
+            <strong>Modo Deload Activo:</strong> Cargas al 80%, 2 series y RIR 3-4 (sin fallo) para regeneración del SNC.
           </div>
         </div>
       )}
 
-      {/* TABLA DE SERIES DE TRABAJO EFECTIVAS (DISEÑO ANTI-DESBORDE Y SIN TRUNCAMIENTO) */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '10px', width: '100%' }}>
+      {/* TABLA DE SERIES DE TRABAJO EFECTIVAS (DISEÑO TÁCTICO CYBER-CLINICAL) */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', marginBottom: '8px', width: '100%' }}>
         {Array.from({ length: totalSets }).map((_, sIdx) => {
           const setNum = sIdx + 1;
           const setVal = exerciseData[setNum] || {};
@@ -719,43 +720,43 @@ export default function SetLogger({
               <div
                 key={setNum}
                 style={{
-                  background: '#f8fafc',
-                  border: '1.5px dashed #cbd5e1',
-                  borderRadius: '12px',
-                  padding: '9px 12px',
+                  background: 'var(--bg-surface-secondary)',
+                  border: '1px dashed var(--border-subtle)',
+                  borderRadius: '10px',
+                  padding: '7px 10px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  gap: '8px',
+                  gap: '6px',
                   opacity: 0.8
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{
-                    background: '#94a3b8',
-                    color: '#ffffff',
-                    borderRadius: '6px',
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span className="font-mono-tech" style={{
+                    background: 'var(--bg-surface-elevated)',
+                    color: 'var(--text-muted)',
+                    borderRadius: '5px',
                     padding: '1px 5px',
-                    fontSize: '10px',
+                    fontSize: '9.5px',
                     fontWeight: '900'
                   }}>
                     S{setNum}
                   </span>
-                  <span style={{ fontSize: '11px', color: '#64748b', fontWeight: '700' }}>
-                    🧘 Serie Omitida por Deload (Objetivo: 2 series de descarga)
+                  <span style={{ fontSize: '10.5px', color: 'var(--text-muted)', fontWeight: '700' }}>
+                    🧘 Serie Omitida por Deload (Descarga)
                   </span>
                 </div>
                 <button
                   type="button"
                   onClick={() => setUnlockedDeloadSets(prev => ({ ...prev, [setNum]: true }))}
                   style={{
-                    background: '#ffffff',
-                    border: '1px solid #cbd5e1',
-                    borderRadius: '8px',
-                    padding: '4px 8px',
-                    fontSize: '10px',
+                    background: 'var(--bg-surface)',
+                    border: '1px solid var(--border-strong)',
+                    borderRadius: '6px',
+                    padding: '3px 7px',
+                    fontSize: '9.5px',
                     fontWeight: '800',
-                    color: '#0284c7',
+                    color: 'var(--accent-cyan)',
                     cursor: 'pointer'
                   }}
                   title="Desbloquear si deseas realizar esta serie extra"
@@ -771,52 +772,45 @@ export default function SetLogger({
           if (isDone) {
             if (isExtraSet) {
               completedBadge = {
-                text: '➕ Extra (+Volumen)',
-                color: '#4f46e5',
-                bg: '#eef2ff',
-                border: '#c7d2fe'
+                text: '➕ Extra (+Vol)',
+                color: 'var(--accent-blue)',
+                border: 'var(--accent-blue)'
               };
             } else if (deltaWeight > 0) {
               completedBadge = {
-                text: `${isPr ? '🏆 PR! ' : ''}🚀 +${deltaWeight}# Sobrecarga!`,
-                color: '#15803d',
-                bg: '#dcfce7',
-                border: '#86efac'
+                text: `${isPr ? '🏆 PR! ' : ''}🚀 +${deltaWeight}#`,
+                color: 'var(--accent-emerald)',
+                border: 'var(--accent-emerald)'
               };
             } else if (deltaWeight === 0 && deltaReps > 0) {
               completedBadge = {
-                text: `${isPr ? '🏆 PR! ' : ''}⚡ +${deltaReps}r Sobrecarga!`,
-                color: '#0369a1',
-                bg: '#e0f2fe',
-                border: '#7dd3fc'
+                text: `${isPr ? '🏆 PR! ' : ''}⚡ +${deltaReps}r`,
+                color: 'var(--accent-cyan)',
+                border: 'var(--accent-cyan)'
               };
             } else if (deltaWeight === 0 && deltaReps === 0) {
               completedBadge = {
-                text: `✓ ${weightNum}# Consolidado (RPE ${rpeNum || 8})`,
-                color: '#15803d',
-                bg: '#f0fdf4',
-                border: '#bbf7d0'
+                text: `✓ ${weightNum}# Consolidado`,
+                color: 'var(--accent-emerald)',
+                border: 'var(--accent-emerald)'
               };
             } else if (deltaWeight < 0) {
               completedBadge = {
-                text: `⚖️ Back-off (${deltaWeight} lbs)`,
-                color: '#b45309',
-                bg: '#fef3c7',
-                border: '#fde68a'
+                text: `⚖️ Back-off (${deltaWeight}#)`,
+                color: 'var(--accent-amber)',
+                border: 'var(--accent-amber)'
               };
             } else if (deltaReps < 0) {
               completedBadge = {
                 text: rpeNum >= 9.5 ? `⚠️ Fatiga (${repsNum} vs ${prevRepsNum}r)` : `✓ ${weightNum}# × ${repsNum}r`,
-                color: '#64748b',
-                bg: '#f1f5f9',
-                border: '#cbd5e1'
+                color: 'var(--text-muted)',
+                border: 'var(--border-strong)'
               };
             } else {
               completedBadge = {
-                text: current1RM > 0 ? `1RM: ${current1RM} lbs` : '✓ Listo',
-                color: '#15803d',
-                bg: '#f0fdf4',
-                border: '#bbf7d0'
+                text: current1RM > 0 ? `1RM: ${current1RM}#` : '✓ Listo',
+                color: 'var(--accent-emerald)',
+                border: 'var(--accent-emerald)'
               };
             }
           }
@@ -828,15 +822,13 @@ export default function SetLogger({
                 display: 'flex',
                 flexDirection: 'column',
                 gap: '5px',
-                background: isDone ? '#f0fdf4' : '#ffffff',
-                border: isDone ? '1.5px solid #86efac' : '1.5px solid #cbd5e1',
-                borderRadius: '12px',
-                padding: '8px 10px',
-                boxShadow: isDone ? '0 2px 6px rgba(34, 197, 94, 0.12)' : '0 1px 3px rgba(0,0,0,0.03)',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '8px',
-                position: 'relative'
+                background: isDone ? 'var(--bg-surface-secondary)' : 'var(--bg-surface)',
+                border: isDone ? '1px solid var(--accent-emerald)' : '1px solid var(--border-subtle)',
+                borderRadius: '10px',
+                padding: '6px 8px',
+                boxShadow: isDone ? '0 0 10px var(--accent-emerald-subtle)' : 'none',
+                position: 'relative',
+                transition: 'border-color 0.15s ease, background 0.15s ease'
               }}
             >
               {/* LÍNEA SUPERIOR: NÚMERO DE SERIE, HISTORIAL ANTERIOR Y META */}
@@ -844,41 +836,41 @@ export default function SetLogger({
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                borderBottom: '1px dashed #e2e8f0',
-                paddingBottom: '4px',
-                gap: '6px'
+                borderBottom: '1px solid var(--border-subtle)',
+                paddingBottom: '3px',
+                gap: '5px'
               }}>
                 {/* GUÍA PASADA (NUNCA TRUNCADA) */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '5px', flexShrink: 0 }}>
-                  <span style={{
-                    background: isDone ? '#15803d' : '#0f172a',
-                    color: '#ffffff',
-                    borderRadius: '6px',
+                  <span className="font-mono-tech" style={{
+                    background: isDone ? 'var(--accent-emerald)' : 'var(--bg-surface-elevated)',
+                    color: isDone ? '#000000' : 'var(--text-main)',
+                    borderRadius: '5px',
                     padding: '1px 5px',
-                    fontSize: '10px',
+                    fontSize: '9.5px',
                     fontWeight: '900'
                   }}>
                     S{setNum}
                   </span>
-                  <span style={{ color: '#64748b', fontSize: '10.5px', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '3px' }}>
-                    <span>Anterior:</span>
-                    <strong style={{ color: '#1e293b' }}>
+                  <span className="font-mono-tech" style={{ color: 'var(--text-muted)', fontSize: '10px', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '3px' }}>
+                    <span style={{ fontSize: '9px', opacity: 0.8 }}>Prev:</span>
+                    <strong style={{ color: 'var(--text-main)', fontWeight: '700' }}>
                       {prevVal.weight 
-                        ? `${prevVal.weight} lbs × ${
+                        ? `${prevVal.weight}# × ${
                             isUnilateral && ((prevVal.repsL && prevVal.repsL !== 'null') || (prevVal.repsR && prevVal.repsR !== 'null'))
                               ? `I:${prevVal.repsL || prevVal.reps} D:${prevVal.repsR || prevVal.reps}`
-                              : `${prevVal.reps || prevVal.repsR || prevVal.repsL || '—'} reps`
+                              : `${prevVal.reps || prevVal.repsR || prevVal.repsL || '—'}r`
                           }` 
                         : '—'}
                     </strong>
                     {prevLocation && (
                       <span style={{
-                        fontSize: '9px',
-                        background: '#f5f3ff',
-                        color: '#7c3aed',
-                        padding: '0 4px',
-                        borderRadius: '4px',
-                        fontWeight: '800'
+                        fontSize: '8.5px',
+                        background: 'var(--bg-surface-elevated)',
+                        color: 'var(--accent-cyan)',
+                        padding: '0 3px',
+                        borderRadius: '3px',
+                        fontWeight: '700'
                       }} title={`Sesión pasada hecha en: ${prevLocation}`}>
                         ({prevLocation.includes('Planta') ? prevLocation.replace('Planta ', 'P.') : prevLocation})
                       </span>
@@ -886,32 +878,32 @@ export default function SetLogger({
                   </span>
                 </div>
 
-                {/* META O PR (COMPACTA, SIN REPETICIÓN DE EMOJIS) */}
+                {/* META O PR */}
                 {overloadTarget && !isDone && (
-                  <span style={{ 
-                    color: overloadTarget.isLoadAdjustment ? '#b45309' : '#0284c7', 
-                    fontSize: '10.5px', 
+                  <span className="font-mono-tech" style={{ 
+                    color: overloadTarget.isLoadAdjustment ? 'var(--accent-amber)' : 'var(--accent-cyan)', 
+                    fontSize: '9.5px', 
                     fontWeight: '800', 
                     whiteSpace: 'nowrap',
-                    background: overloadTarget.isLoadAdjustment ? '#fffbeb' : '#f0f9ff',
-                    padding: '1px 6px',
-                    borderRadius: '6px',
-                    border: `1px solid ${overloadTarget.isLoadAdjustment ? '#fde68a' : '#bae6fd'}`,
+                    background: overloadTarget.isLoadAdjustment ? 'var(--accent-amber-subtle)' : 'var(--accent-cyan-subtle)',
+                    padding: '1px 5px',
+                    borderRadius: '5px',
+                    border: `1px solid ${overloadTarget.isLoadAdjustment ? 'var(--accent-amber)' : 'var(--accent-cyan)'}`,
                     flexShrink: 0
                   }}>
                     🎯 {overloadTarget.shortText}
                   </span>
                 )}
                 {isDone && completedBadge && (
-                  <span style={{ 
+                  <span className="font-mono-tech" style={{ 
                     color: completedBadge.color,
-                    background: completedBadge.bg,
+                    background: 'var(--bg-surface)',
                     border: `1px solid ${completedBadge.border}`,
-                    fontSize: '10px', 
+                    fontSize: '9.5px', 
                     fontWeight: '800', 
                     whiteSpace: 'nowrap', 
-                    padding: '1.5px 6px',
-                    borderRadius: '6px',
+                    padding: '1px 5px',
+                    borderRadius: '5px',
                     flexShrink: 0 
                   }}>
                     {completedBadge.text}
@@ -919,7 +911,7 @@ export default function SetLogger({
                 )}
               </div>
 
-              {/* LÍNEA DE ENTRADA DE DATOS (ROBUSTA Y SIN DESBORDAMIENTOS) */}
+              {/* LÍNEA DE ENTRADA DE DATOS (HIGH DENSITY COCKPIT ROW) */}
               <div style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -941,16 +933,18 @@ export default function SetLogger({
                         handleSanitizedChange(setNum, 'weight', raw);
                       }
                     }}
+                    className="font-mono-tech"
                     style={{
                       width: isUnilateral ? '48px' : '52px',
-                      padding: '6px 2px',
-                      borderRadius: '8px',
-                      border: isWeightJumpAlert ? '2px solid #f59e0b' : '1.5px solid #94a3b8',
-                      fontSize: '13px',
-                      fontWeight: '900',
+                      height: '34px',
+                      padding: '0 2px',
+                      borderRadius: '6px',
+                      border: isWeightJumpAlert ? '1.5px solid var(--accent-amber)' : '1px solid var(--border-strong)',
+                      fontSize: '14px',
+                      fontWeight: '800',
                       textAlign: 'center',
-                      background: isWeightJumpAlert ? '#fffbeb' : '#ffffff',
-                      color: '#0f172a'
+                      background: 'var(--bg-surface-secondary)',
+                      color: 'var(--text-main)'
                     }}
                   />
                   <button
@@ -962,22 +956,22 @@ export default function SetLogger({
                       border: 'none',
                       cursor: 'pointer',
                       padding: '1px',
-                      fontSize: '13px',
+                      fontSize: '12px',
                       lineHeight: 1
                     }}
                   >
                     🏋️
                   </button>
-                  <span style={{ fontSize: isUnilateral ? '9.5px' : '10px', color: isUnilateral ? '#7c3aed' : '#64748b', fontWeight: '800', whiteSpace: 'nowrap' }}>
-                    {isUnilateral ? `${exercise.defaultUnit || 'lbs'}/ld` : (exercise.defaultUnit || 'lbs')}
+                  <span className="font-mono-tech" style={{ fontSize: isUnilateral ? '9px' : '9.5px', color: 'var(--text-muted)', fontWeight: '700', whiteSpace: 'nowrap' }}>
+                    {isUnilateral ? `${exercise.defaultUnit || 'lbs'}/l` : (exercise.defaultUnit || 'lbs')}
                   </span>
                 </div>
 
                 {/* REPETICIONES: MODO BILATERAL O POR LADO */}
                 {isUnilateral ? (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '3px', flexShrink: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', background: '#f5f3ff', borderRadius: '8px', border: '1.5px solid #c4b5fd', padding: '1px 3px' }}>
-                      <span style={{ fontSize: '9.5px', color: '#7c3aed', fontWeight: '900', marginRight: '1px' }}>I:</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '2px', flexShrink: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', background: 'var(--bg-surface-secondary)', borderRadius: '6px', border: '1px solid var(--border-strong)', padding: '0 2px', height: '34px' }}>
+                      <span className="font-mono-tech" style={{ fontSize: '9px', color: 'var(--accent-cyan)', fontWeight: '800', marginRight: '1px' }}>I:</span>
                       <input
                         type="text"
                         inputMode="numeric"
@@ -1003,21 +997,22 @@ export default function SetLogger({
                             });
                           }
                         }}
+                        className="font-mono-tech"
                         style={{
-                          width: '28px',
-                          padding: '5px 1px',
+                          width: '24px',
+                          padding: '0',
                           border: 'none',
-                          fontSize: '12px',
-                          fontWeight: '900',
+                          fontSize: '13px',
+                          fontWeight: '800',
                           textAlign: 'center',
                           background: 'transparent',
-                          color: '#4c1d95',
+                          color: 'var(--text-main)',
                           outline: 'none'
                         }}
                       />
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', background: '#ecfdf5', borderRadius: '8px', border: '1.5px solid #a7f3d0', padding: '1px 3px' }}>
-                      <span style={{ fontSize: '9.5px', color: '#059669', fontWeight: '900', marginRight: '1px' }}>D:</span>
+                    <div style={{ display: 'flex', alignItems: 'center', background: 'var(--bg-surface-secondary)', borderRadius: '6px', border: '1px solid var(--border-strong)', padding: '0 2px', height: '34px' }}>
+                      <span className="font-mono-tech" style={{ fontSize: '9px', color: 'var(--accent-emerald)', fontWeight: '800', marginRight: '1px' }}>D:</span>
                       <input
                         type="text"
                         inputMode="numeric"
@@ -1043,15 +1038,16 @@ export default function SetLogger({
                             });
                           }
                         }}
+                        className="font-mono-tech"
                         style={{
-                          width: '28px',
-                          padding: '5px 1px',
+                          width: '24px',
+                          padding: '0',
                           border: 'none',
-                          fontSize: '12px',
-                          fontWeight: '900',
+                          fontSize: '13px',
+                          fontWeight: '800',
                           textAlign: 'center',
                           background: 'transparent',
-                          color: '#065f46',
+                          color: 'var(--text-main)',
                           outline: 'none'
                         }}
                       />
@@ -1071,64 +1067,102 @@ export default function SetLogger({
                           handleSanitizedChange(setNum, 'reps', val);
                         }
                       }}
+                      className="font-mono-tech"
                       style={{
-                        width: '46px',
-                        padding: '6px 2px',
-                        borderRadius: '8px',
-                        border: isRepsHighAlert ? '2px solid #ef4444' : '1.5px solid #94a3b8',
-                        fontSize: '13px',
-                        fontWeight: '900',
+                        width: '44px',
+                        height: '34px',
+                        padding: '0 2px',
+                        borderRadius: '6px',
+                        border: isRepsHighAlert ? '1.5px solid var(--accent-red)' : '1px solid var(--border-strong)',
+                        fontSize: '14px',
+                        fontWeight: '800',
                         textAlign: 'center',
-                        background: isRepsHighAlert ? '#fef2f2' : '#ffffff',
-                        color: '#0f172a'
+                        background: 'var(--bg-surface-secondary)',
+                        color: 'var(--text-main)'
                       }}
                     />
-                    <span style={{ fontSize: '10px', color: '#64748b', fontWeight: '800' }}>r</span>
+                    <span className="font-mono-tech" style={{ fontSize: '9.5px', color: 'var(--text-muted)', fontWeight: '700' }}>r</span>
                   </div>
                 )}
 
-                {/* SELECTOR RPE */}
-                <select
-                  value={setVal.rpe || '8'}
-                  onChange={(e) => handleSetChange(setNum, 'rpe', e.target.value)}
-                  style={{
-                    width: '56px',
-                    padding: '6px 2px',
-                    borderRadius: '8px',
-                    border: setVal.rpe === '8' ? '1.5px solid #3b82f6' : '1.5px solid #cbd5e1',
-                    fontSize: '11px',
-                    fontWeight: '900',
-                    textAlign: 'center',
-                    background: setVal.rpe === '8' ? '#eff6ff' : '#ffffff',
-                    color: setVal.rpe === '8' ? '#1d4ed8' : '#0f172a',
-                    cursor: 'pointer'
-                  }}
-                >
-                  <option value="6">RPE 6</option>
-                  <option value="7">RPE 7</option>
-                  <option value="8">RPE 8</option>
-                  <option value="8.5">RPE 8.5</option>
-                  <option value="9">RPE 9</option>
-                  <option value="9.5">RPE 9.5</option>
-                  <option value="10">RPE 10</option>
-                </select>
+                {/* SELECTOR RPE SEMÁNTICO RIR */}
+                {(() => {
+                  const rpeVal = parseFloat(setVal.rpe || '8');
+                  let rpeBorder = 'var(--border-strong)';
+                  let rpeColor = 'var(--text-main)';
+                  let rpeBg = 'var(--bg-surface-secondary)';
+
+                  if (rpeVal <= 8) {
+                    // RIR 2-4: Esmeralda
+                    rpeBorder = 'var(--accent-emerald)';
+                    rpeColor = 'var(--accent-emerald)';
+                    rpeBg = 'var(--accent-emerald-subtle)';
+                  } else if (rpeVal <= 9) {
+                    // RIR 1-1.5: Ámbar
+                    rpeBorder = 'var(--accent-amber)';
+                    rpeColor = 'var(--accent-amber)';
+                    rpeBg = 'var(--accent-amber-subtle)';
+                  } else {
+                    // RIR 0 / Fallo: Rojo
+                    rpeBorder = 'var(--accent-red)';
+                    rpeColor = 'var(--accent-red)';
+                    rpeBg = 'var(--accent-red-subtle)';
+                  }
+
+                  return (
+                    <select
+                      value={setVal.rpe || '8'}
+                      onChange={(e) => handleSetChange(setNum, 'rpe', e.target.value)}
+                      className="font-mono-tech"
+                      style={{
+                        width: '54px',
+                        height: '34px',
+                        padding: '0 2px',
+                        borderRadius: '6px',
+                        border: `1px solid ${rpeBorder}`,
+                        fontSize: '10.5px',
+                        fontWeight: '800',
+                        textAlign: 'center',
+                        background: rpeBg,
+                        color: rpeColor,
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <option value="6">RPE 6</option>
+                      <option value="7">RPE 7</option>
+                      <option value="8">RPE 8</option>
+                      <option value="8.5">RPE 8.5</option>
+                      <option value="9">RPE 9</option>
+                      <option value="9.5">RPE 9.5</option>
+                      <option value="10">RPE 10</option>
+                    </select>
+                  );
+                })()}
 
                 {/* BOTÓN CHECK SERIE EFECTIVA */}
                 <button
                   type="button"
-                  onClick={() => toggleSetComplete(setNum)}
+                  onClick={() => {
+                    if (navigator.vibrate) {
+                      try { navigator.vibrate(30); } catch (e) {}
+                    }
+                    toggleSetComplete(setNum);
+                  }}
+                  title={isDone ? 'Serie completada (Toca para desmarcar)' : 'Marcar serie como completada'}
                   style={{
                     width: '36px',
-                    height: '36px',
-                    borderRadius: '10px',
+                    height: '34px',
+                    borderRadius: '8px',
                     border: 'none',
-                    background: isDone ? '#10b981' : '#cbd5e1',
-                    color: '#ffffff',
+                    background: isDone ? 'var(--accent-emerald)' : 'var(--bg-surface-elevated)',
+                    color: isDone ? '#000000' : 'var(--text-muted)',
+                    boxShadow: isDone ? '0 0 10px var(--accent-emerald-subtle)' : 'none',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     cursor: 'pointer',
-                    flexShrink: 0
+                    flexShrink: 0,
+                    transition: 'all 0.15s ease'
                   }}
                 >
                   <Check size={18} strokeWidth={3.5} />
@@ -1137,12 +1171,12 @@ export default function SetLogger({
 
               {/* ALERTAS ANTI-TYPO */}
               {isRepsHighAlert && (
-                <div style={{ fontSize: '10px', fontWeight: '800', color: '#dc2626', background: '#fef2f2', border: '1px solid #fecaca', padding: '2px 6px', borderRadius: '6px' }}>
+                <div style={{ fontSize: '9.5px', fontWeight: '800', color: 'var(--accent-red)', background: 'var(--accent-red-subtle)', border: '1px solid var(--accent-red)', padding: '2px 5px', borderRadius: '5px' }}>
                   ⚠️ ¿{repsNum} reps? Verifica posible error tipográfico.
                 </div>
               )}
               {isWeightJumpAlert && (
-                <div style={{ fontSize: '10px', fontWeight: '800', color: '#d97706', background: '#fffbeb', border: '1px solid #fed7aa', padding: '2px 6px', borderRadius: '6px' }}>
+                <div style={{ fontSize: '9.5px', fontWeight: '800', color: 'var(--accent-amber)', background: 'var(--accent-amber-subtle)', border: '1px solid var(--accent-amber)', padding: '2px 5px', borderRadius: '5px' }}>
                   ⚠️ Salto brusco detectado ({prevWeightNum} ➔ {weightNum} lbs).
                 </div>
               )}
@@ -1152,19 +1186,19 @@ export default function SetLogger({
       </div>
 
       {/* CONTROLES INFERIORES: AGREGAR SERIE, QUITAR SERIE Y REGISTRAR SENSACIONES */}
-      <div style={{ display: 'flex', gap: '6px', marginBottom: '8px', width: '100%' }}>
+      <div style={{ display: 'flex', gap: '5px', marginBottom: '6px', width: '100%' }}>
         <button
           type="button"
           onClick={handleAddSet}
           style={{
             flex: 1,
-            background: '#eff6ff',
-            color: '#0066ff',
-            border: '1.5px solid #bfdbfe',
-            padding: '9px 4px',
-            borderRadius: '12px',
+            background: 'var(--bg-surface-secondary)',
+            color: 'var(--accent-blue)',
+            border: '1px solid var(--border-strong)',
+            padding: '7px 4px',
+            borderRadius: '8px',
             fontSize: '11px',
-            fontWeight: '900',
+            fontWeight: '800',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
@@ -1172,7 +1206,7 @@ export default function SetLogger({
             gap: '4px'
           }}
         >
-          <Plus size={13} /> + Serie
+          <Plus size={12} /> + Serie
         </button>
 
         {totalSets > 1 && (
@@ -1180,20 +1214,20 @@ export default function SetLogger({
             type="button"
             onClick={handleRemoveSet}
             style={{
-              background: '#fef2f2',
-              color: '#ef4444',
-              border: '1.5px solid #fecaca',
-              padding: '9px 10px',
-              borderRadius: '12px',
+              background: 'var(--accent-red-subtle)',
+              color: 'var(--accent-red)',
+              border: '1px solid var(--accent-red)',
+              padding: '7px 8px',
+              borderRadius: '8px',
               fontSize: '11px',
-              fontWeight: '900',
+              fontWeight: '800',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               gap: '4px'
             }}
           >
-            <Minus size={13} /> Quitar
+            <Minus size={12} /> Quitar
           </button>
         )}
 
@@ -1202,13 +1236,13 @@ export default function SetLogger({
           onClick={() => setIsFeedbackModalOpen(true)}
           style={{
             flex: 1.2,
-            background: hasFeedback ? '#f3e8ff' : '#f8fafc',
-            color: hasFeedback ? '#7c3aed' : '#475569',
-            border: hasFeedback ? '1.5px solid #c084fc' : '1.5px solid #cbd5e1',
-            padding: '9px 6px',
-            borderRadius: '12px',
+            background: hasFeedback ? 'var(--bg-surface-elevated)' : 'var(--bg-surface-secondary)',
+            color: hasFeedback ? '#a855f7' : 'var(--text-secondary)',
+            border: hasFeedback ? '1px solid #a855f7' : '1px solid var(--border-strong)',
+            padding: '7px 6px',
+            borderRadius: '8px',
             fontSize: '11px',
-            fontWeight: '900',
+            fontWeight: '800',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
@@ -1217,7 +1251,7 @@ export default function SetLogger({
           }}
           title="Registrar biofeedback medible de sensaciones y congestión"
         >
-          <Sparkles size={13} color={hasFeedback ? '#7c3aed' : '#64748b'} />
+          <Sparkles size={12} color={hasFeedback ? '#a855f7' : 'var(--text-muted)'} />
           {hasFeedback ? 'Sensaciones ✓' : 'Sensaciones'}
         </button>
       </div>

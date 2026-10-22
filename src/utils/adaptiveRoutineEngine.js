@@ -11,10 +11,29 @@ import { scientificProtocol } from '../data/scientificProtocol.js';
  * Evalúa el estado de fatiga acumulada para recomendar Deload (reactivo o proactivo).
  * @param {Array} workoutHistory - Historial de entrenamientos del usuario.
  * @param {number} currentWeek - Número de semana del mesociclo actual.
- * @returns {Object} { shouldDeloadProactive, shouldDeloadReactive, reason, averageRpe }
+ * @param {Object|null} deloadCycleConfig - Configuración actual o previa del ciclo de descarga.
+ * @returns {Object} { shouldDeloadProactive, shouldDeloadReactive, shouldHighlightDeload, reason, averageRpe }
  */
-export function detectFatigueStatus(workoutHistory = [], currentWeek = 1) {
-  const isProactive = currentWeek >= 5 || (currentWeek > 0 && currentWeek % 5 === 0);
+export function detectFatigueStatus(workoutHistory = [], currentWeek = 1, deloadCycleConfig = null) {
+  // Comprobar período de enfriamiento (cooldown): si el usuario ya salió de un Deload o completó uno
+  let isUnderCooldown = false;
+  if (deloadCycleConfig) {
+    // Si fue desactivado manualmente o completado en esta misma semana o ciclo
+    if (deloadCycleConfig.manuallyExited || deloadCycleConfig.exitedWeek === currentWeek || deloadCycleConfig.weekNumber === currentWeek) {
+      if (deloadCycleConfig.isActive === false) {
+        isUnderCooldown = true;
+      }
+    }
+    // Cooldown de al menos 21 días (3 semanas de entrenamiento pesado garantizado antes de volver a sugerir proactivamente)
+    if (deloadCycleConfig.completedAt) {
+      const daysSinceCompleted = (Date.now() - new Date(deloadCycleConfig.completedAt).getTime()) / (1000 * 60 * 60 * 24);
+      if (daysSinceCompleted < 21) {
+        isUnderCooldown = true;
+      }
+    }
+  }
+
+  const isProactive = !isUnderCooldown && (currentWeek >= 5 || (currentWeek > 0 && currentWeek % 5 === 0));
 
   // Filtrar las últimas sesiones completadas (no descanso ni faltas)
   const validSessions = (workoutHistory || [])
@@ -57,7 +76,7 @@ export function detectFatigueStatus(workoutHistory = [], currentWeek = 1) {
   });
 
   const averageRpe = countRpe > 0 ? parseFloat((totalRpe / countRpe).toFixed(1)) : 8.0;
-  const isReactive = highRpeDaysCount >= 2 || (countRpe >= 2 && averageRpe >= 9.4);
+  const isReactive = !isUnderCooldown && (highRpeDaysCount >= 2 || (countRpe >= 2 && averageRpe >= 9.4));
 
   let reason = '';
   if (isReactive) {
@@ -556,4 +575,141 @@ export function generateAdaptiveSplit(targetSplit, baseRoutine = scientificProto
 
   // Fallback: rutina base original
   return baseRoutine;
+}
+
+/**
+ * Distribuye inteligentemente una lista de ejercicios pendientes de un día perdido
+ * entre los días restantes de entrenamiento de la semana, respetando la sinergia muscular
+ * y balanceando el volumen para evitar sobrecargar ninguna sesión individual.
+ *
+ * @param {Object} params
+ * @param {Array} params.pendingExercises - Ejercicios pendientes que no se realizaron.
+ * @param {Array} params.remainingDays - Días de entrenamiento restantes en la semana (no descanso).
+ * @param {Object} params.existingCustomsMap - Mapa actual de ejercicios personalizados { [dayId]: [] }.
+ * @returns {Object} { distributionMap: { [dayId]: [newExercises] }, summaryItems: Array<{ dayName, exerciseName }> }
+ */
+export function distributePendingExercisesAcrossDays({
+  pendingExercises = [],
+  remainingDays = [],
+  existingCustomsMap = {}
+}) {
+  if (!pendingExercises || pendingExercises.length === 0 || !remainingDays || remainingDays.length === 0) {
+    return { distributionMap: {}, summaryItems: [] };
+  }
+
+  // Filtrar únicamente días de entrenamiento (descartar descanso absoluto)
+  const targetDays = remainingDays.filter(d => d && d.type !== 'rest');
+  if (targetDays.length === 0) {
+    return { distributionMap: {}, summaryItems: [] };
+  }
+
+  const distributionMap = {};
+  targetDays.forEach(d => {
+    distributionMap[d.id] = [];
+  });
+
+  const summaryItems = [];
+
+  // Función para determinar compatibilidad muscular
+  const getMuscleAffinityScore = (exMuscleGroup = '', dayFocus = '', dayName = '') => {
+    const mg = exMuscleGroup.toLowerCase();
+    const focusStr = (dayFocus + ' ' + dayName).toLowerCase();
+
+    // Sinergias directas
+    if (mg.includes('espalda') || mg.includes('dorsal') || mg.includes('trapecio') || mg.includes('remo')) {
+      if (focusStr.includes('jalón') || focusStr.includes('tirón') || focusStr.includes('pull')) return 5;
+      if (focusStr.includes('empuje') || focusStr.includes('push')) return 2; // Antagonista bueno para remate
+      return 1;
+    }
+
+    if (mg.includes('pecho') || mg.includes('pectoral')) {
+      if (focusStr.includes('empuje') || focusStr.includes('push')) return 5;
+      if (focusStr.includes('jalón') || focusStr.includes('tirón')) return 2;
+      return 1;
+    }
+
+    if (mg.includes('hombro') || mg.includes('deltoides')) {
+      if (focusStr.includes('empuje') || focusStr.includes('hombro')) return 5;
+      if (focusStr.includes('jalón') && (mg.includes('posterior') || mg.includes('rear'))) return 5;
+      return 2;
+    }
+
+    if (mg.includes('bíceps') || mg.includes('biceps') || mg.includes('braquial')) {
+      if (focusStr.includes('jalón') || focusStr.includes('tirón')) return 5;
+      if (focusStr.includes('pierna') || focusStr.includes('leg')) return 3; // Muy común rematar brazo en pierna
+      return 2;
+    }
+
+    if (mg.includes('tríceps') || mg.includes('triceps')) {
+      if (focusStr.includes('empuje') || focusStr.includes('push')) return 5;
+      if (focusStr.includes('pierna') || focusStr.includes('leg')) return 3;
+      return 2;
+    }
+
+    if (mg.includes('cuádriceps') || mg.includes('isquio') || mg.includes('femoral') || mg.includes('glúteo') || mg.includes('pierna')) {
+      if (focusStr.includes('pierna') || focusStr.includes('leg') || focusStr.includes('cadena')) return 5;
+      return 1;
+    }
+
+    return 2;
+  };
+
+  // Asignar cada ejercicio al mejor día restante
+  pendingExercises.forEach(ex => {
+    let bestDay = targetDays[0];
+    let bestScore = -999;
+
+    targetDays.forEach(day => {
+      const alreadyAssignedCount = (distributionMap[day.id] || []).length;
+      const currentDayExerciseCount = (day.exercises || []).length + (existingCustomsMap[day.id] || []).length + alreadyAssignedCount;
+
+      // Si ya tiene 2 ejercicios asignados, penalizar fuertemente para no saturar
+      if (alreadyAssignedCount >= 2) {
+        return;
+      }
+
+      let score = getMuscleAffinityScore(ex.muscleGroup, day.focus, day.name);
+
+      // Penalizar días que ya están sobrecargados de ejercicios totales
+      score -= currentDayExerciseCount * 0.5;
+
+      // Dar preferencia a balancear equitativamente
+      score -= alreadyAssignedCount * 2;
+
+      if (score > bestScore) {
+        bestScore = score;
+        bestDay = day;
+      }
+    });
+
+    const newExItem = {
+      id: `distributed_${Date.now()}_${Math.random().toString(36).substr(2, 6)}_${ex.id}`,
+      name: ex.name,
+      muscleGroup: ex.muscleGroup || 'General',
+      sets: Math.min(3, ex.sets || 3),
+      reps: ex.reps || '10-12',
+      restTime: ex.restTime || '90 s',
+      biomechanics: ex.biomechanics || 'Recuperado de sesión pendiente para completar volumen semanal.',
+      unifiedCode: ex.unifiedCode,
+      isCustom: true,
+      recoveredFromMissedDay: true,
+      originalDayName: ex.sourceDayName || 'Inasistencia'
+    };
+
+    if (!distributionMap[bestDay.id]) {
+      distributionMap[bestDay.id] = [];
+    }
+    distributionMap[bestDay.id].push(newExItem);
+
+    summaryItems.push({
+      exerciseName: ex.name,
+      targetDayId: bestDay.id,
+      targetDayName: bestDay.name.split(':')[0]
+    });
+  });
+
+  return {
+    distributionMap,
+    summaryItems
+  };
 }

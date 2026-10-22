@@ -136,26 +136,26 @@ export default function ExerciseStrengthProgressModal({
     }
 
     // Diagnóstico del estado de sobrecarga
-    let status = { label: 'Línea Base Inicial', color: '#0066ff', bg: '#eff6ff', tip: 'Continúa registrando series para mapear tu curva de fuerza.' };
+    let status = { label: 'Línea Base Inicial', color: 'var(--accent-blue)', bg: 'var(--accent-blue-light)', tip: 'Continúa registrando series para mapear tu curva de fuerza.' };
     if (delta1RM > 5 || peakWeight > initialWeight) {
       status = { 
         label: '🚀 Sobrecarga Acelerada', 
-        color: '#15803d', 
-        bg: '#dcfce7', 
+        color: 'var(--accent-emerald)', 
+        bg: 'var(--accent-emerald-subtle)', 
         tip: 'Tu sistema neuromuscular está respondiendo óptimamente a la tensión mecánica.' 
       };
     } else if (delta1RM >= 0) {
       status = { 
         label: '📈 Progresión Sólida', 
-        color: '#0369a1', 
-        bg: '#e0f2fe', 
+        color: 'var(--accent-blue)', 
+        bg: 'var(--accent-blue-light)', 
         tip: 'Mantienes la carga incrementando control excéntrico o repeticiones.' 
       };
     } else {
       status = { 
         label: '⚖️ Consolidación / Back-off', 
-        color: '#b45309', 
-        bg: '#fef3c7', 
+        color: 'var(--accent-amber)', 
+        bg: 'var(--accent-amber-subtle)', 
         tip: 'Sesión de descarga o back-off controlada. Tu récord histórico se mantiene protegido.' 
       };
     }
@@ -219,7 +219,7 @@ export default function ExerciseStrengthProgressModal({
       left: 0,
       right: 0,
       bottom: 0,
-      background: 'rgba(15, 23, 42, 0.75)',
+      background: 'rgba(0, 0, 0, 0.75)',
       backdropFilter: 'blur(5px)',
       display: 'flex',
       alignItems: 'center',
@@ -232,40 +232,41 @@ export default function ExerciseStrengthProgressModal({
         width: '100%',
         maxHeight: '90vh',
         overflowY: 'auto',
-        background: '#ffffff',
-        borderRadius: '26px',
-        padding: '22px',
-        boxShadow: '0 25px 50px -12px rgba(0,0,0,0.3)',
+        background: 'var(--bg-surface)',
+        borderRadius: '24px',
+        padding: '20px',
+        border: '1px solid var(--border-subtle)',
+        boxShadow: 'var(--shadow-ios)',
         boxSizing: 'border-box'
       }}>
         {/* CABECERA */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '14px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <div style={{
-              width: '40px',
-              height: '40px',
-              borderRadius: '14px',
+              width: '38px',
+              height: '38px',
+              borderRadius: '12px',
               background: 'linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               color: '#ffffff',
-              boxShadow: '0 4px 12px rgba(124, 58, 237, 0.3)'
+              boxShadow: '0 4px 12px rgba(124, 58, 237, 0.25)'
             }}>
-              <TrendingUp size={22} />
+              <TrendingUp size={20} />
             </div>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '900', color: '#0f172a' }}>
+                <h3 style={{ margin: 0, fontSize: '15px', fontWeight: '900', color: 'var(--text-main)' }}>
                   {exName}
                 </h3>
                 {getUnifiedCodeForExercise(exercise) && (
-                  <span style={{ fontSize: '9.5px', background: '#f5f3ff', color: '#7c3aed', padding: '1px 6px', borderRadius: '6px', fontWeight: '800', border: '1px solid #ddd6fe' }}>
+                  <span className="font-mono-tech" style={{ fontSize: '9.5px', background: 'var(--bg-surface-secondary)', color: 'var(--accent-cyan)', padding: '1px 6px', borderRadius: '6px', fontWeight: '800', border: '1px solid var(--border-subtle)' }}>
                     {getUnifiedCodeForExercise(exercise).canonical}
                   </span>
                 )}
               </div>
-              <span style={{ fontSize: '11px', color: '#64748b', fontWeight: '700' }}>
+              <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: '700' }}>
                 {exercise.muscleGroup || 'General'} • Analítica & Proyección de Fuerza
               </span>
               {getUnifiedCodeForExercise(exercise)?.machineKey && (
@@ -274,16 +275,16 @@ export default function ExerciseStrengthProgressModal({
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: '4px',
-                  background: '#f5f3ff',
-                  border: '1px solid #ddd6fe',
+                  background: 'rgba(139, 92, 246, 0.12)',
+                  border: '1px solid rgba(139, 92, 246, 0.3)',
                   borderRadius: '6px',
                   padding: '2px 6px',
                   fontSize: '9.5px',
-                  color: '#6d28d9',
+                  color: '#c4b5fd',
                   fontWeight: '800'
                 }}>
-                  <Sparkles size={11} color="#7c3aed" />
-                  Motor inteligente: Mostrando progreso consolidado de la familia {getUnifiedCodeForExercise(exercise)?.machineKey}
+                  <Sparkles size={11} color="#a78bfa" />
+                  Motor inteligente: Familia {getUnifiedCodeForExercise(exercise)?.machineKey}
                 </div>
               )}
             </div>
@@ -292,9 +293,9 @@ export default function ExerciseStrengthProgressModal({
           <button
             type="button"
             onClick={onClose}
-            style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#64748b', padding: '4px' }}
+            style={{ background: 'var(--bg-surface-secondary)', border: '1px solid var(--border-subtle)', borderRadius: '50%', width: '30px', height: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--text-secondary)' }}
           >
-            <X size={20} />
+            <X size={16} />
           </button>
         </div>
 
@@ -302,15 +303,16 @@ export default function ExerciseStrengthProgressModal({
           <div>
             {/* KPI DE FUERZA ACTUAL & ESTADO */}
             <div style={{
-              background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
+              background: 'var(--bg-card)',
+              border: '1px solid var(--border-subtle)',
               borderRadius: '18px',
               padding: '16px',
-              color: '#ffffff',
+              color: 'var(--text-main)',
               marginBottom: '16px',
-              boxShadow: '0 4px 16px rgba(15, 23, 42, 0.15)'
+              boxShadow: 'var(--shadow-ios-sm)'
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '800', textTransform: 'uppercase' }}>
+                <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: '800', textTransform: 'uppercase' }}>
                   Fuerza Máxima Actual
                 </span>
                 <span style={{
@@ -327,19 +329,19 @@ export default function ExerciseStrengthProgressModal({
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                 <div>
-                  <span style={{ fontSize: '10.5px', color: '#94a3b8', display: 'block' }}>
+                  <span style={{ fontSize: '10.5px', color: 'var(--text-muted)', display: 'block' }}>
                     {stats.peakWeight > stats.currentWeight ? 'Carga Pico (Récord)' : 'Carga Pico Lograda'}
                   </span>
-                  <strong style={{ fontSize: '22px', color: '#ffffff', fontWeight: '900' }}>
-                    {stats.peakWeight > stats.currentWeight ? stats.peakWeight : stats.currentWeight} <span style={{ fontSize: '12px', color: '#94a3b8' }}>lbs</span>
+                  <strong className="font-mono-tech" style={{ fontSize: '22px', color: 'var(--text-main)', fontWeight: '900' }}>
+                    {stats.peakWeight > stats.currentWeight ? stats.peakWeight : stats.currentWeight} <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>lbs</span>
                   </strong>
                   {stats.peakWeight > stats.currentWeight ? (
-                    <span style={{ fontSize: '10.5px', color: '#cbd5e1', display: 'block', fontWeight: '700' }}>
+                    <span className="font-mono-tech" style={{ fontSize: '10.5px', color: 'var(--text-secondary)', display: 'block', fontWeight: '700' }}>
                       Última sesión: {stats.currentWeight} lbs
                     </span>
                   ) : (
                     stats.deltaWeight !== 0 && (
-                      <span style={{ fontSize: '11px', color: stats.deltaWeight > 0 ? '#4ade80' : '#f87171', display: 'block', fontWeight: '800' }}>
+                      <span className="font-mono-tech" style={{ fontSize: '11px', color: stats.deltaWeight > 0 ? 'var(--accent-emerald)' : 'var(--accent-red)', display: 'block', fontWeight: '800' }}>
                         {stats.deltaWeight > 0 ? `+${stats.deltaWeight}` : stats.deltaWeight} lbs ({stats.initialWeight} ➔ {stats.currentWeight})
                       </span>
                     )
@@ -347,106 +349,106 @@ export default function ExerciseStrengthProgressModal({
                 </div>
 
                 <div>
-                  <span style={{ fontSize: '10.5px', color: '#94a3b8', display: 'block' }}>
+                  <span style={{ fontSize: '10.5px', color: 'var(--text-muted)', display: 'block' }}>
                     {stats.peak1RM > stats.current1RM ? '1RM Máx (Récord)' : '1RM Estimado (Epley)'}
                   </span>
-                  <strong style={{ fontSize: '22px', color: '#38bdf8', fontWeight: '900' }}>
-                    {stats.peak1RM > stats.current1RM ? stats.peak1RM : stats.current1RM} <span style={{ fontSize: '12px', color: '#94a3b8' }}>lbs</span>
+                  <strong className="font-mono-tech" style={{ fontSize: '22px', color: 'var(--accent-cyan)', fontWeight: '900' }}>
+                    {stats.peak1RM > stats.current1RM ? stats.peak1RM : stats.current1RM} <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>lbs</span>
                   </strong>
-                  <span style={{ fontSize: '10.5px', color: '#cbd5e1', display: 'block' }}>
+                  <span className="font-mono-tech" style={{ fontSize: '10.5px', color: 'var(--text-secondary)', display: 'block' }}>
                     {stats.peak1RM > stats.current1RM ? `Última: ${stats.current1RM} lbs | ` : ''}Tasa: ~+{stats.weeklyRateLbs} lbs/sem
                   </span>
                 </div>
               </div>
 
-              <p style={{ margin: '10px 0 0 0', fontSize: '11px', color: '#cbd5e1', lineHeight: '1.4', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '8px' }}>
+              <p style={{ margin: '10px 0 0 0', fontSize: '11px', color: 'var(--text-secondary)', lineHeight: '1.4', borderTop: '1px solid var(--border-subtle)', paddingTop: '8px' }}>
                 💡 <strong>Diagnóstico:</strong> {stats.status.tip}
               </p>
             </div>
 
             {/* SECCIÓN DE PREVISIONES Y PROYECCIONES CIENTÍFICAS */}
             <div style={{
-              background: 'linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%)',
-              border: '1.5px solid #c4b5fd',
+              background: 'var(--bg-surface-secondary)',
+              border: '1px solid var(--border-subtle)',
               borderRadius: '18px',
               padding: '14px',
               marginBottom: '16px'
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                <Brain size={18} color="#7c3aed" />
-                <strong style={{ fontSize: '12.5px', color: '#5b21b6' }}>
+                <Brain size={18} color="#a78bfa" />
+                <strong style={{ fontSize: '12.5px', color: '#c4b5fd' }}>
                   Previsiones Científicas de Fuerza Adonis
                 </strong>
               </div>
-              <p style={{ margin: '0 0 12px 0', fontSize: '11px', color: '#6d28d9', lineHeight: '1.35' }}>
+              <p style={{ margin: '0 0 12px 0', fontSize: '11px', color: 'var(--text-muted)', lineHeight: '1.35' }}>
                 Basadas en tu tasa actual de adaptación miofibrilar y sobrecarga progresiva sin fallar la técnica:
               </p>
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '8px' }}>
                 {/* 1. Siguiente Sesión */}
-                <div style={{ background: '#ffffff', padding: '9px 10px', borderRadius: '12px', border: '1.5px solid #a7f3d0' }}>
-                  <span style={{ fontSize: '9.5px', color: '#059669', fontWeight: '900', display: 'block', textTransform: 'uppercase' }}>
+                <div style={{ background: 'var(--bg-card)', padding: '9px 10px', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
+                  <span style={{ fontSize: '9.5px', color: 'var(--accent-emerald)', fontWeight: '900', display: 'block', textTransform: 'uppercase' }}>
                     ⚡ Próxima Sesión
                   </span>
-                  <div style={{ fontSize: '16px', fontWeight: '900', color: '#064e3b', margin: '2px 0' }}>
+                  <div className="font-mono-tech" style={{ fontSize: '16px', fontWeight: '900', color: 'var(--text-main)', margin: '2px 0' }}>
                     ~{stats.projNextSessionWeight} lbs
                   </div>
-                  <span style={{ fontSize: '9px', color: '#64748b' }}>
+                  <span className="font-mono-tech" style={{ fontSize: '9px', color: 'var(--text-muted)' }}>
                     1RM Est: ~{stats.projNextSession1RM} lbs
                   </span>
                 </div>
 
                 {/* 2. Siguientes 2 Sesiones */}
-                <div style={{ background: '#ffffff', padding: '9px 10px', borderRadius: '12px', border: '1.5px solid #bae6fd' }}>
-                  <span style={{ fontSize: '9.5px', color: '#0284c7', fontWeight: '900', display: 'block', textTransform: 'uppercase' }}>
+                <div style={{ background: 'var(--bg-card)', padding: '9px 10px', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
+                  <span style={{ fontSize: '9.5px', color: 'var(--accent-cyan)', fontWeight: '900', display: 'block', textTransform: 'uppercase' }}>
                     🎯 Siguientes 2 Ses
                   </span>
-                  <div style={{ fontSize: '16px', fontWeight: '900', color: '#0c4a6e', margin: '2px 0' }}>
+                  <div className="font-mono-tech" style={{ fontSize: '16px', fontWeight: '900', color: 'var(--text-main)', margin: '2px 0' }}>
                     ~{stats.proj2SessionsWeight} lbs
                   </div>
-                  <span style={{ fontSize: '9px', color: '#64748b' }}>
+                  <span className="font-mono-tech" style={{ fontSize: '9px', color: 'var(--text-muted)' }}>
                     1RM Est: ~{stats.proj2Sessions1RM} lbs
                   </span>
                 </div>
 
                 {/* 3. 1 Mes */}
-                <div style={{ background: '#ffffff', padding: '9px 10px', borderRadius: '12px', border: '1px solid #ddd6fe' }}>
-                  <span style={{ fontSize: '9.5px', color: '#7c3aed', fontWeight: '900', display: 'block', textTransform: 'uppercase' }}>
+                <div style={{ background: 'var(--bg-card)', padding: '9px 10px', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
+                  <span style={{ fontSize: '9.5px', color: '#a78bfa', fontWeight: '900', display: 'block', textTransform: 'uppercase' }}>
                     🚀 Meta a 1 Mes
                   </span>
-                  <div style={{ fontSize: '16px', fontWeight: '900', color: '#1e1b4b', margin: '2px 0' }}>
+                  <div className="font-mono-tech" style={{ fontSize: '16px', fontWeight: '900', color: 'var(--text-main)', margin: '2px 0' }}>
                     ~{stats.proj1MonthWeight} lbs
                   </div>
-                  <span style={{ fontSize: '9px', color: '#64748b' }}>
+                  <span className="font-mono-tech" style={{ fontSize: '9px', color: 'var(--text-muted)' }}>
                     1RM Est: ~{stats.proj1Month1RM} lbs
                   </span>
                 </div>
 
                 {/* 4. 3 Meses */}
-                <div style={{ background: '#ffffff', padding: '9px 10px', borderRadius: '12px', border: '1px solid #fde68a' }}>
-                  <span style={{ fontSize: '9.5px', color: '#d97706', fontWeight: '900', display: 'block', textTransform: 'uppercase' }}>
+                <div style={{ background: 'var(--bg-card)', padding: '9px 10px', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
+                  <span style={{ fontSize: '9.5px', color: 'var(--accent-amber)', fontWeight: '900', display: 'block', textTransform: 'uppercase' }}>
                     🏔️ Meta a 3 Meses
                   </span>
-                  <div style={{ fontSize: '16px', fontWeight: '900', color: '#78350f', margin: '2px 0' }}>
+                  <div className="font-mono-tech" style={{ fontSize: '16px', fontWeight: '900', color: 'var(--text-main)', margin: '2px 0' }}>
                     ~{stats.proj3MonthsWeight} lbs
                   </div>
-                  <span style={{ fontSize: '9px', color: '#64748b' }}>
+                  <span className="font-mono-tech" style={{ fontSize: '9px', color: 'var(--text-muted)' }}>
                     1RM Est: ~{stats.proj3Months1RM} lbs
                   </span>
                 </div>
 
                 {/* 5. 6 Meses */}
-                <div style={{ background: '#ffffff', padding: '9px 10px', borderRadius: '12px', border: '1.5px solid #fed7aa', gridColumn: 'span 2' }}>
+                <div style={{ background: 'var(--bg-card)', padding: '9px 10px', borderRadius: '12px', border: '1px solid var(--border-subtle)', gridColumn: 'span 2' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div>
-                      <span style={{ fontSize: '9.5px', color: '#ea580c', fontWeight: '900', display: 'block', textTransform: 'uppercase' }}>
+                      <span style={{ fontSize: '9.5px', color: '#fb923c', fontWeight: '900', display: 'block', textTransform: 'uppercase' }}>
                         🏆 Techo Mesociclo a 6 Meses (24 sem)
                       </span>
-                      <div style={{ fontSize: '17px', fontWeight: '900', color: '#7c2d12', margin: '2px 0' }}>
+                      <div className="font-mono-tech" style={{ fontSize: '17px', fontWeight: '900', color: 'var(--text-main)', margin: '2px 0' }}>
                         ~{stats.proj6MonthsWeight} lbs
                       </div>
                     </div>
-                    <span style={{ fontSize: '10px', color: '#9a3412', fontWeight: '800', background: '#ffedd5', padding: '2px 8px', borderRadius: '6px' }}>
+                    <span className="font-mono-tech" style={{ fontSize: '10px', color: '#fb923c', fontWeight: '800', background: 'rgba(251, 146, 60, 0.15)', padding: '2px 8px', borderRadius: '6px' }}>
                       1RM Est: ~{stats.proj6Months1RM} lbs
                     </span>
                   </div>
@@ -468,7 +470,7 @@ export default function ExerciseStrengthProgressModal({
 
             {/* HISTORIAL SESIÓN POR SESIÓN */}
             <div>
-              <h4 style={{ margin: '0 0 8px 0', fontSize: '12.5px', fontWeight: '900', color: '#1e293b' }}>
+              <h4 style={{ margin: '0 0 8px 0', fontSize: '12.5px', fontWeight: '900', color: 'var(--text-main)' }}>
                 📅 Historial de Sesiones Registradas ({sessionHistory.length})
               </h4>
 
@@ -483,19 +485,19 @@ export default function ExerciseStrengthProgressModal({
                         alignItems: 'center',
                         padding: '8px 10px',
                         borderRadius: '12px',
-                        background: '#f8fafc',
-                        border: '1px solid #e2e8f0',
+                        background: 'var(--bg-card)',
+                        border: '1px solid var(--border-subtle)',
                         fontSize: '11px'
                       }}
                     >
                       <div>
-                        <strong style={{ color: '#0f172a', display: 'block' }}>
+                        <strong className="font-mono-tech" style={{ color: 'var(--text-main)', display: 'block' }}>
                           {item.dateFormatted || item.date}
                         </strong>
-                        <span style={{ color: '#64748b' }}>
-                          {item.sets.length} series • Vol: {item.volume.toLocaleString()} lbs
+                        <span style={{ color: 'var(--text-muted)' }}>
+                          {item.sets.length} series • Vol: <span className="font-mono-tech">{item.volume.toLocaleString()}</span> lbs
                           {item.matchedName && item.matchedName.toLowerCase() !== exName.toLowerCase() && (
-                            <span style={{ display: 'block', color: '#7c3aed', fontSize: '9.5px', fontWeight: '700' }}>
+                            <span style={{ display: 'block', color: '#c4b5fd', fontSize: '9.5px', fontWeight: '700' }}>
                               ⚡ Vinculado con: {item.matchedName}
                             </span>
                           )}
@@ -503,10 +505,10 @@ export default function ExerciseStrengthProgressModal({
                       </div>
 
                       <div style={{ textAlign: 'right' }}>
-                        <strong style={{ color: '#0066ff', fontSize: '13px' }}>
+                        <strong className="font-mono-tech" style={{ color: 'var(--accent-blue)', fontSize: '13px' }}>
                           {item.maxWeight} lbs × {item.maxReps}
                         </strong>
-                        <span style={{ display: 'block', fontSize: '10px', color: '#10b981', fontWeight: '800' }}>
+                        <span className="font-mono-tech" style={{ display: 'block', fontSize: '10px', color: 'var(--accent-emerald)', fontWeight: '800' }}>
                           1RM: {item.est1RM} lbs
                         </span>
                       </div>
@@ -514,23 +516,23 @@ export default function ExerciseStrengthProgressModal({
                   ))}
                 </div>
               ) : (
-                <p style={{ fontSize: '11px', color: '#64748b', fontStyle: 'italic' }}>
+                <p style={{ fontSize: '11px', color: 'var(--text-muted)', fontStyle: 'italic' }}>
                   Aún no hay sesiones archivadas con este ejercicio. ¡Guarda tu primera sesión hoy!
                 </p>
               )}
             </div>
           </div>
         ) : (
-          <div style={{ textAlign: 'center', padding: '30px 10px', color: '#64748b' }}>
-            <Dumbbell size={36} color="#cbd5e1" style={{ margin: '0 auto 10px auto' }} />
-            <h4 style={{ margin: '0 0 6px 0', color: '#1e293b' }}>Sin datos de fuerza registrados</h4>
-            <p style={{ fontSize: '12px', margin: 0 }}>
+          <div style={{ textAlign: 'center', padding: '30px 10px', color: 'var(--text-muted)' }}>
+            <Dumbbell size={36} color="var(--border-strong)" style={{ margin: '0 auto 10px auto' }} />
+            <h4 style={{ margin: '0 0 6px 0', color: 'var(--text-main)' }}>Sin datos de fuerza registrados</h4>
+            <p style={{ fontSize: '12px', margin: 0, color: 'var(--text-secondary)' }}>
               Completa al menos una serie en este ejercicio para calcular tu 1RM y desbloquear las previsiones de sobrecarga.
             </p>
           </div>
         )}
 
-        <div style={{ marginTop: '16px', paddingTop: '12px', borderTop: '1px solid #e2e8f0' }}>
+        <div style={{ marginTop: '16px', paddingTop: '12px', borderTop: '1px solid var(--border-subtle)' }}>
           <button
             type="button"
             onClick={onClose}
@@ -538,9 +540,9 @@ export default function ExerciseStrengthProgressModal({
               width: '100%',
               padding: '12px',
               borderRadius: '14px',
-              background: '#0f172a',
-              color: '#ffffff',
-              border: 'none',
+              background: 'var(--bg-surface-secondary)',
+              color: 'var(--text-main)',
+              border: '1px solid var(--border-subtle)',
               fontWeight: '900',
               fontSize: '13px',
               cursor: 'pointer'

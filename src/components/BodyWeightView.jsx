@@ -378,31 +378,31 @@ export default function BodyWeightView() {
     <div className="container animate-fade" style={{ paddingBottom: '110px' }}>
       
       {/* 1. ENCABEZADO Y SELECTOR DE UNIDAD */}
-      <div className="flex-between" style={{ marginBottom: '16px', flexWrap: 'wrap', gap: '8px' }}>
+      <div className="flex-between" style={{ marginBottom: '14px', flexWrap: 'wrap', gap: '8px' }}>
         <div>
-          <h1 style={{ fontSize: '24px', fontWeight: '900', color: '#0f172a', margin: '0 0 2px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Scale size={28} color="#0066ff" /> Composición Corporal
+          <h1 style={{ fontSize: '20px', fontWeight: '800', color: 'var(--text-main)', margin: '0 0 2px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Scale size={22} color="var(--accent-blue)" /> Composición Corporal
           </h1>
-          <p style={{ color: '#64748b', margin: 0, fontSize: '13px', fontWeight: '600' }}>
+          <p style={{ color: 'var(--text-muted)', margin: 0, fontSize: '12px', fontWeight: '600' }}>
             Monitoreo científico de peso, retención hídrica y velocidad de cambio.
           </p>
         </div>
 
         {/* Toggle de Unidad (kg vs lbs) */}
-        <div style={{ display: 'flex', background: '#e2e8f0', borderRadius: '12px', padding: '3px' }}>
+        <div style={{ display: 'flex', background: 'var(--bg-surface-secondary)', border: '1px solid var(--border-subtle)', borderRadius: '10px', padding: '2px' }}>
           <button
             type="button"
             onClick={() => setPreferredUnit('kg')}
+            className="font-mono-tech"
             style={{
-              padding: '6px 12px',
-              border: 'none',
-              borderRadius: '9px',
-              background: preferredUnit === 'kg' ? '#ffffff' : 'transparent',
-              color: preferredUnit === 'kg' ? '#0066ff' : '#64748b',
-              fontWeight: '900',
-              fontSize: '12px',
-              cursor: 'pointer',
-              boxShadow: preferredUnit === 'kg' ? '0 2px 6px rgba(0,0,0,0.08)' : 'none'
+              padding: '5px 10px',
+              border: preferredUnit === 'kg' ? '1px solid var(--border-subtle)' : 'none',
+              borderRadius: '8px',
+              background: preferredUnit === 'kg' ? 'var(--bg-surface)' : 'transparent',
+              color: preferredUnit === 'kg' ? 'var(--accent-blue)' : 'var(--text-muted)',
+              fontWeight: '800',
+              fontSize: '11px',
+              cursor: 'pointer'
             }}
           >
             kg
@@ -410,16 +410,16 @@ export default function BodyWeightView() {
           <button
             type="button"
             onClick={() => setPreferredUnit('lbs')}
+            className="font-mono-tech"
             style={{
-              padding: '6px 12px',
-              border: 'none',
-              borderRadius: '9px',
-              background: preferredUnit === 'lbs' ? '#ffffff' : 'transparent',
-              color: preferredUnit === 'lbs' ? '#0066ff' : '#64748b',
-              fontWeight: '900',
-              fontSize: '12px',
-              cursor: 'pointer',
-              boxShadow: preferredUnit === 'lbs' ? '0 2px 6px rgba(0,0,0,0.08)' : 'none'
+              padding: '5px 10px',
+              border: preferredUnit === 'lbs' ? '1px solid var(--border-subtle)' : 'none',
+              borderRadius: '8px',
+              background: preferredUnit === 'lbs' ? 'var(--bg-surface)' : 'transparent',
+              color: preferredUnit === 'lbs' ? 'var(--accent-blue)' : 'var(--text-muted)',
+              fontWeight: '800',
+              fontSize: '11px',
+              cursor: 'pointer'
             }}
           >
             lbs

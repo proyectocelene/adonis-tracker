@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShieldCheck, CheckCircle2, AlertCircle, Heart, BatteryCharging, Sparkles, X } from 'lucide-react';
+import { ShieldCheck, CheckCircle2 } from 'lucide-react';
 
 export default function DeloadMonitoringCard({
   deloadProgress,
@@ -7,46 +7,47 @@ export default function DeloadMonitoringCard({
 }) {
   if (!deloadProgress || !deloadProgress.isActive) return null;
 
-  const { elapsedDays, totalDays, remainingDays, progressPercent, completedDeloadWorkouts, endDate, reason } = deloadProgress;
-
+  const { elapsedDays, totalDays, remainingDays, progressPercent, endDate, reason } = deloadProgress;
   const formattedEnd = endDate ? new Date(endDate).toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' }) : '7 días';
 
   return (
-    <div style={{
-      background: 'linear-gradient(135deg, #064e3b 0%, #0f766e 100%)',
-      border: '1.5px solid #34d399',
-      borderRadius: '24px',
-      padding: '16px 18px',
-      marginBottom: '16px',
-      color: '#ffffff',
-      boxShadow: '0 8px 24px rgba(6, 78, 59, 0.25)'
-    }}>
+    <div 
+      className="card"
+      style={{
+        background: 'var(--bg-surface)',
+        border: '1px solid var(--accent-emerald)',
+        borderRadius: 'var(--radius-md)',
+        padding: '10px 12px',
+        marginBottom: '10px',
+        color: 'var(--text-main)'
+      }}
+    >
       {/* CABECERA */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '10px', marginBottom: '12px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '8px', marginBottom: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <div style={{
-            background: 'rgba(52, 211, 153, 0.2)',
-            border: '1px solid #34d399',
-            padding: '8px',
-            borderRadius: '14px',
+            background: 'var(--accent-emerald-subtle)',
+            border: '1px solid var(--accent-emerald)',
+            padding: '5px',
+            borderRadius: '8px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            fontSize: '20px'
+            fontSize: '16px'
           }}>
             🧘
           </div>
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span style={{ fontSize: '11px', fontWeight: '900', color: '#a7f3d0', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                Protocolo Clínico • Microciclo Completo (7 Días)
+            <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+              <span style={{ fontSize: '10px', fontWeight: '900', color: 'var(--accent-emerald)', textTransform: 'uppercase', letterSpacing: '0.4px' }}>
+                Protocolo Deload • 7 Días
               </span>
-              <span style={{ fontSize: '10px', background: 'rgba(255,255,255,0.15)', padding: '1px 6px', borderRadius: '6px', fontWeight: '800' }}>
-                Día {elapsedDays} de {totalDays}
+              <span className="font-mono-tech" style={{ fontSize: '9.5px', background: 'var(--bg-surface-secondary)', border: '1px solid var(--border-subtle)', padding: '1px 5px', borderRadius: '4px', fontWeight: '800' }}>
+                Día {elapsedDays}/{totalDays}
               </span>
             </div>
-            <h3 style={{ margin: '2px 0 0 0', fontSize: '16.5px', fontWeight: '900', color: '#ffffff' }}>
-              Semana de Descarga Activa & Supercompensación
+            <h3 style={{ margin: '1px 0 0 0', fontSize: '14px', fontWeight: '800', color: 'var(--text-main)' }}>
+              Descarga Activa & Supercompensación
             </h3>
           </div>
         </div>
@@ -57,12 +58,12 @@ export default function DeloadMonitoringCard({
             onClick={onDeactivateDeload}
             title="Finalizar modo descarga"
             style={{
-              background: 'rgba(255, 255, 255, 0.1)',
-              border: 'none',
-              color: '#ffffff',
-              borderRadius: '10px',
-              padding: '6px 10px',
-              fontSize: '11px',
+              background: 'var(--bg-surface-secondary)',
+              border: '1px solid var(--border-subtle)',
+              color: 'var(--text-muted)',
+              borderRadius: '6px',
+              padding: '4px 8px',
+              fontSize: '10px',
               fontWeight: '800',
               cursor: 'pointer'
             }}
@@ -72,65 +73,65 @@ export default function DeloadMonitoringCard({
         )}
       </div>
 
-      {/* BARRA DE PROGRESO DE LOS 7 DÍAS */}
-      <div style={{ marginBottom: '14px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', fontWeight: '800', color: '#a7f3d0', marginBottom: '6px' }}>
-          <span>Progreso del ciclo: {elapsedDays} de {totalDays} días ({progressPercent}%)</span>
-          <span>Finaliza: {formattedEnd} ({remainingDays} días restantes)</span>
+      {/* BARRA DE PROGRESO */}
+      <div style={{ marginBottom: '8px' }}>
+        <div className="font-mono-tech" style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', fontWeight: '700', color: 'var(--accent-emerald)', marginBottom: '4px' }}>
+          <span>Progreso: {elapsedDays}/{totalDays}d ({progressPercent}%)</span>
+          <span>Fin: {formattedEnd} ({remainingDays}d)</span>
         </div>
-        <div style={{ width: '100%', height: '8px', background: 'rgba(0,0,0,0.25)', borderRadius: '6px', overflow: 'hidden' }}>
+        <div style={{ width: '100%', height: '6px', background: 'var(--bg-surface-secondary)', borderRadius: '4px', overflow: 'hidden', border: '1px solid var(--border-subtle)' }}>
           <div style={{
             width: `${progressPercent}%`,
             height: '100%',
-            background: 'linear-gradient(90deg, #34d399 0%, #a7f3d0 100%)',
+            background: 'var(--accent-emerald)',
             transition: 'width 0.3s ease'
           }} />
         </div>
       </div>
 
-      {/* LOS 4 PILARES DEL DELOAD (GARANTÍA CLÍNICA EN TIEMPO REAL) */}
+      {/* LOS 4 PILARES DEL DELOAD */}
       <div style={{
-        background: 'rgba(0, 0, 0, 0.18)',
-        borderRadius: '16px',
-        padding: '12px 14px',
+        background: 'var(--bg-surface-secondary)',
+        borderRadius: '8px',
+        padding: '8px 10px',
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-        gap: '8px',
-        border: '1px solid rgba(255, 255, 255, 0.1)'
+        gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+        gap: '6px',
+        border: '1px solid var(--border-subtle)'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <CheckCircle2 size={16} color="#34d399" />
-          <span style={{ fontSize: '11.5px', color: '#ffffff', fontWeight: '700' }}>
-            <strong>Cargas al 80%:</strong> Carga previa multiplicada por 0.8.
+        <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+          <CheckCircle2 size={13} color="var(--accent-emerald)" />
+          <span style={{ fontSize: '10.5px', color: 'var(--text-main)', fontWeight: '600' }}>
+            <strong>Cargas al 80%:</strong> × 0.8 de la previa.
           </span>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <CheckCircle2 size={16} color="#34d399" />
-          <span style={{ fontSize: '11.5px', color: '#ffffff', fontWeight: '700' }}>
-            <strong>Volumen al 50%:</strong> 2 series efectivas (S3 y S4 omitidas).
+        <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+          <CheckCircle2 size={13} color="var(--accent-emerald)" />
+          <span style={{ fontSize: '10.5px', color: 'var(--text-main)', fontWeight: '600' }}>
+            <strong>Volumen 50%:</strong> 2 series efectivas.
           </span>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <CheckCircle2 size={16} color="#34d399" />
-          <span style={{ fontSize: '11.5px', color: '#ffffff', fontWeight: '700' }}>
-            <strong>Intensidad RIR 3-4:</strong> Cero fallos para disipar fatiga del SNC.
+        <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+          <CheckCircle2 size={13} color="var(--accent-emerald)" />
+          <span style={{ fontSize: '10.5px', color: 'var(--text-main)', fontWeight: '600' }}>
+            <strong>RIR 3-4:</strong> Cero fallos concéntricos.
           </span>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <ShieldCheck size={16} color="#38bdf8" />
-          <span style={{ fontSize: '11.5px', color: '#a5f3fc', fontWeight: '700' }}>
-            <strong>Gamificación Blindada:</strong> 100% de crédito en tu racha.
+        <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+          <ShieldCheck size={13} color="var(--accent-cyan)" />
+          <span style={{ fontSize: '10.5px', color: 'var(--accent-cyan)', fontWeight: '600' }}>
+            <strong>Racha protegida:</strong> 100% de crédito.
           </span>
         </div>
       </div>
 
       {/* NOTA DE MOTIVO */}
       {reason && (
-        <span style={{ display: 'block', fontSize: '10.5px', color: '#a7f3d0', marginTop: '10px', fontStyle: 'italic' }}>
-          💡 Diagnóstico del Coach: {reason}
+        <span style={{ display: 'block', fontSize: '9.5px', color: 'var(--text-muted)', marginTop: '6px', fontStyle: 'italic' }}>
+          💡 Diagnóstico: {reason}
         </span>
       )}
     </div>

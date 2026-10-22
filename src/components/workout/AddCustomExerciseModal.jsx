@@ -29,9 +29,9 @@ export default function AddCustomExerciseModal({
         type="button"
         className="btn btn-outline" 
         onClick={() => setIsAddingExercise(true)}
-        style={{ width: '100%', background: '#ffffff', border: '2px dashed #cbd5e1', color: '#475569', fontWeight: '800', padding: '14px', marginBottom: '16px', borderRadius: '18px' }}
+        style={{ width: '100%', background: 'var(--bg-surface-secondary)', border: '1px dashed var(--border-strong)', color: 'var(--text-secondary)', fontWeight: '800', padding: '14px', marginBottom: '16px', borderRadius: '18px' }}
       >
-        <Plus size={18} color="#0066ff" style={{ display: 'inline', marginRight: '6px' }} /> + Agregar Ejercicio a este Día
+        <Plus size={18} color="var(--accent-blue)" style={{ display: 'inline', marginRight: '6px' }} /> + Agregar Ejercicio a este Día
       </button>
     );
   }
@@ -45,7 +45,7 @@ export default function AddCustomExerciseModal({
   const muscleGroups = ['ALL', ...new Set(UNIFIED_EXERCISE_LIBRARY.map(ex => ex.muscleGroup))];
 
   return (
-    <div className="card animate-fade" style={{ padding: '18px', borderTop: '4px solid #0066ff', background: '#ffffff', marginBottom: '20px' }}>
+    <div className="card animate-fade" style={{ padding: '18px', borderTop: '4px solid var(--accent-blue)', background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', marginBottom: '20px' }}>
       <div className="flex-between" style={{ marginBottom: '12px' }}>
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
           <Dumbbell size={18} color="#0066ff" />
@@ -60,7 +60,7 @@ export default function AddCustomExerciseModal({
 
       <form onSubmit={handleAddCustomExercise}>
         {/* SELECTOR DE ÁMBITO (HOY VS PERMANENTE) */}
-        <div style={{ display: 'flex', gap: '8px', marginBottom: '12px', background: '#f8fafc', padding: '4px', borderRadius: '12px', border: '1.5px solid #e2e8f0' }}>
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '12px', background: 'var(--bg-surface-secondary)', padding: '4px', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
           <button
             type="button"
             onClick={() => setNewExScope('today')}
@@ -69,8 +69,8 @@ export default function AddCustomExerciseModal({
               padding: '8px 10px',
               borderRadius: '10px',
               border: 'none',
-              background: newExScope === 'today' ? '#0066ff' : 'transparent',
-              color: newExScope === 'today' ? '#ffffff' : '#64748b',
+              background: newExScope === 'today' ? 'var(--accent-blue)' : 'transparent',
+              color: newExScope === 'today' ? '#ffffff' : 'var(--text-muted)',
               fontSize: '11px',
               fontWeight: '900',
               cursor: 'pointer',
@@ -90,8 +90,8 @@ export default function AddCustomExerciseModal({
               padding: '8px 10px',
               borderRadius: '10px',
               border: 'none',
-              background: newExScope === 'permanent' ? '#7c3aed' : 'transparent',
-              color: newExScope === 'permanent' ? '#ffffff' : '#64748b',
+              background: newExScope === 'permanent' ? '#8b5cf6' : 'transparent',
+              color: newExScope === 'permanent' ? '#ffffff' : 'var(--text-muted)',
               fontSize: '11px',
               fontWeight: '900',
               cursor: 'pointer',
@@ -107,14 +107,14 @@ export default function AddCustomExerciseModal({
 
         {/* SELECTOR DE DÍA OBJETIVO SI ES PERMANENTE */}
         {newExScope === 'permanent' && allDays && allDays.length > 0 && setNewExTargetDay && (
-          <div style={{ marginBottom: '12px', background: '#f5f3ff', padding: '8px 12px', borderRadius: '12px', border: '1px solid #ddd6fe' }}>
-            <label style={{ display: 'block', fontSize: '11px', fontWeight: '800', color: '#6d28d9', marginBottom: '4px' }}>
+          <div style={{ marginBottom: '12px', background: 'rgba(124, 58, 237, 0.1)', padding: '8px 12px', borderRadius: '12px', border: '1px solid rgba(168, 85, 247, 0.25)' }}>
+            <label style={{ display: 'block', fontSize: '11px', fontWeight: '800', color: '#c084fc', marginBottom: '4px' }}>
               📅 Día de la rutina a modificar:
             </label>
             <select
               value={newExTargetDay}
               onChange={(e) => setNewExTargetDay(e.target.value)}
-              style={{ width: '100%', padding: '6px 10px', borderRadius: '8px', border: '1px solid #c4b5fd', fontSize: '12px', fontWeight: '800', color: '#4c1d95', background: '#ffffff' }}
+              style={{ width: '100%', padding: '6px 10px', borderRadius: '8px', border: '1px solid var(--border-subtle)', fontSize: '12px', fontWeight: '800', color: 'var(--text-main)', background: 'var(--bg-surface-secondary)' }}
             >
               {allDays.map(d => (
                 <option key={d.id} value={d.id}>
@@ -126,8 +126,8 @@ export default function AddCustomExerciseModal({
         )}
 
         {/* CATÁLOGO DE MÁQUINAS CON BÚSQUEDA Y FILTRO */}
-        <div style={{ background: '#f5f3ff', border: '1px solid #a78bfa', padding: '12px', borderRadius: '14px', marginBottom: '14px' }}>
-          <label className="input-label" style={{ display: 'block', marginBottom: '6px', color: '#5b21b6', fontWeight: '800', fontSize: '12px' }}>
+        <div style={{ background: 'rgba(124, 58, 237, 0.1)', border: '1px solid rgba(168, 85, 247, 0.25)', padding: '12px', borderRadius: '14px', marginBottom: '14px' }}>
+          <label className="input-label" style={{ display: 'block', marginBottom: '6px', color: '#c084fc', fontWeight: '800', fontSize: '12px' }}>
             ⚡️ Elegir de Catálogo Completo de Gimnasio ({filteredLibrary.length} disponibles):
           </label>
           
@@ -141,11 +141,11 @@ export default function AddCustomExerciseModal({
                 flex: 1,
                 padding: '8px 10px',
                 borderRadius: '8px',
-                border: '1px solid #c4b5fd',
+                border: '1px solid var(--border-subtle)',
                 fontSize: '12px',
                 fontWeight: '700',
-                background: '#ffffff',
-                color: '#1e1b4b'
+                background: 'var(--bg-surface-secondary)',
+                color: 'var(--text-main)'
               }}
             />
             <select
@@ -155,11 +155,11 @@ export default function AddCustomExerciseModal({
                 width: '110px',
                 padding: '8px 4px',
                 borderRadius: '8px',
-                border: '1px solid #c4b5fd',
+                border: '1px solid var(--border-subtle)',
                 fontSize: '11px',
                 fontWeight: '800',
-                background: '#ffffff',
-                color: '#5b21b6'
+                background: 'var(--bg-surface-secondary)',
+                color: 'var(--text-main)'
               }}
             >
               {muscleGroups.map(mg => (
@@ -173,7 +173,7 @@ export default function AddCustomExerciseModal({
             onChange={(e) => {
               if (e.target.value) handlePickFromLibrary(e.target.value);
             }}
-            style={{ width: '100%', padding: '9px 10px', borderRadius: '10px', border: '1.5px solid #7c3aed', background: '#ffffff', color: '#1e1b4b', fontWeight: '800', fontSize: '12px' }}
+            style={{ width: '100%', padding: '9px 10px', borderRadius: '10px', border: '1.5px solid #a855f7', background: 'var(--bg-surface-secondary)', color: 'var(--text-main)', fontWeight: '800', fontSize: '12px' }}
           >
             <option value="">👆 Toca para seleccionar un ejercicio preconfigurado...</option>
             {filteredLibrary.map(ex => (
@@ -191,7 +191,7 @@ export default function AddCustomExerciseModal({
             placeholder="Nombre del Ejercicio" 
             value={newExName} 
             onChange={e => setNewExName(e.target.value)} 
-            style={{ padding: '10px 12px', width: '100%', borderRadius: '12px', border: '1.5px solid #cbd5e1', fontWeight: '700', fontSize: '13px' }}
+            style={{ padding: '10px 12px', width: '100%', borderRadius: '12px', border: '1px solid var(--border-subtle)', background: 'var(--bg-surface-secondary)', color: 'var(--text-main)', fontWeight: '700', fontSize: '13px' }}
           />
         </div>
 
@@ -201,14 +201,14 @@ export default function AddCustomExerciseModal({
             placeholder="Series (ej. 3)" 
             value={newExSets} 
             onChange={e => setNewExSets(e.target.value)} 
-            style={{ padding: '10px', width: '100%', borderRadius: '12px', border: '1.5px solid #cbd5e1', fontWeight: '700', fontSize: '13px' }} 
+            style={{ padding: '10px', width: '100%', borderRadius: '12px', border: '1px solid var(--border-subtle)', background: 'var(--bg-surface-secondary)', color: 'var(--text-main)', fontWeight: '700', fontSize: '13px' }} 
           />
           <input 
             type="text" 
             placeholder="Reps (ej. 10-12)" 
             value={newExReps} 
             onChange={e => setNewExReps(e.target.value)} 
-            style={{ padding: '10px', width: '100%', borderRadius: '12px', border: '1.5px solid #cbd5e1', fontWeight: '700', fontSize: '13px' }} 
+            style={{ padding: '10px', width: '100%', borderRadius: '12px', border: '1px solid var(--border-subtle)', background: 'var(--bg-surface-secondary)', color: 'var(--text-main)', fontWeight: '700', fontSize: '13px' }} 
           />
         </div>
 

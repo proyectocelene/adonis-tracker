@@ -81,20 +81,20 @@ export default function WorkoutFooterControls({
           marginBottom: '10px',
           padding: '14px 16px',
           borderRadius: '20px',
-          background: 'linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%)',
-          border: '1.5px solid #fdba74',
-          boxShadow: '0 4px 14px rgba(234, 88, 12, 0.12)'
+          background: 'var(--accent-amber-subtle)',
+          border: '1px solid var(--accent-amber)',
+          boxShadow: 'var(--shadow-ios-sm)'
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <div style={{ width: '32px', height: '32px', borderRadius: '10px', background: '#ea580c', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ffffff' }}>
+              <div style={{ width: '32px', height: '32px', borderRadius: '10px', background: 'var(--accent-amber)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ffffff' }}>
                 <Flame size={18} />
               </div>
               <div>
-                <strong style={{ fontSize: '14px', color: '#9a3412', fontWeight: '900', display: 'block' }}>
+                <strong style={{ fontSize: '14px', color: 'var(--accent-amber)', fontWeight: '900', display: 'block' }}>
                   Gasto Calórico Estimado
                 </strong>
-                <span style={{ fontSize: '10.5px', color: '#c2410c', fontWeight: '600' }}>
+                <span style={{ fontSize: '10.5px', color: 'var(--text-muted)', fontWeight: '600' }}>
                   Trabajo mecánico • Pausas ATP • EPOC
                 </span>
               </div>
@@ -119,13 +119,13 @@ export default function WorkoutFooterControls({
                   setShowWatchModal(true);
                 }}
                 style={{
-                  background: userSmartwatchKcal ? '#ffedd5' : '#ffffff',
-                  border: '1.5px solid #fdba74',
+                  background: userSmartwatchKcal ? 'var(--accent-amber-subtle)' : 'var(--bg-surface-secondary)',
+                  border: '1px solid var(--accent-amber)',
                   borderRadius: '10px',
                   padding: '4px 8px',
                   fontSize: '11px',
                   fontWeight: '800',
-                  color: '#c2410c',
+                  color: 'var(--accent-amber)',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
@@ -134,7 +134,7 @@ export default function WorkoutFooterControls({
               >
                 <Watch size={13} /> {calories.isHeartRateCalibrated ? `❤️ ${calories.watchHrAvg} bpm` : (userSmartwatchKcal ? '⌚ Calibrado' : 'Calibrar Reloj')}
               </button>
-              <span className="badge" style={{ background: '#ea580c', color: '#ffffff', fontSize: '13px', fontWeight: '900', padding: '4px 10px', borderRadius: '12px' }}>
+              <span className="badge" style={{ background: 'var(--accent-amber)', color: '#000000', fontSize: '13px', fontWeight: '900', padding: '4px 10px', borderRadius: '12px' }}>
                 🔥 {calories.displayKcal || calories.totalKcal} kcal
               </span>
             </div>
@@ -144,26 +144,27 @@ export default function WorkoutFooterControls({
             display: 'grid', 
             gridTemplateColumns: calories.cardioKcal > 0 ? 'repeat(3, 1fr)' : 'repeat(2, 1fr)', 
             gap: '8px', 
-            background: 'rgba(255, 255, 255, 0.7)', 
+            background: 'var(--bg-card)', 
             padding: '8px 10px', 
             borderRadius: '12px',
+            border: '1px solid var(--border-subtle)',
             textAlign: 'center',
             fontSize: '11px',
-            color: '#7c2d12',
+            color: 'var(--text-main)',
             fontWeight: '700'
           }}>
             <div>
-              <span style={{ display: 'block', fontSize: '10px', color: '#9a3412' }}>🏋️ Fuerza</span>
+              <span style={{ display: 'block', fontSize: '10px', color: 'var(--text-muted)' }}>🏋️ Fuerza</span>
               <strong>{calories.strengthKcal} kcal</strong>
             </div>
             {calories.cardioKcal > 0 && (
               <div>
-                <span style={{ display: 'block', fontSize: '10px', color: '#9a3412' }}>🚴 Cardio Z2</span>
+                <span style={{ display: 'block', fontSize: '10px', color: 'var(--text-muted)' }}>🚴 Cardio Z2</span>
                 <strong>{calories.cardioKcal} kcal</strong>
               </div>
             )}
             <div>
-              <span style={{ display: 'block', fontSize: '10px', color: '#9a3412' }}>⚡ EPOC Post</span>
+              <span style={{ display: 'block', fontSize: '10px', color: 'var(--text-muted)' }}>⚡ EPOC Post</span>
               <strong>+{calories.epocKcal} kcal</strong>
             </div>
           </div>
@@ -191,9 +192,9 @@ export default function WorkoutFooterControls({
               fontSize: '13px',
               borderRadius: '16px',
               fontWeight: '900',
-              background: '#f0fdf4',
-              color: '#15803d',
-              border: '1.5px solid #86efac',
+              background: 'var(--accent-emerald-subtle)',
+              color: 'var(--accent-emerald)',
+              border: '1px solid var(--accent-emerald)',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
@@ -216,9 +217,9 @@ export default function WorkoutFooterControls({
               fontSize: '13px',
               borderRadius: '16px',
               fontWeight: '900',
-              background: '#eff6ff',
-              color: '#1d4ed8',
-              border: '1.5px solid #93c5fd',
+              background: 'var(--accent-blue-light)',
+              color: 'var(--accent-blue)',
+              border: '1px solid var(--accent-blue)',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
@@ -240,19 +241,19 @@ export default function WorkoutFooterControls({
               fontSize: '13px',
               borderRadius: '16px',
               fontWeight: '900',
-              background: 'linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%)',
-              color: '#6d28d9',
-              border: '1.5px solid #c4b5fd',
+              background: 'rgba(124, 58, 237, 0.15)',
+              color: '#c084fc',
+              border: '1px solid rgba(168, 85, 247, 0.3)',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               gap: '8px',
-              boxShadow: '0 4px 12px rgba(109, 40, 217, 0.12)',
+              boxShadow: '0 4px 12px rgba(109, 40, 217, 0.2)',
               transition: 'all 0.2s ease'
             }}
           >
-            <Bot size={18} color="#7c3aed" /> 🤖 Copiar Prompt para IA (ChatGPT / Gemini / Claude)
+            <Bot size={18} color="#c084fc" /> 🤖 Copiar Prompt para IA (ChatGPT / Gemini / Claude)
           </button>
         )}
 
@@ -267,9 +268,9 @@ export default function WorkoutFooterControls({
                   fontSize: '11.5px',
                   borderRadius: '14px',
                   fontWeight: '800',
-                  background: '#f0f9ff',
-                  color: '#0284c7',
-                  border: '1.5px solid #bae6fd',
+                  background: 'var(--accent-blue-light)',
+                  color: 'var(--accent-blue)',
+                  border: '1px solid var(--accent-blue)',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
@@ -289,9 +290,9 @@ export default function WorkoutFooterControls({
                   fontSize: '11.5px',
                   borderRadius: '14px',
                   fontWeight: '800',
-                  background: '#ecfdf5',
-                  color: '#047857',
-                  border: '1.5px solid #a7f3d0',
+                  background: 'var(--accent-emerald-subtle)',
+                  color: 'var(--accent-emerald)',
+                  border: '1px solid var(--accent-emerald)',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
@@ -309,7 +310,7 @@ export default function WorkoutFooterControls({
           <button 
             type="button" 
             onClick={handleClearCurrentDraft}
-            style={{ width: '100%', padding: '10px', fontSize: '12px', borderRadius: '14px', fontWeight: '800', background: '#fee2e2', color: '#dc2626', border: '1px solid #fecaca', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+            style={{ width: '100%', padding: '10px', fontSize: '12px', borderRadius: '14px', fontWeight: '800', background: 'var(--accent-red-subtle)', color: 'var(--accent-red)', border: '1px solid var(--accent-red)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
           >
             <Trash2 size={14} /> Descartar / Limpiar Casillas Marcadas ({isViewingHistory ? selectedDateKey : 'Hoy'})
           </button>
@@ -318,7 +319,7 @@ export default function WorkoutFooterControls({
 
 
       {/* MENÚ SECUNDARIO DE HERRAMIENTAS */}
-      <div className="card" style={{ padding: '14px', marginBottom: '20px', background: '#f8fafc', border: '1.5px solid #e2e8f0' }}>
+      <div className="card" style={{ padding: '14px', marginBottom: '20px', background: 'var(--bg-surface-secondary)', border: '1px solid var(--border-subtle)' }}>
         <button
           type="button"
           onClick={() => setShowSecondaryTools(!showSecondaryTools)}
@@ -334,14 +335,14 @@ export default function WorkoutFooterControls({
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Settings2 size={18} color="#64748b" />
-            <span style={{ fontSize: '13px', fontWeight: '800', color: '#334155' }}>🛠️ Herramientas Secundarias & Ajustes</span>
+            <Settings2 size={18} color="var(--accent-blue)" />
+            <span style={{ fontSize: '13px', fontWeight: '800', color: 'var(--text-main)' }}>🛠️ Herramientas Secundarias & Ajustes</span>
           </div>
-          {showSecondaryTools ? <ChevronUp size={18} color="#64748b" /> : <ChevronDown size={18} color="#64748b" />}
+          {showSecondaryTools ? <ChevronUp size={18} color="var(--text-muted)" /> : <ChevronDown size={18} color="var(--text-muted)" />}
         </button>
 
         {showSecondaryTools && (
-          <div className="animate-fade" style={{ marginTop: '14px', paddingTop: '14px', borderTop: '1px dashed #cbd5e1', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <div className="animate-fade" style={{ marginTop: '14px', paddingTop: '14px', borderTop: '1px dashed var(--border-subtle)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
             <button 
               type="button"
               onClick={handleOptimizeWithMath}
@@ -356,7 +357,7 @@ export default function WorkoutFooterControls({
             <button
               type="button"
               onClick={() => setShowGlosarioModal(true)}
-              style={{ width: '100%', background: '#eff6ff', color: '#0066ff', border: '1px solid #bfdbfe', padding: '12px', borderRadius: '14px', fontSize: '12px', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer' }}
+              style={{ width: '100%', background: 'var(--accent-blue-light)', color: 'var(--accent-blue)', border: '1px solid var(--accent-blue)', padding: '12px', borderRadius: '14px', fontSize: '12px', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer' }}
             >
               <BookOpen size={16} /> 📖 Ver Glosario & Guía Técnica
             </button>
@@ -364,7 +365,7 @@ export default function WorkoutFooterControls({
             <button 
               type="button"
               onClick={handleCopyRoutineForCoach}
-              style={{ width: '100%', background: '#ffffff', color: '#334155', border: '1px solid #cbd5e1', padding: '12px', borderRadius: '14px', fontSize: '12px', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer' }}
+              style={{ width: '100%', background: 'var(--bg-card)', color: 'var(--text-main)', border: '1px solid var(--border-subtle)', padding: '12px', borderRadius: '14px', fontSize: '12px', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer' }}
             >
               <Copy size={16} /> 📋 Copiar Rutina en Texto
             </button>
@@ -372,15 +373,15 @@ export default function WorkoutFooterControls({
             <button
               type="button"
               onClick={() => setShowRoutineBuilder(true)}
-              style={{ width: '100%', background: '#1e293b', color: '#ffffff', border: 'none', padding: '12px', borderRadius: '14px', fontSize: '12px', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer' }}
+              style={{ width: '100%', background: 'var(--bg-surface-secondary)', color: 'var(--text-main)', border: '1px solid var(--border-subtle)', padding: '12px', borderRadius: '14px', fontSize: '12px', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer' }}
             >
-              <Layers size={16} color="#38bdf8" /> 🛠️ Gestor Maestro de Rutinas (Actualizar / Pegar)
+              <Layers size={16} color="var(--accent-blue)" /> 🛠️ Gestor Maestro de Rutinas (Actualizar / Pegar)
             </button>
 
             <button
               type="button"
               onClick={handleResetToOfficialRoutine}
-              style={{ width: '100%', background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe', padding: '12px', borderRadius: '14px', fontSize: '12px', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer' }}
+              style={{ width: '100%', background: 'var(--accent-blue-light)', color: 'var(--accent-blue)', border: '1px solid var(--accent-blue)', padding: '12px', borderRadius: '14px', fontSize: '12px', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer' }}
             >
               <RefreshCw size={16} /> ↺ Restablecer {(baseDay.name || '').split(':')[0]} a Rutina Oficial
             </button>
@@ -388,9 +389,9 @@ export default function WorkoutFooterControls({
             <button
               type="button"
               onClick={handleResetAllDaysToOfficial}
-              style={{ width: '100%', background: '#ecfdf5', color: '#047857', border: '1.5px solid #6ee7b7', padding: '12px', borderRadius: '14px', fontSize: '12px', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer' }}
+              style={{ width: '100%', background: 'var(--accent-emerald-subtle)', color: 'var(--accent-emerald)', border: '1.5px solid var(--accent-emerald)', padding: '12px', borderRadius: '14px', fontSize: '12px', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer' }}
             >
-              <Sparkles size={16} color="#059669" /> ✨ Activar Protocolo Adonis Oficial en Toda la Semana
+              <Sparkles size={16} color="var(--accent-emerald)" /> ✨ Activar Protocolo Adonis Oficial en Toda la Semana
             </button>
           </div>
         )}
@@ -415,21 +416,22 @@ export default function WorkoutFooterControls({
           <div className="card animate-fade" style={{
             maxWidth: '380px',
             width: '100%',
-            background: '#ffffff',
+            background: 'var(--bg-surface)',
+            border: '1px solid var(--border-subtle)',
             borderRadius: '24px',
             padding: '20px',
-            boxShadow: '0 20px 40px rgba(0,0,0,0.25)'
+            boxShadow: 'var(--shadow-ios-lg)'
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <div style={{ width: '36px', height: '36px', borderRadius: '12px', background: '#ffedd5', color: '#ea580c', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ width: '36px', height: '36px', borderRadius: '12px', background: 'var(--accent-amber-subtle)', color: 'var(--accent-amber)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <Watch size={20} />
                 </div>
                 <div>
-                  <h3 style={{ margin: 0, fontSize: '15px', fontWeight: '900', color: '#0f172a' }}>
+                  <h3 style={{ margin: 0, fontSize: '15px', fontWeight: '900', color: 'var(--text-main)' }}>
                     Calibrar con Smartwatch
                   </h3>
-                  <span style={{ fontSize: '11px', color: '#64748b', fontWeight: '600' }}>
+                  <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: '600' }}>
                     Apple Watch, Garmin, Galaxy, Fitbit
                   </span>
                 </div>
@@ -437,19 +439,19 @@ export default function WorkoutFooterControls({
               <button 
                 type="button" 
                 onClick={() => setShowWatchModal(false)}
-                style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#64748b' }}
+                style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}
               >
                 <X size={20} />
               </button>
             </div>
 
-            <p style={{ fontSize: '12px', color: '#475569', lineHeight: '1.4', marginBottom: '14px' }}>
+            <p style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: '1.4', marginBottom: '14px' }}>
               Calibra con tus sensores cardíacos reales (Apple Watch, Garmin, Galaxy, Polar). Adonis aplicará la <strong>Ecuación de Keytel modificada para pesas</strong> con <strong>Reserva Cardíaca (%HRR de Karvonen)</strong> y trabajo mecánico.
             </p>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '12px' }}>
               <div>
-                <label style={{ display: 'block', fontSize: '11px', fontWeight: '800', color: '#1e293b', marginBottom: '4px' }}>
+                <label style={{ display: 'block', fontSize: '11px', fontWeight: '800', color: 'var(--text-main)', marginBottom: '4px' }}>
                   ❤️ FC Promedio (BPM):
                 </label>
                 <input
@@ -461,7 +463,9 @@ export default function WorkoutFooterControls({
                     width: '100%',
                     padding: '10px',
                     borderRadius: '12px',
-                    border: '1.5px solid #cbd5e1',
+                    border: '1px solid var(--border-subtle)',
+                    background: 'var(--bg-surface-secondary)',
+                    color: 'var(--text-main)',
                     fontSize: '14px',
                     fontWeight: '800',
                     boxSizing: 'border-box'
@@ -470,7 +474,7 @@ export default function WorkoutFooterControls({
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '11px', fontWeight: '800', color: '#1e293b', marginBottom: '4px' }}>
+                <label style={{ display: 'block', fontSize: '11px', fontWeight: '800', color: 'var(--text-main)', marginBottom: '4px' }}>
                   ⚡ FC Máxima (BPM):
                 </label>
                 <input
@@ -482,7 +486,9 @@ export default function WorkoutFooterControls({
                     width: '100%',
                     padding: '10px',
                     borderRadius: '12px',
-                    border: '1.5px solid #cbd5e1',
+                    border: '1px solid var(--border-subtle)',
+                    background: 'var(--bg-surface-secondary)',
+                    color: 'var(--text-main)',
                     fontSize: '14px',
                     fontWeight: '800',
                     boxSizing: 'border-box'
@@ -493,7 +499,7 @@ export default function WorkoutFooterControls({
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '14px' }}>
               <div>
-                <label style={{ display: 'block', fontSize: '11px', fontWeight: '800', color: '#1e293b', marginBottom: '4px' }}>
+                <label style={{ display: 'block', fontSize: '11px', fontWeight: '800', color: 'var(--text-main)', marginBottom: '4px' }}>
                   💤 FC Reposo / Mín (BPM):
                 </label>
                 <input
@@ -505,7 +511,9 @@ export default function WorkoutFooterControls({
                     width: '100%',
                     padding: '10px',
                     borderRadius: '12px',
-                    border: '1.5px solid #cbd5e1',
+                    border: '1px solid var(--border-subtle)',
+                    background: 'var(--bg-surface-secondary)',
+                    color: 'var(--text-main)',
                     fontSize: '14px',
                     fontWeight: '800',
                     boxSizing: 'border-box'
@@ -514,7 +522,7 @@ export default function WorkoutFooterControls({
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '11px', fontWeight: '800', color: '#1e293b', marginBottom: '4px' }}>
+                <label style={{ display: 'block', fontSize: '11px', fontWeight: '800', color: 'var(--text-main)', marginBottom: '4px' }}>
                   ⌚ Kcal del Reloj (Opcional):
                 </label>
                 <input
@@ -526,7 +534,9 @@ export default function WorkoutFooterControls({
                     width: '100%',
                     padding: '10px',
                     borderRadius: '12px',
-                    border: '1.5px solid #cbd5e1',
+                    border: '1px solid var(--border-subtle)',
+                    background: 'var(--bg-surface-secondary)',
+                    color: 'var(--text-main)',
                     fontSize: '14px',
                     fontWeight: '800',
                     boxSizing: 'border-box'
@@ -536,23 +546,23 @@ export default function WorkoutFooterControls({
             </div>
 
             {calories && (
-              <div style={{ background: '#f8fafc', padding: '10px 12px', borderRadius: '14px', fontSize: '11px', color: '#475569', marginBottom: '16px', border: '1px solid #e2e8f0' }}>
-                <div style={{ fontWeight: '800', color: '#1e293b', marginBottom: '4px' }}>
+              <div style={{ background: 'var(--bg-surface-secondary)', padding: '10px 12px', borderRadius: '14px', fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '16px', border: '1px solid var(--border-subtle)' }}>
+                <div style={{ fontWeight: '800', color: 'var(--text-main)', marginBottom: '4px' }}>
                   🧪 Desglose del Algoritmo Híbrido:
                 </div>
                 <div>• Trabajo Mecánico Puro (Músculo): <strong>{calories.breakdown?.mechanicalKcal + calories.breakdown?.activeKcal || calories.strengthKcal} kcal</strong></div>
                 {calories.cardiacKcal > 0 && (
-                  <div style={{ color: '#dc2626' }}>
+                  <div style={{ color: 'var(--accent-red)' }}>
                     • Costo Hemodinámico (Keytel Atenuado): <strong>{calories.cardiacKcal} kcal</strong>
                   </div>
                 )}
                 {calories.hrrPct && (
-                  <div style={{ color: '#7c3aed' }}>
+                  <div style={{ color: '#a855f7' }}>
                     • Intensidad Reserva Cardíaca (%HRR Karvonen): <strong>{calories.hrrPct}%</strong>
                   </div>
                 )}
                 <div>• Deuda de Oxígeno (EPOC): <strong>+{calories.epocKcal} kcal</strong></div>
-                <div style={{ marginTop: '4px', paddingTop: '4px', borderTop: '1px dashed #cbd5e1', color: '#ea580c', fontWeight: '900', fontSize: '12px' }}>
+                <div style={{ marginTop: '4px', paddingTop: '4px', borderTop: '1px dashed var(--border-subtle)', color: 'var(--accent-amber)', fontWeight: '900', fontSize: '12px' }}>
                   🔥 Gasto Fisiológico Total: {calories.displayKcal || calories.totalKcal} kcal
                 </div>
               </div>

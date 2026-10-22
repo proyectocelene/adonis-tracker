@@ -52,61 +52,62 @@ export default function SundayRecoveryDashboard({
       
       {/* ALERTA CLÍNICA BIOMECÁNICA */}
       <div style={{
-        background: 'linear-gradient(135deg, #eff6ff 0%, #f0fdf4 100%)',
-        border: '1.5px solid #38bdf8',
+        background: 'var(--bg-surface)',
+        border: '1px solid var(--border-subtle)',
+        borderLeft: '4px solid var(--accent-blue)',
         borderRadius: '20px',
         padding: '16px',
-        boxShadow: '0 4px 15px rgba(56, 189, 248, 0.1)'
+        boxShadow: 'var(--shadow-ios)'
       }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
           <div style={{
-            background: '#e0f2fe',
-            color: '#0284c7',
+            background: 'var(--accent-blue-light)',
+            color: 'var(--accent-blue)',
             padding: '10px',
             borderRadius: '14px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center'
           }}>
-            <ShieldAlert size={26} color="#0284c7" />
+            <ShieldAlert size={26} color="var(--accent-blue)" />
           </div>
           <div style={{ flex: 1 }}>
-            <span style={{ fontSize: '11px', fontWeight: '900', color: '#0369a1', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            <span style={{ fontSize: '11px', fontWeight: '900', color: 'var(--accent-blue)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
               Directriz Clínica • Día Sagrado de Adaptación
             </span>
-            <h3 style={{ margin: '4px 0 6px 0', fontSize: '16px', fontWeight: '900', color: '#0f172a' }}>
+            <h3 style={{ margin: '4px 0 6px 0', fontSize: '16px', fontWeight: '900', color: 'var(--text-main)' }}>
               Blindaje del Sistema Nervioso Central (SNC)
             </h3>
-            <p style={{ margin: 0, fontSize: '12.5px', color: '#334155', lineHeight: '1.5' }}>
-              <strong>🚫 Prohibido cardio extenuante o pesas.</strong> El músculo no crece durante el entrenamiento, sino en la fase de reposo profundo. Hoy tus miofibrillas reparan microdesgarros, los depósitos de glucógeno se supercompensan y el sistema nervioso autónomo reestablece su tono parasimpático.
+            <p style={{ margin: 0, fontSize: '12.5px', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
+              <strong style={{ color: 'var(--accent-amber)' }}>🚫 Prohibido cardio extenuante o pesas.</strong> El músculo no crece durante el entrenamiento, sino en la fase de reposo profundo. Hoy tus miofibrillas reparan microdesgarros, los depósitos de glucógeno se supercompensan y el sistema nervioso autónomo reestablece su tono parasimpático.
             </p>
           </div>
         </div>
       </div>
 
       {/* TRACKER DE NEAT / PASOS */}
-      <div className="card" style={{ padding: '18px', borderRadius: '20px', border: '1.5px solid #e2e8f0', background: '#ffffff', boxShadow: '0 4px 12px rgba(0,0,0,0.03)' }}>
+      <div className="card" style={{ padding: '18px', borderRadius: '20px', border: '1px solid var(--border-subtle)', background: 'var(--bg-surface)', boxShadow: 'var(--shadow-ios)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <div style={{ background: '#ecfdf5', color: '#059669', padding: '8px', borderRadius: '12px' }}>
+            <div style={{ background: 'var(--accent-emerald-subtle)', color: 'var(--accent-emerald)', padding: '8px', borderRadius: '12px' }}>
               <Footprints size={20} />
             </div>
             <div>
-              <h4 style={{ margin: 0, fontSize: '15px', fontWeight: '900', color: '#0f172a' }}>
+              <h4 style={{ margin: 0, fontSize: '15px', fontWeight: '900', color: 'var(--text-main)' }}>
                 Tracker NEAT (Termogénesis sin Fatiga)
               </h4>
-              <span style={{ fontSize: '11px', color: '#64748b' }}>
+              <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
                 Meta saludable: 8,000 – 10,000 pasos ligeros (caminar, pasear)
               </span>
             </div>
           </div>
-          <span style={{ fontSize: '18px', fontWeight: '900', color: steps >= 8000 ? '#059669' : '#0284c7' }}>
+          <span style={{ fontSize: '18px', fontWeight: '900', color: steps >= 8000 ? 'var(--accent-emerald)' : 'var(--accent-cyan)' }}>
             {Number(steps).toLocaleString()} pasos
           </span>
         </div>
 
         {/* BARRA DE PROGRESO */}
-        <div style={{ width: '100%', height: '10px', background: '#f1f5f9', borderRadius: '6px', overflow: 'hidden', marginBottom: '14px' }}>
+        <div style={{ width: '100%', height: '10px', background: 'var(--bg-surface-secondary)', borderRadius: '6px', overflow: 'hidden', marginBottom: '14px', border: '1px solid var(--border-subtle)' }}>
           <div style={{
             width: `${stepsProgress}%`,
             height: '100%',
@@ -138,7 +139,9 @@ export default function SundayRecoveryDashboard({
               width: '85px',
               padding: '6px 8px',
               borderRadius: '10px',
-              border: '1.5px solid #cbd5e1',
+              border: '1px solid var(--border-subtle)',
+              background: 'var(--bg-surface-secondary)',
+              color: 'var(--text-main)',
               fontSize: '13px',
               fontWeight: '800',
               textAlign: 'center'
@@ -151,10 +154,10 @@ export default function SundayRecoveryDashboard({
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
         
         {/* SUEÑO */}
-        <div className="card" style={{ padding: '14px', borderRadius: '18px', border: '1.5px solid #e2e8f0', background: '#ffffff' }}>
+        <div className="card" style={{ padding: '14px', borderRadius: '18px', border: '1px solid var(--border-subtle)', background: 'var(--bg-surface)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
             <Moon size={16} color="#6366f1" />
-            <span style={{ fontSize: '12px', fontWeight: '800', color: '#475569' }}>Sueño Nocturno</span>
+            <span style={{ fontSize: '12px', fontWeight: '800', color: 'var(--text-secondary)' }}>Sueño Nocturno</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <input 
@@ -169,24 +172,26 @@ export default function SundayRecoveryDashboard({
                 width: '65px',
                 padding: '6px 8px',
                 borderRadius: '10px',
-                border: '1.5px solid #cbd5e1',
+                border: '1px solid var(--border-subtle)',
+                background: 'var(--bg-surface-secondary)',
+                color: 'var(--text-main)',
                 fontSize: '14px',
                 fontWeight: '900',
                 textAlign: 'center'
               }}
             />
-            <span style={{ fontSize: '13px', fontWeight: '700', color: '#64748b' }}>horas</span>
+            <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-muted)' }}>horas</span>
           </div>
-          <span style={{ fontSize: '10px', color: '#94a3b8', marginTop: '4px', display: 'block' }}>
+          <span style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '4px', display: 'block' }}>
             {sleepHours >= 8 ? '✅ Pico de GH & testosterona' : '⚠️ Intenta siesta reparadora'}
           </span>
         </div>
 
         {/* ENERGÍA PERCIBIDA */}
-        <div className="card" style={{ padding: '14px', borderRadius: '18px', border: '1.5px solid #e2e8f0', background: '#ffffff' }}>
+        <div className="card" style={{ padding: '14px', borderRadius: '18px', border: '1px solid var(--border-subtle)', background: 'var(--bg-surface)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
-            <BatteryCharging size={16} color="#10b981" />
-            <span style={{ fontSize: '12px', fontWeight: '800', color: '#475569' }}>Sensación SNC</span>
+            <BatteryCharging size={16} color="var(--accent-emerald)" />
+            <span style={{ fontSize: '12px', fontWeight: '800', color: 'var(--text-secondary)' }}>Sensación SNC</span>
           </div>
           <select
             value={energyLevel}
@@ -196,10 +201,11 @@ export default function SundayRecoveryDashboard({
               width: '100%',
               padding: '6px 8px',
               borderRadius: '10px',
-              border: '1.5px solid #cbd5e1',
+              border: '1px solid var(--border-subtle)',
+              background: 'var(--bg-surface-secondary)',
+              color: 'var(--text-main)',
               fontSize: '12px',
-              fontWeight: '800',
-              background: '#f8fafc'
+              fontWeight: '800'
             }}
           >
             <option value="Óptimo">🔋 Óptimo / Fresco</option>
@@ -207,15 +213,15 @@ export default function SundayRecoveryDashboard({
             <option value="Fatigado">⚠️ Fatigado / Pesado</option>
             <option value="Dolor Articular">🛑 Dolor Articular</option>
           </select>
-          <span style={{ fontSize: '10px', color: '#94a3b8', marginTop: '4px', display: 'block' }}>
+          <span style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '4px', display: 'block' }}>
             Estado de batería biológica
           </span>
         </div>
       </div>
 
       {/* NOTAS DE BIENESTAR */}
-      <div className="card" style={{ padding: '14px', borderRadius: '18px', border: '1.5px solid #e2e8f0', background: '#ffffff' }}>
-        <span style={{ fontSize: '11px', fontWeight: '800', color: '#475569', display: 'block', marginBottom: '6px' }}>
+      <div className="card" style={{ padding: '14px', borderRadius: '18px', border: '1px solid var(--border-subtle)', background: 'var(--bg-surface)' }}>
+        <span style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>
           Notas de Descanso / Hidratación / Nutrición:
         </span>
         <textarea
@@ -228,7 +234,9 @@ export default function SundayRecoveryDashboard({
             width: '100%',
             padding: '8px 10px',
             borderRadius: '12px',
-            border: '1.5px solid #cbd5e1',
+            border: '1px solid var(--border-subtle)',
+            background: 'var(--bg-surface-secondary)',
+            color: 'var(--text-main)',
             fontSize: '12px',
             boxSizing: 'border-box',
             fontFamily: 'inherit',

@@ -192,31 +192,32 @@ export default function PlateCalculatorModal({
       zIndex: 9999
     }}>
       <div style={{
-        background: '#ffffff',
+        background: 'var(--bg-surface)',
         borderRadius: '24px',
         width: '100%',
         maxWidth: '460px',
         margin: 'auto 0',
         overflowY: 'auto',
-        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.35)',
-        border: '1px solid #e2e8f0',
+        maxHeight: '92vh',
+        boxShadow: 'var(--shadow-ios)',
+        border: '1px solid var(--border-subtle)',
         display: 'flex',
         flexDirection: 'column'
       }}>
         {/* HEADER */}
         <div style={{
-          padding: '16px 20px',
-          borderBottom: '1px solid #e2e8f0',
+          padding: '14px 18px',
+          borderBottom: '1px solid var(--border-subtle)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          background: '#f8fafc',
+          background: 'var(--bg-subtle)',
           borderTopLeftRadius: '24px',
           borderTopRightRadius: '24px'
         }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '900', color: '#0f172a', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <h3 style={{ margin: 0, fontSize: '15px', fontWeight: '900', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 🏋️ Calculadora de Carga
               </h3>
               {onOpenMachineConfig && (
@@ -230,9 +231,9 @@ export default function PlateCalculatorModal({
                     display: 'inline-flex',
                     alignItems: 'center',
                     gap: '4px',
-                    background: '#eff6ff',
-                    border: '1px solid #bfdbfe',
-                    color: '#0066ff',
+                    background: 'var(--accent-blue-light)',
+                    border: '1px solid var(--accent-blue)',
+                    color: 'var(--accent-blue)',
                     padding: '3px 8px',
                     borderRadius: '8px',
                     fontSize: '10px',
@@ -245,15 +246,15 @@ export default function PlateCalculatorModal({
                 </button>
               )}
             </div>
-            <p style={{ margin: '2px 0 0 0', fontSize: '11px', color: '#64748b', fontWeight: '600' }}>
+            <p style={{ margin: '2px 0 0 0', fontSize: '11px', color: 'var(--text-muted)', fontWeight: '600' }}>
               {exerciseName || 'Ajuste de peso'}
               {machineConfig?.floor && (
-                <span style={{ color: '#7c3aed', fontWeight: '800', marginLeft: '6px' }}>
+                <span style={{ color: '#a78bfa', fontWeight: '800', marginLeft: '6px' }}>
                   • {machineConfig.floor}
                 </span>
               )}
               {machineConfig?.station && (
-                <span style={{ color: '#0284c7', fontWeight: '700', marginLeft: '4px' }}>
+                <span style={{ color: 'var(--accent-cyan)', fontWeight: '700', marginLeft: '4px' }}>
                   ({machineConfig.station})
                 </span>
               )}
@@ -262,7 +263,7 @@ export default function PlateCalculatorModal({
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             {/* TOGGLE LBS / KG */}
-            <div style={{ display: 'flex', background: '#e2e8f0', borderRadius: '10px', padding: '2px' }}>
+            <div style={{ display: 'flex', background: 'var(--bg-surface-secondary)', border: '1px solid var(--border-subtle)', borderRadius: '10px', padding: '2px' }}>
               <button
                 type="button"
                 onClick={() => handleUnitToggle('lbs')}
@@ -270,8 +271,8 @@ export default function PlateCalculatorModal({
                   padding: '4px 8px',
                   borderRadius: '8px',
                   border: 'none',
-                  background: unit === 'lbs' ? '#0066ff' : 'transparent',
-                  color: unit === 'lbs' ? '#ffffff' : '#475569',
+                  background: unit === 'lbs' ? 'var(--accent-blue)' : 'transparent',
+                  color: unit === 'lbs' ? '#ffffff' : 'var(--text-muted)',
                   fontSize: '11px',
                   fontWeight: '900',
                   cursor: 'pointer'
@@ -286,8 +287,8 @@ export default function PlateCalculatorModal({
                   padding: '4px 8px',
                   borderRadius: '8px',
                   border: 'none',
-                  background: unit === 'kg' ? '#0066ff' : 'transparent',
-                  color: unit === 'kg' ? '#ffffff' : '#475569',
+                  background: unit === 'kg' ? 'var(--accent-blue)' : 'transparent',
+                  color: unit === 'kg' ? '#ffffff' : 'var(--text-muted)',
                   fontSize: '11px',
                   fontWeight: '900',
                   cursor: 'pointer'
@@ -300,9 +301,9 @@ export default function PlateCalculatorModal({
             <button
               type="button"
               onClick={onClose}
-              style={{ background: '#e2e8f0', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#475569' }}
+              style={{ background: 'var(--bg-surface-secondary)', border: '1px solid var(--border-subtle)', borderRadius: '50%', width: '30px', height: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--text-secondary)' }}
             >
-              <X size={18} />
+              <X size={16} />
             </button>
           </div>
         </div>
@@ -314,13 +315,13 @@ export default function PlateCalculatorModal({
             onClick={() => setActiveTab('plates')}
             style={{
               flex: 1,
-              padding: '10px',
+              padding: '9px',
               borderRadius: '12px',
-              border: activeTab === 'plates' ? '2px solid #0066ff' : '1px solid #e2e8f0',
-              background: activeTab === 'plates' ? '#eff6ff' : '#ffffff',
-              color: activeTab === 'plates' ? '#0066ff' : '#64748b',
+              border: activeTab === 'plates' ? '2px solid var(--accent-blue)' : '1px solid var(--border-subtle)',
+              background: activeTab === 'plates' ? 'var(--accent-blue-light)' : 'var(--bg-surface-secondary)',
+              color: activeTab === 'plates' ? 'var(--accent-blue)' : 'var(--text-muted)',
               fontWeight: '800',
-              fontSize: '13px',
+              fontSize: '12.5px',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
@@ -328,20 +329,20 @@ export default function PlateCalculatorModal({
               gap: '6px'
             }}
           >
-            <Disc size={16} /> Discos por Lado
+            <Disc size={15} /> Discos por Lado
           </button>
           <button
             type="button"
             onClick={() => setActiveTab('stack')}
             style={{
               flex: 1,
-              padding: '10px',
+              padding: '9px',
               borderRadius: '12px',
-              border: activeTab === 'stack' ? '2px solid #7c3aed' : '1px solid #e2e8f0',
-              background: activeTab === 'stack' ? '#f5f3ff' : '#ffffff',
-              color: activeTab === 'stack' ? '#7c3aed' : '#64748b',
+              border: activeTab === 'stack' ? '2px solid #8b5cf6' : '1px solid var(--border-subtle)',
+              background: activeTab === 'stack' ? 'rgba(139, 92, 246, 0.15)' : 'var(--bg-surface-secondary)',
+              color: activeTab === 'stack' ? '#a78bfa' : 'var(--text-muted)',
               fontWeight: '800',
-              fontSize: '13px',
+              fontSize: '12.5px',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
@@ -360,23 +361,25 @@ export default function PlateCalculatorModal({
               {/* PESO OBJETIVO */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <label style={{ fontSize: '12px', fontWeight: '800', color: '#475569' }}>PESO TOTAL OBJETIVO</label>
-                  <span style={{ fontSize: '12px', fontWeight: '800', color: '#0066ff' }}>{targetWeight} {unit}</span>
+                  <label style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>PESO TOTAL OBJETIVO</label>
+                  <span className="font-mono-tech" style={{ fontSize: '12.5px', fontWeight: '800', color: 'var(--accent-blue)' }}>{targetWeight} {unit}</span>
                 </div>
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                   <input
                     type="number"
                     value={targetWeight || ''}
                     onChange={(e) => setTargetWeight(parseFloat(e.target.value) || 0)}
+                    className="font-mono-tech"
                     style={{
                       flex: 1,
                       padding: '10px',
                       borderRadius: '12px',
-                      border: '2px solid #0066ff',
+                      border: '2px solid var(--accent-blue)',
                       fontSize: '20px',
                       fontWeight: '900',
                       textAlign: 'center',
-                      color: '#0f172a'
+                      background: 'var(--bg-card)',
+                      color: 'var(--text-main)'
                     }}
                   />
                   <div style={{ display: 'flex', gap: '4px' }}>
@@ -385,14 +388,15 @@ export default function PlateCalculatorModal({
                         key={delta}
                         type="button"
                         onClick={() => setTargetWeight(Math.max(baseWeight, targetWeight + delta))}
+                        className="font-mono-tech"
                         style={{
                           padding: '8px 8px',
                           borderRadius: '8px',
-                          border: '1px solid #cbd5e1',
-                          background: '#f8fafc',
+                          border: '1px solid var(--border-subtle)',
+                          background: 'var(--bg-card)',
                           fontSize: '11px',
                           fontWeight: '800',
-                          color: delta > 0 ? '#16a34a' : '#dc2626',
+                          color: delta > 0 ? 'var(--accent-emerald)' : 'var(--accent-red)',
                           cursor: 'pointer'
                         }}
                       >
@@ -404,10 +408,10 @@ export default function PlateCalculatorModal({
               </div>
 
               {/* PESO BASE DE BARRA / TRINEO */}
-              <div style={{ background: '#f8fafc', padding: '10px 12px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+              <div style={{ background: 'var(--bg-surface-secondary)', padding: '10px 12px', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                  <span style={{ fontSize: '11px', fontWeight: '800', color: '#64748b' }}>PESO BASE (BARRA / TRINEO)</span>
-                  <span style={{ fontSize: '12px', fontWeight: '900', color: '#0f172a' }}>{baseWeight} {unit}</span>
+                  <span style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-muted)' }}>PESO BASE (BARRA / TRINEO)</span>
+                  <span className="font-mono-tech" style={{ fontSize: '12px', fontWeight: '900', color: 'var(--text-main)' }}>{baseWeight} {unit}</span>
                 </div>
                 <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginBottom: '6px' }}>
                   {(unit === 'kg' ? [
@@ -433,9 +437,9 @@ export default function PlateCalculatorModal({
                         borderRadius: '8px',
                         fontSize: '11px',
                         fontWeight: '700',
-                        border: baseWeight === b.val ? '1.5px solid #0066ff' : '1px solid #cbd5e1',
-                        background: baseWeight === b.val ? '#eff6ff' : '#ffffff',
-                        color: baseWeight === b.val ? '#0066ff' : '#475569',
+                        border: baseWeight === b.val ? '1.5px solid var(--accent-blue)' : '1px solid var(--border-subtle)',
+                        background: baseWeight === b.val ? 'var(--accent-blue-light)' : 'var(--bg-card)',
+                        color: baseWeight === b.val ? 'var(--accent-blue)' : 'var(--text-secondary)',
                         cursor: 'pointer'
                       }}
                     >
@@ -444,7 +448,7 @@ export default function PlateCalculatorModal({
                   ))}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <span style={{ fontSize: '10.5px', color: '#64748b', fontWeight: '700' }}>✏️ O peso base manual:</span>
+                  <span style={{ fontSize: '10.5px', color: 'var(--text-muted)', fontWeight: '700' }}>✏️ O peso base manual:</span>
                   <input
                     type="number"
                     inputMode="decimal"
@@ -452,27 +456,28 @@ export default function PlateCalculatorModal({
                     placeholder="Ej. 105"
                     value={baseWeight}
                     onChange={(e) => setBaseWeight(parseFloat(e.target.value) || 0)}
+                    className="font-mono-tech"
                     style={{
                       width: '70px',
                       padding: '4px 8px',
                       borderRadius: '8px',
-                      border: '1.5px solid #0066ff',
+                      border: '1.5px solid var(--accent-blue)',
                       fontSize: '12px',
                       fontWeight: '900',
                       textAlign: 'center',
-                      background: '#ffffff',
-                      color: '#0f172a'
+                      background: 'var(--bg-card)',
+                      color: 'var(--text-main)'
                     }}
                   />
-                  <span style={{ fontSize: '11px', fontWeight: '800', color: '#64748b' }}>{unit}</span>
+                  <span style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-muted)' }}>{unit}</span>
                 </div>
               </div>
 
               {/* DESGLOSE VISUAL DE DISCOS POR LADO */}
-              <div style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', padding: '14px', borderRadius: '16px', color: '#ffffff' }}>
+              <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', padding: '14px', borderRadius: '16px', color: 'var(--text-main)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                  <span style={{ fontSize: '12px', fontWeight: '800', color: '#94a3b8', textTransform: 'uppercase' }}>Cargar por cada lado:</span>
-                  <strong style={{ fontSize: '17px', fontWeight: '900', color: '#38bdf8' }}>{plateCalc.perSideWeight} {unit} / lado</strong>
+                  <span style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Cargar por cada lado:</span>
+                  <strong className="font-mono-tech" style={{ fontSize: '17px', fontWeight: '900', color: 'var(--accent-cyan)' }}>{plateCalc.perSideWeight} {unit} / lado</strong>
                 </div>
 
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', justifyContent: 'center' }}>
@@ -529,8 +534,8 @@ export default function PlateCalculatorModal({
                   display: 'flex',
                   alignItems: 'center',
                   gap: '8px',
-                  background: saveAsCalibration ? '#eff6ff' : '#f8fafc',
-                  border: `1.5px solid ${saveAsCalibration ? '#bfdbfe' : '#e2e8f0'}`,
+                  background: saveAsCalibration ? 'var(--accent-blue-light)' : 'var(--bg-surface-secondary)',
+                  border: `1.5px solid ${saveAsCalibration ? 'var(--accent-blue)' : 'var(--border-subtle)'}`,
                   borderRadius: '12px',
                   padding: '8px 12px',
                   cursor: 'pointer',
@@ -541,13 +546,13 @@ export default function PlateCalculatorModal({
                   type="checkbox"
                   checked={saveAsCalibration}
                   onChange={(e) => setSaveAsCalibration(e.target.checked)}
-                  style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: '#0066ff' }}
+                  style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: 'var(--accent-blue)' }}
                 />
                 <div>
-                  <div style={{ fontSize: '11px', fontWeight: '900', color: saveAsCalibration ? '#1e40af' : '#334155' }}>
+                  <div style={{ fontSize: '11px', fontWeight: '900', color: saveAsCalibration ? 'var(--accent-blue)' : 'var(--text-main)' }}>
                     💾 Recordar peso base ({baseWeight} {unit}) para esta máquina
                   </div>
-                  <div style={{ fontSize: '9.5px', color: '#64748b' }}>
+                  <div style={{ fontSize: '9.5px', color: 'var(--text-muted)' }}>
                     Sincroniza el peso inicial del trineo/barra para próximas series y sesiones.
                   </div>
                 </div>
@@ -561,16 +566,16 @@ export default function PlateCalculatorModal({
                   padding: '12px',
                   borderRadius: '14px',
                   border: 'none',
-                  background: 'linear-gradient(135deg, #0066ff 0%, #0052cc 100%)',
+                  background: 'linear-gradient(135deg, var(--accent-emerald) 0%, #059669 100%)',
                   color: '#ffffff',
-                  fontSize: '14px',
+                  fontSize: '13.5px',
                   fontWeight: '900',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: '8px',
-                  boxShadow: '0 4px 14px rgba(0, 102, 255, 0.3)'
+                  boxShadow: '0 4px 14px rgba(0, 230, 118, 0.25)'
                 }}
               >
                 <Check size={18} strokeWidth={3} /> Aplicar {targetWeight} {unit} a la serie
@@ -581,12 +586,12 @@ export default function PlateCalculatorModal({
               {/* MODO TORRE DE PLACAS SKEUOMÓRFICA */}
 
               {/* TIPO DE PROGRESIÓN DE LA TORRE */}
-              <div style={{ background: '#f8fafc', padding: '10px 12px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+              <div style={{ background: 'var(--bg-surface-secondary)', padding: '10px 12px', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                  <span style={{ fontSize: '11px', fontWeight: '800', color: '#475569' }}>
+                  <span style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-muted)' }}>
                     TIPO DE TORRE DE PLACAS
                   </span>
-                  <span style={{ fontSize: '11px', fontWeight: '900', color: '#7c3aed' }}>
+                  <span style={{ fontSize: '11px', fontWeight: '900', color: '#a78bfa' }}>
                     {stackPreset === 'two_tens_then_twenty' ? '2 de 10 lb, luego +20' : 'Incremento Constante'}
                   </span>
                 </div>
@@ -597,9 +602,9 @@ export default function PlateCalculatorModal({
                     style={{
                       padding: '7px 6px',
                       borderRadius: '8px',
-                      border: stackPreset === 'two_tens_then_twenty' ? '2px solid #7c3aed' : '1px solid #cbd5e1',
-                      background: stackPreset === 'two_tens_then_twenty' ? '#f5f3ff' : '#ffffff',
-                      color: stackPreset === 'two_tens_then_twenty' ? '#7c3aed' : '#475569',
+                      border: stackPreset === 'two_tens_then_twenty' ? '2px solid #8b5cf6' : '1px solid var(--border-subtle)',
+                      background: stackPreset === 'two_tens_then_twenty' ? 'rgba(139, 92, 246, 0.15)' : 'var(--bg-card)',
+                      color: stackPreset === 'two_tens_then_twenty' ? '#a78bfa' : 'var(--text-secondary)',
                       fontSize: '10.5px',
                       fontWeight: '800',
                       cursor: 'pointer',
@@ -607,7 +612,7 @@ export default function PlateCalculatorModal({
                     }}
                   >
                     ⚡ 2 de 10 lb, luego +20
-                    <span style={{ display: 'block', fontSize: '8.5px', color: '#64748b' }}>(10, 20, 40, 60...)</span>
+                    <span style={{ display: 'block', fontSize: '8.5px', color: 'var(--text-muted)' }}>(10, 20, 40, 60...)</span>
                   </button>
                   <button
                     type="button"
@@ -615,9 +620,9 @@ export default function PlateCalculatorModal({
                     style={{
                       padding: '7px 6px',
                       borderRadius: '8px',
-                      border: stackPreset === 'linear' ? '2px solid #7c3aed' : '1px solid #cbd5e1',
-                      background: stackPreset === 'linear' ? '#f5f3ff' : '#ffffff',
-                      color: stackPreset === 'linear' ? '#7c3aed' : '#475569',
+                      border: stackPreset === 'linear' ? '2px solid #8b5cf6' : '1px solid var(--border-subtle)',
+                      background: stackPreset === 'linear' ? 'rgba(139, 92, 246, 0.15)' : 'var(--bg-card)',
+                      color: stackPreset === 'linear' ? '#a78bfa' : 'var(--text-secondary)',
                       fontSize: '10.5px',
                       fontWeight: '800',
                       cursor: 'pointer',
@@ -625,18 +630,18 @@ export default function PlateCalculatorModal({
                     }}
                   >
                     📏 Incremento Fijo / Manual
-                    <span style={{ display: 'block', fontSize: '8.5px', color: '#64748b' }}>(Personalizable)</span>
+                    <span style={{ display: 'block', fontSize: '8.5px', color: 'var(--text-muted)' }}>(Personalizable)</span>
                   </button>
                 </div>
               </div>
 
               {/* 1. PLACA #1 (CABEZAL / PRIMERA PESA) */}
-              <div style={{ background: '#f8fafc', padding: '10px 12px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+              <div style={{ background: 'var(--bg-surface-secondary)', padding: '10px 12px', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                  <span style={{ fontSize: '11px', fontWeight: '800', color: '#475569' }}>
+                  <span style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-muted)' }}>
                     PLACA #1 (CABEZAL / INICIAL)
                   </span>
-                  <span style={{ fontSize: '12px', fontWeight: '900', color: '#7c3aed' }}>
+                  <span className="font-mono-tech" style={{ fontSize: '12px', fontWeight: '900', color: '#a78bfa' }}>
                     {topPlateWeight} {unit}
                   </span>
                 </div>
@@ -646,15 +651,16 @@ export default function PlateCalculatorModal({
                       key={val}
                       type="button"
                       onClick={() => setTopPlateWeight(val)}
+                      className="font-mono-tech"
                       style={{
                         flex: '1 1 auto',
                         padding: '4px 6px',
                         borderRadius: '6px',
                         fontSize: '11px',
                         fontWeight: '800',
-                        border: topPlateWeight === val ? '1.5px solid #7c3aed' : '1px solid #cbd5e1',
-                        background: topPlateWeight === val ? '#f5f3ff' : '#ffffff',
-                        color: topPlateWeight === val ? '#7c3aed' : '#64748b',
+                        border: topPlateWeight === val ? '1.5px solid #8b5cf6' : '1px solid var(--border-subtle)',
+                        background: topPlateWeight === val ? 'rgba(139, 92, 246, 0.15)' : 'var(--bg-card)',
+                        color: topPlateWeight === val ? '#a78bfa' : 'var(--text-secondary)',
                         cursor: 'pointer'
                       }}
                     >
@@ -663,7 +669,7 @@ export default function PlateCalculatorModal({
                   ))}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <span style={{ fontSize: '10.5px', color: '#64748b', fontWeight: '700' }}>✏️ O cabezal manual:</span>
+                  <span style={{ fontSize: '10.5px', color: 'var(--text-muted)', fontWeight: '700' }}>✏️ O cabezal manual:</span>
                   <input
                     type="number"
                     inputMode="decimal"
@@ -671,31 +677,32 @@ export default function PlateCalculatorModal({
                     placeholder="Ej. 15"
                     value={topPlateWeight}
                     onChange={(e) => setTopPlateWeight(parseFloat(e.target.value) || 0)}
+                    className="font-mono-tech"
                     style={{
                       width: '70px',
                       padding: '4px 8px',
                       borderRadius: '8px',
-                      border: '1.5px solid #7c3aed',
+                      border: '1.5px solid #8b5cf6',
                       fontSize: '12px',
                       fontWeight: '900',
                       textAlign: 'center',
-                      background: '#ffffff',
-                      color: '#4c1d95'
+                      background: 'var(--bg-card)',
+                      color: 'var(--text-main)'
                     }}
                   />
-                  <span style={{ fontSize: '11px', fontWeight: '800', color: '#64748b' }}>{unit}</span>
+                  <span style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-muted)' }}>{unit}</span>
                 </div>
               </div>
 
               {/* 2. INCREMENTO POR PLACA */}
-              <div style={{ background: '#f8fafc', padding: '10px 12px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+              <div style={{ background: 'var(--bg-surface-secondary)', padding: '10px 12px', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                  <span style={{ fontSize: '11px', fontWeight: '800', color: '#475569' }}>
+                  <span style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-muted)' }}>
                     {stackPreset === 'two_tens_then_twenty' 
                       ? 'INCREMENTO PLACAS (A PARTIR DE #3)' 
                       : 'INCREMENTO PLACAS (#2 EN ADELANTE)'}
                   </span>
-                  <span style={{ fontSize: '12px', fontWeight: '900', color: '#7c3aed' }}>
+                  <span className="font-mono-tech" style={{ fontSize: '12px', fontWeight: '900', color: '#a78bfa' }}>
                     +{stackIncrement} {unit}/placa
                   </span>
                 </div>
@@ -708,15 +715,16 @@ export default function PlateCalculatorModal({
                       key={inc}
                       type="button"
                       onClick={() => setStackIncrement(inc)}
+                      className="font-mono-tech"
                       style={{
                         flex: '1 1 auto',
                         padding: '4px 6px',
                         borderRadius: '6px',
                         fontSize: '11px',
                         fontWeight: '800',
-                        border: stackIncrement === inc ? '1.5px solid #7c3aed' : '1px solid #cbd5e1',
-                        background: stackIncrement === inc ? '#f5f3ff' : '#ffffff',
-                        color: stackIncrement === inc ? '#7c3aed' : '#64748b',
+                        border: stackIncrement === inc ? '1.5px solid #8b5cf6' : '1px solid var(--border-subtle)',
+                        background: stackIncrement === inc ? 'rgba(139, 92, 246, 0.15)' : 'var(--bg-card)',
+                        color: stackIncrement === inc ? '#a78bfa' : 'var(--text-secondary)',
                         cursor: 'pointer'
                       }}
                     >
@@ -725,7 +733,7 @@ export default function PlateCalculatorModal({
                   ))}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <span style={{ fontSize: '10.5px', color: '#64748b', fontWeight: '700' }}>✏️ O salto manual:</span>
+                  <span style={{ fontSize: '10.5px', color: 'var(--text-muted)', fontWeight: '700' }}>✏️ O salto manual:</span>
                   <input
                     type="number"
                     inputMode="decimal"
@@ -733,29 +741,30 @@ export default function PlateCalculatorModal({
                     placeholder="Ej. 12.5"
                     value={stackIncrement}
                     onChange={(e) => setStackIncrement(parseFloat(e.target.value) || 0)}
+                    className="font-mono-tech"
                     style={{
                       width: '70px',
                       padding: '4px 8px',
                       borderRadius: '8px',
-                      border: '1.5px solid #7c3aed',
+                      border: '1.5px solid #8b5cf6',
                       fontSize: '12px',
                       fontWeight: '900',
                       textAlign: 'center',
-                      background: '#ffffff',
-                      color: '#4c1d95'
+                      background: 'var(--bg-card)',
+                      color: 'var(--text-main)'
                     }}
                   />
-                  <span style={{ fontSize: '11px', fontWeight: '800', color: '#64748b' }}>{unit}/placa</span>
+                  <span style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-muted)' }}>{unit}/placa</span>
                 </div>
               </div>
 
               {/* 3. PESAS AUXILIARES / ADD-ONS (+2.5, +5, +7.5, +10 LBS) */}
-              <div style={{ background: '#f8fafc', padding: '10px 12px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+              <div style={{ background: 'var(--bg-surface-secondary)', padding: '10px 12px', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                  <span style={{ fontSize: '11px', fontWeight: '800', color: '#475569' }}>
+                  <span style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-muted)' }}>
                     PESA AUXILIAR (PIN EXTRA / DIAL)
                   </span>
-                  <span style={{ fontSize: '12px', fontWeight: '900', color: '#16a34a' }}>
+                  <span className="font-mono-tech" style={{ fontSize: '12px', fontWeight: '900', color: 'var(--accent-emerald)' }}>
                     {addOnWeight > 0 ? `+${addOnWeight} ${unit}` : 'Ninguna'}
                   </span>
                 </div>
@@ -765,15 +774,16 @@ export default function PlateCalculatorModal({
                       key={extra}
                       type="button"
                       onClick={() => setAddOnWeight(extra)}
+                      className="font-mono-tech"
                       style={{
                         flex: '1 1 auto',
                         padding: '4px 6px',
                         borderRadius: '6px',
                         fontSize: '11px',
                         fontWeight: '800',
-                        border: addOnWeight === extra ? '1.5px solid #16a34a' : '1px solid #cbd5e1',
-                        background: addOnWeight === extra ? '#dcfce7' : '#ffffff',
-                        color: addOnWeight === extra ? '#15803d' : '#64748b',
+                        border: addOnWeight === extra ? '1.5px solid var(--accent-emerald)' : '1px solid var(--border-subtle)',
+                        background: addOnWeight === extra ? 'var(--accent-emerald-subtle)' : 'var(--bg-card)',
+                        color: addOnWeight === extra ? 'var(--accent-emerald)' : 'var(--text-secondary)',
                         cursor: 'pointer'
                       }}
                     >
@@ -782,7 +792,7 @@ export default function PlateCalculatorModal({
                   ))}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <span style={{ fontSize: '10.5px', color: '#64748b', fontWeight: '700' }}>✏️ O valor manual:</span>
+                  <span style={{ fontSize: '10.5px', color: 'var(--text-muted)', fontWeight: '700' }}>✏️ O valor manual:</span>
                   <input
                     type="number"
                     inputMode="decimal"
@@ -790,29 +800,30 @@ export default function PlateCalculatorModal({
                     placeholder="0"
                     value={addOnWeight}
                     onChange={(e) => setAddOnWeight(parseFloat(e.target.value) || 0)}
+                    className="font-mono-tech"
                     style={{
                       width: '70px',
                       padding: '4px 8px',
                       borderRadius: '8px',
-                      border: '1.5px solid #16a34a',
+                      border: '1.5px solid var(--accent-emerald)',
                       fontSize: '12px',
                       fontWeight: '900',
                       textAlign: 'center',
-                      background: '#ffffff',
-                      color: '#15803d'
+                      background: 'var(--bg-card)',
+                      color: 'var(--text-main)'
                     }}
                   />
-                  <span style={{ fontSize: '11px', fontWeight: '800', color: '#64748b' }}>{unit}</span>
+                  <span style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-muted)' }}>{unit}</span>
                 </div>
               </div>
 
               {machineConfig && (
-                <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '10px', padding: '6px 10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2px' }}>
-                  <span style={{ fontSize: '11px', color: '#1e40af', fontWeight: '800' }}>
+                <div style={{ background: 'var(--accent-blue-light)', border: '1px solid var(--accent-blue)', borderRadius: '10px', padding: '6px 10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2px' }}>
+                  <span style={{ fontSize: '11px', color: 'var(--accent-blue)', fontWeight: '800' }}>
                     ⚙️ {stackPreset === 'two_tens_then_twenty' ? 'Torre: 2 de 10 lb, luego +20 lb' : `Torre (+${stackIncrement} ${unit}/placa)`}
                   </span>
                   {machineConfig.station && (
-                    <span style={{ fontSize: '10px', color: '#3b82f6', fontWeight: '700' }}>{machineConfig.station}</span>
+                    <span style={{ fontSize: '10px', color: 'var(--accent-cyan)', fontWeight: '700' }}>{machineConfig.station}</span>
                   )}
                 </div>
               )}
@@ -821,13 +832,13 @@ export default function PlateCalculatorModal({
               <div style={{
                 maxHeight: '230px',
                 overflowY: 'auto',
-                background: '#0f172a',
+                background: 'var(--bg-app)',
                 borderRadius: '16px',
                 padding: '10px 8px',
                 display: 'flex',
                 flexDirection: 'column',
                 gap: '3px',
-                border: '2px solid #334155'
+                border: '1px solid var(--border-subtle)'
               }}>
                 {Array.from({ length: totalStackPlates }).map((_, idx) => {
                   const plateNum = idx + 1;
@@ -844,25 +855,26 @@ export default function PlateCalculatorModal({
                         borderRadius: '8px',
                         background: isSelected 
                           ? 'linear-gradient(90deg, #7c3aed 0%, #a855f7 100%)' 
-                          : (idx < selectedPlateIndex ? '#1e293b' : '#334155'),
-                        color: isSelected ? '#ffffff' : (idx < selectedPlateIndex ? '#e2e8f0' : '#94a3b8'),
+                          : (idx < selectedPlateIndex ? 'var(--bg-card)' : 'var(--bg-surface-secondary)'),
+                        color: isSelected ? '#ffffff' : (idx < selectedPlateIndex ? 'var(--text-main)' : 'var(--text-muted)'),
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'space-between',
                         cursor: 'pointer',
                         transition: 'all 0.15s ease',
                         boxShadow: isSelected ? '0 0 12px rgba(168, 85, 247, 0.6)' : 'none',
-                        borderLeft: isSelected ? '6px solid #fbbf24' : (isTopPlate ? '3px solid #38bdf8' : '3px solid transparent')
+                        borderLeft: isSelected ? '6px solid #fbbf24' : (isTopPlate ? '3px solid var(--accent-cyan)' : '3px solid transparent'),
+                        borderBottom: '1px solid var(--border-subtle)'
                       }}
                     >
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <span style={{ fontSize: '10px', fontWeight: '800', opacity: 0.7, width: '22px' }}>#{plateNum}</span>
-                        <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: isSelected ? '#fbbf24' : (isTopPlate ? '#38bdf8' : '#64748b') }} />
-                        <strong style={{ fontSize: '13px', fontWeight: '900' }}>
+                        <span className="font-mono-tech" style={{ fontSize: '10px', fontWeight: '800', opacity: 0.7, width: '22px' }}>#{plateNum}</span>
+                        <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: isSelected ? '#fbbf24' : (isTopPlate ? 'var(--accent-cyan)' : 'var(--border-strong)') }} />
+                        <strong className="font-mono-tech" style={{ fontSize: '13px', fontWeight: '900' }}>
                           {weightForPlate} {unit}
                         </strong>
                         {isTopPlate && (
-                          <span style={{ fontSize: '9px', background: '#0284c7', color: '#fff', padding: '1px 5px', borderRadius: '4px', fontWeight: '800' }}>
+                          <span style={{ fontSize: '9px', background: 'var(--accent-cyan)', color: '#000', padding: '1px 5px', borderRadius: '4px', fontWeight: '800' }}>
                             Cabezal
                           </span>
                         )}
@@ -879,13 +891,13 @@ export default function PlateCalculatorModal({
 
               {/* TOTAL SELECCIONADO */}
               <div style={{ textAlign: 'center', padding: '4px 0' }}>
-                <span style={{ fontSize: '11px', color: '#64748b', fontWeight: '700' }}>Peso efectivo seleccionado:</span>
-                <div style={{ fontSize: '24px', fontWeight: '900', color: '#7c3aed' }}>
+                <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: '700' }}>Peso efectivo seleccionado:</span>
+                <div className="font-mono-tech" style={{ fontSize: '24px', fontWeight: '900', color: '#a78bfa' }}>
                   {currentStackWeight} {unit}
-                  {addOnWeight > 0 && <span style={{ fontSize: '13px', color: '#16a34a', marginLeft: '6px' }}>(+{addOnWeight} {unit} extra)</span>}
+                  {addOnWeight > 0 && <span style={{ fontSize: '13px', color: 'var(--accent-emerald)', marginLeft: '6px' }}>(+{addOnWeight} {unit} extra)</span>}
                 </div>
                 {unit === 'kg' && (
-                  <div style={{ fontSize: '12px', fontWeight: '800', color: '#0066ff', marginTop: '2px' }}>
+                  <div className="font-mono-tech" style={{ fontSize: '12px', fontWeight: '800', color: 'var(--accent-blue)', marginTop: '2px' }}>
                     ≈ {convertedToLbs} lbs equivalentes
                   </div>
                 )}
@@ -898,8 +910,8 @@ export default function PlateCalculatorModal({
                   display: 'flex',
                   alignItems: 'center',
                   gap: '8px',
-                  background: saveAsCalibration ? '#f5f3ff' : '#f8fafc',
-                  border: `1.5px solid ${saveAsCalibration ? '#c4b5fd' : '#e2e8f0'}`,
+                  background: saveAsCalibration ? 'rgba(139, 92, 246, 0.15)' : 'var(--bg-surface-secondary)',
+                  border: `1.5px solid ${saveAsCalibration ? '#8b5cf6' : 'var(--border-subtle)'}`,
                   borderRadius: '12px',
                   padding: '8px 12px',
                   cursor: 'pointer',
@@ -910,13 +922,13 @@ export default function PlateCalculatorModal({
                   type="checkbox"
                   checked={saveAsCalibration}
                   onChange={(e) => setSaveAsCalibration(e.target.checked)}
-                  style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: '#7c3aed' }}
+                  style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: '#8b5cf6' }}
                 />
                 <div>
-                  <div style={{ fontSize: '11px', fontWeight: '900', color: saveAsCalibration ? '#5b21b6' : '#334155' }}>
+                  <div style={{ fontSize: '11px', fontWeight: '900', color: saveAsCalibration ? '#a78bfa' : 'var(--text-main)' }}>
                     💾 Recordar como calibración oficial de esta máquina
                   </div>
-                  <div style={{ fontSize: '9.5px', color: '#64748b' }}>
+                  <div style={{ fontSize: '9.5px', color: 'var(--text-muted)' }}>
                     Guarda el cabezal ({topPlateWeight} {unit}) y saltos ({stackPreset === 'two_tens_then_twenty' ? '2 de 10 lb, luego +20' : `+${stackIncrement} ${unit}`}) para próximas series y sesiones.
                   </div>
                 </div>
@@ -933,7 +945,7 @@ export default function PlateCalculatorModal({
                     border: 'none',
                     background: 'linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)',
                     color: '#ffffff',
-                    fontSize: '14px',
+                    fontSize: '13.5px',
                     fontWeight: '900',
                     cursor: 'pointer',
                     display: 'flex',
@@ -956,9 +968,9 @@ export default function PlateCalculatorModal({
                     style={{
                       padding: '8px',
                       borderRadius: '10px',
-                      border: '1px solid #cbd5e1',
-                      background: '#f8fafc',
-                      color: '#475569',
+                      border: '1px solid var(--border-subtle)',
+                      background: 'var(--bg-surface-secondary)',
+                      color: 'var(--text-secondary)',
                       fontSize: '12px',
                       fontWeight: '800',
                       cursor: 'pointer'

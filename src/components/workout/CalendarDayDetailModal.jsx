@@ -31,27 +31,27 @@ export default function CalendarDayDetailModal({
       padding: '16px',
       zIndex: 2000
     }}>
-      <div className="card animate-fade" style={{ background: '#ffffff', borderRadius: '24px', padding: '20px', width: '100%', maxWidth: '380px', boxShadow: '0 20px 40px rgba(0,0,0,0.3)' }}>
+      <div className="card animate-fade" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', borderRadius: '24px', padding: '20px', width: '100%', maxWidth: '380px', boxShadow: 'var(--shadow-ios-lg)' }}>
         <div className="flex-between" style={{ marginBottom: '14px' }}>
           <div>
-            <span style={{ fontSize: '11px', color: '#0066ff', fontWeight: '900', textTransform: 'uppercase' }}>
+            <span style={{ fontSize: '11px', color: 'var(--accent-blue)', fontWeight: '900', textTransform: 'uppercase' }}>
               Gestión del Calendario
             </span>
-            <h3 style={{ margin: '2px 0 0 0', fontSize: '17px', fontWeight: '900', color: '#0f172a' }}>
+            <h3 style={{ margin: '2px 0 0 0', fontSize: '17px', fontWeight: '900', color: 'var(--text-main)' }}>
               {selectedCellModal.dayNumber} de {monthNames[month]} {year}
             </h3>
           </div>
           <button
             type="button"
             onClick={onClose}
-            style={{ background: '#f1f5f9', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+            style={{ background: 'var(--bg-surface-secondary)', border: '1px solid var(--border-subtle)', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
           >
-            <X size={18} color="#64748b" />
+            <X size={18} color="var(--text-muted)" />
           </button>
         </div>
 
         {/* ESTADO ACTUAL */}
-        <div style={{ background: '#f8fafc', padding: '12px', borderRadius: '16px', border: '1.5px solid #e2e8f0', marginBottom: '16px' }}>
+        <div style={{ background: 'var(--bg-surface-secondary)', padding: '12px', borderRadius: '16px', border: '1px solid var(--border-subtle)', marginBottom: '16px' }}>
           <div style={{ fontSize: '11px', color: '#64748b', fontWeight: '800', marginBottom: '4px' }}>
             ESTADO ACTUAL:
           </div>
@@ -110,9 +110,9 @@ export default function CalendarDayDetailModal({
               onClose();
             }}
             style={{
-              background: '#eff6ff',
-              color: '#0066ff',
-              border: '1.5px solid #bfdbfe',
+              background: 'var(--accent-blue-light)',
+              color: 'var(--accent-blue)',
+              border: '1px solid var(--accent-blue)',
               padding: '11px',
               borderRadius: '14px',
               fontSize: '13px',
@@ -132,9 +132,9 @@ export default function CalendarDayDetailModal({
               type="button"
               onClick={() => handleMarkRestDay(selectedCellModal)}
               style={{
-                background: '#f3f4f6',
-                color: '#374151',
-                border: '1.5px solid #d1d5db',
+                background: 'var(--bg-surface-secondary)',
+                color: 'var(--text-main)',
+                border: '1px solid var(--border-subtle)',
                 padding: '10px',
                 borderRadius: '12px',
                 fontSize: '12px',
@@ -153,9 +153,9 @@ export default function CalendarDayDetailModal({
               type="button"
               onClick={() => handleMarkMissedDay(selectedCellModal)}
               style={{
-                background: '#fef2f2',
-                color: '#991b1b',
-                border: '1.5px solid #fecaca',
+                background: 'var(--accent-red-subtle)',
+                color: 'var(--accent-red)',
+                border: '1px solid var(--accent-red)',
                 padding: '10px',
                 borderRadius: '12px',
                 fontSize: '12px',
@@ -176,9 +176,9 @@ export default function CalendarDayDetailModal({
               type="button"
               onClick={() => handleDeleteDayLog(selectedCellModal)}
               style={{
-                background: '#fff1f2',
-                color: '#e11d48',
-                border: '1.5px solid #fecdd3',
+                background: 'var(--accent-red-subtle)',
+                color: 'var(--accent-red)',
+                border: '1px solid var(--accent-red)',
                 padding: '10px',
                 borderRadius: '12px',
                 fontSize: '12px',

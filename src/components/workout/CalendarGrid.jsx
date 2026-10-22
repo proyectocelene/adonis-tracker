@@ -15,7 +15,7 @@ export default function CalendarGrid({
       {/* DÍAS DE LA SEMANA */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px', textAlign: 'center', marginBottom: '8px' }}>
         {daysOfWeek.map((d, i) => (
-          <span key={i} style={{ fontSize: '11px', fontWeight: '800', color: i >= 5 ? '#94a3b8' : '#64748b' }}>
+          <span key={i} style={{ fontSize: '11px', fontWeight: '800', color: i >= 5 ? 'var(--text-muted)' : 'var(--text-secondary)' }}>
             {d}
           </span>
         ))}
@@ -35,29 +35,29 @@ export default function CalendarGrid({
           const isToday = cell.isToday;
           const isPaymentDay = cell.isPaymentDay;
 
-          let bg = isToday ? '#eff6ff' : '#f8fafc';
-          let border = isToday ? '2px solid #0066ff' : '1px solid #f1f5f9';
-          let colorNum = isToday ? '#0066ff' : '#334155';
+          let bg = isToday ? 'var(--accent-blue-light)' : 'var(--bg-surface-secondary)';
+          let border = isToday ? '2px solid var(--accent-blue)' : '1px solid var(--border-subtle)';
+          let colorNum = isToday ? 'var(--accent-blue)' : 'var(--text-main)';
 
           if (isPaymentDay) {
-            border = isMonthPaid ? '2px solid #10b981' : '2px solid #f59e0b';
+            border = isMonthPaid ? '2px solid var(--accent-emerald)' : '2px solid var(--accent-amber)';
             if (!isToday && !hasTrained) {
-              bg = isMonthPaid ? '#f0fdf4' : '#fffbeb';
+              bg = isMonthPaid ? 'var(--accent-emerald-subtle)' : 'var(--accent-amber-subtle)';
             }
           }
 
           if (isNormalWorkout) {
-             bg = 'linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)';
-             border = isPaymentDay ? '2.5px solid #f59e0b' : '1.5px solid #6ee7b7';
-             colorNum = '#065f46';
+             bg = 'var(--accent-emerald-subtle)';
+             border = isPaymentDay ? '2.5px solid var(--accent-amber)' : '1.5px solid var(--accent-emerald)';
+             colorNum = 'var(--accent-emerald)';
           } else if (isRestDay) {
-             bg = 'linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)';
-             border = isPaymentDay ? '2.5px solid #f59e0b' : '1.5px solid #d1d5db';
-             colorNum = '#4b5563';
+             bg = 'rgba(148, 163, 184, 0.08)';
+             border = isPaymentDay ? '2.5px solid var(--accent-amber)' : '1px solid var(--border-subtle)';
+             colorNum = 'var(--text-muted)';
           } else if (isMissedDay) {
-             bg = 'linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%)';
-             border = isPaymentDay ? '2.5px solid #f59e0b' : '1.5px solid #fca5a5';
-             colorNum = '#b91c1c';
+             bg = 'var(--accent-red-subtle)';
+             border = isPaymentDay ? '2.5px solid var(--accent-amber)' : '1.5px solid var(--accent-red)';
+             colorNum = 'var(--accent-red)';
           }
 
           return (
@@ -88,13 +88,13 @@ export default function CalendarGrid({
                     position: 'absolute',
                     top: '-6px',
                     right: '-4px',
-                    background: isMonthPaid ? '#059669' : '#d97706',
-                    color: '#ffffff',
+                    background: isMonthPaid ? 'var(--accent-emerald)' : 'var(--accent-amber)',
+                    color: '#000000',
                     fontSize: '8px',
                     fontWeight: '900',
                     padding: '1px 4px',
                     borderRadius: '6px',
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.15)',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
                     display: 'flex',
                     alignItems: 'center',
                     gap: '1px'
@@ -114,8 +114,8 @@ export default function CalendarGrid({
 
               {isNormalWorkout ? (
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1px' }}>
-                  <CheckCircle2 size={12} color="#059669" />
-                  <span style={{ fontSize: '9px', fontWeight: '800', color: '#047857' }}>
+                  <CheckCircle2 size={12} color="var(--accent-emerald)" />
+                  <span style={{ fontSize: '9px', fontWeight: '800', color: 'var(--accent-emerald)' }}>
                     {cell.session.volume && cell.session.volume > 1000 ? `${Math.round(cell.session.volume / 1000)}k` : '✓'}
                   </span>
                 </div>
@@ -130,7 +130,7 @@ export default function CalendarGrid({
               )}
 
               {isPaymentDay && (
-                <span style={{ fontSize: '8px', fontWeight: '900', color: isMonthPaid ? '#059669' : '#b45309' }}>
+                <span style={{ fontSize: '8px', fontWeight: '900', color: isMonthPaid ? 'var(--accent-emerald)' : 'var(--accent-amber)' }}>
                   {isMonthPaid ? 'PAGADO' : 'PAGO'}
                 </span>
               )}

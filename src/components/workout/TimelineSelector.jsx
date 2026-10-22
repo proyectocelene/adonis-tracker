@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import { Calendar, RotateCcw, Copy, CheckCircle2 } from 'lucide-react';
+import { Calendar, RotateCcw, Copy } from 'lucide-react';
 
 export default function TimelineSelector({
   selectedDateKey,
@@ -88,66 +88,71 @@ export default function TimelineSelector({
   const isDeloadGlow = !isDeloadMode && fatigueStatus?.shouldHighlightDeload;
 
   return (
-    <div className="card" style={{ padding: '16px', marginBottom: '14px', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', border: '1.5px solid #334155', borderRadius: '24px', color: '#ffffff', boxShadow: '0 10px 25px rgba(15, 23, 42, 0.25)' }}>
-      
-      {/* Cabecera del Mesociclo */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px', flexWrap: 'wrap', gap: '8px' }}>
+    <div 
+      className="card" 
+      style={{ 
+        padding: '10px 12px', 
+        marginBottom: '10px', 
+        background: 'var(--bg-surface)', 
+        border: '1px solid var(--border-subtle)', 
+        borderRadius: 'var(--radius-lg)', 
+        color: 'var(--text-main)'
+      }}
+    >
+      {/* Cabecera del Mesociclo Compacta */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px', flexWrap: 'wrap', gap: '6px' }}>
         <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-            <Calendar size={18} color="#38bdf8" />
-            <span style={{ fontSize: '12px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.5px', color: '#38bdf8' }}>
-              Mesociclo Científico
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+            <Calendar size={15} color="var(--accent-blue)" />
+            <span style={{ fontSize: '10.5px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--accent-blue)' }}>
+              Mesociclo • S{currentWeek}
             </span>
             {activeOverride && (
-              <span style={{ fontSize: '10px', background: 'rgba(56, 189, 248, 0.2)', color: '#38bdf8', padding: '2px 7px', borderRadius: '8px', fontWeight: '900', border: '1px solid rgba(56, 189, 248, 0.4)' }}>
-                ⚡ Split: {activeOverride.splitType?.replace('_', ' ').toUpperCase()}
+              <span style={{ fontSize: '9.5px', background: 'var(--accent-blue-light)', color: 'var(--accent-blue)', padding: '1px 6px', borderRadius: '6px', fontWeight: '900', border: '1px solid var(--border-strong)' }}>
+                ⚡ {activeOverride.splitType?.replace('_', ' ').toUpperCase()}
               </span>
             )}
-          </div>
-          <div style={{ fontSize: '19px', fontWeight: '900', color: isDeloadMode ? '#86efac' : '#ffffff', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            Semana {currentWeek}
             {isDeloadMode && (
-              <span style={{ fontSize: '11px', background: '#065f46', color: '#86efac', border: '1px solid #10b981', padding: '2px 8px', borderRadius: '10px', fontWeight: '800' }}>
-                🧘 Deload Activo
+              <span style={{ fontSize: '9.5px', background: 'var(--accent-emerald-subtle)', color: 'var(--accent-emerald)', border: '1px solid var(--accent-emerald)', padding: '1px 6px', borderRadius: '6px', fontWeight: '800' }}>
+                🧘 Deload
               </span>
             )}
           </div>
-          <div style={{ fontSize: '11px', color: isDeloadMode ? '#86efac' : '#94a3b8', fontWeight: '700' }}>
+          <div style={{ fontSize: '10px', color: isDeloadMode ? 'var(--accent-emerald)' : 'var(--text-muted)', fontWeight: '600', marginTop: '1px' }}>
             {isDeloadMode 
-              ? '🧘 Semana de Descarga: Volumen al 50%, cargas al 80% y RIR 3-4' 
-              : (currentWeek === 1 ? '🌱 Semana de Calibración & Línea Base' : `🔥 Fase de Sobrecarga Progresiva (S${currentWeek})`)}
+              ? 'Descarga: Vol 50%, Cargas 80%, RIR 3-4' 
+              : (currentWeek === 1 ? 'Calibración & Línea Base' : `Sobrecarga Progresiva (Semana ${currentWeek})`)}
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: '5px', alignItems: 'center', flexWrap: 'wrap' }}>
           {onToggleDeload && (
             <button
               type="button"
               onClick={onToggleDeload}
-              title={isDeloadMode ? "Desactivar modo descarga" : (fatigueStatus?.reason || "Activar semana de descarga (Deload)")}
+              title={isDeloadMode ? "Desactivar descarga" : (fatigueStatus?.reason || "Activar Deload")}
               style={{
                 background: isDeloadMode 
-                  ? '#065f46' 
-                  : (isDeloadGlow ? 'rgba(245, 158, 11, 0.25)' : 'rgba(255, 255, 255, 0.08)'),
+                  ? 'var(--accent-emerald-subtle)' 
+                  : (isDeloadGlow ? 'var(--accent-amber-subtle)' : 'var(--bg-surface-secondary)'),
                 border: isDeloadMode 
-                  ? '1.5px solid #10b981' 
-                  : (isDeloadGlow ? '1.5px solid #f59e0b' : '1px solid rgba(255, 255, 255, 0.2)'),
+                  ? '1px solid var(--accent-emerald)' 
+                  : (isDeloadGlow ? '1px solid var(--accent-amber)' : '1px solid var(--border-strong)'),
                 color: isDeloadMode 
-                  ? '#86efac' 
-                  : (isDeloadGlow ? '#fbbf24' : '#e2e8f0'),
-                padding: '8px 11px',
-                borderRadius: '12px',
+                  ? 'var(--accent-emerald)' 
+                  : (isDeloadGlow ? 'var(--accent-amber)' : 'var(--text-secondary)'),
+                padding: '5px 8px',
+                borderRadius: '8px',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '4px',
-                fontSize: '11px',
-                fontWeight: '900',
-                boxShadow: isDeloadGlow ? '0 0 14px rgba(245, 158, 11, 0.6)' : 'none',
+                gap: '3px',
+                fontSize: '10.5px',
+                fontWeight: '800',
                 transition: 'all 0.2s ease'
               }}
             >
-              <span>{isDeloadMode ? '🧘 Salir Deload' : (isDeloadGlow ? '⚠️ Sugerir Deload' : '🧘 Deload')}</span>
+              <span>{isDeloadMode ? '🧘 Salir Deload' : (isDeloadGlow ? '⚠️ Deload' : '🧘 Deload')}</span>
             </button>
           )}
 
@@ -156,30 +161,54 @@ export default function TimelineSelector({
               type="button"
               onClick={onClonePreviousWeek}
               title="Clonar pesos de semana anterior"
-              style={{ background: 'rgba(16, 185, 129, 0.15)', border: '1px solid rgba(16, 185, 129, 0.4)', color: '#10b981', padding: '8px 10px', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', fontWeight: '800' }}
+              style={{ 
+                background: 'var(--accent-emerald-subtle)', 
+                border: '1px solid var(--accent-emerald)', 
+                color: 'var(--accent-emerald)', 
+                padding: '5px 8px', 
+                borderRadius: '8px', 
+                cursor: 'pointer', 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '3px', 
+                fontSize: '10.5px', 
+                fontWeight: '800' 
+              }}
             >
-              <Copy size={14} /> Clonar S{currentWeek - 1}
+              <Copy size={12} /> S{currentWeek - 1}
             </button>
           )}
           <button 
             type="button"
             onClick={onResetMesocycle}
             title="Reiniciar Mesociclo a Semana 1"
-            style={{ background: 'rgba(239, 68, 68, 0.15)', border: '1px solid rgba(239, 68, 68, 0.4)', color: '#ef4444', padding: '8px 10px', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', fontWeight: '800' }}
+            style={{ 
+              background: 'var(--bg-surface-secondary)', 
+              border: '1px solid var(--border-subtle)', 
+              color: 'var(--text-muted)', 
+              padding: '5px 8px', 
+              borderRadius: '8px', 
+              cursor: 'pointer', 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '3px', 
+              fontSize: '10.5px', 
+              fontWeight: '700' 
+            }}
           >
-            <RotateCcw size={14} /> Reiniciar
+            <RotateCcw size={12} /> Reiniciar
           </button>
         </div>
       </div>
 
-      {/* Timeline Scrollable con palomitas de verificación completadas */}
+      {/* Timeline Scrollable Compacto (OLED Anti-Reflejo) */}
       <div 
         ref={scrollRef}
         style={{ 
           display: 'flex', 
-          gap: '8px', 
+          gap: '6px', 
           overflowX: 'auto', 
-          padding: '4px 2px 8px 2px', 
+          padding: '2px 1px 4px 1px', 
           scrollbarWidth: 'none',
           msOverflowStyle: 'none',
           WebkitOverflowScrolling: 'touch'
@@ -187,12 +216,14 @@ export default function TimelineSelector({
       >
         {dates.map((item) => {
           const isActive = item.key === selectedDateKey;
-          let borderStyle = isActive ? '2px solid #38bdf8' : '1px solid rgba(255, 255, 255, 0.12)';
-          let bgStyle = isActive ? '#0066ff' : 'rgba(255, 255, 255, 0.07)';
+          let borderStyle = isActive ? '1.5px solid var(--accent-blue)' : '1px solid var(--border-subtle)';
+          let bgStyle = isActive ? 'var(--accent-blue)' : 'var(--bg-surface-secondary)';
+          let textColor = isActive ? '#000000' : 'var(--text-secondary)';
           
           if (item.isCompleted && !isActive) {
-            borderStyle = '1.5px solid #059669';
-            bgStyle = 'rgba(16, 185, 129, 0.12)';
+            borderStyle = '1.5px solid var(--accent-emerald)';
+            bgStyle = 'var(--accent-emerald-subtle)';
+            textColor = 'var(--accent-emerald)';
           }
 
           return (
@@ -200,81 +231,82 @@ export default function TimelineSelector({
               key={item.key}
               type="button"
               data-is-active={isActive}
-              onClick={() => setSelectedDateKey(item.key)}
+              onClick={() => {
+                if (navigator.vibrate) {
+                  try { navigator.vibrate(15); } catch (e) {}
+                }
+                setSelectedDateKey(item.key);
+              }}
               style={{
                 flex: '0 0 auto',
-                minWidth: isActive ? '68px' : '58px',
-                padding: isActive ? '10px 8px' : '8px 6px',
-                borderRadius: '16px',
+                minWidth: isActive ? '58px' : '50px',
+                padding: isActive ? '7px 6px' : '6px 4px',
+                borderRadius: '10px',
                 border: borderStyle,
                 background: bgStyle,
-                color: isActive ? '#ffffff' : '#cbd5e1',
+                color: textColor,
                 cursor: 'pointer',
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
                 justifyContent: 'center',
-                gap: '2px',
-                boxShadow: isActive ? '0 6px 18px rgba(0, 102, 255, 0.45)' : 'none',
-                transform: isActive ? 'scale(1.04)' : 'scale(1)',
-                transition: 'all 0.2s ease',
+                gap: '1px',
+                transform: isActive ? 'scale(1.03)' : 'scale(1)',
+                transition: 'all 0.15s ease',
                 position: 'relative'
               }}
             >
-              {/* Palomita / Indicador de Estado en la esquina */}
+              {/* Indicador de Estado en la esquina */}
               {item.isCompleted ? (
                 <div 
-                  title="Entrenamiento completado y archivado"
+                  title="Completado"
                   style={{
                     position: 'absolute',
-                    top: '3px',
-                    right: '3px',
-                    background: '#10b981',
-                    color: '#ffffff',
-                    fontSize: '8px',
+                    top: '2px',
+                    right: '2px',
+                    background: 'var(--accent-emerald)',
+                    color: '#000000',
+                    fontSize: '7.5px',
                     fontWeight: '900',
-                    width: '14px',
-                    height: '14px',
+                    width: '12px',
+                    height: '12px',
                     borderRadius: '50%',
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'center',
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
+                    justifyContent: 'center'
                   }}
                 >
                   ✓
                 </div>
               ) : item.isRestDay ? (
-                <div style={{ position: 'absolute', top: '2px', right: '3px', fontSize: '9px' }}>💤</div>
+                <div style={{ position: 'absolute', top: '1px', right: '2px', fontSize: '8px' }}>💤</div>
               ) : item.isMissedDay ? (
-                <div style={{ position: 'absolute', top: '2px', right: '3px', fontSize: '9px' }}>❌</div>
+                <div style={{ position: 'absolute', top: '1px', right: '2px', fontSize: '8px' }}>❌</div>
               ) : item.isToday ? (
                 <div style={{
                   position: 'absolute',
-                  top: '4px',
-                  right: '4px',
-                  width: '6px',
-                  height: '6px',
+                  top: '3px',
+                  right: '3px',
+                  width: '5px',
+                  height: '5px',
                   borderRadius: '50%',
-                  background: isActive ? '#ffffff' : '#38bdf8',
-                  boxShadow: '0 0 6px #38bdf8'
+                  background: isActive ? '#000000' : 'var(--accent-cyan)'
                 }} />
               ) : null}
 
-              <span style={{ fontSize: '10px', textTransform: 'capitalize', fontWeight: '900', color: isActive ? '#ffffff' : '#94a3b8', letterSpacing: '0.3px' }}>
+              <span style={{ fontSize: '9.5px', textTransform: 'capitalize', fontWeight: '800', opacity: 0.9 }}>
                 {item.dayName}
               </span>
-              <span style={{ fontSize: '18px', fontWeight: '900', color: '#ffffff', lineHeight: 1 }}>
+              <span className="font-mono-tech" style={{ fontSize: '15px', fontWeight: '800', lineHeight: 1.1 }}>
                 {item.dayNumber}
               </span>
-              <span style={{ fontSize: '13px', lineHeight: 1, marginTop: '2px' }} title={item.meta.label}>
+              <span style={{ fontSize: '11px', lineHeight: 1, marginTop: '1px' }} title={item.meta.label}>
                 {item.meta.icon}
               </span>
             </button>
           );
         })}
       </div>
-      
     </div>
   );
 }

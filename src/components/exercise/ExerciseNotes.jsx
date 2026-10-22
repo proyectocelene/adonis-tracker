@@ -9,15 +9,15 @@ export default function ExerciseNotes({
   handleDeleteNote
 }) {
   return (
-    <div style={{ background: '#f8fafc', padding: '12px', borderRadius: '14px', border: '1.5px solid #e2e8f0', width: '100%', marginTop: '8px' }}>
+    <div style={{ background: 'var(--bg-card)', padding: '12px', borderRadius: '14px', border: '1px solid var(--border-subtle)', width: '100%', marginTop: '8px' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <MessageSquare size={16} color="#7c3aed" />
-          <span style={{ fontSize: '12px', color: '#4c1d95', fontWeight: '900' }}>
+          <MessageSquare size={16} color="#a855f7" />
+          <span style={{ fontSize: '12px', color: '#c084fc', fontWeight: '900' }}>
             📜 Historial de Notas & Sensaciones:
           </span>
         </div>
-        <span style={{ fontSize: '10px', background: '#f3e8ff', color: '#7c3aed', padding: '2px 8px', borderRadius: '10px', fontWeight: '800' }}>
+        <span style={{ fontSize: '10px', background: 'rgba(124, 58, 237, 0.15)', color: '#c084fc', padding: '2px 8px', borderRadius: '10px', fontWeight: '800' }}>
           {allNotesList.length} {allNotesList.length === 1 ? 'nota' : 'notas'}
         </span>
       </div>
@@ -32,11 +32,11 @@ export default function ExerciseNotes({
             flex: 1,
             padding: '8px',
             borderRadius: '10px',
-            border: '1.5px solid #cbd5e1',
+            border: '1px solid var(--border-subtle)',
             fontSize: '12px',
             fontWeight: '600',
-            background: '#ffffff',
-            color: '#0f172a',
+            background: 'var(--bg-surface-secondary)',
+            color: 'var(--text-main)',
             resize: 'none'
           }}
         />
@@ -68,10 +68,10 @@ export default function ExerciseNotes({
             <div 
               key={item.id}
               style={{
-                background: '#ffffff',
+                background: 'var(--bg-surface-secondary)',
                 padding: '8px 10px',
                 borderRadius: '10px',
-                border: '1px solid #cbd5e1',
+                border: '1px solid var(--border-subtle)',
                 display: 'flex',
                 alignItems: 'flex-start',
                 justifyContent: 'space-between',
@@ -79,10 +79,10 @@ export default function ExerciseNotes({
               }}
             >
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: '10px', color: '#64748b', fontWeight: '700', marginBottom: '2px' }}>
+                <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '700', marginBottom: '2px' }}>
                   🕒 {item.date}
                 </div>
-                <div style={{ fontSize: '12px', color: '#1e293b', fontWeight: '600', whiteSpace: 'pre-wrap' }}>
+                <div style={{ fontSize: '12px', color: 'var(--text-main)', fontWeight: '600', whiteSpace: 'pre-wrap' }}>
                   {item.text}
                 </div>
               </div>
@@ -91,9 +91,9 @@ export default function ExerciseNotes({
                 onClick={() => handleDeleteNote(item.id)}
                 title="Borrar nota"
                 style={{
-                  background: '#fef2f2',
-                  color: '#ef4444',
-                  border: '1px solid #fecaca',
+                  background: 'var(--accent-red-subtle)',
+                  color: 'var(--accent-red)',
+                  border: '1px solid var(--accent-red)',
                   borderRadius: '6px',
                   padding: '4px 6px',
                   fontSize: '11px',
@@ -110,7 +110,7 @@ export default function ExerciseNotes({
           ))}
         </div>
       ) : (
-        <div style={{ fontSize: '11px', color: '#64748b', fontStyle: 'italic', textAlign: 'center', padding: '6px 0' }}>
+        <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontStyle: 'italic', textAlign: 'center', padding: '6px 0' }}>
           No hay notas guardadas para este ejercicio.
         </div>
       )}

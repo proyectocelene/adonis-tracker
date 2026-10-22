@@ -21,13 +21,13 @@ export default function HistoryProgressionView({
     <div className="animate-fade" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
       
       {/* Cabecera del Gestor de Rutina con botón rápido para actualizar / pegar */}
-      <div className="card" style={{ padding: '14px 16px', background: '#eff6ff', border: '1.5px solid #bfdbfe', borderRadius: '20px' }}>
+      <div className="card" style={{ padding: '14px 16px', background: 'var(--accent-blue-light)', border: '1px solid var(--accent-blue)', borderRadius: '20px' }}>
         <div className="flex-between" style={{ flexWrap: 'wrap', gap: '8px' }}>
           <div>
-            <strong style={{ fontSize: '13px', color: '#1e3a8a', fontWeight: '900', display: 'block' }}>
+            <strong style={{ fontSize: '13px', color: 'var(--accent-blue)', fontWeight: '900', display: 'block' }}>
               🎯 Progresión Estructurada por Día
             </strong>
-            <span style={{ fontSize: '11px', color: '#3b82f6', fontWeight: '600' }}>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: '600' }}>
               Auditoría histórica de sobrecarga progresiva y marcas máximas (PR).
             </span>
           </div>
@@ -35,7 +35,7 @@ export default function HistoryProgressionView({
             type="button"
             onClick={onOpenRoutineModal}
             style={{
-              background: '#0066ff',
+              background: 'var(--accent-blue)',
               color: '#ffffff',
               border: 'none',
               padding: '8px 12px',
@@ -72,9 +72,9 @@ export default function HistoryProgressionView({
                 minWidth: '78px',
                 padding: '8px 10px',
                 borderRadius: '14px',
-                border: isSelected ? '2px solid #0066ff' : (isToday ? '1.5px solid #38bdf8' : '1px solid #cbd5e1'),
-                background: isSelected ? '#0066ff' : (isToday ? '#f0f9ff' : '#ffffff'),
-                color: isSelected ? '#ffffff' : '#1e293b',
+                border: isSelected ? '1px solid var(--accent-blue)' : (isToday ? '1px solid var(--accent-blue)' : '1px solid var(--border-subtle)'),
+                background: isSelected ? 'var(--accent-blue)' : (isToday ? 'var(--accent-blue-light)' : 'var(--bg-surface-secondary)'),
+                color: isSelected ? '#ffffff' : (isToday ? 'var(--accent-blue)' : 'var(--text-main)'),
                 fontSize: '12px',
                 fontWeight: '900',
                 cursor: 'pointer',
@@ -93,8 +93,8 @@ export default function HistoryProgressionView({
                 <span style={{
                   fontSize: '8px',
                   fontWeight: '900',
-                  background: isSelected ? '#ffffff' : '#0066ff',
-                  color: isSelected ? '#0066ff' : '#ffffff',
+                  background: isSelected ? '#ffffff' : 'var(--accent-blue)',
+                  color: isSelected ? 'var(--accent-blue)' : '#ffffff',
                   padding: '1px 5px',
                   borderRadius: '6px',
                   lineHeight: '1.2',
@@ -113,12 +113,12 @@ export default function HistoryProgressionView({
       </div>
 
       {/* Tarjeta Informativa del Día Activo */}
-      <div className="card" style={{ padding: '12px 14px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '16px' }}>
-        <h3 style={{ margin: 0, fontSize: '14px', fontWeight: '900', color: '#0f172a' }}>
+      <div className="card" style={{ padding: '12px 14px', background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', borderRadius: '16px' }}>
+        <h3 style={{ margin: 0, fontSize: '14px', fontWeight: '900', color: 'var(--text-main)' }}>
           {activeProgDayObj?.name}
         </h3>
         {activeProgDayObj?.focus && (
-          <p style={{ margin: '3px 0 0 0', fontSize: '11px', color: '#64748b', fontWeight: '600' }}>
+          <p style={{ margin: '3px 0 0 0', fontSize: '11px', color: 'var(--text-muted)', fontWeight: '600' }}>
             🎯 {activeProgDayObj.focus}
           </p>
         )}
@@ -142,34 +142,34 @@ export default function HistoryProgressionView({
               style={{
                 padding: '14px',
                 borderRadius: '18px',
-                border: hasHistory ? (delta > 0 ? '1.5px solid #86efac' : '1.5px solid #cbd5e1') : '1.5px dashed #cbd5e1',
-                background: '#ffffff',
+                border: hasHistory ? (delta > 0 ? '1px solid var(--accent-emerald)' : '1px solid var(--border-subtle)') : '1px dashed var(--border-subtle)',
+                background: 'var(--bg-card)',
                 marginBottom: '4px',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.03)'
+                boxShadow: 'var(--shadow-ios-sm)'
               }}
             >
               {/* Encabezado del Ejercicio */}
               <div className="flex-between" style={{ alignItems: 'flex-start', marginBottom: '10px' }}>
                 <div>
-                  <strong style={{ fontSize: '14px', color: '#0f172a', fontWeight: '900', display: 'block' }}>
+                  <strong style={{ fontSize: '14px', color: 'var(--text-main)', fontWeight: '900', display: 'block' }}>
                     {exercise.name}
                   </strong>
                   <div style={{ display: 'flex', gap: '6px', alignItems: 'center', marginTop: '4px', flexWrap: 'wrap' }}>
-                    <span className="badge" style={{ background: '#f1f5f9', color: '#475569', fontSize: '10px', fontWeight: '800' }}>
+                    <span className="badge" style={{ background: 'var(--bg-surface-secondary)', color: 'var(--text-muted)', border: '1px solid var(--border-subtle)', fontSize: '10px', fontWeight: '800' }}>
                       💪 {exercise.muscleGroup || 'General'}
                     </span>
                     {exercise.loadFamily && (
-                      <span className="badge" style={{ background: '#f5f3ff', color: '#7c3aed', border: '1px solid #ddd6fe', fontSize: '10px', fontWeight: '800' }}>
+                      <span className="badge" style={{ background: 'rgba(124, 58, 237, 0.15)', color: '#c084fc', border: '1px solid rgba(168, 85, 247, 0.3)', fontSize: '10px', fontWeight: '800' }}>
                         🏛️ {exercise.loadFamily.replace('Familia ', '')}
                       </span>
                     )}
-                    <span style={{ fontSize: '11px', color: '#0066ff', fontWeight: '700' }}>
+                    <span style={{ fontSize: '11px', color: 'var(--accent-blue)', fontWeight: '700' }}>
                       Prescripción: {exercise.sets}x{exercise.reps} ({exercise.restTime || '90s'})
                     </span>
                   </div>
 
                   {matchedSources && matchedSources.length > 0 && matchedSources.some(s => s.toLowerCase() !== exercise.name.toLowerCase()) && (
-                    <div style={{ marginTop: '6px', fontSize: '10px', color: '#6d28d9', background: '#f5f3ff', padding: '3px 8px', borderRadius: '8px', border: '1px solid #ddd6fe', fontWeight: '700', display: 'inline-block' }}>
+                    <div style={{ marginTop: '6px', fontSize: '10px', color: '#c084fc', background: 'rgba(124, 58, 237, 0.15)', padding: '3px 8px', borderRadius: '8px', border: '1px solid rgba(168, 85, 247, 0.3)', fontWeight: '700', display: 'inline-block' }}>
                       ⚡️ Historial vinculado con: {matchedSources.join(' • ')}
                     </div>
                   )}
@@ -180,17 +180,17 @@ export default function HistoryProgressionView({
                   <span 
                     className="badge" 
                     style={{ 
-                      background: delta > 0 ? '#dcfce7' : (delta === 0 ? '#eff6ff' : '#fee2e2'),
-                      color: delta > 0 ? '#15803d' : (delta === 0 ? '#1d4ed8' : '#b91c1c'),
+                      background: delta > 0 ? 'var(--accent-emerald-subtle)' : (delta === 0 ? 'var(--accent-blue-light)' : 'var(--accent-red-subtle)'),
+                      color: delta > 0 ? 'var(--accent-emerald)' : (delta === 0 ? 'var(--accent-blue)' : 'var(--accent-red)'),
                       fontSize: '11px',
                       fontWeight: '900',
-                      border: delta > 0 ? '1px solid #86efac' : '1px solid #bfdbfe'
+                      border: delta > 0 ? '1px solid var(--accent-emerald)' : '1px solid var(--border-subtle)'
                     }}
                   >
                     {delta > 0 ? `🚀 +${delta} ${unit} (+${deltaPercent}%)` : (delta === 0 ? `⚖️ Estable` : `⚠️ ${delta} ${unit}`)}
                   </span>
                 ) : (
-                  <span className="badge" style={{ background: '#f1f5f9', color: '#94a3b8', fontSize: '10px' }}>
+                  <span className="badge" style={{ background: 'var(--bg-surface-secondary)', color: 'var(--text-muted)', fontSize: '10px' }}>
                     Sin registros
                   </span>
                 )}
@@ -199,34 +199,34 @@ export default function HistoryProgressionView({
               {/* Fila de Métricas (Inicial vs Actual vs Récord PR vs Fuerza Relativa) con tarjetas limpias */}
               {hasHistory ? (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px', marginBottom: '10px' }}>
-                  <div style={{ textAlign: 'center', background: '#f8fafc', padding: '8px 2px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-                    <span style={{ fontSize: '9px', color: '#64748b', textTransform: 'uppercase', fontWeight: '800', display: 'block' }}>Inicial</span>
-                    <strong style={{ fontSize: '12px', color: '#334155', fontWeight: '900' }}>
+                  <div style={{ textAlign: 'center', background: 'var(--bg-surface-secondary)', padding: '8px 2px', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
+                    <span style={{ fontSize: '9px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '800', display: 'block' }}>Inicial</span>
+                    <strong style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: '900' }}>
                       {startWeight} {unit}
                     </strong>
                   </div>
-                  <div style={{ textAlign: 'center', background: '#eff6ff', padding: '8px 2px', borderRadius: '12px', border: '1px solid #bfdbfe' }}>
-                    <span style={{ fontSize: '9px', color: '#1e40af', textTransform: 'uppercase', fontWeight: '800', display: 'block' }}>Actual</span>
-                    <strong style={{ fontSize: '13px', color: '#0066ff', fontWeight: '900' }}>
+                  <div style={{ textAlign: 'center', background: 'var(--accent-blue-light)', padding: '8px 2px', borderRadius: '12px', border: '1px solid var(--accent-blue)' }}>
+                    <span style={{ fontSize: '9px', color: 'var(--accent-blue)', textTransform: 'uppercase', fontWeight: '800', display: 'block' }}>Actual</span>
+                    <strong style={{ fontSize: '13px', color: 'var(--accent-blue)', fontWeight: '900' }}>
                       {currentWeight} {unit}
                     </strong>
                   </div>
-                  <div style={{ textAlign: 'center', background: '#fffbeb', padding: '8px 2px', borderRadius: '12px', border: '1px solid #fef3c7' }}>
-                    <span style={{ fontSize: '9px', color: '#92400e', textTransform: 'uppercase', fontWeight: '800', display: 'block' }}>Récord 🏆</span>
-                    <strong style={{ fontSize: '12px', color: '#b45309', fontWeight: '900' }}>
+                  <div style={{ textAlign: 'center', background: 'var(--accent-amber-subtle)', padding: '8px 2px', borderRadius: '12px', border: '1px solid var(--accent-amber)' }}>
+                    <span style={{ fontSize: '9px', color: 'var(--accent-amber)', textTransform: 'uppercase', fontWeight: '800', display: 'block' }}>Récord 🏆</span>
+                    <strong style={{ fontSize: '12px', color: 'var(--accent-amber)', fontWeight: '900' }}>
                       {prWeight} {unit}
                     </strong>
                   </div>
-                  <div style={{ textAlign: 'center', background: '#f5f3ff', padding: '8px 2px', borderRadius: '12px', border: '1px solid #ddd6fe' }}>
-                    <span style={{ fontSize: '9px', color: '#6d28d9', textTransform: 'uppercase', fontWeight: '800', display: 'block' }}>Fuerza Rel.</span>
-                    <strong style={{ fontSize: '12px', color: '#7c3aed', fontWeight: '900' }}>
+                  <div style={{ textAlign: 'center', background: 'rgba(124, 58, 237, 0.12)', padding: '8px 2px', borderRadius: '12px', border: '1px solid rgba(168, 85, 247, 0.3)' }}>
+                    <span style={{ fontSize: '9px', color: '#c084fc', textTransform: 'uppercase', fontWeight: '800', display: 'block' }}>Fuerza Rel.</span>
+                    <strong style={{ fontSize: '12px', color: '#a855f7', fontWeight: '900' }}>
                       {relRatio ? `${relRatio}x` : '—'}
                     </strong>
-                    <span style={{ fontSize: '8px', color: '#8b5cf6', display: 'block', fontWeight: '700' }}>1RM/PC</span>
+                    <span style={{ fontSize: '8px', color: '#c084fc', display: 'block', fontWeight: '700' }}>1RM/PC</span>
                   </div>
                 </div>
               ) : (
-                <div style={{ background: '#fffbeb', border: '1px solid #fef3c7', padding: '8px 12px', borderRadius: '12px', fontSize: '11px', color: '#92400e', marginBottom: '10px' }}>
+                <div style={{ background: 'var(--accent-amber-subtle)', border: '1px solid var(--accent-amber)', padding: '8px 12px', borderRadius: '12px', fontSize: '11px', color: 'var(--accent-amber)', marginBottom: '10px' }}>
                   📌 Registra tus cargas hoy para comenzar a trazar la sobrecarga progresiva de este ejercicio.
                 </div>
               )}
@@ -244,25 +244,25 @@ export default function HistoryProgressionView({
                         key={idx}
                         style={{
                           flex: '0 0 auto',
-                          background: occ.maxWeight === prWeight ? '#fef3c7' : '#f1f5f9',
-                          border: occ.maxWeight === prWeight ? '1px solid #f59e0b' : '1px solid #e2e8f0',
+                          background: occ.maxWeight === prWeight ? 'var(--accent-amber-subtle)' : 'var(--bg-surface-secondary)',
+                          border: occ.maxWeight === prWeight ? '1px solid var(--accent-amber)' : '1px solid var(--border-subtle)',
                           padding: '4px 8px',
                           borderRadius: '8px',
                           fontSize: '10px',
                           fontWeight: '800',
-                          color: occ.maxWeight === prWeight ? '#78350f' : '#1e293b',
+                          color: occ.maxWeight === prWeight ? 'var(--accent-amber)' : 'var(--text-main)',
                           textAlign: 'center'
                         }}
                       >
-                        <div style={{ fontSize: '9px', color: '#64748b' }}>{occ.dateStr}</div>
+                        <div style={{ fontSize: '9px', color: 'var(--text-muted)' }}>{occ.dateStr}</div>
                         <div>{occ.maxWeight}{occ.unit} × {occ.bestReps}r</div>
                         {occ.minWeight && occ.minWeight < occ.maxWeight && (
-                          <div style={{ fontSize: '8px', color: '#0369a1', fontWeight: '700' }}>
+                          <div style={{ fontSize: '8px', color: 'var(--accent-blue)', fontWeight: '700' }}>
                             Base: {occ.minWeight}{occ.unit}
                           </div>
                         )}
                         {occ.rpeStart && (
-                          <div style={{ fontSize: '7.5px', color: '#64748b' }}>
+                          <div style={{ fontSize: '7.5px', color: 'var(--text-muted)' }}>
                             RPE {occ.rpeStart}{occ.rpeEnd && occ.rpeEnd !== occ.rpeStart ? `➔${occ.rpeEnd}` : ''}
                           </div>
                         )}
@@ -301,16 +301,16 @@ export default function HistoryProgressionView({
                   </button>
 
                   {isExpanded && (
-                    <div className="animate-fade" style={{ marginTop: '8px', borderTop: '1px solid #e2e8f0', paddingTop: '8px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <div className="animate-fade" style={{ marginTop: '8px', borderTop: '1px solid var(--border-subtle)', paddingTop: '8px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
                       {sessionOccurrences.map((occ, sIdx) => (
-                        <div key={sIdx} style={{ background: '#f8fafc', padding: '8px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+                        <div key={sIdx} style={{ background: 'var(--bg-surface-secondary)', padding: '8px', borderRadius: '10px', border: '1px solid var(--border-subtle)' }}>
                           <div className="flex-between" style={{ marginBottom: '4px' }}>
-                            <strong style={{ fontSize: '11px', color: '#1e293b' }}>📅 {occ.dateStr} (Semana {occ.weekNumber})</strong>
-                            <span style={{ fontSize: '10px', color: '#0066ff', fontWeight: '800' }}>Pico: {occ.maxWeight} {occ.unit}</span>
+                            <strong style={{ fontSize: '11px', color: 'var(--text-main)' }}>📅 {occ.dateStr} (Semana {occ.weekNumber})</strong>
+                            <span style={{ fontSize: '10px', color: 'var(--accent-blue)', fontWeight: '800' }}>Pico: {occ.maxWeight} {occ.unit}</span>
                           </div>
                           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
                             {occ.detailedSets.map(st => (
-                              <span key={st.setNum} style={{ background: '#ffffff', border: '1px solid #cbd5e1', padding: '2px 6px', borderRadius: '6px', fontSize: '10px', fontWeight: '700' }}>
+                              <span key={st.setNum} style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', color: 'var(--text-secondary)', padding: '2px 6px', borderRadius: '6px', fontSize: '10px', fontWeight: '700' }}>
                                 S{st.setNum}: {st.weight}{st.unit} × {st.reps}r (RPE {st.rpe})
                               </span>
                             ))}

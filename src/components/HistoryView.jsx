@@ -426,11 +426,13 @@ export default function HistoryView() {
     <div className="container" style={{ paddingBottom: '70px' }}>
       
       {/* Cabecera del Laboratorio Científico */}
-      <div className="card" style={{ padding: '16px', marginBottom: '14px', borderTop: '4px solid #0066ff' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '10px' }}>
+      <div className="card" style={{ padding: '12px 14px', marginBottom: '10px', borderLeft: '4px solid var(--accent-blue)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
           <div>
-            <span className="badge badge-blue">Analítica & Progresión</span>
-            <h1 style={{ marginTop: '4px', fontSize: '20px', fontWeight: '900', color: '#0f172a' }}>
+            <span style={{ fontSize: '10px', color: 'var(--accent-blue)', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.4px' }}>
+              Analítica & Progresión
+            </span>
+            <h1 style={{ marginTop: '2px', fontSize: '18px', fontWeight: '800', color: 'var(--text-main)' }}>
               Laboratorio de Progreso
             </h1>
           </div>
@@ -439,49 +441,49 @@ export default function HistoryView() {
             type="button"
             onClick={() => setShowConfigModal(true)}
             style={{ 
-              background: '#0f172a', 
-              color: '#ffffff', 
-              border: 'none', 
-              padding: '10px 14px', 
-              borderRadius: '14px', 
-              fontSize: '12px', 
+              background: 'var(--bg-surface-secondary)', 
+              color: 'var(--text-main)', 
+              border: '1px solid var(--border-strong)', 
+              padding: '7px 12px', 
+              borderRadius: '8px', 
+              fontSize: '11px', 
               fontWeight: '800', 
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
-              gap: '6px',
-              boxShadow: '0 4px 12px rgba(15, 23, 42, 0.2)',
+              gap: '5px',
               flexShrink: 0
             }}
           >
-            <Settings size={15} /> Base de Datos & Nube
+            <Settings size={13} /> Base de Datos & Nube
           </button>
         </div>
       </div>
 
       {/* SELECTOR DE VISTA PRINCIPAL (PROGRESIÓN DE RUTINA VS GRÁFICAS VS BITÁCORA) */}
-      <div style={{ display: 'flex', background: '#e2e8f0', padding: '4px', borderRadius: '16px', marginBottom: '16px' }}>
+      <div style={{ display: 'flex', background: 'var(--bg-surface-secondary)', padding: '3px', borderRadius: '12px', marginBottom: '12px', border: '1px solid var(--border-subtle)' }}>
         <button
           type="button"
           onClick={() => setMainViewMode('routine_progression')}
           style={{
             flex: 1,
-            padding: '10px 6px',
-            border: 'none',
-            borderRadius: '12px',
-            background: mainViewMode === 'routine_progression' ? '#ffffff' : 'transparent',
-            color: mainViewMode === 'routine_progression' ? '#0066ff' : '#64748b',
+            padding: '8px 4px',
+            borderRadius: '10px',
+            background: mainViewMode === 'routine_progression' ? 'var(--accent-blue)' : 'transparent',
+            color: mainViewMode === 'routine_progression' ? '#ffffff' : 'var(--text-muted)',
             fontWeight: '900',
-            fontSize: '12px',
+            fontSize: '11.5px',
             cursor: 'pointer',
-            boxShadow: mainViewMode === 'routine_progression' ? '0 2px 8px rgba(0,0,0,0.08)' : 'none',
+            border: 'none',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: '4px'
+            gap: '4px',
+            boxShadow: mainViewMode === 'routine_progression' ? '0 2px 8px rgba(0, 102, 255, 0.3)' : 'none',
+            transition: 'all 0.15s ease'
           }}
         >
-          <Dumbbell size={14} /> Progresión Rutina
+          <Dumbbell size={13} /> Progresión
         </button>
 
         <button
@@ -489,22 +491,23 @@ export default function HistoryView() {
           onClick={() => setMainViewMode('charts')}
           style={{
             flex: 1,
-            padding: '10px 6px',
-            border: 'none',
-            borderRadius: '12px',
-            background: mainViewMode === 'charts' ? '#ffffff' : 'transparent',
-            color: mainViewMode === 'charts' ? '#0066ff' : '#64748b',
+            padding: '8px 4px',
+            borderRadius: '10px',
+            background: mainViewMode === 'charts' ? 'var(--accent-blue)' : 'transparent',
+            color: mainViewMode === 'charts' ? '#ffffff' : 'var(--text-muted)',
             fontWeight: '900',
-            fontSize: '12px',
+            fontSize: '11.5px',
             cursor: 'pointer',
-            boxShadow: mainViewMode === 'charts' ? '0 2px 8px rgba(0,0,0,0.08)' : 'none',
+            border: 'none',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: '4px'
+            gap: '4px',
+            boxShadow: mainViewMode === 'charts' ? '0 2px 8px rgba(0, 102, 255, 0.3)' : 'none',
+            transition: 'all 0.15s ease'
           }}
         >
-          <Activity size={14} /> Gráficas & 1RM
+          <Activity size={13} /> Gráficas
         </button>
 
         <button
@@ -512,22 +515,23 @@ export default function HistoryView() {
           onClick={() => setMainViewMode('sessions')}
           style={{
             flex: 1,
-            padding: '10px 6px',
-            border: 'none',
-            borderRadius: '12px',
-            background: mainViewMode === 'sessions' ? '#ffffff' : 'transparent',
-            color: mainViewMode === 'sessions' ? '#0066ff' : '#64748b',
+            padding: '8px 4px',
+            borderRadius: '10px',
+            background: mainViewMode === 'sessions' ? 'var(--accent-blue)' : 'transparent',
+            color: mainViewMode === 'sessions' ? '#ffffff' : 'var(--text-muted)',
             fontWeight: '900',
-            fontSize: '12px',
+            fontSize: '11.5px',
             cursor: 'pointer',
-            boxShadow: mainViewMode === 'sessions' ? '0 2px 8px rgba(0,0,0,0.08)' : 'none',
+            border: 'none',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: '4px'
+            gap: '4px',
+            boxShadow: mainViewMode === 'sessions' ? '0 2px 8px rgba(0, 102, 255, 0.3)' : 'none',
+            transition: 'all 0.15s ease'
           }}
         >
-          <Calendar size={14} /> Bitácora ({totalSessions})
+          <Calendar size={13} /> Bitácora ({totalSessions})
         </button>
       </div>
 
@@ -572,10 +576,10 @@ export default function HistoryView() {
       {mainViewMode === 'sessions' && (
         <div className="animate-fade">
           {workoutHistory.length === 0 ? (
-            <div className="card" style={{ padding: '28px', textAlign: 'center', backgroundColor: '#f8fafc', border: '1.5px dashed #cbd5e1', borderRadius: '24px' }}>
-              <Calendar size={34} color="#94a3b8" style={{ margin: '0 auto 12px auto' }} />
-              <h3 style={{ color: '#334155', margin: 0, fontSize: '16px', fontWeight: '800' }}>Bitácora limpia</h3>
-              <p style={{ marginTop: '8px', fontSize: '13px', lineHeight: '1.5', fontWeight: '600' }}>
+            <div className="card" style={{ padding: '28px', textAlign: 'center', backgroundColor: 'var(--bg-surface-secondary)', border: '1px dashed var(--border-subtle)', borderRadius: '24px' }}>
+              <Calendar size={34} color="var(--accent-blue)" style={{ margin: '0 auto 12px auto' }} />
+              <h3 style={{ color: 'var(--text-main)', margin: 0, fontSize: '16px', fontWeight: '800' }}>Bitácora limpia</h3>
+              <p style={{ marginTop: '8px', fontSize: '13px', lineHeight: '1.5', fontWeight: '600', color: 'var(--text-muted)' }}>
                 Guarda tus sesiones de entrenamiento para ver tu historial cronológico aquí.
               </p>
             </div>

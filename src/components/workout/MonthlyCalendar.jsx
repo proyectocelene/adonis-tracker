@@ -241,13 +241,13 @@ export default function MonthlyCalendar({
   };
 
   return (
-    <div className="card animate-fade" style={{ padding: '16px', marginBottom: '16px', borderRadius: '24px', background: '#ffffff', border: '1.5px solid #e2e8f0', boxShadow: '0 10px 30px rgba(15, 23, 42, 0.06)' }}>
+    <div className="card animate-fade" style={{ padding: '16px', marginBottom: '16px', borderRadius: '24px', background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', boxShadow: 'var(--shadow-ios)' }}>
       
       {/* CABECERA DEL MES Y NAVEGACIÓN */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <CalendarIcon size={20} color="#0066ff" />
-          <h2 style={{ margin: 0, fontSize: '18px', fontWeight: '900', color: '#0f172a' }}>
+          <CalendarIcon size={20} color="var(--accent-blue)" />
+          <h2 style={{ margin: 0, fontSize: '18px', fontWeight: '900', color: 'var(--text-main)' }}>
             {monthNames[month]} {year}
           </h2>
         </div>
@@ -256,14 +256,14 @@ export default function MonthlyCalendar({
           <button
             type="button"
             onClick={handlePrevMonth}
-            style={{ width: '36px', height: '36px', borderRadius: '12px', background: '#f1f5f9', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#334155' }}
+            style={{ width: '36px', height: '36px', borderRadius: '12px', background: 'var(--bg-surface-secondary)', border: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--text-secondary)' }}
           >
             <ChevronLeft size={18} />
           </button>
           <button
             type="button"
             onClick={handleNextMonth}
-            style={{ width: '36px', height: '36px', borderRadius: '12px', background: '#f1f5f9', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#334155' }}
+            style={{ width: '36px', height: '36px', borderRadius: '12px', background: 'var(--bg-surface-secondary)', border: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--text-secondary)' }}
           >
             <ChevronRight size={18} />
           </button>

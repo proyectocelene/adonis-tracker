@@ -13,7 +13,7 @@ export default function GamificationDashboard({ workoutHistory = [], bodyMetrics
     <div style={{
       marginTop: '20px',
       paddingTop: '18px',
-      borderTop: '2px dashed #cbd5e1'
+      borderTop: '1px dashed var(--border-subtle)'
     }}>
       {/* CABECERA PRINCIPAL DEL HUB DE GAMIFICACIÓN */}
       <div style={{
@@ -37,10 +37,10 @@ export default function GamificationDashboard({ workoutHistory = [], bodyMetrics
             <Trophy size={18} />
           </div>
           <div>
-            <h2 style={{ margin: 0, fontSize: '17px', fontWeight: '900', color: '#0f172a' }}>
+            <h2 style={{ margin: 0, fontSize: '17px', fontWeight: '900', color: 'var(--text-main)' }}>
               Gamificación & Progreso Adonis
             </h2>
-            <span style={{ fontSize: '11px', color: '#64748b', fontWeight: '700' }}>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: '700' }}>
               Puntos XP, racha, constancia y proyección hacia tu cuerpo ideal
             </span>
           </div>

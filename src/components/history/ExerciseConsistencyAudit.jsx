@@ -116,23 +116,23 @@ export default function ExerciseConsistencyAudit({ workoutHistory = [] }) {
   const leastConsistent = consistencyData.find(item => item.totalAttempts >= 2 && item.adherenceRate < 80);
 
   return (
-    <div className="card" style={{ padding: '18px', marginBottom: '22px', borderRadius: '24px', background: '#ffffff', border: '1.5px solid #e2e8f0', boxShadow: '0 4px 16px rgba(0,0,0,0.04)' }}>
+    <div className="card" style={{ padding: '18px', marginBottom: '22px', borderRadius: '24px', background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', boxShadow: 'var(--shadow-ios)' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px', marginBottom: '12px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Sparkles size={20} color="#7c3aed" />
-          <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '900', color: '#0f172a' }}>
+          <Sparkles size={20} color="#a855f7" />
+          <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '900', color: 'var(--text-main)' }}>
             Consistencia & Adherencia por Ejercicio
           </h3>
         </div>
-        <span className="badge" style={{ background: '#f5f3ff', color: '#6d28d9', fontSize: '11px', fontWeight: '800' }}>
+        <span className="badge" style={{ background: 'rgba(168, 85, 247, 0.15)', color: '#c084fc', border: '1px solid rgba(168, 85, 247, 0.3)', fontSize: '11px', fontWeight: '800' }}>
           {consistencyData.length} Ejercicios Rastreados
         </span>
       </div>
 
       {leastConsistent && (
         <div style={{
-          background: '#fffbeb',
-          border: '1.5px solid #fde68a',
+          background: 'var(--accent-amber-subtle)',
+          border: '1px solid var(--accent-amber)',
           borderRadius: '16px',
           padding: '12px 14px',
           marginBottom: '16px',
@@ -140,12 +140,12 @@ export default function ExerciseConsistencyAudit({ workoutHistory = [] }) {
           gap: '10px',
           alignItems: 'flex-start'
         }}>
-          <AlertTriangle size={18} color="#d97706" style={{ flexShrink: 0, marginTop: '2px' }} />
+          <AlertTriangle size={18} color="var(--accent-amber)" style={{ flexShrink: 0, marginTop: '2px' }} />
           <div>
-            <strong style={{ fontSize: '12.5px', color: '#92400e', display: 'block', fontWeight: '800' }}>
+            <strong style={{ fontSize: '12.5px', color: 'var(--accent-amber)', display: 'block', fontWeight: '800' }}>
               ⚠️ Menor consistencia detectada: {leastConsistent.name} ({leastConsistent.adherenceRate}% completado)
             </strong>
-            <span style={{ fontSize: '11.5px', color: '#b45309', lineHeight: '1.4', display: 'block', marginTop: '2px' }}>
+            <span style={{ fontSize: '11.5px', color: 'var(--text-muted)', lineHeight: '1.4', display: 'block', marginTop: '2px' }}>
               Este movimiento se ha omitido {leastConsistent.skippedCount} {leastConsistent.skippedCount === 1 ? 'vez' : 'veces'}. Si te genera fatiga articular o la máquina suele estar ocupada, utiliza el botón <strong>"🔄 Sustituir"</strong> o pásalo al inicio de la sesión.
             </span>
           </div>
@@ -160,9 +160,9 @@ export default function ExerciseConsistencyAudit({ workoutHistory = [] }) {
           style={{
             padding: '6px 12px',
             borderRadius: '12px',
-            border: 'none',
-            background: sortCriteria === 'least_adherent' ? '#fee2e2' : '#f1f5f9',
-            color: sortCriteria === 'least_adherent' ? '#dc2626' : '#64748b',
+            border: sortCriteria === 'least_adherent' ? '1px solid var(--accent-red)' : '1px solid var(--border-subtle)',
+            background: sortCriteria === 'least_adherent' ? 'var(--accent-red-subtle)' : 'var(--bg-surface-secondary)',
+            color: sortCriteria === 'least_adherent' ? 'var(--accent-red)' : 'var(--text-muted)',
             fontSize: '11px',
             fontWeight: '800',
             cursor: 'pointer',
@@ -181,9 +181,9 @@ export default function ExerciseConsistencyAudit({ workoutHistory = [] }) {
           style={{
             padding: '6px 12px',
             borderRadius: '12px',
-            border: 'none',
-            background: sortCriteria === 'most_adherent' ? '#dcfce7' : '#f1f5f9',
-            color: sortCriteria === 'most_adherent' ? '#16a34a' : '#64748b',
+            border: sortCriteria === 'most_adherent' ? '1px solid var(--accent-emerald)' : '1px solid var(--border-subtle)',
+            background: sortCriteria === 'most_adherent' ? 'var(--accent-emerald-subtle)' : 'var(--bg-surface-secondary)',
+            color: sortCriteria === 'most_adherent' ? 'var(--accent-emerald)' : 'var(--text-muted)',
             fontSize: '11px',
             fontWeight: '800',
             cursor: 'pointer',
@@ -202,9 +202,9 @@ export default function ExerciseConsistencyAudit({ workoutHistory = [] }) {
           style={{
             padding: '6px 12px',
             borderRadius: '12px',
-            border: 'none',
-            background: sortCriteria === 'most_progress' ? '#eff6ff' : '#f1f5f9',
-            color: sortCriteria === 'most_progress' ? '#2563eb' : '#64748b',
+            border: sortCriteria === 'most_progress' ? '1px solid var(--accent-blue)' : '1px solid var(--border-subtle)',
+            background: sortCriteria === 'most_progress' ? 'var(--accent-blue-light)' : 'var(--bg-surface-secondary)',
+            color: sortCriteria === 'most_progress' ? 'var(--accent-blue)' : 'var(--text-muted)',
             fontSize: '11px',
             fontWeight: '800',
             cursor: 'pointer',
@@ -223,7 +223,7 @@ export default function ExerciseConsistencyAudit({ workoutHistory = [] }) {
         {consistencyData.map(item => {
           const isLow = item.adherenceRate < 60;
           const isMedium = item.adherenceRate >= 60 && item.adherenceRate < 85;
-          const barColor = isLow ? '#ef4444' : isMedium ? '#f59e0b' : '#10b981';
+          const barColor = isLow ? 'var(--accent-red)' : isMedium ? 'var(--accent-amber)' : 'var(--accent-emerald)';
 
           return (
             <div
@@ -231,15 +231,15 @@ export default function ExerciseConsistencyAudit({ workoutHistory = [] }) {
               style={{
                 padding: '10px 12px',
                 borderRadius: '14px',
-                background: '#f8fafc',
-                border: '1px solid #e2e8f0',
+                background: 'var(--bg-card)',
+                border: '1px solid var(--border-subtle)',
                 display: 'flex',
                 flexDirection: 'column',
                 gap: '6px'
               }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <strong style={{ fontSize: '13px', color: '#1e293b', fontWeight: '800' }}>
+                <strong style={{ fontSize: '13px', color: 'var(--text-main)', fontWeight: '800' }}>
                   {item.name}
                 </strong>
                 <span style={{
@@ -252,11 +252,11 @@ export default function ExerciseConsistencyAudit({ workoutHistory = [] }) {
               </div>
 
               {/* BARRA DE PROGRESO DE ADHERENCIA */}
-              <div style={{ height: '6px', background: '#e2e8f0', borderRadius: '3px', overflow: 'hidden' }}>
+              <div style={{ height: '6px', background: 'var(--bg-surface-secondary)', border: '1px solid var(--border-subtle)', borderRadius: '3px', overflow: 'hidden' }}>
                 <div style={{ width: `${item.adherenceRate}%`, height: '100%', background: barColor, borderRadius: '3px', transition: 'width 0.3s ease' }} />
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '10.5px', color: '#64748b', fontWeight: '700' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '10.5px', color: 'var(--text-muted)', fontWeight: '700' }}>
                 <span>
                   ✅ {item.loggedCount} realizadas {item.skippedCount > 0 && <span style={{ color: '#dc2626' }}>• ⚠️ {item.skippedCount} omitidas</span>}
                 </span>

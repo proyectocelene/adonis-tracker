@@ -12,11 +12,11 @@ export default function WeekHeader({
   isReadOnly = false
 }) {
   return (
-    <div className="card animate-fade" style={{ padding: '16px', marginBottom: '14px', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', border: '1.5px solid #334155', borderRadius: '24px', color: '#ffffff', boxShadow: '0 10px 25px rgba(15, 23, 42, 0.25)' }}>
+    <div className="card animate-fade" style={{ padding: '16px', marginBottom: '14px', background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', borderRadius: '24px', color: 'var(--text-main)', boxShadow: 'var(--shadow-ios)' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Calendar size={18} color="#38bdf8" />
-          <span style={{ fontSize: '12px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.5px', color: '#38bdf8' }}>
+          <Calendar size={18} color="var(--accent-blue)" />
+          <span style={{ fontSize: '12px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--accent-blue)' }}>
             Mesociclo Científico
           </span>
         </div>
@@ -33,14 +33,14 @@ export default function WeekHeader({
                 variant: "success"
               });
             }}
-            style={{ background: 'rgba(56, 189, 248, 0.15)', border: '1px solid rgba(56, 189, 248, 0.4)', color: '#38bdf8', padding: '6px 14px', borderRadius: '14px', fontSize: '11px', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', transition: 'all 0.2s' }}
+            style={{ background: 'var(--accent-blue-light)', border: '1px solid var(--border-subtle)', color: 'var(--accent-blue)', padding: '6px 14px', borderRadius: '14px', fontSize: '11px', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', transition: 'all 0.2s' }}
           >
             <Plus size={14} /> + Nueva Semana
           </button>
         )}
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', background: 'rgba(15, 23, 42, 0.7)', padding: '8px', borderRadius: '20px', border: '1px solid #334155' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', background: 'var(--bg-surface-secondary)', padding: '8px', borderRadius: '20px', border: '1px solid var(--border-subtle)' }}>
         <button 
           type="button"
           disabled={currentWeek <= 1 || isReadOnly}
@@ -50,13 +50,13 @@ export default function WeekHeader({
               setExpandedExerciseId(null);
             }
           }}
-          style={{ width: '44px', height: '44px', background: currentWeek <= 1 || isReadOnly ? 'rgba(51, 65, 85, 0.3)' : '#0066ff', color: '#ffffff', border: 'none', borderRadius: '16px', cursor: currentWeek <= 1 || isReadOnly ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: currentWeek <= 1 || isReadOnly ? 0.4 : 1, transition: 'all 0.2s', flexShrink: 0 }}
+          style={{ width: '44px', height: '44px', background: currentWeek <= 1 || isReadOnly ? 'transparent' : 'var(--accent-blue)', color: currentWeek <= 1 || isReadOnly ? 'var(--text-muted)' : '#ffffff', border: currentWeek <= 1 || isReadOnly ? '1px solid var(--border-subtle)' : 'none', borderRadius: '16px', cursor: currentWeek <= 1 || isReadOnly ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: currentWeek <= 1 || isReadOnly ? 0.4 : 1, transition: 'all 0.2s', flexShrink: 0 }}
         >
           <ArrowLeft size={22} />
         </button>
 
         <div style={{ textAlign: 'center', flex: 1, minWidth: 0, padding: '0 4px' }}>
-          <div style={{ fontSize: '19px', fontWeight: '900', color: '#ffffff', letterSpacing: '-0.3px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+          <div style={{ fontSize: '19px', fontWeight: '900', color: 'var(--text-main)', letterSpacing: '-0.3px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
             <span>🗓️ Semana {currentWeek}</span>
             {!isReadOnly && <span style={{ fontSize: '13px', fontWeight: '700', color: '#94a3b8', background: 'rgba(255,255,255,0.08)', padding: '2px 8px', borderRadius: '10px' }}>de {totalWeeks}</span>}
           </div>
@@ -74,7 +74,7 @@ export default function WeekHeader({
               setExpandedExerciseId(null);
             }
           }}
-          style={{ width: '44px', height: '44px', background: currentWeek >= totalWeeks || isReadOnly ? 'rgba(51, 65, 85, 0.3)' : '#0066ff', color: '#ffffff', border: 'none', borderRadius: '16px', cursor: currentWeek >= totalWeeks || isReadOnly ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: currentWeek >= totalWeeks || isReadOnly ? 0.4 : 1, transition: 'all 0.2s', flexShrink: 0 }}
+          style={{ width: '44px', height: '44px', background: currentWeek >= totalWeeks || isReadOnly ? 'transparent' : 'var(--accent-blue)', color: currentWeek >= totalWeeks || isReadOnly ? 'var(--text-muted)' : '#ffffff', border: currentWeek >= totalWeeks || isReadOnly ? '1px solid var(--border-subtle)' : 'none', borderRadius: '16px', cursor: currentWeek >= totalWeeks || isReadOnly ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: currentWeek >= totalWeeks || isReadOnly ? 0.4 : 1, transition: 'all 0.2s', flexShrink: 0 }}
         >
           <ArrowRight size={22} />
         </button>

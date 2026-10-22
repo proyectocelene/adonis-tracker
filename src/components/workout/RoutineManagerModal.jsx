@@ -143,26 +143,27 @@ export default function RoutineManagerModal({
           width: '100%',
           maxWidth: '650px',
           maxHeight: '90vh',
-          background: '#ffffff',
+          background: 'var(--bg-surface)',
+          border: '1px solid var(--border-subtle)',
           borderRadius: '24px',
           padding: '20px',
           overflowY: 'auto',
           display: 'flex',
           flexDirection: 'column',
-          boxShadow: '0 20px 50px rgba(0,0,0,0.3)'
+          boxShadow: 'var(--shadow-ios-lg)'
         }}
       >
         {/* Cabecera */}
-        <div className="flex-between" style={{ borderBottom: '2px solid #e2e8f0', paddingBottom: '14px', marginBottom: '16px' }}>
+        <div className="flex-between" style={{ borderBottom: '1px solid var(--border-subtle)', paddingBottom: '14px', marginBottom: '16px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div style={{ background: '#eff6ff', padding: '8px', borderRadius: '12px', color: '#0066ff' }}>
+            <div style={{ background: 'var(--accent-blue-light)', padding: '8px', borderRadius: '12px', color: 'var(--accent-blue)' }}>
               <Layers size={22} />
             </div>
             <div>
-              <h2 style={{ fontSize: '17px', fontWeight: '900', color: '#0f172a', margin: 0 }}>
+              <h2 style={{ fontSize: '17px', fontWeight: '900', color: 'var(--text-main)', margin: 0 }}>
                 Gestor Maestro de Rutinas
               </h2>
-              <span style={{ fontSize: '11px', color: '#64748b', fontWeight: '600' }}>
+              <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: '600' }}>
                 Ver, copiar, editar o pegar nuevas rutinas sin corromper tu historial
               </span>
             </div>
@@ -170,14 +171,14 @@ export default function RoutineManagerModal({
           <button 
             type="button" 
             onClick={onClose} 
-            style={{ background: '#f1f5f9', border: 'none', padding: '8px', borderRadius: '12px', cursor: 'pointer', color: '#475569' }}
+            style={{ background: 'var(--bg-surface-secondary)', border: '1px solid var(--border-subtle)', padding: '8px', borderRadius: '12px', cursor: 'pointer', color: 'var(--text-muted)' }}
           >
             <X size={18} />
           </button>
         </div>
 
         {/* Pestañas */}
-        <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', background: '#f8fafc', padding: '4px', borderRadius: '14px', border: '1px solid #e2e8f0' }}>
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', background: 'var(--bg-surface-secondary)', padding: '4px', borderRadius: '14px', border: '1px solid var(--border-subtle)' }}>
           <button
             type="button"
             onClick={() => setActiveTab('view')}
@@ -186,8 +187,8 @@ export default function RoutineManagerModal({
               padding: '9px 12px',
               borderRadius: '10px',
               border: 'none',
-              background: activeTab === 'view' ? '#0066ff' : 'transparent',
-              color: activeTab === 'view' ? '#ffffff' : '#475569',
+              background: activeTab === 'view' ? 'var(--accent-blue)' : 'transparent',
+              color: activeTab === 'view' ? '#ffffff' : 'var(--text-secondary)',
               fontSize: '12px',
               fontWeight: '800',
               cursor: 'pointer',
@@ -207,8 +208,8 @@ export default function RoutineManagerModal({
               padding: '9px 12px',
               borderRadius: '10px',
               border: 'none',
-              background: activeTab === 'paste' ? '#0066ff' : 'transparent',
-              color: activeTab === 'paste' ? '#ffffff' : '#475569',
+              background: activeTab === 'paste' ? 'var(--accent-blue)' : 'transparent',
+              color: activeTab === 'paste' ? '#ffffff' : 'var(--text-secondary)',
               fontSize: '12px',
               fontWeight: '800',
               cursor: 'pointer',
