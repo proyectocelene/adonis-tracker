@@ -605,17 +605,18 @@ export default function WorkoutDay() {
 
 
   let todayWorkoutData = {};
+  const dateDraft = currentSessions?.[`draft_${selectedDateKey}`];
   if (historySession && historySession.exercises && Object.keys(historySession.exercises).length > 0) {
     todayWorkoutData = historySession.exercises;
-  } else {
-    // Si hay un borrador guardado específicamente para esta fecha exacta
-    const dateDraft = currentSessions?.[`draft_${selectedDateKey}`];
-    if (dateDraft && Object.keys(dateDraft).length > 0) {
-      todayWorkoutData = dateDraft;
-    } else {
-      // Todo día no entrenado sin borrador inicia 100% en blanco
-      todayWorkoutData = {};
+    // Si el borrador local tiene más datos recientes o series en curso, fusionar sin pérdida
+    if (dateDraft && typeof dateDraft === 'object' && Object.keys(dateDraft).length > 0) {
+      todayWorkoutData = { ...dateDraft, ...todayWorkoutData };
     }
+  } else if (dateDraft && Object.keys(dateDraft).length > 0) {
+    todayWorkoutData = dateDraft;
+  } else {
+    // Todo día no entrenado sin borrador inicia 100% en blanco
+    todayWorkoutData = {};
   }
 
   const getPreviousDataForDay = () => {
@@ -672,10 +673,17 @@ export default function WorkoutDay() {
         exercises: newExercises,
         volume: Math.round(recalculatedVol),
         completedSets: recSets,
-        isCompleted: recSets > 0 || recalculatedVol > 0
+        isCompleted: recSets > 0 || recalculatedVol > 0,
+        lastModified: Date.now()
       };
 
       saveSession(updated);
+      // Redundancia defensiva local: mantener copia en draft_ para evitar desincronizaciones en segundo plano
+      setCurrentSessions(prev => ({
+        ...prev,
+        [`draft_${selectedDateKey}`]: newExercises,
+        [`lastModified_${selectedDateKey}`]: Date.now()
+      }));
       return;
     }
 
@@ -700,6 +708,7 @@ export default function WorkoutDay() {
       return {
         ...prev,
         [`draft_${selectedDateKey}`]: newDayData,
+        [`lastModified_${selectedDateKey}`]: Date.now(),
         ...(startTime ? { [`startTime_${selectedDateKey}`]: startTime } : {})
       };
     });

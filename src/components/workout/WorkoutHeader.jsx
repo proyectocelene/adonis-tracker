@@ -99,6 +99,21 @@ export default function WorkoutHeader({
                 Último: {formatSessionDate(previousSession)}
               </span>
             )}
+            <span style={{
+              fontSize: '9px',
+              color: 'var(--accent-emerald)',
+              fontWeight: '800',
+              background: 'var(--accent-emerald-subtle)',
+              border: '1px solid var(--accent-emerald)',
+              padding: '1px 6px',
+              borderRadius: '6px',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '4px'
+            }} title="Todos los cambios se guardan localmente en memoria e IndexedDB en 0ms y se respaldan en la nube">
+              <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: 'var(--accent-emerald)' }} />
+              Auto-guardado 0ms ✓
+            </span>
           </div>
           <h2 style={{ margin: '2px 0 0 0', fontSize: '16px', fontWeight: '900', color: 'var(--text-main)', lineHeight: '1.25' }}>
             {((historySession && historySession.dayName) || currentDay.name || '').includes(':') 

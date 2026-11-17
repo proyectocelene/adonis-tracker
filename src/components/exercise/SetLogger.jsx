@@ -849,7 +849,7 @@ export default function SetLogger({
                 paddingBottom: '3px',
                 gap: '5px'
               }}>
-                {/* GUÍA PASADA (NUNCA TRUNCADA) */}
+                {/* GUÍA PASADA (CLICKABLE AUTO-FILL TÁCTIL) */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '5px', flexShrink: 0 }}>
                   <span className="font-mono-tech" style={{
                     background: isDone ? 'var(--accent-emerald)' : 'var(--bg-surface-elevated)',
@@ -861,7 +861,40 @@ export default function SetLogger({
                   }}>
                     S{setNum}
                   </span>
-                  <span className="font-mono-tech" style={{ color: 'var(--text-muted)', fontSize: '10px', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '3px' }}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!prevVal.weight && !prevVal.reps && !prevVal.repsL && !prevVal.repsR) return;
+                      if (navigator.vibrate) try { navigator.vibrate(15); } catch (e) {}
+                      const updates = {};
+                      if (prevVal.weight) updates.weight = String(prevVal.weight);
+                      if (isUnilateral) {
+                        if (prevVal.repsL) updates.repsL = String(prevVal.repsL);
+                        if (prevVal.repsR) updates.repsR = String(prevVal.repsR);
+                        updates.reps = String(prevVal.reps || prevVal.repsR || prevVal.repsL || '10');
+                      } else {
+                        if (prevVal.reps) updates.reps = String(prevVal.reps);
+                      }
+                      if (prevVal.rpe) updates.rpe = String(prevVal.rpe);
+                      handleSanitizedChange(setNum, updates);
+                    }}
+                    className="font-mono-tech tactile-btn"
+                    title={prevVal.weight ? "Toca para autollenar con la carga y reps de la sesión anterior" : "Sin registro anterior"}
+                    style={{
+                      background: 'var(--bg-surface-elevated)',
+                      border: '1px solid var(--border-subtle)',
+                      borderRadius: '5px',
+                      padding: '1px 6px',
+                      color: 'var(--text-muted)',
+                      fontSize: '10px',
+                      whiteSpace: 'nowrap',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '3px',
+                      cursor: prevVal.weight ? 'pointer' : 'default',
+                      transition: 'all 0.15s ease'
+                    }}
+                  >
                     <span style={{ fontSize: '9px', opacity: 0.8 }}>Prev:</span>
                     <strong style={{ color: 'var(--text-main)', fontWeight: '700' }}>
                       {prevVal.weight 
@@ -872,10 +905,11 @@ export default function SetLogger({
                           }` 
                         : '—'}
                     </strong>
+                    {prevVal.weight && <span style={{ fontSize: '8.5px', color: 'var(--accent-blue)', opacity: 0.9 }}>⚡</span>}
                     {prevLocation && (
                       <span style={{
                         fontSize: '8.5px',
-                        background: 'var(--bg-surface-elevated)',
+                        background: 'var(--bg-surface)',
                         color: 'var(--accent-cyan)',
                         padding: '0 3px',
                         borderRadius: '3px',
@@ -884,24 +918,47 @@ export default function SetLogger({
                         ({prevLocation.includes('Planta') ? prevLocation.replace('Planta ', 'P.') : prevLocation})
                       </span>
                     )}
-                  </span>
+                  </button>
                 </div>
 
-                {/* META O PR */}
+                {/* META O PR (CLICKABLE AUTO-FILL TÁCTIL) */}
                 {overloadTarget && !isDone && (
-                  <span className="font-mono-tech" style={{ 
-                    color: overloadTarget.isLoadAdjustment ? 'var(--accent-amber)' : 'var(--accent-cyan)', 
-                    fontSize: '9.5px', 
-                    fontWeight: '800', 
-                    whiteSpace: 'nowrap',
-                    background: overloadTarget.isLoadAdjustment ? 'var(--accent-amber-subtle)' : 'var(--accent-cyan-subtle)',
-                    padding: '1px 5px',
-                    borderRadius: '5px',
-                    border: `1px solid ${overloadTarget.isLoadAdjustment ? 'var(--accent-amber)' : 'var(--accent-cyan)'}`,
-                    flexShrink: 0
-                  }}>
-                    🎯 {overloadTarget.shortText}
-                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (navigator.vibrate) try { navigator.vibrate(15); } catch (e) {}
+                      const updates = {};
+                      if (overloadTarget.targetWeight) updates.weight = String(overloadTarget.targetWeight);
+                      if (overloadTarget.targetReps) {
+                        updates.reps = String(overloadTarget.targetReps);
+                        if (isUnilateral) {
+                          updates.repsL = String(overloadTarget.targetReps);
+                          updates.repsR = String(overloadTarget.targetReps);
+                        }
+                      }
+                      handleSanitizedChange(setNum, updates);
+                    }}
+                    className="font-mono-tech tactile-btn"
+                    title="Toca para aplicar la meta científica de sobrecarga"
+                    style={{ 
+                      color: overloadTarget.isLoadAdjustment ? 'var(--accent-amber)' : 'var(--accent-cyan)', 
+                      fontSize: '9.5px', 
+                      fontWeight: '800', 
+                      whiteSpace: 'nowrap',
+                      background: overloadTarget.isLoadAdjustment ? 'var(--accent-amber-subtle)' : 'var(--accent-cyan-subtle)',
+                      padding: '1px 6px',
+                      borderRadius: '5px',
+                      border: `1px solid ${overloadTarget.isLoadAdjustment ? 'var(--accent-amber)' : 'var(--accent-cyan)'}`,
+                      flexShrink: 0,
+                      cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '3px'
+                    }}
+                  >
+                    <span>🎯 {overloadTarget.shortText}</span>
+                    <span style={{ fontSize: '8px', opacity: 0.8 }}>⚡</span>
+                  </button>
                 )}
                 {isDone && completedBadge && (
                   <span className="font-mono-tech" style={{ 
@@ -929,8 +986,38 @@ export default function SetLogger({
                 width: '100%',
                 flexWrap: 'nowrap'
               }}>
-                {/* PESO CON CALCULADORA */}
+                {/* PESO CON STEPPERS RÁPIDOS Y CALCULADORA */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '2px', flexShrink: 0 }}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (navigator.vibrate) try { navigator.vibrate(10); } catch (e) {}
+                      const step = machineConfig?.increment ? Number(machineConfig.increment) : 5;
+                      const current = parseFloat(setVal.weight) || parseFloat(prevVal.weight) || 0;
+                      const next = Math.max(0, current - step);
+                      handleSanitizedChange(setNum, 'weight', next > 0 ? String(next) : '');
+                    }}
+                    className="tactile-btn"
+                    title="Bajar carga (-5# o incremento)"
+                    style={{
+                      width: '18px',
+                      height: '34px',
+                      borderRadius: '5px 0 0 5px',
+                      border: '1px solid var(--border-strong)',
+                      borderRight: 'none',
+                      background: 'var(--bg-surface-elevated)',
+                      color: 'var(--text-muted)',
+                      fontSize: '12px',
+                      fontWeight: '900',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      padding: 0
+                    }}
+                  >
+                    -
+                  </button>
                   <input
                     type="text"
                     inputMode="decimal"
@@ -947,11 +1034,13 @@ export default function SetLogger({
                     }}
                     className="font-mono-tech"
                     style={{
-                      width: isUnilateral ? '48px' : '52px',
+                      width: isUnilateral ? '44px' : '48px',
                       height: '34px',
                       padding: '0 2px',
-                      borderRadius: '6px',
+                      borderRadius: '0',
                       border: isWeightJumpAlert ? '1.5px solid var(--accent-amber)' : '1px solid var(--border-strong)',
+                      borderLeft: 'none',
+                      borderRight: 'none',
                       fontSize: '14px',
                       fontWeight: '800',
                       textAlign: 'center',
@@ -959,6 +1048,36 @@ export default function SetLogger({
                       color: 'var(--text-main)'
                     }}
                   />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (navigator.vibrate) try { navigator.vibrate(10); } catch (e) {}
+                      const step = machineConfig?.increment ? Number(machineConfig.increment) : 5;
+                      const current = parseFloat(setVal.weight) || parseFloat(prevVal.weight) || 0;
+                      const next = current + step;
+                      handleSanitizedChange(setNum, 'weight', String(next));
+                    }}
+                    className="tactile-btn"
+                    title="Subir carga (+5# o incremento)"
+                    style={{
+                      width: '18px',
+                      height: '34px',
+                      borderRadius: '0 5px 5px 0',
+                      border: '1px solid var(--border-strong)',
+                      borderLeft: 'none',
+                      background: 'var(--bg-surface-elevated)',
+                      color: 'var(--accent-emerald)',
+                      fontSize: '12px',
+                      fontWeight: '900',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      padding: 0
+                    }}
+                  >
+                    +
+                  </button>
                   <button
                     type="button"
                     onClick={() => setPlateModal({ isOpen: true, setNum, currentWeight: setVal.weight || 0 })}

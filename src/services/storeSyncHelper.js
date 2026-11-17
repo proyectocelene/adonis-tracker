@@ -35,16 +35,35 @@ export function mergeStoreValues(key, localVal, cloudVal) {
     return merged;
   }
 
-  // 2. Borradores activos de entrenamientos
+  // 2. Borradores activos de entrenamientos (Fusión profunda nivel ejercicio y serie)
   if (key === 'coachv2_active_workouts') {
     const merged = { ...(typeof cloudVal === 'object' && cloudVal ? cloudVal : {}) };
     const localObj = (typeof localVal === 'object' && localVal) ? localVal : {};
 
-    Object.keys(localObj).forEach(k => {
-      if (!merged[k]) {
-        merged[k] = localObj[k];
-      } else if (typeof localObj[k] === 'object' && localObj[k] !== null && typeof merged[k] === 'object' && merged[k] !== null) {
-        merged[k] = { ...merged[k], ...localObj[k] };
+    Object.keys(localObj).forEach(draftKey => {
+      if (!merged[draftKey]) {
+        merged[draftKey] = localObj[draftKey];
+      } else if (typeof localObj[draftKey] === 'object' && localObj[draftKey] !== null) {
+        const cloudDraft = (typeof merged[draftKey] === 'object' && merged[draftKey] !== null) ? merged[draftKey] : {};
+        const localDraft = localObj[draftKey];
+        const mergedDraft = { ...cloudDraft };
+
+        Object.keys(localDraft).forEach(exId => {
+          if (!mergedDraft[exId]) {
+            mergedDraft[exId] = localDraft[exId];
+          } else if (typeof localDraft[exId] === 'object' && localDraft[exId] !== null) {
+            // Fusión profunda a nivel de serie individual para que ninguna serie escrita localmente se borre
+            const cloudEx = (typeof mergedDraft[exId] === 'object' && mergedDraft[exId] !== null) ? mergedDraft[exId] : {};
+            const localEx = localDraft[exId];
+            mergedDraft[exId] = {
+              ...cloudEx,
+              ...localEx
+            };
+          } else {
+            mergedDraft[exId] = localDraft[exId];
+          }
+        });
+        merged[draftKey] = mergedDraft;
       }
     });
     return merged;
