@@ -171,149 +171,191 @@ export default function WorkoutFooterControls({
         </div>
       )}
 
-      {/* BOTÓN PRINCIPAL DE GUARDAR ENTRENAMIENTO Y LIMPIAR */}
-      <div style={{ marginTop: '4px', marginBottom: '20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+      {/* SECCIÓN DE CIERRE Y EXPORTACIÓN CLÍNICA (ANTI-SLOP COCKPIT) */}
+      <div style={{ marginTop: '6px', marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        {/* BOTÓN PRIMARIO ELEVADO: COMPLETAR & ARCHIVAR SESIÓN */}
         <button 
           type="button" 
-          className="btn btn-primary" 
+          className="tactile-btn" 
           onClick={handleFinishWorkout} 
-          style={{ width: '100%', padding: '16px', fontSize: '16px', borderRadius: '20px', fontWeight: '900', boxShadow: '0 8px 24px rgba(0, 102, 255, 0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+          style={{ 
+            width: '100%', 
+            padding: '15px 16px', 
+            fontSize: '15px', 
+            borderRadius: '16px', 
+            fontWeight: '900', 
+            background: completedSets > 0 
+              ? 'linear-gradient(135deg, #059669 0%, #00e676 100%)' 
+              : 'linear-gradient(135deg, #0284c7 0%, #38bdf8 100%)',
+            color: '#000000',
+            border: 'none',
+            boxShadow: completedSets > 0 
+              ? '0 6px 20px rgba(0, 230, 118, 0.35)' 
+              : '0 6px 20px rgba(56, 189, 248, 0.35)', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            gap: '8px',
+            cursor: 'pointer'
+          }}
         >
-          <Save size={22} /> Guardar Sesión en Bitácora
+          <Save size={20} strokeWidth={2.8} /> 
+          <span>Archivar Sesión en Bitácora</span>
+          {completedSets > 0 && (
+            <span style={{
+              background: 'rgba(0,0,0,0.2)',
+              padding: '2px 8px',
+              borderRadius: '20px',
+              fontSize: '11px',
+              fontWeight: '900',
+              marginLeft: '4px'
+            }}>
+              {completedSets} {completedSets === 1 ? 'serie' : 'series'}
+            </span>
+          )}
         </button>
 
-        {completedSets > 0 && onExportTCX && (
-          <button 
-            type="button" 
-            onClick={onExportTCX}
-            style={{
-              width: '100%',
-              padding: '12px',
-              fontSize: '13px',
-              borderRadius: '16px',
-              fontWeight: '900',
-              background: 'var(--accent-emerald-subtle)',
-              color: 'var(--accent-emerald)',
-              border: '1px solid var(--accent-emerald)',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '8px',
-              transition: 'all 0.2s ease'
-            }}
-          >
-            <Share2 size={16} /> 📤 Sincronizar / Exportar a Google Fit / Salud (.TCX)
-          </button>
-        )}
-
-        {completedSets > 0 && handleCopyWorkoutCard && (
-          <button 
-            type="button" 
-            onClick={handleCopyWorkoutCard}
-            style={{
-              width: '100%',
-              padding: '12px',
-              fontSize: '13px',
-              borderRadius: '16px',
-              fontWeight: '900',
-              background: 'var(--accent-blue-light)',
-              color: 'var(--accent-blue)',
-              border: '1px solid var(--accent-blue)',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '8px'
-            }}
-          >
-            <Copy size={16} /> 📋 Copiar Workout Card (Resumen para Notas / Chat)
-          </button>
-        )}
-
-        {completedSets > 0 && handleCopySessionForAI && (
-          <button 
-            type="button" 
-            onClick={handleCopySessionForAI}
-            style={{
-              width: '100%',
-              padding: '13px',
-              fontSize: '13px',
-              borderRadius: '16px',
-              fontWeight: '900',
-              background: 'rgba(124, 58, 237, 0.15)',
-              color: '#c084fc',
-              border: '1px solid rgba(168, 85, 247, 0.3)',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '8px',
-              boxShadow: '0 4px 12px rgba(109, 40, 217, 0.2)',
-              transition: 'all 0.2s ease'
-            }}
-          >
-            <Bot size={18} color="#c084fc" /> 🤖 Copiar Prompt para IA (ChatGPT / Gemini / Claude)
-          </button>
-        )}
-
-        {(completedSets > 0 || hasAnyDraftData) && (onExportTCX || onExportJSON) && (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+        {/* HUB ELEGANTE DE EXPORTACIÓN Y COMPARTIR (GRID 2x2 MODERNO) */}
+        {(completedSets > 0 || hasAnyDraftData) && (
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(2, 1fr)',
+            gap: '8px',
+            background: 'var(--bg-surface-secondary)',
+            padding: '8px',
+            borderRadius: '14px',
+            border: '1px solid var(--border-subtle)'
+          }}>
             {onExportTCX && (
               <button
                 type="button"
                 onClick={onExportTCX}
+                className="tactile-btn"
                 style={{
-                  padding: '11px 8px',
-                  fontSize: '11.5px',
-                  borderRadius: '14px',
+                  padding: '9px 10px',
+                  fontSize: '11px',
+                  borderRadius: '10px',
                   fontWeight: '800',
-                  background: 'var(--accent-blue-light)',
-                  color: 'var(--accent-blue)',
-                  border: '1px solid var(--accent-blue)',
+                  background: 'var(--bg-surface-elevated)',
+                  color: 'var(--accent-emerald)',
+                  border: '1px solid var(--border-subtle)',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: '6px'
                 }}
+                title="Exportar archivo compatible con Google Fit, Garmin y Apple Salud"
               >
-                <Share2 size={14} /> 📥 Exportar TCX
+                <Share2 size={13} />
+                <span>Salud / Fit (.TCX)</span>
               </button>
             )}
+
+            {handleCopyWorkoutCard && (
+              <button
+                type="button"
+                onClick={handleCopyWorkoutCard}
+                className="tactile-btn"
+                style={{
+                  padding: '9px 10px',
+                  fontSize: '11px',
+                  borderRadius: '10px',
+                  fontWeight: '800',
+                  background: 'var(--bg-surface-elevated)',
+                  color: 'var(--accent-blue)',
+                  border: '1px solid var(--border-subtle)',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px'
+                }}
+                title="Copiar tarjeta resumida para WhatsApp, Telegram o notas"
+              >
+                <Copy size={13} />
+                <span>Workout Card</span>
+              </button>
+            )}
+
+            {handleCopySessionForAI && (
+              <button
+                type="button"
+                onClick={handleCopySessionForAI}
+                className="tactile-btn"
+                style={{
+                  padding: '9px 10px',
+                  fontSize: '11px',
+                  borderRadius: '10px',
+                  fontWeight: '800',
+                  background: 'var(--bg-surface-elevated)',
+                  color: '#c084fc',
+                  border: '1px solid var(--border-subtle)',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px'
+                }}
+                title="Copiar prompt completo estructurado para ChatGPT, Gemini o Claude"
+              >
+                <Bot size={14} />
+                <span>Prompt para IA</span>
+              </button>
+            )}
+
             {onExportJSON && (
               <button
                 type="button"
                 onClick={onExportJSON}
+                className="tactile-btn"
                 style={{
-                  padding: '11px 8px',
-                  fontSize: '11.5px',
-                  borderRadius: '14px',
+                  padding: '9px 10px',
+                  fontSize: '11px',
+                  borderRadius: '10px',
                   fontWeight: '800',
-                  background: 'var(--accent-emerald-subtle)',
-                  color: 'var(--accent-emerald)',
-                  border: '1px solid var(--accent-emerald)',
+                  background: 'var(--bg-surface-elevated)',
+                  color: 'var(--accent-amber)',
+                  border: '1px solid var(--border-subtle)',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: '6px'
                 }}
+                title="Descargar copia de seguridad cuantitativa JSON de esta sesión"
               >
-                <Download size={14} /> 💾 Exportar JSON
+                <Download size={13} />
+                <span>Backup JSON</span>
               </button>
             )}
           </div>
         )}
 
+        {/* ACCIÓN DISCRETA: LIMPIAR BORRADOR */}
         {hasAnyDraftData && (
-          <button 
-            type="button" 
-            onClick={handleClearCurrentDraft}
-            style={{ width: '100%', padding: '10px', fontSize: '12px', borderRadius: '14px', fontWeight: '800', background: 'var(--accent-red-subtle)', color: 'var(--accent-red)', border: '1px solid var(--accent-red)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
-          >
-            <Trash2 size={14} /> Descartar / Limpiar Casillas Marcadas ({isViewingHistory ? selectedDateKey : 'Hoy'})
-          </button>
+          <div style={{ textAlign: 'center', marginTop: '2px' }}>
+            <button 
+              type="button" 
+              onClick={handleClearCurrentDraft}
+              className="tactile-btn"
+              style={{ 
+                background: 'transparent', 
+                border: 'none',
+                color: 'var(--text-muted)', 
+                fontSize: '11px', 
+                fontWeight: '700', 
+                cursor: 'pointer', 
+                display: 'inline-flex', 
+                alignItems: 'center', 
+                gap: '4px',
+                padding: '4px 8px',
+                opacity: 0.8
+              }}
+            >
+              <Trash2 size={12} /> Descartar casillas marcadas ({isViewingHistory ? selectedDateKey : 'Hoy'})
+            </button>
+          </div>
         )}
       </div>
 

@@ -423,21 +423,24 @@ export default function ExerciseRow({
       {/* 2. CONTENIDO EXPANDIDO A 100% FULL-WIDTH SIN MARGENES MALGASTADOS */}
       {isExpanded && (
         <div className="animate-fade" style={{ padding: '10px 12px', width: '100%' }}>
-          {/* NAVEGACIÓN DE MINI-PESTAÑAS INTERNAS A TODO EL ANCHO */}
-          <div style={{ display: 'flex', background: 'var(--bg-surface-secondary)', border: '1px solid var(--border-subtle)', padding: '3px', borderRadius: '12px', marginBottom: '10px', gap: '4px', width: '100%' }}>
+          {/* NAVEGACIÓN DE MINI-PESTAÑAS INTERNAS A TODO EL ANCHO (SEGMENTED PILL) */}
+          <div style={{ display: 'flex', background: 'var(--bg-surface-secondary)', border: '1px solid var(--border-subtle)', padding: '2px', borderRadius: '11px', marginBottom: '10px', gap: '3px', width: '100%' }}>
             <button
               type="button"
               onClick={() => setActiveSubTab('logger')}
+              className="tactile-btn"
               style={{
                 flex: 1,
-                padding: '7px 4px',
+                padding: '6px 4px',
                 border: 'none',
                 borderRadius: '9px',
-                background: activeSubTab === 'logger' ? 'linear-gradient(135deg, var(--accent-blue) 0%, #0284c7 100%)' : 'transparent',
-                color: activeSubTab === 'logger' ? '#ffffff' : 'var(--text-muted)',
-                fontWeight: '900',
-                fontSize: '11.5px',
-                cursor: 'pointer'
+                background: activeSubTab === 'logger' ? 'var(--bg-surface-elevated)' : 'transparent',
+                color: activeSubTab === 'logger' ? 'var(--accent-blue)' : 'var(--text-muted)',
+                fontWeight: activeSubTab === 'logger' ? '900' : '700',
+                fontSize: '11px',
+                cursor: 'pointer',
+                boxShadow: activeSubTab === 'logger' ? 'var(--shadow-ios-sm)' : 'none',
+                transition: 'all 0.15s ease'
               }}
             >
               📊 Series
@@ -445,16 +448,19 @@ export default function ExerciseRow({
             <button
               type="button"
               onClick={() => setActiveSubTab('technique')}
+              className="tactile-btn"
               style={{
                 flex: 1,
-                padding: '7px 4px',
+                padding: '6px 4px',
                 border: 'none',
                 borderRadius: '9px',
-                background: activeSubTab === 'technique' ? 'linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)' : 'transparent',
-                color: activeSubTab === 'technique' ? '#ffffff' : 'var(--text-muted)',
-                fontWeight: '900',
-                fontSize: '11.5px',
-                cursor: 'pointer'
+                background: activeSubTab === 'technique' ? 'var(--bg-surface-elevated)' : 'transparent',
+                color: activeSubTab === 'technique' ? '#a78bfa' : 'var(--text-muted)',
+                fontWeight: activeSubTab === 'technique' ? '900' : '700',
+                fontSize: '11px',
+                cursor: 'pointer',
+                boxShadow: activeSubTab === 'technique' ? 'var(--shadow-ios-sm)' : 'none',
+                transition: 'all 0.15s ease'
               }}
             >
               💡 Info
@@ -462,16 +468,19 @@ export default function ExerciseRow({
             <button
               type="button"
               onClick={() => setActiveSubTab('swap')}
+              className="tactile-btn"
               style={{
                 flex: 1,
-                padding: '7px 4px',
+                padding: '6px 4px',
                 border: 'none',
                 borderRadius: '9px',
-                background: activeSubTab === 'swap' ? 'linear-gradient(135deg, var(--accent-emerald) 0%, #059669 100%)' : 'transparent',
-                color: activeSubTab === 'swap' ? '#ffffff' : 'var(--text-muted)',
-                fontWeight: '900',
-                fontSize: '11.5px',
-                cursor: 'pointer'
+                background: activeSubTab === 'swap' ? 'var(--bg-surface-elevated)' : 'transparent',
+                color: activeSubTab === 'swap' ? 'var(--accent-emerald)' : 'var(--text-muted)',
+                fontWeight: activeSubTab === 'swap' ? '900' : '700',
+                fontSize: '11px',
+                cursor: 'pointer',
+                boxShadow: activeSubTab === 'swap' ? 'var(--shadow-ios-sm)' : 'none',
+                transition: 'all 0.15s ease'
               }}
             >
               🔄 Cambiar
@@ -479,18 +488,20 @@ export default function ExerciseRow({
             <button
               type="button"
               onClick={handlePromptSkip}
+              className="tactile-btn"
               style={{
-                padding: '7px 8px',
-                border: '1px solid var(--border-subtle)',
+                padding: '6px 8px',
+                border: 'none',
                 borderRadius: '9px',
-                background: 'var(--bg-card)',
+                background: 'transparent',
                 color: 'var(--text-muted)',
-                fontWeight: '900',
-                fontSize: '11px',
+                fontWeight: '800',
+                fontSize: '10.5px',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '2px'
+                gap: '2px',
+                transition: 'all 0.15s ease'
               }}
               title="Marcar si no hiciste el ejercicio o la máquina está ocupada/descompuesta"
             >
