@@ -373,6 +373,16 @@ input:focus, select:focus, textarea:focus {
 .btn-outline:hover { background: var(--bg-surface-elevated); border-color: var(--border-active); }
 .btn-outline:active { transform: scale(0.98); }
 
+/* Micro-interacciones táctiles Emil Kowalski */
+.tactile-btn {
+  transition: transform 0.12s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s ease, border-color 0.15s ease;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.tactile-btn:active {
+  transform: scale(0.96);
+}
+
 .sub-chip-toggle {
   background: var(--bg-surface-secondary);
   border: 1px solid var(--border-subtle);

@@ -1965,25 +1965,24 @@ export default function WorkoutDay() {
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <div style={{ 
-                        width: '32px', 
-                        height: '32px', 
+                        width: '30px', 
+                        height: '30px', 
                         borderRadius: '8px', 
                         background: isCardioDone ? 'var(--accent-emerald)' : 'var(--accent-blue-light)', 
                         color: isCardioDone ? '#000000' : 'var(--accent-blue)', 
                         display: 'flex', 
                         alignItems: 'center', 
                         justifyContent: 'center', 
-                        flexShrink: 0,
-                        fontSize: '16px'
+                        flexShrink: 0
                       }}>
-                        {isRower ? '🚣‍♂️' : '🫀'}
+                        <Activity size={16} />
                       </div>
                       <div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '5px', flexWrap: 'wrap' }}>
-                          <h4 style={{ margin: 0, fontSize: '13px', fontWeight: '800', color: isCardioDone ? 'var(--accent-emerald)' : 'var(--text-main)' }}>
-                            {isRower ? '☀️ Protocolo Matutino: Remo' : '☀️ Cardio Aeróbico en Zona 2'}
+                          <h4 style={{ margin: 0, fontSize: '12.5px', fontWeight: '800', color: isCardioDone ? 'var(--accent-emerald)' : 'var(--text-main)' }}>
+                            {isRower ? 'Protocolo Matutino: Remo' : 'Cardio Aeróbico en Zona 2'}
                           </h4>
-                          <span style={{ fontSize: '9px', background: isCardioDone ? 'var(--accent-emerald-subtle)' : 'var(--accent-amber-subtle)', color: isCardioDone ? 'var(--accent-emerald)' : 'var(--accent-amber)', padding: '1px 6px', borderRadius: '5px', fontWeight: '800' }}>
+                          <span style={{ fontSize: '9px', background: isCardioDone ? 'var(--accent-emerald-subtle)' : 'var(--accent-amber-subtle)', color: isCardioDone ? 'var(--accent-emerald)' : 'var(--accent-amber)', padding: '1px 5px', borderRadius: '4px', fontWeight: '800' }}>
                             ≥ 6h antes
                           </span>
                         </div>
@@ -2044,15 +2043,15 @@ export default function WorkoutDay() {
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: isWarmupDone ? 'var(--accent-emerald)' : 'var(--accent-amber-subtle)', color: isWarmupDone ? '#000000' : 'var(--accent-amber)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      {isWarmupDone ? <Check size={16} strokeWidth={3} /> : <Flame size={16} />}
+                    <div style={{ width: '30px', height: '30px', borderRadius: '8px', background: isWarmupDone ? 'var(--accent-emerald)' : 'var(--accent-amber-subtle)', color: isWarmupDone ? '#000000' : 'var(--accent-amber)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      {isWarmupDone ? <Check size={15} strokeWidth={3} /> : <Flame size={15} />}
                     </div>
                     <div>
-                      <h4 style={{ margin: 0, fontSize: '13px', fontWeight: '800', color: isWarmupDone ? 'var(--accent-emerald)' : 'var(--text-main)' }}>
-                        Paso 0: Calentamiento & Movilidad (5-10 min)
+                      <h4 style={{ margin: 0, fontSize: '12.5px', fontWeight: '800', color: isWarmupDone ? 'var(--accent-emerald)' : 'var(--text-main)' }}>
+                        Calentamiento & Movilidad (5-10 min)
                       </h4>
-                      <span style={{ fontSize: '10.5px', color: 'var(--text-muted)', fontWeight: '600' }}>
-                        Caminata/bici suave + movimientos articulares
+                      <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '600' }}>
+                        Caminata/bici suave + movilidad articular
                       </span>
                     </div>
                   </div>

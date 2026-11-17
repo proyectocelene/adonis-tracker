@@ -1,5 +1,5 @@
-import React from 'react';
-import { Plus, ArrowRight, X, AlertCircle, Dumbbell, Zap, RefreshCw } from 'lucide-react';
+import React, { useState } from 'react';
+import { Plus, ArrowRight, X, AlertCircle, Dumbbell, Zap, RefreshCw, ChevronDown, ChevronUp } from 'lucide-react';
 
 export default function PendingExercisesBanner({
   pendingData,
@@ -10,6 +10,8 @@ export default function PendingExercisesBanner({
   onOpenRescheduleModal,
   onDismiss
 }) {
+  const [showDetails, setShowDetails] = useState(false);
+
   if (!pendingData || !pendingData.pendingExercises || pendingData.pendingExercises.length === 0) {
     return null;
   }
@@ -21,154 +23,183 @@ export default function PendingExercisesBanner({
 
   return (
     <div 
-      className="card"
+      className="card tactile-btn"
       style={{
-        background: '#0a0d14',
-        border: '1px solid #f59e0b',
+        background: 'var(--bg-surface-secondary)',
+        border: '1px solid var(--accent-amber)',
         borderRadius: '12px',
-        padding: '12px 14px',
-        marginBottom: '12px',
-        boxShadow: '0 4px 20px rgba(245, 158, 11, 0.12)'
+        padding: '10px 12px',
+        marginBottom: '10px',
+        boxShadow: '0 2px 12px rgba(245, 158, 11, 0.08)'
       }}
     >
-      {/* HEADER DE ALERTA */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '8px', marginBottom: '8px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+      {/* HEADER DE ALERTA COMPACTO */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
           <div style={{ 
-            background: 'rgba(245, 158, 11, 0.15)', 
-            color: '#fbbf24', 
-            padding: '6px', 
+            background: 'var(--accent-amber-subtle)', 
+            color: 'var(--accent-amber)', 
+            padding: '5px', 
             borderRadius: '8px', 
             display: 'flex', 
             alignItems: 'center', 
             justifyContent: 'center',
-            border: '1px solid rgba(245, 158, 11, 0.3)'
+            border: '1px solid var(--accent-amber)',
+            flexShrink: 0
           }}>
-            <AlertCircle size={18} />
+            <AlertCircle size={15} />
           </div>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span style={{ fontSize: '10px', fontWeight: '900', color: '#fbbf24', textTransform: 'uppercase', letterSpacing: '0.6px', fontFamily: 'monospace' }}>
-                {isFullDayMissed ? '⚠️ INASISTENCIA DETECTADA' : '⚖️ RECUPERACIÓN DE VOLUMEN'}
+          <div style={{ minWidth: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+              <span style={{ fontSize: '9.5px', fontWeight: '900', color: 'var(--accent-amber)', textTransform: 'uppercase', letterSpacing: '0.4px', fontFamily: 'monospace' }}>
+                {isFullDayMissed ? 'Inasistencia Detectada' : 'Recuperación de Volumen'}
               </span>
-              <span style={{ fontSize: '9px', background: 'rgba(245, 158, 11, 0.2)', color: '#fef3c7', padding: '1px 6px', borderRadius: '4px', fontWeight: '800' }}>
-                {pendingExercises.length} ejercicio{pendingExercises.length > 1 ? 's' : ''}
+              <span style={{ fontSize: '9px', background: 'var(--accent-amber-subtle)', color: 'var(--accent-amber)', padding: '1px 5px', borderRadius: '4px', fontWeight: '800' }}>
+                {pendingExercises.length} ej.
               </span>
             </div>
-            <h4 style={{ margin: '2px 0 0 0', fontSize: '13px', fontWeight: '800', color: '#f8fafc' }}>
+            <h4 style={{ margin: '1px 0 0 0', fontSize: '12px', fontWeight: '800', color: 'var(--text-main)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               {isFullDayMissed 
-                ? `Falta registrada: ${missedLabel} (${sourceDate})`
+                ? `Falta: ${missedLabel} (${sourceDate})`
                 : `Pendientes de ${missedLabel} (${sourceDate})`}
             </h4>
           </div>
         </div>
-        <button
-          type="button"
-          onClick={onDismiss}
-          title="Descartar aviso para hoy"
-          style={{ background: 'transparent', border: 'none', color: '#64748b', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center' }}
-        >
-          <X size={16} />
-        </button>
-      </div>
 
-      {/* CHIPS DE EJERCICIOS PENDIENTES */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '10px' }}>
-        {pendingExercises.map((ex, idx) => (
-          <span
-            key={ex.id || `${ex.unifiedCode}_${idx}`}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
+          <button
+            type="button"
+            onClick={() => setShowDetails(prev => !prev)}
             style={{
-              background: '#131822',
-              border: '1px solid #1e293b',
+              background: 'var(--bg-surface-elevated)',
+              border: '1px solid var(--border-strong)',
+              color: 'var(--text-secondary)',
+              cursor: 'pointer',
+              padding: '4px 8px',
               borderRadius: '6px',
-              padding: '3px 8px',
-              fontSize: '11px',
+              fontSize: '10px',
               fontWeight: '700',
-              color: '#e2e8f0',
-              display: 'inline-flex',
+              display: 'flex',
               alignItems: 'center',
-              gap: '5px'
+              gap: '3px'
             }}
           >
-            <Dumbbell size={11} color="#f59e0b" />
-            <span>{ex.name}</span>
-            <span style={{ color: '#94a3b8', fontSize: '9.5px', fontWeight: '600' }}>
-              • {ex.muscleGroup || 'General'}
-            </span>
-          </span>
-        ))}
+            {showDetails ? (
+              <>Ocultar <ChevronUp size={12} /></>
+            ) : (
+              <>Ver ({pendingExercises.length}) <ChevronDown size={12} /></>
+            )}
+          </button>
+          <button
+            type="button"
+            onClick={onDismiss}
+            title="Descartar aviso para hoy"
+            style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center' }}
+          >
+            <X size={15} />
+          </button>
+        </div>
       </div>
 
-      <p style={{ margin: '0 0 10px 0', fontSize: '11px', color: '#94a3b8', lineHeight: '1.4' }}>
-        {isFullDayMissed
-          ? 'Para no perder las adaptaciones hipertróficas semanales, puedes repartir estos ejercicios en los días restantes o sumarlos hoy.'
-          : 'Ejercicios sin registrar en la sesión previa listos para equilibrar tus series semanales.'}
-      </p>
+      {/* DETALLES EXPANDIBLES */}
+      {showDetails && (
+        <div style={{ marginTop: '10px', paddingTop: '8px', borderTop: '1px solid var(--border-subtle)' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px', marginBottom: '8px' }}>
+            {pendingExercises.map((ex, idx) => (
+              <span
+                key={ex.id || `${ex.unifiedCode}_${idx}`}
+                style={{
+                  background: 'var(--bg-surface-elevated)',
+                  border: '1px solid var(--border-subtle)',
+                  borderRadius: '6px',
+                  padding: '2px 7px',
+                  fontSize: '10.5px',
+                  fontWeight: '700',
+                  color: 'var(--text-secondary)',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px'
+                }}
+              >
+                <Dumbbell size={10} color="var(--accent-amber)" />
+                <span>{ex.name}</span>
+                <span style={{ color: 'var(--text-muted)', fontSize: '9px', fontWeight: '600' }}>
+                  • {ex.muscleGroup || 'General'}
+                </span>
+              </span>
+            ))}
+          </div>
+          <p style={{ margin: '0 0 8px 0', fontSize: '10.5px', color: 'var(--text-muted)', lineHeight: '1.4' }}>
+            {isFullDayMissed
+              ? 'Para no perder las adaptaciones hipertróficas semanales, reparte estos ejercicios o súmalos a tu sesión.'
+              : 'Ejercicios sin registrar listos para equilibrar tus series semanales.'}
+          </p>
+        </div>
+      )}
 
       {/* BOTONES DE ACCIÓN INTELIGENTES */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '8px' }}>
-        {/* ACCIÓN RECOMENDADA: DISTRIBUCIÓN INTELIGENTE */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '6px', marginTop: '8px' }}>
         {onDistributeAcrossWeek && (
           <button
             type="button"
             onClick={() => onDistributeAcrossWeek(pendingExercises)}
+            className="tactile-btn"
             style={{
-              background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-              color: '#ffffff',
+              background: 'var(--accent-emerald)',
+              color: '#000000',
               border: 'none',
-              borderRadius: '8px',
-              padding: '8px 12px',
-              fontSize: '11.5px',
+              borderRadius: '7px',
+              padding: '7px 10px',
+              fontSize: '11px',
               fontWeight: '800',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: '6px',
-              boxShadow: '0 2px 8px rgba(16, 185, 129, 0.25)'
+              gap: '5px'
             }}
           >
-            <Zap size={14} fill="#ffffff" />
-            <span>⚡ Distribuir en la semana</span>
+            <Zap size={13} fill="#000000" />
+            <span>Distribuir semana</span>
           </button>
         )}
 
-        {/* SUMAR TODO A HOY */}
         {onImportToToday && (
           <button
             type="button"
             onClick={() => onImportToToday(pendingExercises)}
+            className="tactile-btn"
             style={{
-              background: '#0284c7',
+              background: 'var(--accent-blue)',
               color: '#ffffff',
               border: 'none',
-              borderRadius: '8px',
-              padding: '8px 12px',
-              fontSize: '11.5px',
+              borderRadius: '7px',
+              padding: '7px 10px',
+              fontSize: '11px',
               fontWeight: '800',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: '6px'
+              gap: '5px'
             }}
           >
             <Plus size={13} />
-            <span>➕ Sumar a {todayDayName.split(':')[0]}</span>
+            <span>Sumar a Hoy</span>
           </button>
         )}
 
-        {/* DESPLAZAR EN CASCADA (ROLLING SHIFT) */}
-        {onRollingShift && (
+        {showDetails && onRollingShift && (
           <button
             type="button"
             onClick={onRollingShift}
+            className="tactile-btn"
             style={{
-              background: '#1e293b',
-              color: '#cbd5e1',
-              border: '1px solid #334155',
-              borderRadius: '8px',
-              padding: '8px 10px',
+              background: 'var(--bg-surface-elevated)',
+              color: 'var(--text-main)',
+              border: '1px solid var(--border-strong)',
+              borderRadius: '7px',
+              padding: '7px 10px',
               fontSize: '11px',
               fontWeight: '700',
               cursor: 'pointer',
@@ -179,21 +210,21 @@ export default function PendingExercisesBanner({
             }}
           >
             <RefreshCw size={12} />
-            <span>🔄 Desplazar a mañana</span>
+            <span>Desplazar a mañana</span>
           </button>
         )}
 
-        {/* MOVER MANUALMENTE */}
-        {onOpenRescheduleModal && (
+        {showDetails && onOpenRescheduleModal && (
           <button
             type="button"
             onClick={onOpenRescheduleModal}
+            className="tactile-btn"
             style={{
-              background: '#131822',
-              color: '#94a3b8',
-              border: '1px solid #1e293b',
-              borderRadius: '8px',
-              padding: '8px 10px',
+              background: 'var(--bg-surface-elevated)',
+              color: 'var(--accent-cyan)',
+              border: '1px solid var(--border-strong)',
+              borderRadius: '7px',
+              padding: '7px 10px',
               fontSize: '11px',
               fontWeight: '700',
               cursor: 'pointer',
@@ -204,7 +235,7 @@ export default function PendingExercisesBanner({
             }}
           >
             <span>Mover manual</span>
-            <ArrowRight size={11} />
+            <ArrowRight size={12} />
           </button>
         )}
       </div>

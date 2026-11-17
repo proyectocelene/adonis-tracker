@@ -328,6 +328,9 @@ export default function SetLogger({
           </button>
 
           <select
+            id={`machine-profile-${exercise?.id || 'ex'}`}
+            name={`machine_profile_${exercise?.id || 'ex'}`}
+            aria-label={`Perfil de máquina para ${exercise?.name || 'ejercicio'}`}
             value={machineConfig?.id || (exerciseProfiles[0]?.id) || ''}
             onChange={(e) => handleSelectMachineProfile(e.target.value)}
             style={{
@@ -487,6 +490,9 @@ export default function SetLogger({
                   <input
                     type="text"
                     inputMode="decimal"
+                    id={`warmup-weight-${exercise?.id || 'ex'}-${wSet.id}`}
+                    name={`warmup_weight_${exercise?.id || 'ex'}_${wSet.id}`}
+                    aria-label={`Peso de aproximación ${wSet.label} para ${exercise?.name || 'ejercicio'}`}
                     placeholder={wSet.defaultWeight ? String(wSet.defaultWeight) : "Peso"}
                     value={wVal.weight ?? ''}
                     onChange={(e) => {
@@ -525,6 +531,9 @@ export default function SetLogger({
                   <input
                     type="text"
                     inputMode="numeric"
+                    id={`warmup-reps-${exercise?.id || 'ex'}-${wSet.id}`}
+                    name={`warmup_reps_${exercise?.id || 'ex'}_${wSet.id}`}
+                    aria-label={`Repeticiones de aproximación ${wSet.label} para ${exercise?.name || 'ejercicio'}`}
                     placeholder={wSet.defaultReps ? String(wSet.defaultReps) : "Reps"}
                     value={wVal.reps ?? ''}
                     onChange={(e) => {
@@ -925,6 +934,9 @@ export default function SetLogger({
                   <input
                     type="text"
                     inputMode="decimal"
+                    id={`set-weight-${exercise?.id || 'ex'}-${setNum}`}
+                    name={`weight_${exercise?.id || 'ex'}_${setNum}`}
+                    aria-label={`Peso serie ${setNum} de ${exercise?.name || 'ejercicio'}`}
                     placeholder="Peso"
                     value={setVal.weight === null || setVal.weight === undefined || setVal.weight === 'null' ? '' : setVal.weight}
                     onChange={(e) => {
@@ -976,6 +988,9 @@ export default function SetLogger({
                         type="text"
                         inputMode="numeric"
                         pattern="[0-9]*"
+                        id={`set-repsL-${exercise?.id || 'ex'}-${setNum}`}
+                        name={`repsL_${exercise?.id || 'ex'}_${setNum}`}
+                        aria-label={`Reps lado izquierdo serie ${setNum}`}
                         placeholder="Izq"
                         value={setVal.repsL !== undefined && setVal.repsL !== null && setVal.repsL !== 'null' ? setVal.repsL : ''}
                         onChange={(e) => {
@@ -1017,6 +1032,9 @@ export default function SetLogger({
                         type="text"
                         inputMode="numeric"
                         pattern="[0-9]*"
+                        id={`set-repsR-${exercise?.id || 'ex'}-${setNum}`}
+                        name={`repsR_${exercise?.id || 'ex'}_${setNum}`}
+                        aria-label={`Reps lado derecho serie ${setNum}`}
                         placeholder="Der"
                         value={setVal.repsR !== undefined && setVal.repsR !== null && setVal.repsR !== 'null' ? setVal.repsR : ''}
                         onChange={(e) => {
@@ -1059,6 +1077,9 @@ export default function SetLogger({
                       type="text"
                       inputMode="numeric"
                       pattern="[0-9]*"
+                      id={`set-reps-${exercise?.id || 'ex'}-${setNum}`}
+                      name={`reps_${exercise?.id || 'ex'}_${setNum}`}
+                      aria-label={`Repeticiones serie ${setNum} de ${exercise?.name || 'ejercicio'}`}
                       placeholder="Reps"
                       value={setVal.reps === null || setVal.reps === undefined || setVal.reps === 'null' ? '' : setVal.reps}
                       onChange={(e) => {
@@ -1111,6 +1132,9 @@ export default function SetLogger({
 
                   return (
                     <select
+                      id={`set-rpe-${exercise?.id || 'ex'}-${setNum}`}
+                      name={`rpe_${exercise?.id || 'ex'}_${setNum}`}
+                      aria-label={`RPE serie ${setNum} de ${exercise?.name || 'ejercicio'}`}
                       value={setVal.rpe || '8'}
                       onChange={(e) => handleSetChange(setNum, 'rpe', e.target.value)}
                       className="font-mono-tech"
@@ -1142,12 +1166,14 @@ export default function SetLogger({
                 {/* BOTÓN CHECK SERIE EFECTIVA */}
                 <button
                   type="button"
+                  className="tactile-btn"
                   onClick={() => {
                     if (navigator.vibrate) {
                       try { navigator.vibrate(30); } catch (e) {}
                     }
                     toggleSetComplete(setNum);
                   }}
+                  aria-label={`Serie ${setNum}: ${isDone ? 'Completada (Toca para desmarcar)' : 'Pendiente (Toca para marcar)'}`}
                   title={isDone ? 'Serie completada (Toca para desmarcar)' : 'Marcar serie como completada'}
                   style={{
                     width: '36px',

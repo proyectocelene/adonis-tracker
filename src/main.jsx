@@ -10,6 +10,17 @@ if (import.meta.env.DEV && 'serviceWorker' in navigator) {
   });
 }
 
+// Escuchar cambios de controlador en producción para refrescar automáticamente ante nuevas versiones
+if ('serviceWorker' in navigator) {
+  let refreshing = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!refreshing) {
+      refreshing = true;
+      window.location.reload();
+    }
+  });
+}
+
 // Manejador global para recargas limpias automáticas ante nuevos despliegues de chunks
 window.addEventListener('vite:preloadError', (event) => {
   console.warn('Vite detectó una nueva versión desplegada en el servidor. Recargando con la última versión...');

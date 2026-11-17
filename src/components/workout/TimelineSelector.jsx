@@ -16,18 +16,18 @@ export default function TimelineSelector({
 }) {
   const scrollRef = useRef(null);
 
-  // Mapeo de rutina para cada día de la semana
+  // Mapeo semántico de rutina para cada día de la semana (Anti-Slop: códigos limpios en vez de emojis)
   const getDayMeta = (dateObj) => {
     const day = dateObj.getDay();
     switch (day) {
-      case 1: return { icon: "🔥", label: "Empuje" }; // Lunes
-      case 2: return { icon: "🦵", label: "Piernas" }; // Martes
-      case 3: return { icon: "🦍", label: "Jalón" };  // Miércoles
-      case 4: return { icon: "🔥", label: "Empuje" }; // Jueves
-      case 5: return { icon: "🦵", label: "Piernas" }; // Viernes
-      case 6: return { icon: "💪", label: "Torso" };  // Sábado
-      case 0: return { icon: "💤", label: "Descanso" };// Domingo
-      default: return { icon: "", label: "" };
+      case 1: return { short: "EMP", label: "Empuje 1", color: "var(--accent-blue)" };
+      case 2: return { short: "PIE", label: "Piernas 1", color: "var(--accent-emerald)" };
+      case 3: return { short: "JAL", label: "Jalón", color: "var(--accent-cyan)" };
+      case 4: return { short: "EMP", label: "Empuje 2", color: "var(--accent-blue)" };
+      case 5: return { short: "PIE", label: "Piernas 2", color: "var(--accent-emerald)" };
+      case 6: return { short: "TOR", label: "Torso", color: "var(--accent-amber)" };
+      case 0: return { short: "OFF", label: "Descanso", color: "var(--text-muted)" };
+      default: return { short: "", label: "", color: "var(--text-muted)" };
     }
   };
 
@@ -279,9 +279,9 @@ export default function TimelineSelector({
                   ✓
                 </div>
               ) : item.isRestDay ? (
-                <div style={{ position: 'absolute', top: '1px', right: '2px', fontSize: '8px' }}>💤</div>
+                <div style={{ position: 'absolute', top: '2px', right: '3px', fontSize: '7.5px', fontWeight: '800', color: 'var(--text-muted)' }}>Zz</div>
               ) : item.isMissedDay ? (
-                <div style={{ position: 'absolute', top: '1px', right: '2px', fontSize: '8px' }}>❌</div>
+                <div style={{ position: 'absolute', top: '2px', right: '3px', fontSize: '7.5px', fontWeight: '900', color: 'var(--accent-red)' }}>✕</div>
               ) : item.isToday ? (
                 <div style={{
                   position: 'absolute',
@@ -294,14 +294,21 @@ export default function TimelineSelector({
                 }} />
               ) : null}
 
-              <span style={{ fontSize: '9.5px', textTransform: 'capitalize', fontWeight: '800', opacity: 0.9 }}>
+              <span style={{ fontSize: '9px', textTransform: 'capitalize', fontWeight: '800', opacity: 0.9 }}>
                 {item.dayName}
               </span>
-              <span className="font-mono-tech" style={{ fontSize: '15px', fontWeight: '800', lineHeight: 1.1 }}>
+              <span className="font-mono-tech" style={{ fontSize: '14px', fontWeight: '800', lineHeight: 1.1 }}>
                 {item.dayNumber}
               </span>
-              <span style={{ fontSize: '11px', lineHeight: 1, marginTop: '1px' }} title={item.meta.label}>
-                {item.meta.icon}
+              <span style={{ 
+                fontSize: '8px', 
+                lineHeight: 1, 
+                marginTop: '1px', 
+                fontWeight: '800', 
+                letterSpacing: '0.4px',
+                color: isActive ? '#000000' : item.meta.color 
+              }} title={item.meta.label}>
+                {item.meta.short}
               </span>
             </button>
           );

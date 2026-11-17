@@ -280,6 +280,9 @@ export default function CompactExerciseRow({
                   <div>
                     <input
                       type="number"
+                      id={`compact-weight-${exercise.id || 'ex'}-${setNum}`}
+                      name={`compact_weight_${exercise.id || 'ex'}_${setNum}`}
+                      aria-label={`Peso serie ${setNum} de ${exercise.name || 'ejercicio'}`}
                       placeholder="-"
                       value={setVal.weight === null || setVal.weight === undefined || setVal.weight === 'null' ? '' : setVal.weight}
                       onChange={(e) => {
@@ -297,6 +300,9 @@ export default function CompactExerciseRow({
                   <div>
                     <input
                       type="number"
+                      id={`compact-reps-${exercise.id || 'ex'}-${setNum}`}
+                      name={`compact_reps_${exercise.id || 'ex'}_${setNum}`}
+                      aria-label={`Repeticiones serie ${setNum} de ${exercise.name || 'ejercicio'}`}
                       placeholder="-"
                       value={setVal.reps === null || setVal.reps === undefined || setVal.reps === 'null' ? '' : setVal.reps}
                       onChange={(e) => {
@@ -313,6 +319,9 @@ export default function CompactExerciseRow({
                   {/* RPE Selector */}
                   <div>
                     <select
+                      id={`compact-rpe-${exercise.id || 'ex'}-${setNum}`}
+                      name={`compact_rpe_${exercise.id || 'ex'}_${setNum}`}
+                      aria-label={`RPE serie ${setNum} de ${exercise.name || 'ejercicio'}`}
                       value={setVal.rpe || '8'}
                       onChange={(e) => {
                         onUpdateSet(setNum, { ...setVal, rpe: e.target.value });

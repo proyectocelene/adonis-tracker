@@ -1,5 +1,5 @@
 import React from 'react';
-import { RefreshCw, CheckCircle, Moon, Sun } from 'lucide-react';
+import { RefreshCw, CheckCircle, Moon, Sun, Zap, MoonStar, XCircle } from 'lucide-react';
 import TimelineSelector from './TimelineSelector';
 import { formatSessionDate } from '../../utils/exerciseMatcher';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -204,13 +204,14 @@ export default function WorkoutHeader({
             <button 
               type="button"
               onClick={onOpenRescheduleModal} 
+              className="tactile-btn"
               style={{ 
                 flex: '1 1 100%', 
-                padding: '9px 12px', 
+                padding: '8px 12px', 
                 background: activeOverride ? 'var(--accent-blue)' : 'var(--bg-surface-secondary)', 
                 border: activeOverride ? '1px solid var(--accent-blue)' : '1px solid var(--border-strong)', 
                 borderRadius: '10px', 
-                fontSize: '11.5px', 
+                fontSize: '11px', 
                 fontWeight: '800', 
                 color: activeOverride ? '#000000' : 'var(--accent-blue)', 
                 cursor: 'pointer', 
@@ -220,50 +221,55 @@ export default function WorkoutHeader({
                 gap: '5px'
               }}
             >
-              <span>⚡ {activeOverride ? `Split Activo: ${activeOverride.splitType?.replace('_', ' ').toUpperCase()}` : '¿No puedes entrenar hoy? Ajustar Semana'}</span>
+              <Zap size={13} fill={activeOverride ? '#000000' : 'var(--accent-blue)'} />
+              <span>{activeOverride ? `Split Activo: ${activeOverride.splitType?.replace('_', ' ').toUpperCase()}` : '¿No puedes entrenar hoy? Ajustar Semana'}</span>
             </button>
           )}
           <button 
             type="button" 
             onClick={() => handleSaveSpecialDay('rest')} 
+            className="tactile-btn"
             style={{ 
               flex: 1, 
-              padding: '8px', 
+              padding: '7px 10px', 
               background: 'var(--bg-surface-secondary)', 
               border: '1px solid var(--border-subtle)', 
-              borderRadius: '10px', 
-              fontSize: '11.5px', 
+              borderRadius: '9px', 
+              fontSize: '11px', 
               fontWeight: '700', 
               color: 'var(--text-secondary)', 
               cursor: 'pointer', 
               display: 'flex', 
               justifyContent: 'center', 
               alignItems: 'center', 
-              gap: '4px' 
+              gap: '5px' 
             }}
           >
-            💤 Descanso
+            <MoonStar size={12} color="var(--text-muted)" />
+            <span>Descanso</span>
           </button>
           <button 
             type="button" 
             onClick={() => handleSaveSpecialDay('miss')} 
+            className="tactile-btn"
             style={{ 
               flex: 1, 
-              padding: '8px', 
+              padding: '7px 10px', 
               background: 'var(--accent-red-subtle)', 
               border: '1px solid var(--accent-red)', 
-              borderRadius: '10px', 
-              fontSize: '11.5px', 
+              borderRadius: '9px', 
+              fontSize: '11px', 
               fontWeight: '700', 
               color: 'var(--accent-red)', 
               cursor: 'pointer', 
               display: 'flex', 
               justifyContent: 'center', 
               alignItems: 'center', 
-              gap: '4px' 
+              gap: '5px' 
             }}
           >
-            ❌ Falta
+            <XCircle size={12} color="var(--accent-red)" />
+            <span>Falta</span>
           </button>
         </div>
       )}
