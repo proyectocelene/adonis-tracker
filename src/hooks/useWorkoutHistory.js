@@ -6,6 +6,7 @@ import { get, set } from 'idb-keyval';
 
 export function useWorkoutHistory() {
   const [history, setHistory] = useState([]);
+  const setWorkoutHistory = setHistory;
   const [isLoading, setIsLoading] = useState(true);
   const { currentUser } = useAuth();
   const historyRefState = useRef(history);
