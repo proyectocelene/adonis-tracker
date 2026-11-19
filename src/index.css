@@ -4,6 +4,7 @@
    1. SISTEMA DUAL DE TEMAS: OLED CYBER-CLINICAL (#000000) & CLINICAL LIGHT
 ============================================================================ */
 :root, [data-theme="dark"] {
+  color-scheme: dark;
   /* Fondo Negro Puro OLED (Consumo 0% en píxeles apagados, anti-reflejos de gimnasio) */
   --bg-app: #000000;
   --bg-surface: #000000;
@@ -63,6 +64,7 @@
 }
 
 [data-theme="light"] {
+  color-scheme: light;
   --bg-app: #f1f5f9;
   --bg-surface: #ffffff;
   --bg-surface-secondary: #f8fafc;
@@ -138,7 +140,15 @@ html, body {
   color: var(--text-main);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  color-scheme: dark;
+  overscroll-behavior: none;
+  -webkit-text-size-adjust: 100%;
   transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+[data-theme="light"] html,
+[data-theme="light"] body {
+  color-scheme: light;
 }
 
 body {
@@ -196,20 +206,22 @@ body {
 }
 
 .card-chip.completed {
-  border-left: 4px solid var(--accent-emerald);
+  border-color: rgba(0, 230, 118, 0.4);
+  background: var(--accent-emerald-subtle);
 }
 
 .card-highlight {
-  border-left: 4px solid var(--accent-blue);
+  border-color: rgba(56, 189, 248, 0.35);
+  background: var(--accent-blue-light);
 }
 
 .card-success {
-  border-left: 4px solid var(--accent-emerald);
+  border-color: var(--accent-emerald);
   background: var(--accent-emerald-subtle);
 }
 
 /* ============================================================================
-   4. TIPOGRAFÍA Y TÍTULOS
+   4. TIPOGRAFÍA Y TÍTULOS (JERARQUÍA CLÍNICA IMPECCABLE)
 ============================================================================ */
 h1, h2, h3, h4 {
   font-family: 'Outfit', -apple-system, sans-serif !important;
@@ -220,9 +232,9 @@ h1, h2, h3, h4 {
   white-space: normal !important;
 }
 
-h1 { font-size: 19px; font-weight: 800; line-height: 1.25; }
-h2 { font-size: 16px; font-weight: 700; line-height: 1.3; margin-bottom: 4px; }
-h3 { font-size: 14.5px; font-weight: 700; line-height: 1.3; }
+h1 { font-size: 18px; font-weight: 700; line-height: 1.25; }
+h2 { font-size: 15.5px; font-weight: 600; line-height: 1.3; margin-bottom: 4px; }
+h3 { font-size: 14px; font-weight: 600; line-height: 1.3; }
 
 p {
   color: var(--text-secondary);
@@ -419,8 +431,10 @@ input:focus, select:focus, textarea:focus {
   bottom: 0;
   left: 0;
   width: 100%;
-  height: 62px;
-  background: rgba(0, 0, 0, 0.82);
+  height: calc(62px + env(safe-area-inset-bottom, 0px));
+  min-height: 62px;
+  background: #000000;
+  background: rgba(0, 0, 0, 0.94);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-top: 1px solid var(--border-subtle);
@@ -429,12 +443,12 @@ input:focus, select:focus, textarea:focus {
   align-items: center;
   z-index: 999;
   padding: 0 12px;
-  padding-bottom: max(6px, env(safe-area-inset-bottom));
+  padding-bottom: max(6px, env(safe-area-inset-bottom, 0px));
   box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.6);
 }
 
 [data-theme="light"] .bottom-nav {
-  background: rgba(255, 255, 255, 0.88);
+  background: rgba(255, 255, 255, 0.92);
   box-shadow: 0 -4px 20px rgba(15, 23, 42, 0.08);
 }
 
@@ -451,6 +465,10 @@ input:focus, select:focus, textarea:focus {
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   padding: 6px 20px;
   border-radius: 14px;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  touch-action: manipulation;
 }
 
 .nav-item:active {

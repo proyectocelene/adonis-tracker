@@ -15,15 +15,25 @@ export function ThemeProvider({ children }) {
 
   useEffect(() => {
     try {
+      const isDark = theme === 'dark';
       document.documentElement.setAttribute('data-theme', theme);
       document.body.setAttribute('data-theme', theme);
+      document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
+      document.body.style.colorScheme = isDark ? 'dark' : 'light';
       localStorage.setItem('coachv2_theme', theme);
 
-      // Sincronizar theme-color de la PWA para status bar de iOS y Android
+      // Sincronizar theme-color de la PWA para status bar y navigation bar de iOS y Android
       const metaTheme = document.querySelector('meta[name="theme-color"]');
       if (metaTheme) {
-        metaTheme.setAttribute('content', theme === 'dark' ? '#000000' : '#f1f5f9');
+        metaTheme.setAttribute('content', isDark ? '#000000' : '#ffffff');
       }
+      let metaColorScheme = document.querySelector('meta[name="color-scheme"]');
+      if (!metaColorScheme) {
+        metaColorScheme = document.createElement('meta');
+        metaColorScheme.setAttribute('name', 'color-scheme');
+        document.head.appendChild(metaColorScheme);
+      }
+      metaColorScheme.setAttribute('content', isDark ? 'dark' : 'light');
     } catch {
       // Sincronización fallback
     }

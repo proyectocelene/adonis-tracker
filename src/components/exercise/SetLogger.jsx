@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Flame, Check, Plus, Minus, Trophy, Sparkles, Settings2 } from 'lucide-react';
+import { Flame, Check, Plus, Minus, Trophy, Sparkles, Settings2, Calculator } from 'lucide-react';
 import PlateCalculatorModal from './PlateCalculatorModal';
 import OverloadScienceModal from './OverloadScienceModal';
 import ExerciseFeedbackModal from './ExerciseFeedbackModal';
@@ -518,10 +518,10 @@ export default function SetLogger({
                   <button
                     type="button"
                     onClick={() => setPlateModal({ isOpen: true, setNum: wSet.id, currentWeight: wVal.weight || wSet.defaultWeight || 0 })}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '1px', fontSize: '12px', lineHeight: 1 }}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '2px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                     title="Calculadora de discos y placas"
                   >
-                    🏋️
+                    <Calculator size={13} color="var(--text-muted)" />
                   </button>
                   <span className="font-mono-tech" style={{ fontSize: '9px', color: 'var(--text-muted)', fontWeight: '700' }}>lbs</span>
                 </div>
@@ -1086,12 +1086,13 @@ export default function SetLogger({
                       background: 'none',
                       border: 'none',
                       cursor: 'pointer',
-                      padding: '1px',
-                      fontSize: '12px',
-                      lineHeight: 1
+                      padding: '2px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
                     }}
                   >
-                    🏋️
+                    <Calculator size={13} color="var(--text-muted)" />
                   </button>
                   <span className="font-mono-tech" style={{ fontSize: isUnilateral ? '9px' : '9.5px', color: 'var(--text-muted)', fontWeight: '700', whiteSpace: 'nowrap' }}>
                     {isUnilateral ? `${exercise.defaultUnit || 'lbs'}/l` : (exercise.defaultUnit || 'lbs')}

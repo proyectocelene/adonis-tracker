@@ -159,15 +159,15 @@ export default function BodyCompositionCard({
           border: '1px solid var(--border-subtle)',
           fontSize: '11px'
         }}>
-          <div style={{ color: 'var(--text-muted)', fontWeight: '800', marginBottom: '2px' }}>
-            📅 {d.week === 0 ? 'Punto de Partida (Hoy)' : `Semana ${d.week}`} • {d.phase}
+          <div style={{ color: 'var(--text-muted)', fontWeight: '600', marginBottom: '2px' }}>
+            {d.week === 0 ? 'Punto de Partida (Hoy)' : `Semana ${d.week}`} • {d.phase}
           </div>
-          <div className="font-mono-tech" style={{ fontSize: '18px', fontWeight: '900', color: 'var(--accent-blue)' }}>
+          <div className="font-mono-tech" style={{ fontSize: '18px', fontWeight: '700', color: 'var(--accent-blue)' }}>
             {d.peso} kg
           </div>
           {dropFromStart > 0 && (
-            <div style={{ color: 'var(--accent-emerald)', fontWeight: '800', marginTop: '2px' }}>
-              🔥 -{dropFromStart} kg grasa pura acumulada
+            <div style={{ color: 'var(--accent-emerald)', fontWeight: '600', marginTop: '2px' }}>
+              -{dropFromStart} kg grasa pura acumulada
             </div>
           )}
           <div style={{ color: 'var(--text-muted)', fontSize: '10px', marginTop: '4px' }}>
@@ -207,34 +207,35 @@ export default function BodyCompositionCard({
             <Scale size={20} />
           </div>
           <div>
-            <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '900', color: 'var(--text-main)' }}>
-              Báscula Inteligente & Bioimpedancia
+            <h3 style={{ margin: 0, fontSize: '15.5px', fontWeight: '700', color: 'var(--text-main)' }}>
+              Bioimpedancia & Composición Corporal
             </h3>
-            <span style={{ fontSize: '11px', color: '#64748b', fontWeight: '700' }}>
-              Análisis completo de 18 métricas fisiológicas
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: '500' }}>
+              18 métricas fisiológicas y seguimiento metabólico
             </span>
           </div>
         </div>
 
         <button
           type="button"
+          className="tactile-btn"
           onClick={onOpenScaleModal}
           style={{
-            background: 'linear-gradient(135deg, #0066ff 0%, #0052cc 100%)',
+            background: 'var(--accent-blue)',
             color: '#ffffff',
             border: 'none',
             borderRadius: '12px',
             padding: '7px 14px',
-            fontSize: '12px',
-            fontWeight: '900',
+            fontSize: '11.5px',
+            fontWeight: '600',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
             gap: '6px',
-            boxShadow: '0 4px 10px rgba(0, 102, 255, 0.25)'
+            boxShadow: '0 2px 8px rgba(0, 102, 255, 0.25)'
           }}
         >
-          <Sparkles size={14} /> Cargar / Editar Báscula
+          <Sparkles size={13} /> Cargar / Editar Báscula
         </button>
       </div>
 
@@ -244,15 +245,15 @@ export default function BodyCompositionCard({
         {/* GRASA CORPORAL */}
         <div style={{ background: 'var(--bg-card)', padding: '10px 12px', borderRadius: '16px', border: '1px solid var(--border-subtle)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
-            <span style={{ fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+            <span style={{ fontSize: '10px', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
               Grasa Corporal
             </span>
             <Flame size={14} color="#f97316" />
           </div>
-          <div style={{ fontSize: '18px', fontWeight: '900', color: 'var(--text-main)' }}>
+          <div className="font-mono-tech" style={{ fontSize: '18px', fontWeight: '700', color: 'var(--text-main)' }}>
             {comp.bodyFatPct}%
           </div>
-          <div style={{ fontSize: '10.5px', color: 'var(--text-secondary)', fontWeight: '700' }}>
+          <div style={{ fontSize: '10.5px', color: 'var(--text-secondary)', fontWeight: '500' }}>
             {comp.fatMassKg} kg grasa • Meta: {physiqueGoal?.targetFatPct || 12}%
           </div>
         </div>
@@ -260,15 +261,15 @@ export default function BodyCompositionCard({
         {/* MÚSCULO ESQUELÉTICO */}
         <div style={{ background: 'var(--bg-card)', padding: '10px 12px', borderRadius: '16px', border: '1px solid var(--border-subtle)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
-            <span style={{ fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+            <span style={{ fontSize: '10px', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
               Músculo Esquelético
             </span>
             <Dumbbell size={14} color="var(--accent-blue)" />
           </div>
-          <div style={{ fontSize: '18px', fontWeight: '900', color: 'var(--text-main)' }}>
+          <div className="font-mono-tech" style={{ fontSize: '18px', fontWeight: '700', color: 'var(--text-main)' }}>
             {comp.skeletalMusclePct}%
           </div>
-          <div style={{ fontSize: '10.5px', color: 'var(--text-secondary)', fontWeight: '700' }}>
+          <div style={{ fontSize: '10.5px', color: 'var(--text-secondary)', fontWeight: '500' }}>
             {comp.skeletalMuscleKg} kg (Magra: {comp.fatFreeMassKg} kg)
           </div>
         </div>
@@ -277,27 +278,27 @@ export default function BodyCompositionCard({
         {comp.hasTapeMeasurements ? (
           <div style={{ background: 'var(--accent-blue-light)', padding: '10px 12px', borderRadius: '16px', border: '1px solid var(--accent-blue)' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
-              <span style={{ fontSize: '10px', fontWeight: '900', color: 'var(--accent-blue)', textTransform: 'uppercase' }}>
+              <span style={{ fontSize: '10px', fontWeight: '700', color: 'var(--accent-blue)', textTransform: 'uppercase' }}>
                 V-Taper Adonis
               </span>
               <Ruler size={14} color="var(--accent-blue)" />
             </div>
-            <div style={{ fontSize: '18px', fontWeight: '900', color: 'var(--text-main)' }}>
-              {comp.adonisRatio} <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>/ 1.618</span>
+            <div className="font-mono-tech" style={{ fontSize: '18px', fontWeight: '700', color: 'var(--text-main)' }}>
+              {comp.adonisRatio} <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: '500' }}>/ 1.618</span>
             </div>
-            <div style={{ fontSize: '10.5px', color: 'var(--accent-blue)', fontWeight: '800' }}>
+            <div style={{ fontSize: '10.5px', color: 'var(--accent-blue)', fontWeight: '600' }}>
               Hombro {comp.shouldersCm}cm • Cintura {comp.waistCm}cm
             </div>
           </div>
         ) : (
           <div style={{ background: 'var(--bg-card)', padding: '10px 12px', borderRadius: '16px', border: '1px dashed var(--border-subtle)' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
-              <span style={{ fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+              <span style={{ fontSize: '10px', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
                 V-Taper Adonis
               </span>
               <Ruler size={14} color="var(--text-muted)" />
             </div>
-            <div style={{ fontSize: '14px', fontWeight: '900', color: 'var(--text-muted)' }}>
+            <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-muted)' }}>
               Sin cinta métrica
             </div>
             <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
@@ -309,15 +310,15 @@ export default function BodyCompositionCard({
         {/* GRASA VISCERAL */}
         <div style={{ background: 'var(--bg-card)', padding: '10px 12px', borderRadius: '16px', border: '1px solid var(--border-subtle)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
-            <span style={{ fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+            <span style={{ fontSize: '10px', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
               Grasa Visceral
             </span>
             <Heart size={14} color="#ef4444" />
           </div>
-          <div style={{ fontSize: '18px', fontWeight: '900', color: 'var(--text-main)' }}>
+          <div className="font-mono-tech" style={{ fontSize: '18px', fontWeight: '700', color: 'var(--text-main)' }}>
             Nivel {comp.visceralFat}
           </div>
-          <div style={{ fontSize: '10.5px', color: visceralInfo.color, fontWeight: '800' }}>
+          <div style={{ fontSize: '10.5px', color: visceralInfo.color, fontWeight: '600' }}>
             {visceralInfo.label} (Salud Órganos)
           </div>
         </div>
@@ -325,31 +326,31 @@ export default function BodyCompositionCard({
         {/* EDAD METABÓLICA */}
         <div style={{ background: 'var(--bg-card)', padding: '10px 12px', borderRadius: '16px', border: '1px solid var(--border-subtle)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
-            <span style={{ fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+            <span style={{ fontSize: '10px', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
               Edad Metabólica
             </span>
             <Activity size={14} color="#a855f7" />
           </div>
-          <div style={{ fontSize: '18px', fontWeight: '900', color: 'var(--text-main)' }}>
+          <div className="font-mono-tech" style={{ fontSize: '18px', fontWeight: '700', color: 'var(--text-main)' }}>
             {comp.metabolicAge} años
           </div>
-          <div style={{ fontSize: '10.5px', color: comp.metabolicAge <= comp.realAge ? 'var(--accent-emerald)' : 'var(--accent-amber)', fontWeight: '800' }}>
-            {comp.metabolicAge <= comp.realAge ? `🔥 ${comp.realAge - comp.metabolicAge} años más joven` : `Real: ${comp.realAge} años (+${comp.metabolicAge - comp.realAge})`}
+          <div style={{ fontSize: '10.5px', color: comp.metabolicAge <= comp.realAge ? 'var(--accent-emerald)' : 'var(--accent-amber)', fontWeight: '600' }}>
+            {comp.metabolicAge <= comp.realAge ? `${comp.realAge - comp.metabolicAge} años más joven` : `Real: ${comp.realAge} años (+${comp.metabolicAge - comp.realAge})`}
           </div>
         </div>
 
         {/* METABOLISMO BASAL (BMR) */}
         <div style={{ background: 'var(--bg-card)', padding: '10px 12px', borderRadius: '16px', border: '1px solid var(--border-subtle)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
-            <span style={{ fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+            <span style={{ fontSize: '10px', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
               Metabolismo Basal
             </span>
             <Flame size={14} color="#eab308" />
           </div>
-          <div style={{ fontSize: '18px', fontWeight: '900', color: 'var(--text-main)' }}>
-            {comp.bmr} <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>kcal</span>
+          <div className="font-mono-tech" style={{ fontSize: '18px', fontWeight: '700', color: 'var(--text-main)' }}>
+            {comp.bmr} <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: '500' }}>kcal</span>
           </div>
-          <div style={{ fontSize: '10.5px', color: 'var(--text-secondary)', fontWeight: '700' }}>
+          <div style={{ fontSize: '10.5px', color: 'var(--text-secondary)', fontWeight: '500' }}>
             Katch-McArdle • Agua: {comp.waterPct}%
           </div>
         </div>
@@ -385,15 +386,15 @@ export default function BodyCompositionCard({
             <Target size={18} />
           </div>
           <div>
-            <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: '800', textTransform: 'uppercase' }}>
+            <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: '600' }}>
               Fase 1: Reducción Visceral & Definición Prioritaria
             </div>
-            <div style={{ fontSize: '13px', fontWeight: '900', color: 'var(--text-main)', marginTop: '1px' }}>
-              🎯 Meta: {projection.targetWeightKg} kg al {projection.targetFatPct}% grasa • Faltan: <span style={{ color: 'var(--accent-blue)' }}>~{projection.phase1Weeks || projection.projectedWeeks} semanas</span>
+            <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-main)', marginTop: '1px' }}>
+              Meta: {projection.targetWeightKg} kg al {projection.targetFatPct}% grasa • Faltan: <span style={{ color: 'var(--accent-blue)' }}>~{projection.phase1Weeks || projection.projectedWeeks} semanas</span>
             </div>
             <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '2px' }}>
-              {projection.fatToLoseKg > 0 ? `🔥 -${projection.fatToLoseKg} kg grasa ` : ''}
-              {comp.visceralFat >= 9 ? `• ⚠️ Reducción visceral (de nivel ${comp.visceralFat} a < 6) ` : ''}
+              {projection.fatToLoseKg > 0 ? `-${projection.fatToLoseKg} kg grasa ` : ''}
+              {comp.visceralFat >= 9 ? `• Reducción visceral (nivel ${comp.visceralFat} ➔ < 6) ` : ''}
               • Ritmo seguro (~{projection.weeklyFatLossRateKg} kg/sem)
             </div>
           </div>
@@ -402,38 +403,40 @@ export default function BodyCompositionCard({
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <button
             type="button"
+            className="tactile-btn"
             onClick={() => setShowTimeline(!showTimeline)}
             style={{
-              background: showTimeline ? 'rgba(56, 189, 248, 0.25)' : 'rgba(255,255,255,0.12)',
-              border: '1px solid ' + (showTimeline ? '#38bdf8' : 'rgba(255,255,255,0.2)'),
-              color: showTimeline ? '#38bdf8' : '#ffffff',
+              background: showTimeline ? 'rgba(56, 189, 248, 0.2)' : 'var(--bg-card)',
+              border: '1px solid ' + (showTimeline ? 'var(--accent-blue)' : 'var(--border-subtle)'),
+              color: showTimeline ? 'var(--accent-blue)' : 'var(--text-main)',
               borderRadius: '10px',
               padding: '6px 12px',
               fontSize: '11px',
-              fontWeight: '900',
+              fontWeight: '600',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               gap: '5px',
-              transition: 'all 0.2s ease'
+              transition: 'all 0.15s ease'
             }}
           >
             <Calendar size={13} />
-            {showTimeline ? 'Ocultar Hoja de Ruta' : '📅 Ver Hoja de Ruta & Hitos'}
+            {showTimeline ? 'Ocultar Hoja de Ruta' : 'Ver Hoja de Ruta & Hitos'}
             {showTimeline ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
           </button>
 
           <button
             type="button"
+            className="tactile-btn"
             onClick={onOpenScaleModal}
             style={{
-              background: 'rgba(255,255,255,0.12)',
-              border: '1px solid rgba(255,255,255,0.2)',
-              color: '#ffffff',
+              background: 'var(--bg-card)',
+              border: '1px solid var(--border-subtle)',
+              color: 'var(--text-main)',
               borderRadius: '10px',
               padding: '6px 12px',
               fontSize: '11px',
-              fontWeight: '900',
+              fontWeight: '600',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
@@ -541,11 +544,11 @@ export default function BodyCompositionCard({
                     strokeDasharray="4 4" 
                     strokeWidth={2}
                     label={{
-                      value: `🎯 Adonis: ${finalTargetW}kg`,
+                      value: `Meta: ${finalTargetW}kg`,
                       position: 'insideBottomRight',
                       fill: '#059669',
                       fontSize: 10,
-                      fontWeight: 800
+                      fontWeight: 700
                     }}
                   />
                   <ReferenceLine 

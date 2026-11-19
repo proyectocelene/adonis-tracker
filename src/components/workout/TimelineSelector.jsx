@@ -108,17 +108,17 @@ export default function TimelineSelector({
               Mesociclo • S{currentWeek}
             </span>
             {activeOverride && (
-              <span style={{ fontSize: '9.5px', background: 'var(--accent-blue-light)', color: 'var(--accent-blue)', padding: '1px 6px', borderRadius: '6px', fontWeight: '900', border: '1px solid var(--border-strong)' }}>
-                ⚡ {activeOverride.splitType?.replace('_', ' ').toUpperCase()}
+              <span style={{ fontSize: '9.5px', background: 'var(--accent-blue-light)', color: 'var(--accent-blue)', padding: '1px 6px', borderRadius: '6px', fontWeight: '700', border: '1px solid rgba(56, 189, 248, 0.3)' }}>
+                {activeOverride.splitType?.replace('_', ' ').toUpperCase()}
               </span>
             )}
             {isDeloadMode && (
-              <span style={{ fontSize: '9.5px', background: 'var(--accent-emerald-subtle)', color: 'var(--accent-emerald)', border: '1px solid var(--accent-emerald)', padding: '1px 6px', borderRadius: '6px', fontWeight: '800' }}>
-                🧘 Deload
+              <span style={{ fontSize: '9.5px', background: 'var(--accent-emerald-subtle)', color: 'var(--accent-emerald)', border: '1px solid rgba(0, 230, 118, 0.3)', padding: '1px 6px', borderRadius: '6px', fontWeight: '700' }}>
+                Deload
               </span>
             )}
           </div>
-          <div style={{ fontSize: '10px', color: isDeloadMode ? 'var(--accent-emerald)' : 'var(--text-muted)', fontWeight: '600', marginTop: '1px' }}>
+          <div style={{ fontSize: '10px', color: isDeloadMode ? 'var(--accent-emerald)' : 'var(--text-muted)', fontWeight: '500', marginTop: '1px' }}>
             {isDeloadMode 
               ? 'Descarga: Vol 50%, Cargas 80%, RIR 3-4' 
               : (currentWeek === 1 ? 'Calibración & Línea Base' : `Sobrecarga Progresiva (Semana ${currentWeek})`)}
@@ -130,6 +130,7 @@ export default function TimelineSelector({
             <button
               type="button"
               onClick={onToggleDeload}
+              className="tactile-btn"
               title={isDeloadMode ? "Desactivar descarga" : (fatigueStatus?.reason || "Activar Deload")}
               style={{
                 background: isDeloadMode 
@@ -146,13 +147,13 @@ export default function TimelineSelector({
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '3px',
+                gap: '4px',
                 fontSize: '10.5px',
-                fontWeight: '800',
+                fontWeight: '700',
                 transition: 'all 0.2s ease'
               }}
             >
-              <span>{isDeloadMode ? '🧘 Salir Deload' : (isDeloadGlow ? '⚠️ Deload' : '🧘 Deload')}</span>
+              <span>{isDeloadMode ? 'Salir Deload' : (isDeloadGlow ? 'Deload sugerido' : 'Deload')}</span>
             </button>
           )}
 

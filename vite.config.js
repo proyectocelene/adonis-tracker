@@ -33,9 +33,10 @@ export default defineConfig({
         name: 'COACH V2 - Control Científico',
         short_name: 'COACH V2',
         description: 'Aplicación de registro científico del entrenamiento y esfuerzo percibido',
-        theme_color: '#ffffff',
-        background_color: '#f8fafc',
+        theme_color: '#000000',
+        background_color: '#000000',
         display: 'standalone',
+        orientation: 'portrait',
         icons: [
           {
             src: 'pwa-192x192.png',

@@ -606,14 +606,34 @@ export default function WorkoutDay() {
 
   let todayWorkoutData = {};
   const dateDraft = currentSessions?.[`draft_${selectedDateKey}`];
-  if (historySession && historySession.exercises && Object.keys(historySession.exercises).length > 0) {
-    todayWorkoutData = historySession.exercises;
-    // Si el borrador local tiene más datos recientes o series en curso, fusionar sin pérdida
-    if (dateDraft && typeof dateDraft === 'object' && Object.keys(dateDraft).length > 0) {
-      todayWorkoutData = { ...dateDraft, ...todayWorkoutData };
-    }
+  const histExercises = (historySession && historySession.exercises && typeof historySession.exercises === 'object') ? historySession.exercises : null;
+
+  if (histExercises && dateDraft && typeof dateDraft === 'object') {
+    // Fusión profunda segura: combinar ejercicios y series, dando precedencia a los datos más recientes en borrador (dateDraft)
+    todayWorkoutData = { ...histExercises };
+    Object.keys(dateDraft).forEach(exId => {
+      if (!todayWorkoutData[exId]) {
+        todayWorkoutData[exId] = dateDraft[exId];
+      } else if (typeof dateDraft[exId] === 'object' && dateDraft[exId] !== null) {
+        todayWorkoutData[exId] = {
+          ...todayWorkoutData[exId],
+          ...dateDraft[exId]
+        };
+        // También fusionar series individuales para no perder campos
+        Object.keys(dateDraft[exId]).forEach(setKey => {
+          if (typeof dateDraft[exId][setKey] === 'object' && dateDraft[exId][setKey] !== null) {
+            todayWorkoutData[exId][setKey] = {
+              ...(todayWorkoutData[exId][setKey] || {}),
+              ...dateDraft[exId][setKey]
+            };
+          }
+        });
+      }
+    });
   } else if (dateDraft && Object.keys(dateDraft).length > 0) {
     todayWorkoutData = dateDraft;
+  } else if (histExercises && Object.keys(histExercises).length > 0) {
+    todayWorkoutData = histExercises;
   } else {
     // Todo día no entrenado sin borrador inicia 100% en blanco
     todayWorkoutData = {};
@@ -634,8 +654,23 @@ export default function WorkoutDay() {
   const updateSessionDataForCurrentDay = (updater) => {
     // Si estamos modificando una sesión que ya existe en el historial oficial para esta fecha:
     if (historySession) {
-      const currentExercises = historySession.exercises || {};
-      const newExercises = updater(currentExercises);
+      // Tomar como base la fusión activa (historial + borrador) para que ninguna serie en edición se pierda
+      const baseExercises = {
+        ...(historySession.exercises || {}),
+        ...(dateDraft || {})
+      };
+      if (dateDraft && historySession.exercises) {
+        Object.keys(dateDraft).forEach(exId => {
+          if (historySession.exercises[exId] && typeof dateDraft[exId] === 'object') {
+            baseExercises[exId] = {
+              ...historySession.exercises[exId],
+              ...dateDraft[exId]
+            };
+          }
+        });
+      }
+
+      const newExercises = updater(baseExercises);
 
       let recalculatedVol = 0;
       let recSets = 0;
@@ -677,13 +712,14 @@ export default function WorkoutDay() {
         lastModified: Date.now()
       };
 
-      saveSession(updated);
-      // Redundancia defensiva local: mantener copia en draft_ para evitar desincronizaciones en segundo plano
+      // Redundancia defensiva local INMEDIATA: mantener copia en draft_ para evitar desincronizaciones en segundo plano
       setCurrentSessions(prev => ({
         ...prev,
         [`draft_${selectedDateKey}`]: newExercises,
         [`lastModified_${selectedDateKey}`]: Date.now()
       }));
+
+      saveSession(updated);
       return;
     }
 

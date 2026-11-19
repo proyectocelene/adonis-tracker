@@ -62,13 +62,13 @@ export default function WorkoutHeader({
         activeOverride={activeOverride}
       />
 
-      {/* CABECERA COMPACTA DEL DÍA + CONMUTADOR DE TEMA */}
+      {/* CABECERA COMPACTA DEL DÍA + CONMUTADOR DE TEMA (CRAFT FLOOR) */}
       <div 
         className="card" 
         style={{ 
-          padding: '10px 12px', 
+          padding: '10px 14px', 
           marginBottom: '10px',
-          borderLeft: '4px solid var(--accent-blue)',
+          border: '1px solid var(--border-subtle)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
@@ -80,7 +80,7 @@ export default function WorkoutHeader({
             <span style={{ 
               fontSize: '10.5px', 
               color: 'var(--accent-blue)', 
-              fontWeight: '900', 
+              fontWeight: '700', 
               textTransform: 'uppercase', 
               letterSpacing: '0.4px' 
             }}>
@@ -90,7 +90,7 @@ export default function WorkoutHeader({
               <span style={{ 
                 fontSize: '9.5px', 
                 color: 'var(--text-muted)', 
-                fontWeight: '700', 
+                fontWeight: '600', 
                 background: 'var(--bg-surface-secondary)', 
                 border: '1px solid var(--border-subtle)',
                 padding: '1px 6px', 
@@ -102,9 +102,9 @@ export default function WorkoutHeader({
             <span style={{
               fontSize: '9px',
               color: 'var(--accent-emerald)',
-              fontWeight: '800',
+              fontWeight: '700',
               background: 'var(--accent-emerald-subtle)',
-              border: '1px solid var(--accent-emerald)',
+              border: '1px solid rgba(0, 230, 118, 0.25)',
               padding: '1px 6px',
               borderRadius: '6px',
               display: 'inline-flex',
@@ -115,7 +115,7 @@ export default function WorkoutHeader({
               Auto-guardado 0ms ✓
             </span>
           </div>
-          <h2 style={{ margin: '2px 0 0 0', fontSize: '16px', fontWeight: '900', color: 'var(--text-main)', lineHeight: '1.25' }}>
+          <h2 style={{ margin: '2px 0 0 0', fontSize: '15.5px', fontWeight: '700', color: 'var(--text-main)', lineHeight: '1.25' }}>
             {((historySession && historySession.dayName) || currentDay.name || '').includes(':') 
               ? ((historySession && historySession.dayName) || currentDay.name || '').split(':')[1] 
               : ((historySession && historySession.dayName) || currentDay.name || '')}
@@ -128,6 +128,7 @@ export default function WorkoutHeader({
             <button
               type="button"
               onClick={handleResetToOfficialRoutine}
+              className="tactile-btn"
               title="Restablecer día a la rutina oficial"
               style={{
                 background: 'var(--bg-surface-secondary)',
@@ -136,15 +137,15 @@ export default function WorkoutHeader({
                 padding: '5px 8px',
                 borderRadius: '8px',
                 fontSize: '10.5px',
-                fontWeight: '800',
+                fontWeight: '700',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '3px',
+                gap: '4px',
                 transition: 'all 0.2s'
               }}
             >
-              <RefreshCw size={11} /> ↺ Oficial
+              <RefreshCw size={11} /> Oficial
             </button>
           )}
 
@@ -175,21 +176,20 @@ export default function WorkoutHeader({
       {historySession && (
         <div style={{ 
           background: 'var(--bg-surface-secondary)', 
-          border: '1px solid var(--accent-emerald)', 
+          border: '1px solid rgba(0, 230, 118, 0.3)', 
           padding: '10px 12px', 
           borderRadius: '12px', 
           marginBottom: '10px', 
-          color: 'var(--accent-emerald)', 
           display: 'flex', 
           alignItems: 'center', 
           justifyContent: 'space-between',
           gap: '8px'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <CheckCircle size={16} color="var(--accent-emerald)" />
+            <CheckCircle size={15} color="var(--accent-emerald)" />
             <div>
-              <strong style={{ display: 'block', fontSize: '12px', color: 'var(--text-main)' }}>
-                💾 Sesión Guardada del {selectedDateKey} ({historySession.dayName || baseDay.name})
+              <strong style={{ display: 'block', fontSize: '12px', color: 'var(--text-main)', fontWeight: '700' }}>
+                Sesión guardada del {selectedDateKey} ({historySession.dayName || baseDay.name})
               </strong>
               <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
                 {historySession.completedSets || completedSets} series registradas • {historySession.volume || volume} lbs-reps.

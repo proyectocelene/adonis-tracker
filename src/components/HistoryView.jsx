@@ -425,14 +425,11 @@ export default function HistoryView() {
   return (
     <div className="container" style={{ paddingBottom: '70px' }}>
       
-      {/* Cabecera del Laboratorio Científico */}
-      <div className="card" style={{ padding: '12px 14px', marginBottom: '10px', borderLeft: '4px solid var(--accent-blue)' }}>
+      {/* Cabecera del Laboratorio Científico (Craft Floor) */}
+      <div className="card" style={{ padding: '12px 14px', marginBottom: '10px', border: '1px solid var(--border-subtle)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
           <div>
-            <span style={{ fontSize: '10px', color: 'var(--accent-blue)', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.4px' }}>
-              Analítica & Progresión
-            </span>
-            <h1 style={{ marginTop: '2px', fontSize: '18px', fontWeight: '800', color: 'var(--text-main)' }}>
+            <h1 style={{ margin: 0, fontSize: '17px', fontWeight: '700', color: 'var(--text-main)' }}>
               Laboratorio de Progreso
             </h1>
           </div>
@@ -440,14 +437,15 @@ export default function HistoryView() {
           <button 
             type="button"
             onClick={() => setShowConfigModal(true)}
+            className="tactile-btn"
             style={{ 
               background: 'var(--bg-surface-secondary)', 
               color: 'var(--text-main)', 
               border: '1px solid var(--border-strong)', 
-              padding: '7px 12px', 
+              padding: '6px 11px', 
               borderRadius: '8px', 
               fontSize: '11px', 
-              fontWeight: '800', 
+              fontWeight: '600', 
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
@@ -461,25 +459,26 @@ export default function HistoryView() {
       </div>
 
       {/* SELECTOR DE VISTA PRINCIPAL (PROGRESIÓN DE RUTINA VS GRÁFICAS VS BITÁCORA) */}
-      <div style={{ display: 'flex', background: 'var(--bg-surface-secondary)', padding: '3px', borderRadius: '12px', marginBottom: '12px', border: '1px solid var(--border-subtle)' }}>
+      <div style={{ display: 'flex', background: 'var(--bg-surface-secondary)', padding: '3px', borderRadius: '12px', marginBottom: '12px', border: '1px solid var(--border-subtle)', gap: '3px' }}>
         <button
           type="button"
           onClick={() => setMainViewMode('routine_progression')}
+          className="tactile-btn"
           style={{
             flex: 1,
-            padding: '8px 4px',
-            borderRadius: '10px',
-            background: mainViewMode === 'routine_progression' ? 'var(--accent-blue)' : 'transparent',
-            color: mainViewMode === 'routine_progression' ? '#ffffff' : 'var(--text-muted)',
-            fontWeight: '900',
+            padding: '7px 4px',
+            borderRadius: '9px',
+            background: mainViewMode === 'routine_progression' ? 'var(--bg-surface-elevated)' : 'transparent',
+            color: mainViewMode === 'routine_progression' ? 'var(--accent-blue)' : 'var(--text-muted)',
+            fontWeight: mainViewMode === 'routine_progression' ? '700' : '600',
             fontSize: '11.5px',
             cursor: 'pointer',
             border: 'none',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: '4px',
-            boxShadow: mainViewMode === 'routine_progression' ? '0 2px 8px rgba(0, 102, 255, 0.3)' : 'none',
+            gap: '5px',
+            boxShadow: mainViewMode === 'routine_progression' ? 'var(--shadow-ios-sm)' : 'none',
             transition: 'all 0.15s ease'
           }}
         >
@@ -489,21 +488,22 @@ export default function HistoryView() {
         <button
           type="button"
           onClick={() => setMainViewMode('charts')}
+          className="tactile-btn"
           style={{
             flex: 1,
-            padding: '8px 4px',
-            borderRadius: '10px',
-            background: mainViewMode === 'charts' ? 'var(--accent-blue)' : 'transparent',
-            color: mainViewMode === 'charts' ? '#ffffff' : 'var(--text-muted)',
-            fontWeight: '900',
+            padding: '7px 4px',
+            borderRadius: '9px',
+            background: mainViewMode === 'charts' ? 'var(--bg-surface-elevated)' : 'transparent',
+            color: mainViewMode === 'charts' ? 'var(--accent-blue)' : 'var(--text-muted)',
+            fontWeight: mainViewMode === 'charts' ? '700' : '600',
             fontSize: '11.5px',
             cursor: 'pointer',
             border: 'none',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: '4px',
-            boxShadow: mainViewMode === 'charts' ? '0 2px 8px rgba(0, 102, 255, 0.3)' : 'none',
+            gap: '5px',
+            boxShadow: mainViewMode === 'charts' ? 'var(--shadow-ios-sm)' : 'none',
             transition: 'all 0.15s ease'
           }}
         >
@@ -513,25 +513,26 @@ export default function HistoryView() {
         <button
           type="button"
           onClick={() => setMainViewMode('sessions')}
+          className="tactile-btn"
           style={{
             flex: 1,
-            padding: '8px 4px',
-            borderRadius: '10px',
-            background: mainViewMode === 'sessions' ? 'var(--accent-blue)' : 'transparent',
-            color: mainViewMode === 'sessions' ? '#ffffff' : 'var(--text-muted)',
-            fontWeight: '900',
+            padding: '7px 4px',
+            borderRadius: '9px',
+            background: mainViewMode === 'sessions' ? 'var(--bg-surface-elevated)' : 'transparent',
+            color: mainViewMode === 'sessions' ? 'var(--accent-blue)' : 'var(--text-muted)',
+            fontWeight: mainViewMode === 'sessions' ? '700' : '600',
             fontSize: '11.5px',
             cursor: 'pointer',
             border: 'none',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: '4px',
-            boxShadow: mainViewMode === 'sessions' ? '0 2px 8px rgba(0, 102, 255, 0.3)' : 'none',
+            gap: '5px',
+            boxShadow: mainViewMode === 'sessions' ? 'var(--shadow-ios-sm)' : 'none',
             transition: 'all 0.15s ease'
           }}
         >
-          <Calendar size={13} /> Bitácora ({totalSessions})
+          <Calendar size={13} /> Bitácora ({workoutHistory?.length || 0})
         </button>
       </div>
 
