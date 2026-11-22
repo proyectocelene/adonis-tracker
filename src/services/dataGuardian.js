@@ -98,7 +98,7 @@ export function validateDatasetChange(datasetKey, prevValue, newValue) {
 /**
  * Emite un evento en window para que la UI pueda notificar de forma no intrusiva al atleta
  */
-function notifyGuardianAlert(datasetKey, prevCount, newCount, reason) {
+export function notifyGuardianAlert(datasetKey, prevCount, newCount, reason) {
   if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function') {
     try {
       window.dispatchEvent(new CustomEvent('adonis_guardian_blocked', {

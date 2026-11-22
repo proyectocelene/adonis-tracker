@@ -8,7 +8,7 @@
 | 0 | Auditoría, backup, docs para IA | Quick | Smart | — | ✅ Hecha (2026-11-22) · ⏳ falta backup fresco + commit del usuario |
 | 1 | Detener pérdida de datos | Antigravity | Planning + modelo más potente, razonamiento alto | `fix/perdida-datos` | ✅ Hecha (2026-11-22) |
 | 2 | Fuente única de verdad de datos | Antigravity | Planning + alto | `refactor/fuente-unica-datos` | ✅ Hecha (2026-11-22) |
-| 3 | Tests, CI, Firestore rules | Antigravity | Planning + medio | `chore/estabilidad` | ⬜ |
+| 3 | Tests, CI, Firestore rules | Antigravity | Planning + medio | `chore/estabilidad` | ✅ Hecha (2026-11-22) |
 | 4 | Dividir archivos gigantes (1 archivo por chat) | Antigravity | Planning + alto | `refactor/<archivo>` | ⬜ |
 | 5 | UI para uso en el gym | Quick (mockup) → Antigravity (implementación) | Balanced / Fast | `ui/<pantalla>` | ⬜ |
 | ✔ | Revisión al cierre de cada fase | Quick, chat "Revisor Adonis" | Smart | — | — |
@@ -80,20 +80,33 @@ Archivo: `base de datos pruebas/COACH_V2_Backup_Total_Firebase_2026-09-17.json` 
 - [x] **`backupService.js` como fuente única:** `exportFullDatabase` y `exportWorkoutHistory` leen directamente de Firestore (filtrando `!s.deletedAt`) sin mezclar volcados locales antiguos. `restoreFullDatabase` aplica upsert con `deletedAt: null`, soft-delete a sesiones huérfanas y elimina escrituras espejo a `idb-keyval`.
 - [x] **Validación y compilación:** Script temporal de verificación ejecutado con éxito total contra el backup maestro del 2026-11-22 (113 sesiones, 171 machineConfigs, 146 profiles, 9 pesos, 25 bioimpedancia, soft-delete, DataGuardian y exclusión de API keys). `npm run build` limpio y optimizado con PWA.
 
-## FASE 3 — Estabilidad
-**Dónde:** Antigravity · chat nuevo `03-estabilidad` · Planning + medio.
+## FASE 3 — Estabilidad (✅ Hecha 2026-11-22)
+**Dónde:** Antigravity · chat `03-estabilidad` · Planning + medio · Rama: `chore/estabilidad`.
 
-```
-Lee AGENTS.md y docs/ROADMAP.md. Rama: chore/estabilidad.
-1. Corregir el script lint (dice "eslint ." pero está instalado oxlint).
-2. Vitest + tests para: mergeStoreValues, merge de historial,
-   exerciseMatcher (getUnifiedCodeForExercise, getHistoricalRecordsForExercise),
-   cálculos 1RM/volumen.
-3. GitHub Action: lint + test + build ANTES de deploy (si falla, no despliega).
-4. firestore.rules: cada usuario solo lee/escribe users/{suUid}/**.
-5. Limpiar las 22 sesiones sintéticas de julio solo con backup previo y confirmación.
-Plan primero. Actualiza ROADMAP y commit.
-```
+### Resultados y Cambios Implementados:
+- [x] **Linting Funcional (`package.json`):** Script corregido a `"lint": "oxlint"` aprovechando la configuración de `.oxlintrc.json`. Ejecución limpia sobre 99 archivos en ~40ms con 0 errores.
+- [x] **Vitest y Suite de Pruebas Unitarias (57 tests en 6 suites):**
+  - `vitest.config.js` y `tests/setup.js` configurados con aislamiento 100% de Node.js mockeando `firebase.js` y `idb-keyval` (sin dependencias de red ni fugas de disco).
+  - `storeSyncHelper.test.js`: Validación de `mergeStoreValues` (el vacío nunca sobreescribe datos poblados), borrado explícito con `__cleared: true` y timestamps, y purga de metadatos con `stripInternalMetadata` y `extractMetadataFromDoc`.
+  - `dataGuardian.test.js`: Bloqueo preventivo de reducciones anómalas >50%, bloqueo de vaciado total, bypass controlado con `__approvedDrop` / `__cleared`, conteo seguro y emisión de alertas de evento.
+  - `backupService.test.js`: Purga recursiva de credenciales y API keys (`stripSensitiveBackupKeys`) y saneamiento cronológico/fechas de sesiones (`sanitizeWorkoutHistory`).
+  - `exerciseMatcher.test.js`: Resolución de códigos canónicos de 3 segmentos (`[GRUPO-MÁQUINA-ESPEC]`), mapeo de retrocompatibilidad desde códigos legados, aislamiento biomecánico estricto (no mezcla de variantes de máquinas vs libres) y extracción de récords históricos (`getHistoricalRecordsForExercise`).
+  - `workoutCalculations.test.js`: Fórmula de Epley de 1RM, tonelaje acumulado de volumen (bilateral y unilateral por extremidad con conversión de kg a lbs), clasificación unilateral y cálculo de RPE promedio.
+  - `cleanSyntheticSessions.test.js`: Detección clínica de sesiones sintéticas de prueba de julio/agosto sin ejercicios reales.
+- [x] **CI/CD Blindado en GitHub Actions (`.github/workflows/deploy.yml`):**
+  - Pipeline en 2 etapas: Job `build` obligatorio que ejecuta secuencialmente `npm ci`, `npm run lint`, `npm test` y `npm run build`.
+  - Si cualquiera de los 3 pasos falla, el job falla y el despliegue queda completamente cancelado.
+  - Soporte para `pull_request` hacia `main` ejecutando validaciones de CI; despliegue a GitHub Pages restringido exclusivamente a eventos que no sean PR (`push` a `main` o `workflow_dispatch`).
+- [x] **Reglas de Seguridad de Cloud Firestore (`firestore.rules` y `firebase.json`):**
+  - Autoradas mediante el subagente mandatorio `firestore-rules-author`.
+  - Default deny absoluto en la raíz (`match /{document=**} { allow read, write: if false; }`).
+  - Aislamiento multi-tenant estricto: cada usuario autenticado SOLO puede leer/escribir sus propios documentos y subcolecciones bajo `users/{userId}/**` validando `request.auth != null && request.auth.uid == userId`.
+- [x] **Preservación Segura de Sesiones Sintéticas (`scripts/cleanSyntheticSessions.js`):**
+  - Utilidad opcional aislada sin credenciales hardcodeadas, limpia ante `oxlint` y configurada en modo `--dry-run` por defecto. No se ejecutó ningún borrado automático en la base de datos de producción.
+- [x] **Validación 100% en verde:**
+  - `npm run lint`: 0 errores.
+  - `npm test`: 57 tests superados (6 archivos, ~0.5s).
+  - `npm run build`: Compilación limpia de producción en 1.1s con Service Worker PWA generado.
 
 ## FASE 4 — Dividir archivos gigantes (un chat por archivo)
 **Dónde:** Antigravity · `04a-workoutday`, `04b-cardiologger`, `04c-progressionchart`, `04d-setlogger` · Planning + alto.

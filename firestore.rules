@@ -1,0 +1,53 @@
+rules_version = '2';
+
+// ===============================================================
+// Assumed Data Model - Adonis Tracker (Coach V2)
+// ===============================================================
+//
+// Collection: users/{userId}
+// Document ID: Firebase Auth UID del usuario
+//
+// Subcollections under users/{userId}:
+//   - history: users/{userId}/history/{sessionId}
+//       Registros de sesiones de entrenamiento y sobrecarga progresiva.
+//   - store: users/{userId}/store/{key}
+//       Almacén de estado sincronizado clave-valor (ej. métricas corporales, rutinas, preferencias).
+//   - meta: users/{userId}/meta/{docId}
+//       Metadatos y control de versiones de migraciones (ej. users/{userId}/meta/migrations).
+//   - Cualquier otra subcolección anidada perteneciente de forma exclusiva a {userId}.
+//
+// Invariantes de Seguridad:
+//   - Aislamiento multi-tenant estricto: ningún usuario puede leer ni escribir datos de otro usuario.
+//   - Acceso denegado por defecto a cualquier colección en la raíz que no sea users/{userId}.
+//   - Todas las operaciones requieren autenticación activa mediante Firebase Auth.
+// ===============================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Bloqueo total por defecto: cualquier ruta no autorizada explícitamente se deniega.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Funciones auxiliares de autorización
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Aislamiento Multi-Tenant:
+    // El usuario autenticado tiene acceso de lectura y escritura ÚNICAMENTE a su propio documento
+    // y a la totalidad de sus subcolecciones anidadas (history, store, meta, etc.).
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
+
+      match /{allPaths=**} {
+        allow read, write: if isOwner(userId);
+      }
+    }
+  }
+}

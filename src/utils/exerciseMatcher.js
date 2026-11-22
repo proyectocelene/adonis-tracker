@@ -1253,7 +1253,7 @@ export function getHistoricalRecordsForExercise(currentEx, workoutHistory = [], 
       prWeight: null,
       delta: 0,
       deltaPercent: 0,
-      unit: currentEx.defaultUnit || 'lbs',
+      unit: currentEx?.defaultUnit || 'lbs',
       matchedSources: [],
       hasHistory: false
     };
@@ -1408,7 +1408,7 @@ export function getHistoricalRecordsForExercise(currentEx, workoutHistory = [], 
   const startWeight = occurrences.length > 0 ? occurrences[0].maxWeight : null;
   const currentWeight = occurrences.length > 0 ? occurrences[occurrences.length - 1].maxWeight : null;
   const prWeight = occurrences.length > 0 ? Math.max(...occurrences.map(s => s.maxWeight)) : null;
-  const unit = occurrences.length > 0 ? occurrences[occurrences.length - 1].unit : (currentEx.defaultUnit || 'lbs');
+  const unit = occurrences.length > 0 ? occurrences[occurrences.length - 1].unit : (currentEx?.defaultUnit || 'lbs');
 
   let best1RM = 0;
   occurrences.forEach(occ => {
