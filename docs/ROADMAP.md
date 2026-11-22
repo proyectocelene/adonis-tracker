@@ -1,0 +1,172 @@
+# 🗺️ ROADMAP — Optimización Adonis Tracker / Coach V2
+
+> Documento vivo. **Cada chat de IA lo lee al iniciar y lo actualiza al terminar.**
+> Regla: 1 chat = 1 fase = 1 rama git. Nunca pegar el JSON de backup en el chat.
+
+| Fase | Objetivo | Herramienta | Modo | Rama | Estado |
+|---|---|---|---|---|---|
+| 0 | Auditoría, backup, docs para IA | Quick | Smart | — | ✅ Hecha (2026-11-22) · ⏳ falta backup fresco + commit del usuario |
+| 1 | Detener pérdida de datos | Antigravity | Planning + modelo más potente, razonamiento alto | `fix/perdida-datos` | ⬜ Pendiente |
+| 2 | Fuente única de verdad de datos | Antigravity | Planning + alto | `refactor/fuente-unica-datos` | ⬜ |
+| 3 | Tests, CI, Firestore rules | Antigravity | Planning + medio | `chore/estabilidad` | ⬜ |
+| 4 | Dividir archivos gigantes (1 archivo por chat) | Antigravity | Planning + alto | `refactor/<archivo>` | ⬜ |
+| 5 | UI para uso en el gym | Quick (mockup) → Antigravity (implementación) | Balanced / Fast | `ui/<pantalla>` | ⬜ |
+| ✔ | Revisión al cierre de cada fase | Quick, chat "Revisor Adonis" | Smart | — | — |
+
+---
+
+## FASE 0 — Resultados de la auditoría (2026-11-22)
+
+### Estado del repositorio
+- Rama `main`. Último commit: 2026-11-18 20:41 — *"feat(ui/pwa): optimizaciones mobile-native en Android…"*.
+- ~39,000 líneas de código propio. Archivos más grandes: `unifiedExerciseLibrary.js` (2,724), `WorkoutDay.jsx` (2,306), `scientificProtocol.js` (2,143), `CardioLogger.jsx` (2,110), `ExerciseProgressionChart.jsx` (1,885), `exerciseMatcher.js` (1,723), `SetLogger.jsx` (1,463).
+- `.gitignore` ✅ ya excluye `base de datos pruebas/` y `*Backup*.json`.
+- Docs para IA corregidos: `AGENTS.md` (rutas rotas `Dr. Donato/...` → relativas, + reglas de seguridad de datos + flujo por chat), `GEMINI.md` (rutas, React 19, orden de lectura), `AI_INSTRUCTIONS_PROJECT_CONTEXT.md` (React 19).
+
+### Auditoría del único backup encontrado
+Archivo: `base de datos pruebas/COACH_V2_Backup_Total_Firebase_2026-09-17.json` (1.1 MB)
+
+| Métrica | Valor |
+|---|---|
+| Fecha de exportación | **2026-09-17** → ⚠️ **más de 2 meses de antigüedad** |
+| Cuenta | `donato.mp3@gmail.com` (uid `6TZZ3E…`) |
+| Sesiones totales | 60 (IDs únicos, sin duplicados fecha+día ✅) |
+| Sesiones reales con ejercicios | **32** (2026-08-12 → 2026-09-15), 743 series, 668,390 de volumen |
+| Sesiones sintéticas de prueba | **22** (jul-13 → ago-10, 1 serie @ 1000, sin ejercicios) — basura de pruebas |
+| Días descanso / perdidos | 3 / 3 |
+| Peso corporal | 10 registros · composición corporal 25 campos · machineConfigs 30 |
+
+### 🔴 Hallazgos nuevos de la Fase 0
+1. **Prueba directa del bug de purga:** el backup contiene en IndexedDB las banderas `coachv2_protocol_adonis_2026_09_07_clean_guest` y `coachv2_purge_active_v7_guest`. Las banderas se calculan con `currentUser?.uid || 'guest'` → la bandera de *guest* no protege al usuario logueado (y viceversa), así que las purgas de `App.jsx` **se ejecutan de nuevo** al cambiar de estado de sesión, en cada dispositivo/navegador nuevo y tras cualquier limpieza de localStorage. `PURGE_ACTIVE_V7` escribe `{}` en Firestore **sin merge** sobre `coachv2_active_workouts` → **borra el entrenamiento en curso en la nube**.
+2. **El backup está incompleto:** el backup de septiembre no trae `coachv2_machine_profiles` (el exportador actual ya lo incluye, `backupService.js:177`), y el exportador actual **sigue sin incluir** `coachv2_deload_active`, `coachv2_deload_cycle_config`, `coachv2_week_split_override` ni `coachv2_dismissed_pending_alerts`. Un "restore" (que borra todo primero) **pierde esos datos para siempre**.
+3. **API key expuesta:** `coachv2_deepseek_api_key` se guarda en Firestore y viaja dentro de los backups JSON. Debe excluirse del backup y, idealmente, rotarse.
+4. Hay dos nombres de clave para la API key: los datos guardados usan `coachv2_deepseek_api_key`, pero el código actual (`WorkoutDay.jsx:56`) lee `coachv2_deepseek_apikey` → la key guardada antes quedó huérfana (la app no la encuentra).
+
+### ⏳ Pendiente del usuario para cerrar la Fase 0
+- [ ] Abrir la app (con la cuenta correcta) → Historial → Exportar **backup total nuevo** → guardarlo en `base de datos pruebas/`.
+- [ ] Commit de seguridad: `git add . && git commit -m "docs: fase 0 - auditoria, reglas de seguridad y roadmap"`.
+- [ ] (Opcional) Pedir a Quick que audite el backup nuevo y lo compare con el de septiembre para medir cuántos datos se han perdido.
+- [ ] Rotar la API key de DeepSeek.
+
+---
+
+## FASE 1 — Detener la pérdida de datos
+**Dónde:** Antigravity · chat nuevo `01-perdida-datos` · Planning · modelo más potente con razonamiento alto.
+
+```
+Lee AGENTS.md, docs/ROADMAP.md y AI_INSTRUCTIONS_PROJECT_CONTEXT.md.
+Crea la rama git fix/perdida-datos.
+
+OBJETIVO DE ESTE CHAT: SOLO eliminar las causas de pérdida de datos.
+NO toques UI, NO refactorices, NO cambies lógica de entrenamiento.
+
+Hallazgos confirmados (verifícalos antes de editar):
+1. src/App.jsx: los bloques PROTOCOL_V3_FLAG y PURGE_ACTIVE_V7 escriben {}/null
+   en IndexedDB y Firestore (PURGE con setDoc SIN merge). Sus banderas usan
+   `currentUser?.uid || 'guest'` y viven en localStorage 'coachv2_*', que la
+   migración borra → las purgas se re-ejecutan (evidencia: el backup contiene
+   las banderas *_guest). También corren en cada dispositivo nuevo.
+2. storeSyncHelper.mergeStoreValues: en machine_configs, machine_profiles,
+   swapped, skipped, smartwatch_kcal, global_warmup, body_composition_data y
+   exercise_orders un objeto vacío "gana" y vacía el otro lado; syncService
+   luego sube ese {} a Firestore.
+3. useIndexedDB: setValue puede ejecutarse con isLoading=true y persistir el
+   initialValue ({} / []) local y en la nube.
+4. backupService.restoreFullDatabase borra TODO Firestore ANTES de restaurar,
+   y el export no incluye machine_profiles, deload_*, week_split_override,
+   dismissed_pending_alerts → un restore pierde esos datos.
+5. Reset Total / Clean Slate / Reset Official son destructivos con 1 confirm.
+6. La API key de DeepSeek viaja en Firestore y en el backup JSON; además hay
+   dos nombres de clave (coachv2_deepseek_api_key vs coachv2_deepseek_apikey).
+
+Tareas:
+A. Eliminar las purgas de arranque de App.jsx (ya cumplieron su función).
+   Ningún código de arranque escribe en Firestore sin merge.
+B. Reescribir mergeStoreValues: un vacío NUNCA borra datos, salvo borrado
+   explícito marcado {__cleared:true, clearedAt}. updatedAt por clave
+   (last-write-wins por clave).
+C. useIndexedDB: encolar setValue hasta terminar la carga; nunca persistir initialValue.
+D. Backup: exportar TODAS las claves coachv2_* (excepto la API key).
+   restoreFullDatabase: backup automático primero; writeBatch en modo upsert
+   SIN borrar; borrar sobrantes solo al final y solo si todo se escribió.
+E. Antes de cualquier acción destructiva: backup JSON automático + escribir "BORRAR".
+F. navigator.storage.persist() al iniciar.
+G. Guardián: si una escritura reduce un dataset >50%, bloquear, loguear y pedir confirmación.
+H. Unificar el nombre de la clave de la API key (con migración) y sacarla del backup.
+
+Restricciones: cambios mínimos, no renombrar otras claves, 100% compatible con datos actuales.
+
+Entrega:
+1) PLAN para mi aprobación ANTES de editar.
+2) Cambios.
+3) npm run build limpio.
+4) Pruebas manuales: dispositivo nuevo, localStorage borrado, login/logout,
+   modo avión, restore con el backup más reciente de "base de datos pruebas/".
+5) Actualiza docs/ROADMAP.md (hecho / pendiente / decisiones) y haz commit.
+```
+
+## FASE 2 — Fuente única de verdad
+**Dónde:** Antigravity · chat nuevo `02-arquitectura-datos` · Planning + alto.
+
+```
+Lee AGENTS.md y docs/ROADMAP.md. Rama: refactor/fuente-unica-datos.
+OBJETIVO: una sola fuente de verdad para los datos. Hoy hay 3 capas
+(localStorage, idb-keyval espejo, caché offline de Firestore) + 2 outbox propias.
+
+Propón (plan primero, sin editar) y luego implementa:
+- Firestore persistentLocalCache como ÚNICA capa offline (ya tiene cola de
+  escrituras); eliminar espejo idb-keyval y outbox manuales, o justificar qué conservar.
+- Todo dato con updatedAt; sesiones con soft-delete (deletedAt) para que los
+  borrados se propaguen y no "resuciten".
+- Registro de migraciones versionado en Firestore (users/{uid}/meta), NO en localStorage.
+- Claves locales con namespace por uid.
+- Hook único useSyncedStore(key) que reemplace el alias
+  "useIndexedDB as useLocalStorage" en los 8 archivos que lo usan.
+- Migración de datos existentes sin pérdida + script que compare conteos
+  antes/después contra el backup más reciente.
+Entrega: plan → cambios → build → pruebas multi-dispositivo → ROADMAP → commit.
+```
+
+## FASE 3 — Estabilidad
+**Dónde:** Antigravity · chat nuevo `03-estabilidad` · Planning + medio.
+
+```
+Lee AGENTS.md y docs/ROADMAP.md. Rama: chore/estabilidad.
+1. Corregir el script lint (dice "eslint ." pero está instalado oxlint).
+2. Vitest + tests para: mergeStoreValues, merge de historial,
+   exerciseMatcher (getUnifiedCodeForExercise, getHistoricalRecordsForExercise),
+   cálculos 1RM/volumen.
+3. GitHub Action: lint + test + build ANTES de deploy (si falla, no despliega).
+4. firestore.rules: cada usuario solo lee/escribe users/{suUid}/**.
+5. Limpiar las 22 sesiones sintéticas de julio solo con backup previo y confirmación.
+Plan primero. Actualiza ROADMAP y commit.
+```
+
+## FASE 4 — Dividir archivos gigantes (un chat por archivo)
+**Dónde:** Antigravity · `04a-workoutday`, `04b-cardiologger`, `04c-progressionchart`, `04d-setlogger` · Planning + alto.
+
+```
+Lee AGENTS.md y docs/ROADMAP.md. Rama: refactor/workoutday.
+Divide src/components/WorkoutDay.jsx (2,306 líneas) SIN cambiar comportamiento:
+- Extraer estado/sync a hooks (useWorkoutSession, useRoutineConfig, useDeload).
+- Extraer modales y handlers a componentes/archivos propios.
+- Meta: ningún archivo >400 líneas.
+- Tests de Fase 3 deben pasar; npm run build limpio.
+Plan con mapa de archivos nuevos ANTES de mover código.
+```
+
+## FASE 5 — UI para el gym
+- **Quick (Balanced):** "Hazme un mockup HTML de la pantalla de registro de series para usar con una mano en el gym: registrar una serie en ≤2 toques, indicador de Guardado ✓ / Pendiente ⟳, modo oscuro."
+- **Antigravity (Fast), un chat por pantalla:** "Implementa este mockup [adjunto] en SetLogger.jsx sin tocar la lógica de datos."
+
+## ✔ Revisión al cierre de cada fase (Quick, chat "Revisor Adonis", Smart)
+```
+Revisa la fase X del proyecto adonis-tracker-main. Lee docs/ROADMAP.md y los
+archivos modificados (git diff main...<rama>). Busca: riesgos de pérdida de datos,
+regresiones, setDoc sin merge, código muerto. Veredicto: aprobar / corregir.
+```
+
+---
+
+## 📒 Bitácora de decisiones
+- 2026-11-22 · Fase 0 · Se adoptan las Reglas de Seguridad de Datos en `AGENTS.md`. Se decide implementar en Antigravity (puede ejecutar build/dev server) y revisar en Quick.

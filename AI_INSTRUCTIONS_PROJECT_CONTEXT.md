@@ -13,7 +13,7 @@ El atleta principal entrena bajo una periodización de alta intensidad (6 días 
 ---
 
 ## 2. STACK TECNOLÓGICO Y ARQUITECTURA
-- **Frontend**: React 18, Vite 8, Rolldown / Rollup bundler.
+- **Frontend**: React 19, Vite 8, Rolldown / Rollup bundler, Tailwind 4.
 - **Gráficas y Visualización**: Recharts (1RM estimado, tonelaje, curvas evolutivas de sobrecarga).
 - **Iconografía**: `lucide-react`.
 - **Persistencia Dual (Zero-Latency + Nube)**:

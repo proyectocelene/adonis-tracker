@@ -1,12 +1,16 @@
 # REGLAS Y CONTEXTO PERMANENTE DEL PROYECTO (ADONIS TRACKER / COACH V2)
 
 Este archivo es cargado automáticamente por Google Antigravity en cada inicio de sesión.
-Para la documentación clínica y técnica completa, consulta [AI_INSTRUCTIONS_PROJECT_CONTEXT.md](file:///c:/Users/Dr.%20Donato/Downloads/ProyectosPersonales/adonis-tracker/AI_INSTRUCTIONS_PROJECT_CONTEXT.md).
+
+**Al iniciar cada sesión lee, en este orden:**
+1. [AGENTS.md](./AGENTS.md) — reglas operativas y **Reglas de Seguridad de Datos (no negociables)**.
+2. [docs/ROADMAP.md](./docs/ROADMAP.md) — fase actual del plan de optimización.
+3. [AI_INSTRUCTIONS_PROJECT_CONTEXT.md](./AI_INSTRUCTIONS_PROJECT_CONTEXT.md) — documentación clínica y técnica completa.
 
 ## 1. Naturaleza del Proyecto
 - **Nombre**: Adonis Tracker (Coach V2).
 - **Enfoque**: Aplicación de hipertrofia clínica, seguimiento de sobrecarga progresiva y gestión biomecánica de maquinaria.
-- **Stack**: React 18, Vite, Firebase Cloud Firestore, IndexedDB (`idb-keyval`), Recharts, PWA.
+- **Stack**: React 19, Vite 8, Firebase Cloud Firestore, IndexedDB (`idb-keyval`), Recharts, Tailwind 4, PWA.
 
 ## 2. Regla Fundamental: Aislamiento Biomecánico Estricto
 - Cada ejercicio físico o estación debe tener su propio código unificado de 3 segmentos: `[GRUPO-MÁQUINA-ESPEC_UBIC]`.
