@@ -3,7 +3,6 @@
 // garantizando consistencia total entre dispositivos (móvil, tablet, PC).
 // PRESERVA INTACTO: workoutHistory (series, cargas, 1RM), métricas corporales y configuraciones de máquinas.
 
-import { set } from 'idb-keyval';
 import { db, sanitizeForFirestore } from './firebase.js';
 import { doc, setDoc } from 'firebase/firestore';
 import { exportFullDatabase } from './backupService.js';
@@ -28,12 +27,8 @@ export async function executeCleanSlate(currentUser) {
 
   const nowIso = new Date().toISOString();
 
-  // 1. Limpieza instantánea en almacenamiento local (IndexedDB)
-  for (const [key, val] of Object.entries(storeKeysToReset)) {
-    await set(key, val).catch(e => console.warn(`[CleanSlate] Error local en ${key}:`, e));
-  }
-
-  // 2. Limpieza en Firestore Cloud con marca explícita __cleared y { merge: true }
+  // 1. Limpieza en Firestore con marca explícita __cleared, timestamps y { merge: true }
+  // Gracias a persistentLocalCache, la caché local se actualiza a 0ms y se sincroniza en la nube
   if (currentUser && currentUser.uid) {
     for (const [key, val] of Object.entries(storeKeysToReset)) {
       try {
@@ -42,7 +37,8 @@ export async function executeCleanSlate(currentUser) {
           value: sanitizeForFirestore(val), 
           __cleared: true, 
           clearedAt: nowIso,
-          cleanSlateAt: nowIso 
+          cleanSlateAt: nowIso,
+          updatedAt: nowIso
         }, { merge: true });
       } catch (err) {
         console.warn(`[CleanSlate] Firestore warning para ${key}:`, err.message);
@@ -50,7 +46,7 @@ export async function executeCleanSlate(currentUser) {
     }
   }
 
-  // 3. Notificar a toda la aplicación para actualización inmediata de React
+  // 2. Notificar a toda la aplicación para actualización inmediata de React
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent('adonis_cloud_synced', {
       detail: { storeSyncPayload: storeKeysToReset }

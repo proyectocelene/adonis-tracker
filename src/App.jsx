@@ -5,37 +5,10 @@ import { ModalProvider, PwaInstallBanner, useModal } from './components/common/U
 import { ErrorBoundary } from './components/common/ErrorBoundary';
 
 import { Loader2 } from 'lucide-react';
-import { setMany } from 'idb-keyval';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { GlobalTimerProvider } from './contexts/GlobalTimerContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import LoginScreen from './components/LoginScreen';
-
-async function migrateLocalStorageToIndexedDB() {
-  const hasMigrated = localStorage.getItem('coachv2_migrated_to_idb');
-  if (hasMigrated === 'true') return;
-
-  const entriesToMigrate = [];
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i);
-    if (key && key.startsWith('coachv2_') && key !== 'coachv2_migrated_to_idb') {
-      try {
-        const valueStr = localStorage.getItem(key);
-        if (valueStr === 'undefined') continue;
-        entriesToMigrate.push([key, JSON.parse(valueStr)]);
-      } catch (e) {
-        entriesToMigrate.push([key, localStorage.getItem(key)]);
-      }
-    }
-  }
-  
-  if (entriesToMigrate.length > 0) {
-    try {
-      await setMany(entriesToMigrate);
-    } catch (e) {}
-  }
-  localStorage.setItem('coachv2_migrated_to_idb', 'true');
-}
 
 import WorkoutDay from './components/WorkoutDay';
 
@@ -116,83 +89,24 @@ function AppContent() {
     return () => window.removeEventListener('adonis_guardian_blocked', handleGuardianBlocked);
   }, [showAlert]);
 
-  // Motor de Sincronización Automática Resiliente & Rescate Offline
+  // Migración y Sincronización Centralizada (Fase 2: users/{uid}/meta/migrations)
   useEffect(() => {
-    async function runCentralizedMigration() {
-      if (!currentUser) {
-        setIsMigrating(false);
-        return;
-      }
-      const migrationFlag = `coachv2_migrated_to_firebase_${currentUser.uid}`;
-      if (localStorage.getItem(migrationFlag) === 'true') {
-        setIsMigrating(false);
-        return;
-      }
-
-      setIsMigrating(true);
-      try {
-        // 1. Asegurar que los datos locales pasaron a IndexedDB
-        await migrateLocalStorageToIndexedDB();
-
-        // 2. Extraer de IndexedDB e Inyectar en Firebase (solo las llaves vitales)
-        const { get } = await import('idb-keyval');
-        const { doc, setDoc } = await import('firebase/firestore');
-        const { db, sanitizeForFirestore } = await import('./services/firebase');
-
-        const keysToMigrate = [
-          'coachv2_active_workouts', 
-          'coachv2_custom_day_exercises',
-          'coachv2_swapped_exercises',
-          'coachv2_machine_configs',
-          'coachv2_machine_profiles'
-        ];
-
-        // Migrar primero el historial (como documentos individuales en subcolección)
-        const localHistory = await get('coachv2_history');
-        if (localHistory && Array.isArray(localHistory)) {
-          for (const session of localHistory) {
-            if (session && session.id) {
-              try {
-                const sessionRef = doc(db, 'users', currentUser.uid, 'history', session.id);
-                await setDoc(sessionRef, sanitizeForFirestore(session), { merge: true });
-              } catch (setErr) {
-                console.warn(`[Migration] Error subiendo sesión ${session.id}:`, setErr.message);
-              }
-            }
-          }
-        }
-
-        // Luego migrar el resto (como documentos simples)
-        for (const key of keysToMigrate) {
-          try {
-            const localVal = await get(key);
-            if (localVal !== undefined) {
-              const docRef = doc(db, 'users', currentUser.uid, 'store', key);
-              await setDoc(docRef, { value: sanitizeForFirestore(localVal) }, { merge: true });
-            }
-          } catch (storeErr) {
-            console.warn(`[Migration] Error subiendo clave ${key}:`, storeErr.message);
-          }
-        }
-
-        // 3. Limpiar TODO el localStorage antiguo obsoleto (excepto Auth de Firebase que no usa 'coachv2_')
-        for (let i = localStorage.length - 1; i >= 0; i--) {
-          const k = localStorage.key(i);
-          if (k && k.startsWith('coachv2_') && k !== migrationFlag) {
-             localStorage.removeItem(k);
-          }
-        }
-        
-        localStorage.setItem(migrationFlag, 'true');
-        console.log('✅ Migración Maestra a Firebase completada y Memoria Limpiada.');
-      } catch (err) {
-        console.error("Error en migración maestra:", err);
-      } finally {
-        setIsMigrating(false);
-      }
+    if (!currentUser) {
+      setIsMigrating(false);
+      return;
     }
-    
-    runCentralizedMigration();
+
+    // Ejecutar migración segura, drenado de outboxes y limpieza de espejos
+    import('./services/migrationService').then(({ runV2FirestoreMigration }) => {
+      runV2FirestoreMigration(currentUser).then(() => {
+        setIsMigrating(false);
+      }).catch(err => {
+        console.warn("[App] Aviso durante migración v2:", err);
+        setIsMigrating(false);
+      });
+    }).catch(() => {
+      setIsMigrating(false);
+    });
   }, [currentUser]);
 
   // Garantizar persistencia de almacenamiento contra desalojos del navegador
@@ -205,34 +119,6 @@ function AppContent() {
       }).catch(e => console.warn("[Storage] Error solicitando persistencia:", e));
     }
   }, []);
-
-  // Migración transparente de clave antigua coachv2_deepseek_apikey -> coachv2_deepseek_api_key
-  useEffect(() => {
-    async function migrateApiKey() {
-      try {
-        const { get, set, del } = await import('idb-keyval');
-        const oldVal = (await get('coachv2_deepseek_apikey')) || localStorage.getItem('coachv2_deepseek_apikey');
-        const currentVal = await get('coachv2_deepseek_api_key');
-        if (oldVal && !currentVal) {
-          await set('coachv2_deepseek_api_key', oldVal);
-          localStorage.setItem('coachv2_deepseek_api_key', oldVal);
-        }
-        if (oldVal) {
-          await del('coachv2_deepseek_apikey');
-          localStorage.removeItem('coachv2_deepseek_apikey');
-        }
-      } catch (e) {}
-    }
-    migrateApiKey();
-  }, []);
-
-  // 6. Sincronización Maestra Nube ➔ IndexedDB al entrar a la app (garantiza análisis local al 100%)
-  useEffect(() => {
-    if (!currentUser) return;
-    import('./services/syncService').then(({ syncAllCloudDataToIndexedDB }) => {
-      syncAllCloudDataToIndexedDB(currentUser);
-    }).catch(err => console.warn("[App] Aviso cargando syncService:", err));
-  }, [currentUser]);
 
   if (isMigrating) {
     return (

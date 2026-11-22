@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useIndexedDB as useLocalStorage } from './useIndexedDB.js';
+import { useSyncedStore } from './useSyncedStore.js';
 import {
   ADONIS_RANKS,
   getRankForLevel,
@@ -25,7 +25,7 @@ export {
  */
 export function useGamification(workoutHistory = [], bodyMetrics = []) {
   // 1. Configuración de objetivos fisiológicos
-  const [physiqueGoal, setPhysiqueGoal] = useLocalStorage('coachv2_physique_goal', {
+  const [physiqueGoal, setPhysiqueGoal] = useSyncedStore('coachv2_physique_goal', {
     targetWeightKg: 72.0,
     targetFatPct: 12.0,
     muscleGainTargetKg: 2.0,
@@ -33,7 +33,7 @@ export function useGamification(workoutHistory = [], bodyMetrics = []) {
   });
 
   // 2. Datos detallados de báscula de bioimpedancia y medidas corporales
-  const [bodyComposition, setBodyComposition] = useLocalStorage('coachv2_body_composition_data', {
+  const [bodyComposition, setBodyComposition] = useSyncedStore('coachv2_body_composition_data', {
     weightKg: 78.55,
     heightCm: 174,
     bodyFatPct: 24.5,

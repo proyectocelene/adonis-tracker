@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { useIndexedDB as useLocalStorage } from '../hooks/useIndexedDB';
+import { useSyncedStore } from '../hooks/useSyncedStore';
 import { useWorkoutHistory } from '../hooks/useWorkoutHistory';
 import { clear } from 'idb-keyval';
 import { scientificProtocol } from '../data/scientificProtocol';
@@ -34,10 +34,10 @@ export default function HistoryView() {
   const modal = useModal();
   const { logout, currentUser } = useAuth();
   const [workoutHistory, setWorkoutHistory, isHistoryLoading, saveSession, deleteSession] = useWorkoutHistory();
-  const [currentSessions, setCurrentSessions, isSessionsLoading] = useLocalStorage('coachv2_active_workouts', {});
-  const [customExercisesMap, setCustomExercisesMap, isCustomLoading] = useLocalStorage('coachv2_custom_day_exercises', {});
-  const [customRoutine, setCustomRoutine] = useLocalStorage('coachv2_custom_routine', null);
-  const [bodyMetrics] = useLocalStorage('coachv2_body_metrics_history', []);
+  const [currentSessions, setCurrentSessions, isSessionsLoading] = useSyncedStore('coachv2_active_workouts', {});
+  const [customExercisesMap, setCustomExercisesMap, isCustomLoading] = useSyncedStore('coachv2_custom_day_exercises', {});
+  const [customRoutine, setCustomRoutine] = useSyncedStore('coachv2_custom_routine', null);
+  const [bodyMetrics] = useSyncedStore('coachv2_body_metrics_history', []);
 
   const latestWeightObj = Array.isArray(bodyMetrics) && bodyMetrics.length > 0 
     ? [...bodyMetrics].reverse().find(m => m && (m.weight || m.peso))

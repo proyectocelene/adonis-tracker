@@ -7,7 +7,7 @@ import ExerciseNotes from './exercise/ExerciseNotes';
 import ExerciseBiomechanics from './exercise/ExerciseBiomechanics';
 import ExerciseSwap from './exercise/ExerciseSwap';
 import { calculateSmartWarmup, getLoadRecommendation, isExerciseUnilateral, loadMachineProfilesForExercise, getActiveMachineConfig } from '../hooks/useWorkoutCalculations';
-import { useIndexedDB as useLocalStorage } from '../hooks/useIndexedDB';
+import { useSyncedStore } from '../hooks/useSyncedStore';
 import { UNIFIED_EXERCISE_LIBRARY } from '../data/unifiedExerciseLibrary';
 import { normalizeExerciseName } from '../utils/exerciseMatcher';
 
@@ -45,8 +45,8 @@ export default function ExerciseRow({
   const [exerciseNotesInput, setExerciseNotesInput] = useState('');
 
   // Perfiles de máquina y configuración activa resuelta para este ejercicio
-  const [globalMachineProfiles] = useLocalStorage('coachv2_machine_profiles', {});
-  const [globalMachineConfigs] = useLocalStorage('coachv2_machine_configs', {});
+  const [globalMachineProfiles] = useSyncedStore('coachv2_machine_profiles', {});
+  const [globalMachineConfigs] = useSyncedStore('coachv2_machine_configs', {});
 
   const activeMachineConfig = useMemo(() => {
     const profiles = loadMachineProfilesForExercise(exercise, {

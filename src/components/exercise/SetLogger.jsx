@@ -16,7 +16,7 @@ import {
   saveMachineConfigAndProfiles,
   roundToAttainableWeight
 } from '../../hooks/useWorkoutCalculations';
-import { useIndexedDB as useLocalStorage } from '../../hooks/useIndexedDB';
+import { useSyncedStore } from '../../hooks/useSyncedStore';
 
 // Analizador fisiológico de calentamiento según prescripción oficial
 function getWarmupPlan(exercise, previousData, exerciseData, machineConfig, coachAnalysis) {
@@ -121,8 +121,8 @@ export default function SetLogger({
   const prescribedReps = exercise?.reps || exercise?.targetReps || '10-12';
   
   const slugKey = useMemo(() => getMachineStorageKey(exercise), [exercise]);
-  const [globalMachineConfigs, setGlobalMachineConfigs] = useLocalStorage('coachv2_machine_configs', {});
-  const [globalMachineProfiles, setGlobalMachineProfiles] = useLocalStorage('coachv2_machine_profiles', {});
+  const [globalMachineConfigs, setGlobalMachineConfigs] = useSyncedStore('coachv2_machine_configs', {});
+  const [globalMachineProfiles, setGlobalMachineProfiles] = useSyncedStore('coachv2_machine_profiles', {});
 
   // Extraer de forma exhaustiva todos los perfiles de máquina guardados (Planta Alta / Planta Baja / etc.)
   const exerciseProfiles = useMemo(() => {

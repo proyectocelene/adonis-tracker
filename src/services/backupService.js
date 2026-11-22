@@ -1,6 +1,5 @@
 import { db, sanitizeForFirestore } from './firebase.js';
 import { collection, getDocs, doc, getDoc, setDoc, deleteDoc, writeBatch } from 'firebase/firestore';
-import { entries, setMany, set } from 'idb-keyval';
 import { scientificProtocol } from '../data/scientificProtocol.js';
 import { UNIFIED_EXERCISE_LIBRARY } from '../data/unifiedExerciseLibrary.js';
 import { stripInternalMetadata } from './storeSyncHelper.js';
@@ -129,82 +128,54 @@ export function sanitizeWorkoutHistory(rawHistory = []) {
 export async function exportFullDatabase(currentUser, options = {}) {
   let workoutHistory = [];
   const storeData = {};
-  let localDbDump = {};
 
-  // 1. Obtener volcado de IndexedDB local como respaldo de seguridad prioritario
-  try {
-    const idbEntries = await entries();
-    idbEntries.forEach(([key, val]) => {
-      localDbDump[key] = val;
-    });
-  } catch (e) {
-    console.warn("No se pudo leer idb-keyval local:", e);
-  }
-
-  // 2. Si hay usuario autenticado, obtener datos de Firebase Firestore
-  if (currentUser) {
+  // 1. Obtener datos directamente de Firebase Firestore (fuente única de verdad)
+  if (currentUser && currentUser.uid) {
     try {
-      // 2.1 Obtener todas las sesiones de la subcolección 'history'
+      // 1.1 Obtener sesiones activas de la subcolección 'history' (excluyendo soft-deleted)
       const historyRef = collection(db, 'users', currentUser.uid, 'history');
       const historySnapshot = await getDocs(historyRef);
-      workoutHistory = historySnapshot.docs.map(doc => doc.data());
+      workoutHistory = historySnapshot.docs
+        .map(doc => ({ ...doc.data(), id: doc.id }))
+        .filter(s => !s.deletedAt);
 
-      // 2.2 Obtener todos los documentos de la subcolección 'store'
+      // 1.2 Obtener todos los documentos de la subcolección 'store'
       const storeRef = collection(db, 'users', currentUser.uid, 'store');
       const storeSnapshot = await getDocs(storeRef);
       storeSnapshot.docs.forEach(doc => {
         storeData[doc.id] = doc.data().value !== undefined ? doc.data().value : doc.data();
       });
     } catch (err) {
-      console.warn("Aviso: Conexión Firestore lenta u offline durante exportación. Usando copia local:", err);
+      console.warn("[Backup] Aviso leyendo Firestore durante exportación:", err);
     }
   }
 
-  // 3. Fusionar inteligentemente historial de Firestore y caché local (0% pérdida de datos)
-  const localHistory = (currentUser && localDbDump[`coachv2_history_cache_${currentUser.uid}`])
-    || localDbDump['coachv2_history_cache_anon']
-    || localDbDump['coachv2_history']
-    || [];
-
-  const sessionMap = new Map();
-  workoutHistory.forEach(s => {
-    const key = s.id || s.timestamp;
-    if (key) sessionMap.set(key, s);
-  });
-  if (Array.isArray(localHistory)) {
-    localHistory.forEach(s => {
-      const key = s.id || s.timestamp;
-      if (key && !sessionMap.has(key)) {
-        sessionMap.set(key, s);
-      }
-    });
-  }
-  const mergedWorkoutHistory = sanitizeWorkoutHistory(Array.from(sessionMap.values()));
+  // 2. Sanitizar historial sin mezclar con volcados locales obsoletos
+  const mergedWorkoutHistory = sanitizeWorkoutHistory(workoutHistory);
 
   // Extraer datos clave para acceso directo y compatibilidad
-  const currentActiveSessions = storeData['coachv2_active_workouts'] || localDbDump['coachv2_active_workouts'] || {};
-  const customExercises = storeData['coachv2_custom_day_exercises'] || localDbDump['coachv2_custom_day_exercises'] || {};
-  const swappedExercises = storeData['coachv2_swapped_exercises'] || localDbDump['coachv2_swapped_exercises'] || {};
-  const skippedExercises = storeData['coachv2_skipped_exercises'] || localDbDump['coachv2_skipped_exercises'] || {};
-  const exerciseOrders = storeData['coachv2_exercise_orders'] || localDbDump['coachv2_exercise_orders'] || {};
-  const bodyWeightHistory = storeData['coachv2_body_metrics_history'] || localDbDump['coachv2_body_metrics_history'] || [];
-  const bodyComposition = storeData['coachv2_body_composition_data'] || localDbDump['coachv2_body_composition_data'] || {};
-  const physiqueGoal = storeData['coachv2_physique_goal'] || localDbDump['coachv2_physique_goal'] || {};
-  const machineConfigs = storeData['coachv2_machine_configs'] || localDbDump['coachv2_machine_configs'] || {};
-  const machineProfiles = storeData['coachv2_machine_profiles'] || localDbDump['coachv2_machine_profiles'] || {};
-  const smartwatchKcal = storeData['coachv2_smartwatch_kcal'] || localDbDump['coachv2_smartwatch_kcal'] || {};
-  const customRoutine = storeData['coachv2_custom_routine'] || localDbDump['coachv2_custom_routine'] || null;
-  const mesocycleStartDate = storeData['coachv2_mesocycle_start'] || localDbDump['coachv2_mesocycle_start'] || null;
-  const weightPreferredUnit = storeData['coachv2_weight_preferred_unit'] || localDbDump['coachv2_weight_preferred_unit'] || 'kg';
-  const googleSheetsUrl = storeData['coachv2_google_sheets_url'] || localDbDump['coachv2_google_sheets_url'] || '';
-  const deloadActive = storeData['coachv2_deload_active'] !== undefined ? storeData['coachv2_deload_active'] : (localDbDump['coachv2_deload_active'] || false);
-  const deloadCycleConfig = storeData['coachv2_deload_cycle_config'] || localDbDump['coachv2_deload_cycle_config'] || null;
-  const weekSplitOverride = storeData['coachv2_week_split_override'] || localDbDump['coachv2_week_split_override'] || null;
-  const dismissedPendingAlerts = storeData['coachv2_dismissed_pending_alerts'] || localDbDump['coachv2_dismissed_pending_alerts'] || {};
+  const currentActiveSessions = storeData['coachv2_active_workouts'] || {};
+  const customExercises = storeData['coachv2_custom_day_exercises'] || {};
+  const swappedExercises = storeData['coachv2_swapped_exercises'] || {};
+  const skippedExercises = storeData['coachv2_skipped_exercises'] || {};
+  const exerciseOrders = storeData['coachv2_exercise_orders'] || {};
+  const bodyWeightHistory = storeData['coachv2_body_metrics_history'] || [];
+  const bodyComposition = storeData['coachv2_body_composition_data'] || {};
+  const physiqueGoal = storeData['coachv2_physique_goal'] || {};
+  const machineConfigs = storeData['coachv2_machine_configs'] || {};
+  const machineProfiles = storeData['coachv2_machine_profiles'] || {};
+  const smartwatchKcal = storeData['coachv2_smartwatch_kcal'] || {};
+  const customRoutine = storeData['coachv2_custom_routine'] || null;
+  const mesocycleStartDate = storeData['coachv2_mesocycle_start'] || null;
+  const weightPreferredUnit = storeData['coachv2_weight_preferred_unit'] || 'kg';
+  const googleSheetsUrl = storeData['coachv2_google_sheets_url'] || '';
+  const deloadActive = storeData['coachv2_deload_active'] !== undefined ? storeData['coachv2_deload_active'] : false;
+  const deloadCycleConfig = storeData['coachv2_deload_cycle_config'] || null;
+  const weekSplitOverride = storeData['coachv2_week_split_override'] || null;
+  const dismissedPendingAlerts = storeData['coachv2_dismissed_pending_alerts'] || {};
 
   // Sanitizar volcados de claves sensibles (API Keys)
   const safeStoreDump = stripSensitiveBackupKeys(storeData);
-  const safeIdbDump = stripSensitiveBackupKeys(localDbDump);
 
   const fullMasterBackup = {
     appVersion: "COACH V2 - Protocolo Adonis Científico (Backup Maestro 100% Firebase & Local)",
@@ -239,9 +210,9 @@ export async function exportFullDatabase(currentUser, options = {}) {
     scientificProtocol,
     unifiedExerciseLibrary: UNIFIED_EXERCISE_LIBRARY,
 
-    // Volcado Completo Firestore & Local (sanitizado sin credenciales)
+    // Volcado Completo Firestore (sanitizado sin credenciales)
     firestoreStoreDump: safeStoreDump,
-    rawIndexedDBDump: safeIdbDump
+    rawIndexedDBDump: {}
   };
 
   const filename = options.isAutoBackup
@@ -337,39 +308,29 @@ export function exportExerciseLibrary() {
 
 export async function exportWorkoutHistory(currentUser) {
   let workoutHistory = [];
-  if (currentUser) {
+  if (currentUser && currentUser.uid) {
     try {
       const historyRef = collection(db, 'users', currentUser.uid, 'history');
       const snapshot = await getDocs(historyRef);
-      workoutHistory = snapshot.docs.map(doc => doc.data());
+      workoutHistory = snapshot.docs
+        .map(doc => ({ ...doc.data(), id: doc.id }))
+        .filter(s => !s.deletedAt);
     } catch (e) {
       console.warn("Error leyendo Firestore en exportWorkoutHistory:", e);
     }
   }
 
-  if (workoutHistory.length === 0) {
-    try {
-      const cached = (currentUser && await get(`coachv2_history_cache_${currentUser.uid}`))
-        || await get('coachv2_history_cache_anon')
-        || await get('coachv2_history')
-        || [];
-      if (Array.isArray(cached) && cached.length > 0) {
-        workoutHistory = cached;
-      }
-    } catch (e) {
-      console.warn("Error leyendo IndexedDB local:", e);
-    }
-  }
+  const cleanHistory = sanitizeWorkoutHistory(workoutHistory);
 
   const historyExport = {
     exportDate: new Date().toISOString(),
     atleta: currentUser?.displayName || "Carlos Donato",
-    totalSessions: workoutHistory.length,
-    history: workoutHistory
+    totalSessions: cleanHistory.length,
+    history: cleanHistory
   };
 
   downloadJsonFile(historyExport, `Historial_Entrenamientos_${new Date().toISOString().split('T')[0]}.json`);
-  return { success: true, count: workoutHistory.length };
+  return { success: true, count: cleanHistory.length };
 }
 
 /**
@@ -395,19 +356,6 @@ export async function exportBodyMetrics(currentUser) {
       if (goalSnap.exists()) physiqueGoal = goalSnap.data().value || {};
     } catch (e) {
       console.warn("Error leyendo Firestore en exportBodyMetrics:", e);
-    }
-  }
-
-  if (bodyMetrics.length === 0) {
-    try {
-      const localMetrics = await get('coachv2_body_metrics_history');
-      if (Array.isArray(localMetrics)) bodyMetrics = localMetrics;
-      const localComp = await get('coachv2_body_composition_data');
-      if (localComp) bodyComposition = localComp;
-      const localGoal = await get('coachv2_physique_goal');
-      if (localGoal) physiqueGoal = localGoal;
-    } catch (e) {
-      console.warn("Error leyendo IndexedDB local en exportBodyMetrics:", e);
     }
   }
 
@@ -527,19 +475,7 @@ export async function sanitizeCloudHistory(currentUser, onProgress) {
     }
   }
 
-  // Sincronizar en caché local idb
-  try {
-    const updatedHistorySnap = await getDocs(historyRef);
-    const refreshedHistory = updatedHistorySnap.docs.map(d => d.data()).sort((a, b) => {
-      const timeA = new Date(a.timestamp || a.date || 0).getTime();
-      const timeB = new Date(b.timestamp || b.date || 0).getTime();
-      return timeA - timeB;
-    });
-    const cacheKey = `coachv2_history_cache_${currentUser.uid}`;
-    await set(cacheKey, refreshedHistory);
-  } catch (e) {
-    console.warn("No se pudo refrescar caché idb:", e);
-  }
+  // (En Fase 2, persistentLocalCache de Firestore actualiza la caché automáticamente)
 
   return {
     success: true,
@@ -644,7 +580,12 @@ export async function restoreFullDatabase(currentUser, jsonData, onProgress) {
         restoredSessionIds.add(sessionId);
 
         const sessionRef = doc(db, 'users', currentUser.uid, 'history', sessionId);
-        batch.set(sessionRef, sanitizeForFirestore(session), { merge: true });
+        const enrichedSession = {
+          ...session,
+          updatedAt: new Date().toISOString(),
+          deletedAt: null
+        };
+        batch.set(sessionRef, sanitizeForFirestore(enrichedSession), { merge: true });
         totalSessionsRestored++;
       }
 
@@ -690,9 +631,12 @@ export async function restoreFullDatabase(currentUser, jsonData, onProgress) {
 
       if (orphanHistoryDocs.length > 0) {
         if (onProgress) onProgress(`Depurando ${orphanHistoryDocs.length} sesiones obsoletas no presentes en el backup...`);
+        const nowIso = new Date().toISOString();
         for (let i = 0; i < orphanHistoryDocs.length; i += 400) {
           const delBatch = writeBatch(db);
-          orphanHistoryDocs.slice(i, i + 400).forEach(d => delBatch.delete(d.ref));
+          orphanHistoryDocs.slice(i, i + 400).forEach(d => {
+            delBatch.set(d.ref, { deletedAt: nowIso, updatedAt: nowIso }, { merge: true });
+          });
           await delBatch.commit();
         }
       }
@@ -724,18 +668,7 @@ export async function restoreFullDatabase(currentUser, jsonData, onProgress) {
     console.warn("[Restore] Aviso al depurar huérfanos posteriores:", cleanErr);
   }
 
-  // 4. Sincronizar también en IndexedDB local
-  try {
-    const idbEntries = Object.entries(storeEntries).map(([k, v]) => [k, stripInternalMetadata(v)]);
-    if (idbEntries.length > 0) {
-      await setMany(idbEntries);
-    }
-    const cacheKey = `coachv2_history_cache_${currentUser.uid}`;
-    await set(cacheKey, sessionsToRestore);
-    await set('coachv2_history', sessionsToRestore);
-  } catch (e) {
-    console.warn("No se pudo escribir en idb-keyval local:", e);
-  }
+  // (En Fase 2, persistentLocalCache de Firestore sincroniza la caché local automáticamente sin espejos idb)
 
   return {
     success: true,

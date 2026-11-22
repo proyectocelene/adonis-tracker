@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { useIndexedDB as useLocalStorage } from '../hooks/useIndexedDB';
+import { useSyncedStore } from '../hooks/useSyncedStore';
 import { Scale } from 'lucide-react';
 import { useModal } from './common/UIComponents';
 import GymMembershipReminder from './common/GymMembershipReminder';
@@ -14,15 +14,15 @@ import { normalizeBodyComposition } from '../utils/gamificationCalculations';
 import { useWorkoutHistory } from '../hooks/useWorkoutHistory';
 
 export default function BodyWeightView() {
-  const [bodyMetrics, setBodyMetrics] = useLocalStorage('coachv2_body_metrics_history', []);
-  const [preferredUnit, setPreferredUnit] = useLocalStorage('coachv2_weight_preferred_unit', 'kg');
+  const [bodyMetrics, setBodyMetrics] = useSyncedStore('coachv2_body_metrics_history', []);
+  const [preferredUnit, setPreferredUnit] = useSyncedStore('coachv2_weight_preferred_unit', 'kg');
   const [selectedTimeframe, setSelectedTimeframe] = useState('1m');
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingEntryId, setEditingEntryId] = useState(null);
   const [showScaleModal, setShowScaleModal] = useState(false);
 
   // Estados sincronizados de báscula de bioimpedancia y metas Adonis
-  const [bodyComposition, setBodyComposition] = useLocalStorage('coachv2_body_composition_data', {
+  const [bodyComposition, setBodyComposition] = useSyncedStore('coachv2_body_composition_data', {
     weightKg: 78.55,
     heightCm: 174,
     bodyFatPct: 24.5,
@@ -45,7 +45,7 @@ export default function BodyWeightView() {
     armsCm: null
   });
 
-  const [physiqueGoal, setPhysiqueGoal] = useLocalStorage('coachv2_physique_goal', {
+  const [physiqueGoal, setPhysiqueGoal] = useSyncedStore('coachv2_physique_goal', {
     targetWeightKg: 72.0,
     targetFatPct: 12.0,
     muscleGainTargetKg: 2.0,

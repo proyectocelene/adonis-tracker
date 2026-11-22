@@ -1,4 +1,3 @@
-import { get, set } from 'idb-keyval';
 import { db, sanitizeForFirestore } from './firebase.js';
 import { doc, setDoc } from 'firebase/firestore';
 
@@ -317,51 +316,11 @@ export function mergeStoreValues(key, localVal, cloudVal, cloudMetaParam = null,
 }
 
 /**
- * Encola un cambio de configuración en Outbox si la conexión a Firestore falló
+ * @deprecated En Fase 2 Firestore persistentLocalCache gestiona la cola nativa offline.
  */
-export async function enqueueStoreOutbox(uid, key, value) {
-  if (!uid || !key) return;
-  // Nunca encolar claves de API en la outbox de Firestore
-  if (key.includes('deepseek') || key.includes('api_key') || key.includes('apikey')) return;
-
-  const outboxKey = `coachv2_store_outbox_${uid}`;
-  try {
-    const outbox = (await get(outboxKey)) || [];
-    const filtered = outbox.filter(item => item.key !== key);
-    filtered.push({ key, value: stripInternalMetadata(value), timestamp: Date.now() });
-    await set(outboxKey, filtered);
-  } catch (e) {
-    console.warn(`[StoreOutbox] Error encolando ${key}:`, e);
-  }
-}
+export async function enqueueStoreOutbox() {}
 
 /**
- * Procesa y sube todos los elementos pendientes en la cola Outbox a Firestore
+ * @deprecated En Fase 2 Firestore persistentLocalCache gestiona la sincronización offline.
  */
-export async function flushStoreOutbox(currentUser) {
-  if (!currentUser || !currentUser.uid || (typeof navigator !== 'undefined' && !navigator.onLine)) return;
-  const outboxKey = `coachv2_store_outbox_${currentUser.uid}`;
-  try {
-    const outbox = (await get(outboxKey)) || [];
-    if (!Array.isArray(outbox) || outbox.length === 0) return;
-
-    const remaining = [];
-    for (const item of outbox) {
-      try {
-        if (item.key.includes('deepseek') || item.key.includes('api_key') || item.key.includes('apikey')) {
-          continue; // Omitir credenciales
-        }
-        const docRef = doc(db, 'users', currentUser.uid, 'store', item.key);
-        const cleanVal = sanitizeForFirestore(stripInternalMetadata(item.value));
-        await setDoc(docRef, { value: cleanVal, updatedAt: new Date().toISOString(), __cleared: false }, { merge: true });
-        console.log(`[StoreOutbox] ☁️ Sincronizado ${item.key} pendiente con Firestore.`);
-      } catch (err) {
-        console.warn(`[StoreOutbox] Error subiendo ${item.key}, se mantendrá en cola:`, err);
-        remaining.push(item);
-      }
-    }
-    await set(outboxKey, remaining);
-  } catch (e) {
-    console.warn("[StoreOutbox] Error procesando cola de configuraciones:", e);
-  }
-}
+export async function flushStoreOutbox() {}

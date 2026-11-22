@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { 
   ChevronLeft, ChevronRight, Calendar as CalendarIcon 
 } from 'lucide-react';
-import { useIndexedDB as useLocalStorage } from '../../hooks/useIndexedDB';
+import { useSyncedStore } from '../../hooks/useSyncedStore';
 import CalendarAdherenceStats from './CalendarAdherenceStats';
 import CalendarGrid from './CalendarGrid';
 import CalendarDayDetailModal from './CalendarDayDetailModal';
@@ -19,7 +19,7 @@ export default function MonthlyCalendar({
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedCellModal, setSelectedCellModal] = useState(null);
 
-  const [membershipSettings] = useLocalStorage('coachv2_gym_membership_settings', {
+  const [membershipSettings] = useSyncedStore('coachv2_gym_membership_settings', {
     paymentDay: 21,
     gymName: 'Gimnasio',
     amount: '',

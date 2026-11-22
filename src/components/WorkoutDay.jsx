@@ -27,7 +27,7 @@ import { calculateVolume, calculate1RM, calculateAverageRPE, isExerciseUnilatera
 import { calculateWorkoutCalories } from '../utils/calorieCalculations';
 import { shareOrExportWorkout, downloadWorkoutTCX, downloadWorkoutJSON } from '../services/workoutExportService';
 import { generateAISessionPrompt } from '../utils/aiPromptGenerator';
-import { useIndexedDB as useLocalStorage } from '../hooks/useIndexedDB';
+import { useSyncedStore } from '../hooks/useSyncedStore';
 import { useWorkoutHistory } from '../hooks/useWorkoutHistory';
 import { Target, Calendar as CalendarIcon, Clock, ArrowRight, Loader2, Dumbbell, Save, Activity, Trash2, Cpu, FileText, CheckCircle, RotateCcw, ChevronDown, ChevronUp, RefreshCw, RefreshCcw, Plus, X, Layers, Settings2, Cloud, FileSpreadsheet, Lock, Sparkles, BookOpen, Copy, HelpCircle, Check, Flame, ShieldCheck, Zap, Database, History, Share2 } from 'lucide-react';
 import { useModal } from './common/UIComponents';
@@ -39,26 +39,26 @@ export default function WorkoutDay() {
   const todayStr = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(new Date().getDate()).padStart(2, '0')}`;
   
   // 1. Estados y Hooks de Base de Datos / LocalStorage al inicio
-  const [customRoutine, setCustomRoutine] = useLocalStorage('coachv2_custom_routine', null);
-  const [mesocycleStartDate, setMesocycleStartDate] = useLocalStorage('coachv2_mesocycle_start', null);
-  const [customExercisesMap, setCustomExercisesMap] = useLocalStorage('coachv2_custom_day_exercises', {});
-  const [swappedExercisesMap, setSwappedExercisesMap] = useLocalStorage('coachv2_swapped_exercises', {});
-  const [skippedExercisesMap, setSkippedExercisesMap] = useLocalStorage('coachv2_skipped_exercises', {});
-  const [smartwatchKcalMap, setSmartwatchKcalMap] = useLocalStorage('coachv2_smartwatch_kcal', {});
-  const [exerciseOrderMap, setExerciseOrderMap] = useLocalStorage('coachv2_exercise_orders', {});
-  const [globalWarmupDone, setGlobalWarmupDone] = useLocalStorage('coachv2_global_warmup', {});
-  const [currentSessions, setCurrentSessions, isSessionsLoading] = useLocalStorage('coachv2_active_workouts', {});
-  const [bodyMetrics, , isMetricsLoading] = useLocalStorage('coachv2_body_metrics_history', []);
-  const [bodyComposition] = useLocalStorage('coachv2_body_composition_data', {});
-  const [globalMachineConfigs] = useLocalStorage('coachv2_machine_configs', {});
-  const [globalMachineProfiles] = useLocalStorage('coachv2_machine_profiles', {});
+  const [customRoutine, setCustomRoutine] = useSyncedStore('coachv2_custom_routine', null);
+  const [mesocycleStartDate, setMesocycleStartDate] = useSyncedStore('coachv2_mesocycle_start', null);
+  const [customExercisesMap, setCustomExercisesMap] = useSyncedStore('coachv2_custom_day_exercises', {});
+  const [swappedExercisesMap, setSwappedExercisesMap] = useSyncedStore('coachv2_swapped_exercises', {});
+  const [skippedExercisesMap, setSkippedExercisesMap] = useSyncedStore('coachv2_skipped_exercises', {});
+  const [smartwatchKcalMap, setSmartwatchKcalMap] = useSyncedStore('coachv2_smartwatch_kcal', {});
+  const [exerciseOrderMap, setExerciseOrderMap] = useSyncedStore('coachv2_exercise_orders', {});
+  const [globalWarmupDone, setGlobalWarmupDone] = useSyncedStore('coachv2_global_warmup', {});
+  const [currentSessions, setCurrentSessions, isSessionsLoading] = useSyncedStore('coachv2_active_workouts', {});
+  const [bodyMetrics, , isMetricsLoading] = useSyncedStore('coachv2_body_metrics_history', []);
+  const [bodyComposition] = useSyncedStore('coachv2_body_composition_data', {});
+  const [globalMachineConfigs] = useSyncedStore('coachv2_machine_configs', {});
+  const [globalMachineProfiles] = useSyncedStore('coachv2_machine_profiles', {});
   const [workoutHistory, setWorkoutHistory, isHistoryLoading, saveSession, deleteSession] = useWorkoutHistory();
-  const [apiKey] = useLocalStorage('coachv2_deepseek_api_key', '');
-  const [googleSheetsUrl, setGoogleSheetsUrl] = useLocalStorage('coachv2_google_sheets_url', 'https://script.google.com/macros/s/AKfycbxA-KbUcEgWUq4jvjdSBxLw3tGsgPxXsF2Y7mX5JsNIpE2qslN1v7xW3NqdJ3-4b-RCwg/exec');
-  const [isDeloadMode, setIsDeloadMode] = useLocalStorage('coachv2_deload_active', false);
-  const [deloadCycleConfig, setDeloadCycleConfig] = useLocalStorage('coachv2_deload_cycle_config', null);
-  const [weekSplitOverride, setWeekSplitOverride] = useLocalStorage('coachv2_week_split_override', null);
-  const [dismissedPendingAlerts, setDismissedPendingAlerts] = useLocalStorage('coachv2_dismissed_pending_alerts', {});
+  const [apiKey] = useSyncedStore('coachv2_deepseek_api_key', '');
+  const [googleSheetsUrl, setGoogleSheetsUrl] = useSyncedStore('coachv2_google_sheets_url', 'https://script.google.com/macros/s/AKfycbxA-KbUcEgWUq4jvjdSBxLw3tGsgPxXsF2Y7mX5JsNIpE2qslN1v7xW3NqdJ3-4b-RCwg/exec');
+  const [isDeloadMode, setIsDeloadMode] = useSyncedStore('coachv2_deload_active', false);
+  const [deloadCycleConfig, setDeloadCycleConfig] = useSyncedStore('coachv2_deload_cycle_config', null);
+  const [weekSplitOverride, setWeekSplitOverride] = useSyncedStore('coachv2_week_split_override', null);
+  const [dismissedPendingAlerts, setDismissedPendingAlerts] = useSyncedStore('coachv2_dismissed_pending_alerts', {});
 
   const isLoadingDb = isHistoryLoading || isSessionsLoading || isMetricsLoading;
 
@@ -202,12 +202,6 @@ export default function WorkoutDay() {
       setIsDeloadMode(false);
       setDeloadCycleConfig(completedConfig);
 
-      // Persistir de forma atómica en idb-keyval y Firestore
-      import('idb-keyval').then(({ set }) => {
-        set('coachv2_deload_active', false).catch(() => {});
-        set('coachv2_deload_cycle_config', completedConfig).catch(() => {});
-      }).catch(() => {});
-
       modal.showAlert({
         title: "⚡ ¡Semana de Descarga Completada!",
         message: "Has completado exitosamente el microciclo de 7 días de recuperación activa y supercompensación. Tu sistema nervioso y articulaciones están al 100%. ¡Iniciando nueva fase de sobrecarga progresiva pesada!",
@@ -245,21 +239,6 @@ export default function WorkoutDay() {
           };
           setIsDeloadMode(false);
           setDeloadCycleConfig(exitedConfig);
-
-          // Asegurar persistencia directa en idb-keyval y Firestore para evitar cualquier condición de carrera
-          try {
-            const { set } = await import('idb-keyval');
-            await set('coachv2_deload_active', false);
-            await set('coachv2_deload_cycle_config', exitedConfig);
-            if (currentUser) {
-              const { doc, setDoc } = await import('firebase/firestore');
-              const { db } = await import('../services/firebase');
-              await setDoc(doc(db, 'users', currentUser.uid, 'store', 'coachv2_deload_active'), { value: false }, { merge: true });
-              await setDoc(doc(db, 'users', currentUser.uid, 'store', 'coachv2_deload_cycle_config'), { value: exitedConfig }, { merge: true });
-            }
-          } catch (err) {
-            console.warn('[Deload Exit] Error en sincronización directa:', err);
-          }
 
           modal.showAlert({
             title: "💪 Modo Deload Finalizado",

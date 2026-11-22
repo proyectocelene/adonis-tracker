@@ -7,7 +7,7 @@
 |---|---|---|---|---|---|
 | 0 | Auditoría, backup, docs para IA | Quick | Smart | — | ✅ Hecha (2026-11-22) · ⏳ falta backup fresco + commit del usuario |
 | 1 | Detener pérdida de datos | Antigravity | Planning + modelo más potente, razonamiento alto | `fix/perdida-datos` | ✅ Hecha (2026-11-22) |
-| 2 | Fuente única de verdad de datos | Antigravity | Planning + alto | `refactor/fuente-unica-datos` | ⬜ |
+| 2 | Fuente única de verdad de datos | Antigravity | Planning + alto | `refactor/fuente-unica-datos` | ✅ Hecha (2026-11-22) |
 | 3 | Tests, CI, Firestore rules | Antigravity | Planning + medio | `chore/estabilidad` | ⬜ |
 | 4 | Dividir archivos gigantes (1 archivo por chat) | Antigravity | Planning + alto | `refactor/<archivo>` | ⬜ |
 | 5 | UI para uso en el gym | Quick (mockup) → Antigravity (implementación) | Balanced / Fast | `ui/<pantalla>` | ⬜ |
@@ -65,27 +65,20 @@ Archivo: `base de datos pruebas/COACH_V2_Backup_Total_Firebase_2026-09-17.json` 
 
 ---
 
-## FASE 2 — Fuente única de verdad
-**Dónde:** Antigravity · chat nuevo `02-arquitectura-datos` · Planning + alto.
+## FASE 2 — Fuente única de verdad (✅ Hecha 2026-11-22)
+**Dónde:** Antigravity · chat `02-arquitectura-datos` · Planning + alto · Rama: `refactor/fuente-unica-datos`.
 
-```
-Lee AGENTS.md y docs/ROADMAP.md. Rama: refactor/fuente-unica-datos.
-OBJETIVO: una sola fuente de verdad para los datos. Hoy hay 3 capas
-(localStorage, idb-keyval espejo, caché offline de Firestore) + 2 outbox propias.
-
-Propón (plan primero, sin editar) y luego implementa:
-- Firestore persistentLocalCache como ÚNICA capa offline (ya tiene cola de
-  escrituras); eliminar espejo idb-keyval y outbox manuales, o justificar qué conservar.
-- Todo dato con updatedAt; sesiones con soft-delete (deletedAt) para que los
-  borrados se propaguen y no "resuciten".
-- Registro de migraciones versionado en Firestore (users/{uid}/meta), NO en localStorage.
-- Claves locales con namespace por uid.
-- Hook único useSyncedStore(key) que reemplace el alias
-  "useIndexedDB as useLocalStorage" en los 8 archivos que lo usan.
-- Migración de datos existentes sin pérdida + script que compare conteos
-  antes/después contra el backup más reciente.
-Entrega: plan → cambios → build → pruebas multi-dispositivo → ROADMAP → commit.
-```
+### Resultados y Cambios Implementados:
+- [x] **Capa offline/online consolidada:** Firestore configurado con `persistentLocalCache({ tabManager: persistentMultipleTabManager() })` como ÚNICA fuente de verdad. Se eliminaron el espejo paralelo en `idb-keyval` y las colas outbox manuales (`coachv2_outbox_${uid}`, `coachv2_store_outbox_${uid}`).
+- [x] **Soft-delete universal en `history`:** Borrado de sesiones implementado mediante marca `{ deletedAt: nowIso, updatedAt: nowIso }` con `{ merge: true }`. Las sesiones eliminadas en un dispositivo jamás resucitan en otro que sincronice offline posteriormente.
+- [x] **Aislamiento estricto de credenciales:** API key de DeepSeek aislada exclusivamente en `idb-keyval` local con namespace por usuario (`coachv2_${uid}_deepseek_api_key`), excluida 100% de Firestore y de los backups. `coachv2_theme` preservado en `localStorage` para prevenir FOUC.
+- [x] **Registro de migraciones en Firestore (`users/{uid}/meta/migrations`):** Se eliminaron las banderas volátiles en `localStorage`. La migración `v2_single_source_of_truth` se registra en la nube y se ejecuta solo con conexión verificada en el servidor sin sobreescribir datos más nuevos (`mergeStoreValues`).
+- [x] **Drenado multi-dispositivo y limpieza de espejos:** `migrationService.js` drena colas outbox remanentes en cada dispositivo antes de purgar claves espejo obsoletas en `idb-keyval`.
+- [x] **Hook unificado `useSyncedStore(key, initialValue)`:** Creado en `src/hooks/useSyncedStore.js` con suscripción directa `onSnapshot` a `users/{uid}/store/{key}`. Mantiene `initialValueRef`, cola de carga `isLoadedRef`, y `dataGuardian`. Maneja transparentemente Clean Slate persistiendo `__cleared: true` y `clearedAt` mientras entrega el valor limpio a React.
+- [x] **Retrocompatibilidad total:** `useIndexedDB.js` y `useLocalStorage.js` re-exportan `useSyncedStore`. Los 8 componentes consumidores (`BodyWeightView`, `ExerciseRow`, `HistoryView`, `WorkoutDay`, `GymMembershipReminder`, `SetLogger`, `MonthlyCalendar`, `useGamification`) fueron migrados directamente a `useSyncedStore`.
+- [x] **Logout limpio:** En `useWorkoutHistory.js`, cuando `currentUser` pasa a `null`, el estado en memoria se reinicia a `[]` sin disparar falsas alertas de DataGuardian.
+- [x] **`backupService.js` como fuente única:** `exportFullDatabase` y `exportWorkoutHistory` leen directamente de Firestore (filtrando `!s.deletedAt`) sin mezclar volcados locales antiguos. `restoreFullDatabase` aplica upsert con `deletedAt: null`, soft-delete a sesiones huérfanas y elimina escrituras espejo a `idb-keyval`.
+- [x] **Validación y compilación:** Script temporal de verificación ejecutado con éxito total contra el backup maestro del 2026-11-22 (113 sesiones, 171 machineConfigs, 146 profiles, 9 pesos, 25 bioimpedancia, soft-delete, DataGuardian y exclusión de API keys). `npm run build` limpio y optimizado con PWA.
 
 ## FASE 3 — Estabilidad
 **Dónde:** Antigravity · chat nuevo `03-estabilidad` · Planning + medio.

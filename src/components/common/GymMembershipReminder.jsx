@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { useIndexedDB as useLocalStorage } from '../../hooks/useIndexedDB';
+import { useSyncedStore } from '../../hooks/useSyncedStore';
 import { Calendar, AlertCircle, CheckCircle2, Clock, DollarSign, Settings2, Bell, Check, ChevronRight } from 'lucide-react';
 import { useModal } from './UIComponents';
 
 export default function GymMembershipReminder({ compact = false }) {
   const modal = useModal();
-  const [membershipSettings, setMembershipSettings] = useLocalStorage('coachv2_gym_membership_settings', {
+  const [membershipSettings, setMembershipSettings] = useSyncedStore('coachv2_gym_membership_settings', {
     paymentDay: 21,
     gymName: 'Gimnasio',
     amount: '',
