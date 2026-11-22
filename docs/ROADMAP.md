@@ -6,7 +6,7 @@
 | Fase | Objetivo | Herramienta | Modo | Rama | Estado |
 |---|---|---|---|---|---|
 | 0 | Auditoría, backup, docs para IA | Quick | Smart | — | ✅ Hecha (2026-11-22) · ⏳ falta backup fresco + commit del usuario |
-| 1 | Detener pérdida de datos | Antigravity | Planning + modelo más potente, razonamiento alto | `fix/perdida-datos` | ⬜ Pendiente |
+| 1 | Detener pérdida de datos | Antigravity | Planning + modelo más potente, razonamiento alto | `fix/perdida-datos` | ✅ Hecha (2026-11-22) |
 | 2 | Fuente única de verdad de datos | Antigravity | Planning + alto | `refactor/fuente-unica-datos` | ⬜ |
 | 3 | Tests, CI, Firestore rules | Antigravity | Planning + medio | `chore/estabilidad` | ⬜ |
 | 4 | Dividir archivos gigantes (1 archivo por chat) | Antigravity | Planning + alto | `refactor/<archivo>` | ⬜ |
@@ -50,60 +50,20 @@ Archivo: `base de datos pruebas/COACH_V2_Backup_Total_Firebase_2026-09-17.json` 
 
 ---
 
-## FASE 1 — Detener la pérdida de datos
-**Dónde:** Antigravity · chat nuevo `01-perdida-datos` · Planning · modelo más potente con razonamiento alto.
+## FASE 1 — Detener la pérdida de datos (✅ Hecha 2026-11-22)
+**Dónde:** Antigravity · chat `01-perdida-datos` · Planning · Rama: `fix/perdida-datos`.
 
-```
-Lee AGENTS.md, docs/ROADMAP.md y AI_INSTRUCTIONS_PROJECT_CONTEXT.md.
-Crea la rama git fix/perdida-datos.
+### Resultados y Cambios Implementados:
+- [x] **Tarea A:** Purgas de arranque eliminadas de `App.jsx` (`PROTOCOL_V3_FLAG` y `PURGE_ACTIVE_V7` removidos al 100%). Ningún código de arranque escribe en Firestore sin `{ merge: true }`.
+- [x] **Tarea B:** `mergeStoreValues` en `storeSyncHelper.js` reescrito. Un valor vacío (`{}`, `[]`, `null`) NUNCA borra datos poblados. Borrado explícito controlado con marca `{ __cleared: true, clearedAt }` comparado contra timestamps. Los metadatos internos son purgados con `stripInternalMetadata` para que jamás contaminen `Object.keys()` en el estado de React.
+- [x] **Tarea C:** `useIndexedDB.js` implementa `isLoadedRef` y cola `pendingQueueRef`. `setValue` se encola mientras `isLoading === true`; `initialValue` nunca se persiste automáticamente ni en IndexedDB ni en Firestore.
+- [x] **Tarea D:** `backupService.js` exporta todas las claves `coachv2_*` (`deload_*`, `machine_profiles`, `week_split_override`, `dismissed_pending_alerts`, etc.) y purga credenciales de API (`stripSensitiveBackupKeys`). `restoreFullDatabase` centraliza la creación de un auto-backup de seguridad previo, realiza upsert por lotes con `writeBatch` (lotes de 400 con `{ merge: true }`) SIN borrar previamente la base de datos, y solo al final depura huérfanos sobrantes (excluyendo estrictamente claves sensibles/locales).
+- [x] **Tarea E:** `ModalProvider` en `UIComponents.jsx` soporta `requireWord: 'BORRAR'`. Acciones destructivas ("Reset Total" en `HistoryView.jsx`, "Clean Slate" y "Restablecer a Oficial" en `cleanSlateService.js` / `WorkoutDay.jsx`, "Restaurar Backup") descargan backup previo y bloquean el botón de confirmación hasta escribir exactamente `BORRAR`.
+- [x] **Tarea F:** `navigator.storage.persist()` activado en `App.jsx` para solicitar persistencia de almacenamiento al navegador y prevenir desalojo de IndexedDB.
+- [x] **Tarea G:** `dataGuardian.js` creado e integrado en `useIndexedDB.js` y `useWorkoutHistory.js`. Intercepta y bloquea de forma segura cualquier reducción anómala >50% o vaciado total de datasets críticos (`coachv2_history`, configuraciones, métricas), sin lanzar excepciones no capturadas que congelen React.
+- [x] **Tarea H:** API key de DeepSeek unificada a `coachv2_deepseek_api_key`. Migración automática en `App.jsx`, clave local exclusiva en IndexedDB (excluida de la sincronización de Firestore en `syncService.js` y de los backups en `backupService.js`).
 
-OBJETIVO DE ESTE CHAT: SOLO eliminar las causas de pérdida de datos.
-NO toques UI, NO refactorices, NO cambies lógica de entrenamiento.
-
-Hallazgos confirmados (verifícalos antes de editar):
-1. src/App.jsx: los bloques PROTOCOL_V3_FLAG y PURGE_ACTIVE_V7 escriben {}/null
-   en IndexedDB y Firestore (PURGE con setDoc SIN merge). Sus banderas usan
-   `currentUser?.uid || 'guest'` y viven en localStorage 'coachv2_*', que la
-   migración borra → las purgas se re-ejecutan (evidencia: el backup contiene
-   las banderas *_guest). También corren en cada dispositivo nuevo.
-2. storeSyncHelper.mergeStoreValues: en machine_configs, machine_profiles,
-   swapped, skipped, smartwatch_kcal, global_warmup, body_composition_data y
-   exercise_orders un objeto vacío "gana" y vacía el otro lado; syncService
-   luego sube ese {} a Firestore.
-3. useIndexedDB: setValue puede ejecutarse con isLoading=true y persistir el
-   initialValue ({} / []) local y en la nube.
-4. backupService.restoreFullDatabase borra TODO Firestore ANTES de restaurar,
-   y el export no incluye machine_profiles, deload_*, week_split_override,
-   dismissed_pending_alerts → un restore pierde esos datos.
-5. Reset Total / Clean Slate / Reset Official son destructivos con 1 confirm.
-6. La API key de DeepSeek viaja en Firestore y en el backup JSON; además hay
-   dos nombres de clave (coachv2_deepseek_api_key vs coachv2_deepseek_apikey).
-
-Tareas:
-A. Eliminar las purgas de arranque de App.jsx (ya cumplieron su función).
-   Ningún código de arranque escribe en Firestore sin merge.
-B. Reescribir mergeStoreValues: un vacío NUNCA borra datos, salvo borrado
-   explícito marcado {__cleared:true, clearedAt}. updatedAt por clave
-   (last-write-wins por clave).
-C. useIndexedDB: encolar setValue hasta terminar la carga; nunca persistir initialValue.
-D. Backup: exportar TODAS las claves coachv2_* (excepto la API key).
-   restoreFullDatabase: backup automático primero; writeBatch en modo upsert
-   SIN borrar; borrar sobrantes solo al final y solo si todo se escribió.
-E. Antes de cualquier acción destructiva: backup JSON automático + escribir "BORRAR".
-F. navigator.storage.persist() al iniciar.
-G. Guardián: si una escritura reduce un dataset >50%, bloquear, loguear y pedir confirmación.
-H. Unificar el nombre de la clave de la API key (con migración) y sacarla del backup.
-
-Restricciones: cambios mínimos, no renombrar otras claves, 100% compatible con datos actuales.
-
-Entrega:
-1) PLAN para mi aprobación ANTES de editar.
-2) Cambios.
-3) npm run build limpio.
-4) Pruebas manuales: dispositivo nuevo, localStorage borrado, login/logout,
-   modo avión, restore con el backup más reciente de "base de datos pruebas/".
-5) Actualiza docs/ROADMAP.md (hecho / pendiente / decisiones) y haz commit.
-```
+---
 
 ## FASE 2 — Fuente única de verdad
 **Dónde:** Antigravity · chat nuevo `02-arquitectura-datos` · Planning + alto.
@@ -170,3 +130,4 @@ regresiones, setDoc sin merge, código muerto. Veredicto: aprobar / corregir.
 
 ## 📒 Bitácora de decisiones
 - 2026-11-22 · Fase 0 · Se adoptan las Reglas de Seguridad de Datos en `AGENTS.md`. Se decide implementar en Antigravity (puede ejecutar build/dev server) y revisar en Quick.
+- 2026-11-22 · Fase 1 · Se completan las tareas A-H para eliminar todas las causas de pérdida de datos. Se blindan `mergeStoreValues`, `useIndexedDB`, `useWorkoutHistory`, `syncService` y `backupService` (upsert sin wipe previo). Las acciones destructivas ahora requieren confirmación escribiendo `BORRAR` y generan backup previo automático. Se crea `dataGuardian.js` para bloquear caídas anómalas >50%. Build y pruebas de integridad 100% exitosas.

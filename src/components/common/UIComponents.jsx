@@ -17,11 +17,15 @@ export const ModalProvider = ({ children }) => {
     message: '',
     confirmText: 'Aceptar',
     cancelText: 'Cancelar',
+    requireWord: null,
     onConfirm: null,
     onCancel: null
   });
 
+  const [inputWord, setInputWord] = useState('');
+
   const showAlert = ({ title, message, variant = 'info', buttonText = 'Entendido' }) => {
+    setInputWord('');
     setModalState({
       isOpen: true,
       type: 'alert',
@@ -29,11 +33,16 @@ export const ModalProvider = ({ children }) => {
       title: title || 'Notificación del Coach',
       message,
       confirmText: buttonText,
-      onConfirm: () => setModalState(prev => ({ ...prev, isOpen: false }))
+      requireWord: null,
+      onConfirm: () => {
+        setModalState(prev => ({ ...prev, isOpen: false }));
+        setInputWord('');
+      }
     });
   };
 
-  const showConfirm = ({ title, message, variant = 'warning', confirmText = 'Aceptar', cancelText = 'Cancelar', onConfirm, onCancel }) => {
+  const showConfirm = ({ title, message, variant = 'warning', confirmText = 'Aceptar', cancelText = 'Cancelar', requireWord = null, onConfirm, onCancel }) => {
+    setInputWord('');
     setModalState({
       isOpen: true,
       type: 'confirm',
@@ -42,12 +51,15 @@ export const ModalProvider = ({ children }) => {
       message,
       confirmText,
       cancelText,
+      requireWord,
       onConfirm: () => {
         setModalState(prev => ({ ...prev, isOpen: false }));
+        setInputWord('');
         if (onConfirm) onConfirm();
       },
       onCancel: () => {
         setModalState(prev => ({ ...prev, isOpen: false }));
+        setInputWord('');
         if (onCancel) onCancel();
       }
     });
@@ -143,6 +155,32 @@ export const ModalProvider = ({ children }) => {
               {modalState.message}
             </div>
 
+            {modalState.requireWord && (
+              <div style={{ marginBottom: '16px', textAlign: 'left' }}>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: 'var(--text-secondary)', marginBottom: '6px' }}>
+                  Escribe <span style={{ color: 'var(--accent-red)', fontWeight: '900' }}>{modalState.requireWord}</span> para desbloquear la acción:
+                </label>
+                <input
+                  type="text"
+                  value={inputWord}
+                  onChange={(e) => setInputWord(e.target.value)}
+                  placeholder={modalState.requireWord}
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    borderRadius: '10px',
+                    border: inputWord === modalState.requireWord ? '2px solid var(--accent-emerald)' : '1px solid var(--border-strong)',
+                    background: 'var(--bg-surface-secondary)',
+                    color: 'var(--text-main)',
+                    fontSize: '14px',
+                    fontWeight: '700',
+                    outline: 'none',
+                    boxSizing: 'border-box'
+                  }}
+                />
+              </div>
+            )}
+
             <div style={{ 
               display: 'grid', 
               gridTemplateColumns: modalState.type === 'confirm' ? '1fr 1.3fr' : '1fr', 
@@ -170,6 +208,7 @@ export const ModalProvider = ({ children }) => {
 
               <button
                 type="button"
+                disabled={Boolean(modalState.requireWord && inputWord !== modalState.requireWord)}
                 onClick={modalState.onConfirm}
                 style={{
                   padding: '12px 14px',
@@ -179,7 +218,8 @@ export const ModalProvider = ({ children }) => {
                   color: modalState.variant === 'success' ? '#000000' : '#ffffff',
                   fontSize: '13px',
                   fontWeight: '800',
-                  cursor: 'pointer',
+                  cursor: (modalState.requireWord && inputWord !== modalState.requireWord) ? 'not-allowed' : 'pointer',
+                  opacity: (modalState.requireWord && inputWord !== modalState.requireWord) ? 0.45 : 1,
                   transition: 'all 0.2s ease'
                 }}
               >

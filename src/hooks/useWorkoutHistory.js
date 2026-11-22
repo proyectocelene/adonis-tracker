@@ -3,10 +3,10 @@ import { db, sanitizeForFirestore } from '../services/firebase';
 import { collection, doc, onSnapshot, setDoc, deleteDoc } from 'firebase/firestore';
 import { useAuth } from '../contexts/AuthContext';
 import { get, set } from 'idb-keyval';
+import { validateDatasetChange } from '../services/dataGuardian';
 
 export function useWorkoutHistory() {
   const [history, setHistory] = useState([]);
-  const setWorkoutHistory = setHistory;
   const [isLoading, setIsLoading] = useState(true);
   const { currentUser } = useAuth();
   const historyRefState = useRef(history);
@@ -14,6 +14,20 @@ export function useWorkoutHistory() {
 
   const cacheKey = currentUser ? `coachv2_history_cache_${currentUser.uid}` : 'coachv2_history_cache_anon';
   const outboxKey = currentUser ? `coachv2_outbox_${currentUser.uid}` : 'coachv2_outbox_anon';
+
+  const setWorkoutHistory = useCallback((value) => {
+    const prev = historyRefState.current || [];
+    const nextVal = typeof value === 'function' ? value(prev) : value;
+    const check = validateDatasetChange('coachv2_history', prev, nextVal);
+    if (!check.allowed) {
+      console.error(`[DataGuardian] Actualización de historial bloqueada en useWorkoutHistory: ${check.reason}`);
+      return;
+    }
+    historyRefState.current = nextVal;
+    setHistory(nextVal);
+    set(cacheKey, nextVal).catch(err => console.warn("Error guardando en caché IndexedDB:", err));
+    set('coachv2_history', nextVal).catch(() => {});
+  }, [cacheKey]);
 
   // 1. CARGA INSTANTÁNEA (0ms) DESDE INDEXEDDB LOCAL
   useEffect(() => {
@@ -116,6 +130,15 @@ export function useWorkoutHistory() {
           const timeB = new Date(b.timestamp || b.date || b.startTime || b.id || 0).getTime() || 0;
           return timeA - timeB;
         });
+
+        // Verificación con DataGuardian: bloquear si un snapshot vacío o anómalo intenta pisar el historial
+        const prevHistory = historyRefState.current || [];
+        const guardianCheck = validateDatasetChange('coachv2_history', prevHistory, allSessions);
+        if (!guardianCheck.allowed) {
+          console.error(`[DataGuardian] Snapshot de Firestore bloqueado por reducción anómala: ${guardianCheck.reason}`);
+          if (isMounted) setIsLoading(false);
+          return;
+        }
 
         historyRefState.current = allSessions;
         setHistory(allSessions);

@@ -173,53 +173,38 @@ function AppContent() {
     }
     
     runCentralizedMigration();
-
-    // 4. Activar Protocolo Adonis Definitivo (limpiar residuos locales antiguos de swaps y reordenamientos)
-    const PROTOCOL_V3_FLAG = `coachv2_protocol_adonis_2026_09_07_clean_${currentUser?.uid || 'guest'}`;
-    if (localStorage.getItem(PROTOCOL_V3_FLAG) !== 'true') {
-      import('idb-keyval').then(async ({ set }) => {
-        await set('coachv2_custom_day_exercises', {});
-        await set('coachv2_swapped_exercises', {});
-        await set('coachv2_exercise_orders', {});
-        await set('coachv2_custom_routine', null);
-
-        if (currentUser) {
-          try {
-            const { doc, setDoc } = await import('firebase/firestore');
-            const { db, sanitizeForFirestore } = await import('./services/firebase');
-            await setDoc(doc(db, 'users', currentUser.uid, 'store', 'coachv2_custom_day_exercises'), { value: {} }, { merge: true });
-            await setDoc(doc(db, 'users', currentUser.uid, 'store', 'coachv2_swapped_exercises'), { value: {} }, { merge: true });
-            await setDoc(doc(db, 'users', currentUser.uid, 'store', 'coachv2_exercise_orders'), { value: {} }, { merge: true });
-            await setDoc(doc(db, 'users', currentUser.uid, 'store', 'coachv2_custom_routine'), { value: null }, { merge: true });
-          } catch (e) {
-            console.warn("[ProtocolV3] Firestore store cleanup aviso:", e.message);
-          }
-        }
-        localStorage.setItem(PROTOCOL_V3_FLAG, 'true');
-      }).catch(() => {});
-    }
-
-    // 5. Purgado definitivo de residuos de borradores obsoletos en coachv2_active_workouts y coachv2_global_warmup
-    const PURGE_ACTIVE_V7 = `coachv2_purge_active_v7_${currentUser?.uid || 'guest'}`;
-    if (localStorage.getItem(PURGE_ACTIVE_V7) !== 'true') {
-      import('idb-keyval').then(async ({ set }) => {
-        await set('coachv2_active_workouts', {});
-        await set('coachv2_global_warmup', {});
-        if (currentUser) {
-          try {
-            const { doc, setDoc } = await import('firebase/firestore');
-            const { db } = await import('./services/firebase');
-            await setDoc(doc(db, 'users', currentUser.uid, 'store', 'coachv2_active_workouts'), { value: {} });
-            await setDoc(doc(db, 'users', currentUser.uid, 'store', 'coachv2_global_warmup'), { value: {} });
-          } catch (e) {
-            console.warn("[PurgeActive] Firestore purge aviso:", e.message);
-          }
-        }
-        localStorage.setItem(PURGE_ACTIVE_V7, 'true');
-        console.log("🧹 [Adonis] coachv2_active_workouts y coachv2_global_warmup purgados al 100% en IndexedDB y Firestore.");
-      }).catch(err => console.error("Error purgando coachv2_active_workouts:", err));
-    }
   }, [currentUser]);
+
+  // Garantizar persistencia de almacenamiento contra desalojos del navegador
+  useEffect(() => {
+    if (typeof navigator !== 'undefined' && navigator.storage && navigator.storage.persist) {
+      navigator.storage.persist().then(persisted => {
+        if (persisted) {
+          console.log("🔒 [Storage] Persistencia de almacenamiento concedida por el navegador.");
+        }
+      }).catch(e => console.warn("[Storage] Error solicitando persistencia:", e));
+    }
+  }, []);
+
+  // Migración transparente de clave antigua coachv2_deepseek_apikey -> coachv2_deepseek_api_key
+  useEffect(() => {
+    async function migrateApiKey() {
+      try {
+        const { get, set, del } = await import('idb-keyval');
+        const oldVal = (await get('coachv2_deepseek_apikey')) || localStorage.getItem('coachv2_deepseek_apikey');
+        const currentVal = await get('coachv2_deepseek_api_key');
+        if (oldVal && !currentVal) {
+          await set('coachv2_deepseek_api_key', oldVal);
+          localStorage.setItem('coachv2_deepseek_api_key', oldVal);
+        }
+        if (oldVal) {
+          await del('coachv2_deepseek_apikey');
+          localStorage.removeItem('coachv2_deepseek_apikey');
+        }
+      } catch (e) {}
+    }
+    migrateApiKey();
+  }, []);
 
   // 6. Sincronización Maestra Nube ➔ IndexedDB al entrar a la app (garantiza análisis local al 100%)
   useEffect(() => {

@@ -1,8 +1,25 @@
-import { db, sanitizeForFirestore } from './firebase';
-import { collection, getDocs, doc, getDoc, setDoc, deleteDoc } from 'firebase/firestore';
-import { entries, setMany } from 'idb-keyval';
-import { scientificProtocol } from '../data/scientificProtocol';
-import { UNIFIED_EXERCISE_LIBRARY } from '../data/unifiedExerciseLibrary';
+import { db, sanitizeForFirestore } from './firebase.js';
+import { collection, getDocs, doc, getDoc, setDoc, deleteDoc, writeBatch } from 'firebase/firestore';
+import { entries, setMany, set } from 'idb-keyval';
+import { scientificProtocol } from '../data/scientificProtocol.js';
+import { UNIFIED_EXERCISE_LIBRARY } from '../data/unifiedExerciseLibrary.js';
+import { stripInternalMetadata } from './storeSyncHelper.js';
+
+/**
+ * Filtra y elimina cualquier clave que contenga credenciales de API (DeepSeek, etc.)
+ */
+export function stripSensitiveBackupKeys(data) {
+  if (!data || typeof data !== 'object') return data;
+  if (Array.isArray(data)) return data.map(stripSensitiveBackupKeys);
+  const clean = {};
+  for (const [k, v] of Object.entries(data)) {
+    if (/api_?key/i.test(k) || /deepseek/i.test(k)) {
+      continue;
+    }
+    clean[k] = (v && typeof v === 'object') ? stripSensitiveBackupKeys(v) : v;
+  }
+  return clean;
+}
 
 /**
  * Función auxiliar para descargar un objeto como archivo JSON
@@ -109,7 +126,7 @@ export function sanitizeWorkoutHistory(rawHistory = []) {
  * - Todos los estados y configuraciones (subcolección store: active workouts, body metrics, custom exercises, swapped, routine overrides, etc.)
  * - Estructura base del protocolo científico y catálogo de ejercicios
  */
-export async function exportFullDatabase(currentUser) {
+export async function exportFullDatabase(currentUser, options = {}) {
   let workoutHistory = [];
   const storeData = {};
   let localDbDump = {};
@@ -180,6 +197,14 @@ export async function exportFullDatabase(currentUser) {
   const mesocycleStartDate = storeData['coachv2_mesocycle_start'] || localDbDump['coachv2_mesocycle_start'] || null;
   const weightPreferredUnit = storeData['coachv2_weight_preferred_unit'] || localDbDump['coachv2_weight_preferred_unit'] || 'kg';
   const googleSheetsUrl = storeData['coachv2_google_sheets_url'] || localDbDump['coachv2_google_sheets_url'] || '';
+  const deloadActive = storeData['coachv2_deload_active'] !== undefined ? storeData['coachv2_deload_active'] : (localDbDump['coachv2_deload_active'] || false);
+  const deloadCycleConfig = storeData['coachv2_deload_cycle_config'] || localDbDump['coachv2_deload_cycle_config'] || null;
+  const weekSplitOverride = storeData['coachv2_week_split_override'] || localDbDump['coachv2_week_split_override'] || null;
+  const dismissedPendingAlerts = storeData['coachv2_dismissed_pending_alerts'] || localDbDump['coachv2_dismissed_pending_alerts'] || {};
+
+  // Sanitizar volcados de claves sensibles (API Keys)
+  const safeStoreDump = stripSensitiveBackupKeys(storeData);
+  const safeIdbDump = stripSensitiveBackupKeys(localDbDump);
 
   const fullMasterBackup = {
     appVersion: "COACH V2 - Protocolo Adonis Científico (Backup Maestro 100% Firebase & Local)",
@@ -205,17 +230,32 @@ export async function exportFullDatabase(currentUser) {
     mesocycleStartDate,
     weightPreferredUnit,
     googleSheetsUrl,
+    deloadActive,
+    deloadCycleConfig,
+    weekSplitOverride,
+    dismissedPendingAlerts,
 
     // Estructuras de Referencia
     scientificProtocol,
     unifiedExerciseLibrary: UNIFIED_EXERCISE_LIBRARY,
 
-    // Volcado Completo Firestore & Local
-    firestoreStoreDump: storeData,
-    rawIndexedDBDump: localDbDump
+    // Volcado Completo Firestore & Local (sanitizado sin credenciales)
+    firestoreStoreDump: safeStoreDump,
+    rawIndexedDBDump: safeIdbDump
   };
 
-  const filename = `COACH_V2_Backup_Total_Firebase_${new Date().toISOString().split('T')[0]}.json`;
+  const filename = options.isAutoBackup
+    ? `COACH_V2_PreRestore_AutoBackup_${new Date().toISOString().replace(/[:.]/g, '-')}.json`
+    : `COACH_V2_Backup_Total_Firebase_${new Date().toISOString().split('T')[0]}.json`;
+
+  if (options.isAutoBackup) {
+    try {
+      await set('coachv2_prerestore_safety_backup', fullMasterBackup);
+    } catch (e) {
+      console.warn("No se pudo guardar copia pre-restore en IndexedDB:", e);
+    }
+  }
+
   downloadJsonFile(fullMasterBackup, filename);
   return { success: true, countSessions: mergedWorkoutHistory.length, filename };
 }
@@ -534,21 +574,15 @@ export async function restoreFullDatabase(currentUser, jsonData, onProgress) {
   let totalSessionsRestored = 0;
   let totalKeysRestored = 0;
 
-  // 0. LIMPIAR BASE DE DATOS ACTUAL (WIPE)
-  if (onProgress) onProgress("Borrando base de datos actual para un inicio limpio...");
-  const historyColRef = collection(db, 'users', currentUser.uid, 'history');
-  const historySnap = await getDocs(historyColRef);
-  for (const document of historySnap.docs) {
-    await deleteDoc(doc(db, 'users', currentUser.uid, 'history', document.id));
-  }
-  
-  const storeColRef = collection(db, 'users', currentUser.uid, 'store');
-  const storeSnap = await getDocs(storeColRef);
-  for (const document of storeSnap.docs) {
-    await deleteDoc(doc(db, 'users', currentUser.uid, 'store', document.id));
+  // 0. RESPALDO AUTOMÁTICO DE SEGURIDAD PREVIO (Centralizado aquí para no duplicar descargas)
+  if (onProgress) onProgress("Generando respaldo de seguridad automático antes de restaurar...");
+  try {
+    await exportFullDatabase(currentUser, { isAutoBackup: true });
+  } catch (backupErr) {
+    console.warn("[Restore] Aviso: No se pudo generar auto-backup previo:", backupErr);
   }
 
-  // 1. Restaurar Historial de Entrenamientos en Firebase Firestore
+  // 1. Restaurar Historial de Entrenamientos en Firebase Firestore con writeBatch (Modo Upsert)
   const sessionsToRestore = [];
   if (Array.isArray(jsonData.workoutHistory)) {
     sessionsToRestore.push(...jsonData.workoutHistory);
@@ -556,20 +590,31 @@ export async function restoreFullDatabase(currentUser, jsonData, onProgress) {
     sessionsToRestore.push(...jsonData.history);
   }
 
+  const restoredSessionIds = new Set();
+
   if (sessionsToRestore.length > 0) {
-    if (onProgress) onProgress("Restaurando sesiones históricas en Firebase...");
-    for (let i = 0; i < sessionsToRestore.length; i++) {
-      const session = sessionsToRestore[i];
-      const sessionId = session.id || `ses_${session.timestamp ? session.timestamp.split('T')[0] : Date.now()}_${session.dayId || 'd' + i}`;
-      session.id = sessionId;
-      
-      const sessionRef = doc(db, 'users', currentUser.uid, 'history', sessionId);
-      await setDoc(sessionRef, sanitizeForFirestore(session), { merge: true });
-      totalSessionsRestored++;
+    if (onProgress) onProgress("Restaurando sesiones históricas en Firebase con upsert seguro...");
+    for (let i = 0; i < sessionsToRestore.length; i += 400) {
+      const chunk = sessionsToRestore.slice(i, i + 400);
+      const batch = writeBatch(db);
+
+      for (let j = 0; j < chunk.length; j++) {
+        const session = chunk[j];
+        const sessionId = session.id || `ses_${session.timestamp ? session.timestamp.split('T')[0] : Date.now()}_${session.dayId || 'd' + (i + j)}`;
+        session.id = sessionId;
+        restoredSessionIds.add(sessionId);
+
+        const sessionRef = doc(db, 'users', currentUser.uid, 'history', sessionId);
+        batch.set(sessionRef, sanitizeForFirestore(session), { merge: true });
+        totalSessionsRestored++;
+      }
+
+      await batch.commit();
+      if (onProgress) onProgress(`Restauradas ${totalSessionsRestored}/${sessionsToRestore.length} sesiones...`);
     }
   }
 
-  // 2. Restaurar Documentos de la Subcolección 'store'
+  // 2. Restaurar Documentos de la Subcolección 'store' con writeBatch (Modo Upsert)
   const storeEntries = {};
 
   // Extraer llaves directas del JSON si existen
@@ -588,30 +633,98 @@ export async function restoreFullDatabase(currentUser, jsonData, onProgress) {
   if (jsonData.mesocycleStartDate) storeEntries['coachv2_mesocycle_start'] = jsonData.mesocycleStartDate;
   if (jsonData.weightPreferredUnit) storeEntries['coachv2_weight_preferred_unit'] = jsonData.weightPreferredUnit;
   if (jsonData.googleSheetsUrl) storeEntries['coachv2_google_sheets_url'] = jsonData.googleSheetsUrl;
+  if (jsonData.deloadActive !== undefined) storeEntries['coachv2_deload_active'] = jsonData.deloadActive;
+  if (jsonData.deloadCycleConfig) storeEntries['coachv2_deload_cycle_config'] = jsonData.deloadCycleConfig;
+  if (jsonData.weekSplitOverride) storeEntries['coachv2_week_split_override'] = jsonData.weekSplitOverride;
+  if (jsonData.dismissedPendingAlerts) storeEntries['coachv2_dismissed_pending_alerts'] = jsonData.dismissedPendingAlerts;
 
-  // Extraer del volcado FirestoreDump o rawIndexedDBDump
+  // Extraer del volcado FirestoreDump o rawIndexedDBDump (excluyendo credenciales)
   const dumpSource = jsonData.firestoreStoreDump || jsonData.rawIndexedDBDump || jsonData.rawLocalStorageDump || {};
   Object.entries(dumpSource).forEach(([key, val]) => {
     if (key.startsWith('coachv2_')) {
+      // NUNCA sobreescribir o restaurar credenciales de API
+      if (/api_?key/i.test(key) || /deepseek/i.test(key)) {
+        return;
+      }
       storeEntries[key] = val;
     }
   });
 
-  if (onProgress) onProgress("Sincronizando configuraciones y estado en Firestore...");
-  for (const [key, value] of Object.entries(storeEntries)) {
-    if (value !== undefined) {
-      const docRef = doc(db, 'users', currentUser.uid, 'store', key);
-      await setDoc(docRef, { value: sanitizeForFirestore(value) }, { merge: true });
-      totalKeysRestored++;
+  const restoredStoreKeys = new Set();
+  const storeEntriesList = Object.entries(storeEntries);
+
+  if (storeEntriesList.length > 0) {
+    if (onProgress) onProgress("Sincronizando configuraciones en Firestore con upsert seguro...");
+    for (let i = 0; i < storeEntriesList.length; i += 400) {
+      const chunk = storeEntriesList.slice(i, i + 400);
+      const batch = writeBatch(db);
+
+      for (const [key, value] of chunk) {
+        if (value !== undefined) {
+          restoredStoreKeys.add(key);
+          const docRef = doc(db, 'users', currentUser.uid, 'store', key);
+          const cleanVal = sanitizeForFirestore(stripInternalMetadata(value));
+          batch.set(docRef, { value: cleanVal, restoredAt: new Date().toISOString() }, { merge: true });
+          totalKeysRestored++;
+        }
+      }
+
+      await batch.commit();
+      if (onProgress) onProgress(`Sincronizadas ${totalKeysRestored}/${storeEntriesList.length} configuraciones...`);
     }
   }
 
-  // 3. Sincronizar también en IndexedDB local
+  // 3. LIMPIEZA DE HUÉRFANOS SOBRANTES SOLO AL FINAL (Tras éxito total de escritura)
   try {
-    const idbEntries = Object.entries(storeEntries);
+    if (onProgress) onProgress("Comprobando coherencia y depurando registros huérfanos...");
+
+    // 3.1 Purgar sesiones que ya no existen en el backup
+    const historyColRef = collection(db, 'users', currentUser.uid, 'history');
+    const historySnap = await getDocs(historyColRef);
+    const orphanHistoryDocs = historySnap.docs.filter(docSnap => !restoredSessionIds.has(docSnap.id));
+
+    if (orphanHistoryDocs.length > 0) {
+      if (onProgress) onProgress(`Depurando ${orphanHistoryDocs.length} sesiones obsoletas no presentes en el backup...`);
+      for (let i = 0; i < orphanHistoryDocs.length; i += 400) {
+        const delBatch = writeBatch(db);
+        orphanHistoryDocs.slice(i, i + 400).forEach(d => delBatch.delete(d.ref));
+        await delBatch.commit();
+      }
+    }
+
+    // 3.2 Purgar configuraciones obsoletas (EXCLUYENDO estrictamente API keys, autenticación y marcas de migración)
+    const storeColRef = collection(db, 'users', currentUser.uid, 'store');
+    const storeSnap = await getDocs(storeColRef);
+    const orphanStoreDocs = storeSnap.docs.filter(docSnap => {
+      const k = docSnap.id;
+      // NUNCA borrar claves de API, autenticación, migración o métricas locales
+      if (/api_?key/i.test(k) || /deepseek/i.test(k) || k.includes('migrated') || k.includes('last_cloud_sync')) {
+        return false;
+      }
+      return !restoredStoreKeys.has(k);
+    });
+
+    if (orphanStoreDocs.length > 0) {
+      if (onProgress) onProgress(`Depurando ${orphanStoreDocs.length} configuraciones obsoletas...`);
+      for (let i = 0; i < orphanStoreDocs.length; i += 400) {
+        const delBatch = writeBatch(db);
+        orphanStoreDocs.slice(i, i + 400).forEach(d => delBatch.delete(d.ref));
+        await delBatch.commit();
+      }
+    }
+  } catch (cleanErr) {
+    console.warn("[Restore] Aviso al depurar huérfanos posteriores:", cleanErr);
+  }
+
+  // 4. Sincronizar también en IndexedDB local
+  try {
+    const idbEntries = Object.entries(storeEntries).map(([k, v]) => [k, stripInternalMetadata(v)]);
     if (idbEntries.length > 0) {
       await setMany(idbEntries);
     }
+    const cacheKey = `coachv2_history_cache_${currentUser.uid}`;
+    await set(cacheKey, sessionsToRestore);
+    await set('coachv2_history', sessionsToRestore);
   } catch (e) {
     console.warn("No se pudo escribir en idb-keyval local:", e);
   }

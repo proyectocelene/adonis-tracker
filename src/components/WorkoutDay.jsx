@@ -53,7 +53,7 @@ export default function WorkoutDay() {
   const [globalMachineConfigs] = useLocalStorage('coachv2_machine_configs', {});
   const [globalMachineProfiles] = useLocalStorage('coachv2_machine_profiles', {});
   const [workoutHistory, setWorkoutHistory, isHistoryLoading, saveSession, deleteSession] = useWorkoutHistory();
-  const [apiKey] = useLocalStorage('coachv2_deepseek_apikey', '');
+  const [apiKey] = useLocalStorage('coachv2_deepseek_api_key', '');
   const [googleSheetsUrl, setGoogleSheetsUrl] = useLocalStorage('coachv2_google_sheets_url', 'https://script.google.com/macros/s/AKfycbxA-KbUcEgWUq4jvjdSBxLw3tGsgPxXsF2Y7mX5JsNIpE2qslN1v7xW3NqdJ3-4b-RCwg/exec');
   const [isDeloadMode, setIsDeloadMode] = useLocalStorage('coachv2_deload_active', false);
   const [deloadCycleConfig, setDeloadCycleConfig] = useLocalStorage('coachv2_deload_cycle_config', null);
@@ -466,10 +466,11 @@ export default function WorkoutDay() {
   const handleExecuteCleanSlate = () => {
     modal.showConfirm({
       title: "🧹 Clean Slate: Purgar Caché y Órdenes Viejos",
-      message: "Esta acción eliminará de forma atómica en tu dispositivo y en Firestore Cloud cualquier orden residual o rutina desfasada que cause desajustes entre celular y PC.\n\n✅ Tu historial completo de entrenamientos, pesos levantados y marcas de 1RM quedará 100% a salvo e intacto.\n\n¿Proceder con la purga limpia?",
+      message: "Esta acción descargará una copia de seguridad automática y eliminará en tu dispositivo y en Firestore Cloud cualquier orden residual o rutina desfasada.\n\n✅ Tu historial completo de entrenamientos, pesos levantados y marcas de 1RM quedará 100% a salvo e intacto.\n\n¿Proceder con la purga limpia?",
       confirmText: "🧹 Sí, Purgar y Limpiar Todo",
       cancelText: "Cancelar",
       variant: "danger",
+      requireWord: "BORRAR",
       onConfirm: async () => {
         await executeCleanSlate(currentUser);
         setCustomExercisesMap({});
@@ -478,7 +479,7 @@ export default function WorkoutDay() {
         setCustomRoutine(null);
         modal.showAlert({
           title: "🎉 Clean Slate Aplicado con Éxito",
-          message: "Se purgaron todos los órdenes desfasados de la nube y almacenamiento local. La app ahora está sincronizada al 100% con el Protocolo Oficial limpio en todos tus dispositivos.",
+          message: "Se generó un respaldo previo y se purgaron los órdenes desfasados. La app ahora está sincronizada al 100% con el Protocolo Oficial limpio.",
           variant: "success"
         });
       }
@@ -1507,10 +1508,11 @@ export default function WorkoutDay() {
   const handleResetAllDaysToOfficial = () => {
     modal.showConfirm({
       title: "✨ Activar Protocolo Adonis Oficial en Toda la Semana",
-      message: "Se limpiarán todas las sustituciones, órdenes alterados y ejercicios añadidos en los 7 días para activar la lista oficial limpia del Protocolo Adonis Definitivo en todos tus dispositivos.\n\n✅ Tu historial de marcas y bitácoras anteriores permanecerá 100% a salvo e intacto.",
+      message: "Se generará un respaldo automático previo y se limpiarán todas las sustituciones y órdenes alterados para activar la lista oficial limpia del Protocolo Adonis Definitivo.\n\n✅ Tu historial de marcas y bitácoras anteriores permanecerá 100% a salvo e intacto.",
       confirmText: "✨ Sí, Activar en Todos los Días",
       cancelText: "Cancelar",
       variant: "warning",
+      requireWord: "BORRAR",
       onConfirm: async () => {
         await executeCleanSlate(currentUser);
         setCustomExercisesMap({});
@@ -1519,7 +1521,7 @@ export default function WorkoutDay() {
         setCustomRoutine(null);
         modal.showAlert({
           title: "🎉 Protocolo Adonis Definitivo Activado",
-          message: "Todos los días de la semana y dispositivos ahora muestran la plantilla oficial limpia sin residuos de órdenes antiguos.",
+          message: "Todos los días de la semana ahora muestran la plantilla oficial limpia sin residuos de órdenes antiguos.",
           variant: "success"
         });
       }

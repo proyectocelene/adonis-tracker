@@ -6,8 +6,18 @@
 import { set } from 'idb-keyval';
 import { db, sanitizeForFirestore } from './firebase.js';
 import { doc, setDoc } from 'firebase/firestore';
+import { exportFullDatabase } from './backupService.js';
 
 export async function executeCleanSlate(currentUser) {
+  // 0. Auto-backup preventivo obligatorio antes de cualquier acción destructiva
+  if (currentUser) {
+    try {
+      await exportFullDatabase(currentUser, { isAutoBackup: true });
+    } catch (e) {
+      console.warn("[CleanSlate] Error al generar backup de seguridad previo:", e);
+    }
+  }
+
   const storeKeysToReset = {
     coachv2_exercise_orders: {},
     coachv2_custom_routine: null,
@@ -16,18 +26,24 @@ export async function executeCleanSlate(currentUser) {
     coachv2_week_split_override: null
   };
 
+  const nowIso = new Date().toISOString();
+
   // 1. Limpieza instantánea en almacenamiento local (IndexedDB)
   for (const [key, val] of Object.entries(storeKeysToReset)) {
     await set(key, val).catch(e => console.warn(`[CleanSlate] Error local en ${key}:`, e));
   }
 
-  // 2. Limpieza forzada en Firestore Cloud (Reemplazo atómico sin merge sucio)
+  // 2. Limpieza en Firestore Cloud con marca explícita __cleared y { merge: true }
   if (currentUser && currentUser.uid) {
     for (const [key, val] of Object.entries(storeKeysToReset)) {
       try {
         const docRef = doc(db, 'users', currentUser.uid, 'store', key);
-        // setDoc sin merge para sobreescribir cualquier estructura vieja en la nube
-        await setDoc(docRef, { value: sanitizeForFirestore(val), cleanSlateAt: new Date().toISOString() });
+        await setDoc(docRef, { 
+          value: sanitizeForFirestore(val), 
+          __cleared: true, 
+          clearedAt: nowIso,
+          cleanSlateAt: nowIso 
+        }, { merge: true });
       } catch (err) {
         console.warn(`[CleanSlate] Firestore warning para ${key}:`, err.message);
       }
@@ -42,5 +58,5 @@ export async function executeCleanSlate(currentUser) {
     window.dispatchEvent(new CustomEvent('adonis_clean_slate_applied'));
   }
 
-  return { success: true, timestamp: new Date().toISOString() };
+  return { success: true, timestamp: nowIso };
 }

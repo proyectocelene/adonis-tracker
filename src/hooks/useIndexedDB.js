@@ -3,7 +3,8 @@ import { db, sanitizeForFirestore } from '../services/firebase';
 import { doc, onSnapshot, setDoc, getDoc } from 'firebase/firestore';
 import { get, set } from 'idb-keyval';
 import { useAuth } from '../contexts/AuthContext';
-import { mergeStoreValues, enqueueStoreOutbox, flushStoreOutbox } from '../services/storeSyncHelper';
+import { mergeStoreValues, enqueueStoreOutbox, flushStoreOutbox, stripInternalMetadata } from '../services/storeSyncHelper';
+import { validateDatasetChange } from '../services/dataGuardian';
 
 export function useIndexedDB(key, initialValue) {
   const [storedValue, setStoredValue] = useState(initialValue);
@@ -12,8 +13,12 @@ export function useIndexedDB(key, initialValue) {
   const storedValueRef = useRef(storedValue);
   storedValueRef.current = storedValue;
 
+  const isLoadedRef = useRef(false);
+  const pendingQueueRef = useRef([]);
   const pendingSyncValRef = useRef(null);
   const debounceTimerRef = useRef(null);
+
+  const isSensitiveKey = key.includes('deepseek') || key.includes('api_key') || key.includes('apikey');
 
   // Función para vaciar escrituras pendientes de la nube
   const flushCloudSync = useCallback(() => {
@@ -21,42 +26,75 @@ export function useIndexedDB(key, initialValue) {
       clearTimeout(debounceTimerRef.current);
       debounceTimerRef.current = null;
     }
+    // Claves sensibles (como DeepSeek API key) nunca se suben a Firestore
+    if (isSensitiveKey) return;
+
     if (currentUser && pendingSyncValRef.current !== null) {
       const valToSync = pendingSyncValRef.current;
       pendingSyncValRef.current = null;
       const docRef = doc(db, 'users', currentUser.uid, 'store', key);
-      const cleanVal = sanitizeForFirestore(valToSync);
-      setDoc(docRef, { value: cleanVal }, { merge: true }).catch(err => {
+      const cleanVal = sanitizeForFirestore(stripInternalMetadata(valToSync));
+      setDoc(docRef, { value: cleanVal, updatedAt: new Date().toISOString() }, { merge: true }).catch(err => {
         console.warn(`[useIndexedDB] Falló envío Firestore (${key}), encolando en Outbox:`, err.message);
         enqueueStoreOutbox(currentUser.uid, key, cleanVal);
       });
     }
-  }, [currentUser, key]);
+  }, [currentUser, key, isSensitiveKey]);
 
   useEffect(() => {
     let unsubscribe = null;
     let isMounted = true;
 
     if (!currentUser) {
-      if (isMounted) setIsLoading(false);
+      // Usuario no autenticado: cargar únicamente de IndexedDB local
+      get(key).then(localVal => {
+        if (!isMounted) return;
+        const resolvedVal = localVal !== undefined ? stripInternalMetadata(localVal) : initialValue;
+        storedValueRef.current = resolvedVal;
+        setStoredValue(resolvedVal);
+        isLoadedRef.current = true;
+        setIsLoading(false);
+
+        // Procesar posibles escrituras encoladas antes de terminar get(key)
+        if (pendingQueueRef.current.length > 0) {
+          let updatedVal = resolvedVal;
+          for (const item of pendingQueueRef.current) {
+            updatedVal = typeof item === 'function' ? item(updatedVal) : item;
+          }
+          pendingQueueRef.current = [];
+          const check = validateDatasetChange(key, resolvedVal, updatedVal);
+          if (check.allowed) {
+            const cleanUpdated = stripInternalMetadata(updatedVal);
+            storedValueRef.current = cleanUpdated;
+            setStoredValue(cleanUpdated);
+            set(key, cleanUpdated).catch(() => {});
+          }
+        }
+      }).catch(() => {
+        if (isMounted) {
+          isLoadedRef.current = true;
+          setIsLoading(false);
+        }
+      });
       return;
     }
 
-    // 1. Carga instantánea (0ms) desde IndexedDB local
+    // 1. Carga preliminar ultra rápida desde IndexedDB local
     get(key).then(localVal => {
       if (isMounted && localVal !== undefined) {
-        storedValueRef.current = localVal;
-        setStoredValue(localVal);
-        setIsLoading(false);
+        const cleanLocal = stripInternalMetadata(localVal);
+        storedValueRef.current = cleanLocal;
+        setStoredValue(cleanLocal);
       }
     }).catch(() => {});
 
     // Escuchar eventos de sincronización maestra de la nube
     const handleCloudSynced = (e) => {
       if (isMounted && e?.detail?.storeSyncPayload && e.detail.storeSyncPayload[key] !== undefined) {
-        const payloadVal = e.detail.storeSyncPayload[key];
+        const payloadVal = stripInternalMetadata(e.detail.storeSyncPayload[key]);
         storedValueRef.current = payloadVal;
         setStoredValue(payloadVal);
+        isLoadedRef.current = true;
         setIsLoading(false);
       }
     };
@@ -67,77 +105,115 @@ export function useIndexedDB(key, initialValue) {
     const initialize = async () => {
       try {
         const localVal = await get(key);
-        const snapshot = await getDoc(docRef);
+        let resolvedVal;
 
-        if (!snapshot.exists()) {
-          // Si no existe en la nube, rescatar del almacenamiento local (idb-keyval)
-          if (localVal !== undefined) {
-            const cleanVal = sanitizeForFirestore(localVal);
-            await setDoc(docRef, { value: cleanVal }, { merge: true }).catch(err => {
-              console.warn(`[useIndexedDB] Firestore offline/permisos para ${key}:`, err.message);
-              enqueueStoreOutbox(currentUser.uid, key, cleanVal);
-            });
-            if (isMounted) {
-              storedValueRef.current = localVal;
-              setStoredValue(localVal);
-            }
-          }
+        if (isSensitiveKey) {
+          // Las claves sensibles solo residen en IndexedDB local
+          resolvedVal = localVal !== undefined ? stripInternalMetadata(localVal) : initialValue;
         } else {
-          // Si existe en la nube, hacer merge no destructivo
-          const rawCloud = snapshot.data();
-          const cloudVal = rawCloud.value !== undefined ? rawCloud.value : rawCloud;
-          const merged = mergeStoreValues(key, localVal, cloudVal);
+          const snapshot = await getDoc(docRef);
 
-          if (isMounted && merged !== undefined) {
-            storedValueRef.current = merged;
-            setStoredValue(merged);
-            await set(key, merged).catch(() => {});
-          }
+          if (!snapshot.exists()) {
+            // Si no existe en la nube, rescatar del almacenamiento local (idb-keyval)
+            if (localVal !== undefined) {
+              resolvedVal = stripInternalMetadata(localVal);
+              const cleanVal = sanitizeForFirestore(resolvedVal);
+              await setDoc(docRef, { value: cleanVal, updatedAt: new Date().toISOString() }, { merge: true }).catch(err => {
+                console.warn(`[useIndexedDB] Firestore offline/permisos para ${key}:`, err.message);
+                enqueueStoreOutbox(currentUser.uid, key, cleanVal);
+              });
+            } else {
+              // NUNCA persistir initialValue a Firestore si no había datos reales
+              resolvedVal = initialValue;
+            }
+          } else {
+            // Si existe en la nube, hacer merge no destructivo
+            const rawCloud = snapshot.data();
+            const cloudVal = rawCloud.value !== undefined ? rawCloud.value : rawCloud;
+            const merged = mergeStoreValues(key, localVal, cloudVal);
+            resolvedVal = merged !== undefined ? stripInternalMetadata(merged) : initialValue;
 
-          // Si el local tenía datos que la nube no tenía, subir la versión fusionada
-          const cloudStr = JSON.stringify(cloudVal ?? null);
-          const mergedStr = JSON.stringify(merged ?? null);
-          if (merged !== undefined && mergedStr !== cloudStr) {
-            setDoc(docRef, { value: sanitizeForFirestore(merged) }, { merge: true }).catch(() => {
-              enqueueStoreOutbox(currentUser.uid, key, merged);
-            });
+            if (isMounted && resolvedVal !== undefined) {
+              await set(key, resolvedVal).catch(() => {});
+            }
+
+            // Si el valor local aportó datos que la nube no tenía, subir la versión fusionada
+            const cloudStr = JSON.stringify(stripInternalMetadata(cloudVal) ?? null);
+            const resolvedStr = JSON.stringify(resolvedVal ?? null);
+            if (resolvedVal !== undefined && resolvedStr !== cloudStr) {
+              setDoc(docRef, { value: sanitizeForFirestore(resolvedVal), updatedAt: new Date().toISOString() }, { merge: true }).catch(() => {
+                enqueueStoreOutbox(currentUser.uid, key, resolvedVal);
+              });
+            }
           }
         }
-        
-        // Suscribirse a cambios en tiempo real desde la nube/caché offline de Firebase
-        unsubscribe = onSnapshot(
-          docRef, 
-          async (snap) => {
-            // CRÍTICO: Si el snapshot proviene de escrituras locales pendientes o hay escritura pendiente debounced,
-            // NUNCA sobreescribir el estado reactivo con un snapshot intermedio!
-            if (snap.metadata?.hasPendingWrites || pendingSyncValRef.current !== null) {
-              if (isMounted) setIsLoading(false);
-              return;
-            }
 
-            if (snap.exists() && isMounted) {
-              const rawCloud = snap.data();
-              const cloudVal = rawCloud.value !== undefined ? rawCloud.value : rawCloud;
-              
-              // Fusión segura con el valor en memoria activa más reciente
-              const currentLocal = storedValueRef.current ?? (await get(key));
-              const merged = mergeStoreValues(key, currentLocal, cloudVal);
-
-              storedValueRef.current = merged;
-              setStoredValue(merged);
-              await set(key, merged).catch(() => {});
-            }
-            if (isMounted) setIsLoading(false);
-          },
-          (err) => {
-            console.warn(`[useIndexedDB] Snapshot offline/permisos para ${key}:`, err.message);
-            if (isMounted) setIsLoading(false);
+        // Procesar cualquier setValue que haya sido encolado mientras cargaba
+        let finalVal = resolvedVal;
+        if (pendingQueueRef.current.length > 0) {
+          for (const item of pendingQueueRef.current) {
+            finalVal = typeof item === 'function' ? item(finalVal) : item;
           }
-        );
+          pendingQueueRef.current = [];
+
+          const check = validateDatasetChange(key, resolvedVal, finalVal);
+          if (check.allowed) {
+            finalVal = stripInternalMetadata(finalVal);
+            await set(key, finalVal).catch(() => {});
+            if (currentUser && !isSensitiveKey) {
+              pendingSyncValRef.current = finalVal;
+              if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+              debounceTimerRef.current = setTimeout(flushCloudSync, 800);
+            }
+          } else {
+            finalVal = resolvedVal; // Descartar reducción inválida
+          }
+        }
+
+        isLoadedRef.current = true;
+        if (isMounted) {
+          storedValueRef.current = finalVal;
+          setStoredValue(finalVal);
+          setIsLoading(false);
+        }
+
+        // Suscribirse a cambios en tiempo real si no es clave sensible
+        if (!isSensitiveKey) {
+          unsubscribe = onSnapshot(
+            docRef, 
+            async (snap) => {
+              if (snap.metadata?.hasPendingWrites || pendingSyncValRef.current !== null) {
+                if (isMounted) setIsLoading(false);
+                return;
+              }
+
+              if (snap.exists() && isMounted) {
+                const rawCloud = snap.data();
+                const cloudVal = rawCloud.value !== undefined ? rawCloud.value : rawCloud;
+                
+                const currentLocal = storedValueRef.current ?? (await get(key));
+                const merged = mergeStoreValues(key, currentLocal, cloudVal);
+                const cleanMerged = stripInternalMetadata(merged);
+
+                storedValueRef.current = cleanMerged;
+                setStoredValue(cleanMerged);
+                await set(key, cleanMerged).catch(() => {});
+              }
+              if (isMounted) setIsLoading(false);
+            },
+            (err) => {
+              console.warn(`[useIndexedDB] Snapshot offline/permisos para ${key}:`, err.message);
+              if (isMounted) setIsLoading(false);
+            }
+          );
+        }
 
       } catch (err) {
         console.warn(`[useIndexedDB] Error inicializando Firestore para ${key}:`, err.message);
-        if (isMounted) setIsLoading(false);
+        if (isMounted) {
+          isLoadedRef.current = true;
+          setIsLoading(false);
+        }
       }
     };
 
@@ -166,22 +242,38 @@ export function useIndexedDB(key, initialValue) {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('beforeunload', flushCloudSync);
     };
-  }, [key, currentUser, flushCloudSync]);
+  }, [key, currentUser, flushCloudSync, isSensitiveKey, initialValue]);
 
   const setValue = useCallback((value) => {
     try {
+      // Si aún no ha completado la carga inicial, ENCOLAR para no persistir initialValue
+      if (!isLoadedRef.current) {
+        console.warn(`[useIndexedDB] setValue para "${key}" encolado: la carga inicial aún está en progreso.`);
+        pendingQueueRef.current.push(value);
+        return;
+      }
+
       const prev = storedValueRef.current;
-      const valueToStore = value instanceof Function ? value(prev) : value;
-      
-      // 1. Actualización síncrona en memoria y estado React (0ms)
+      const valueToStoreRaw = value instanceof Function ? value(prev) : value;
+
+      // Validación con DataGuardian: verificar que no haya una reducción no autorizada >50%
+      const guardianCheck = validateDatasetChange(key, prev, valueToStoreRaw);
+      if (!guardianCheck.allowed) {
+        console.error(`[DataGuardian] Escritura cancelada en useIndexedDB("${key}"): ${guardianCheck.reason}`);
+        return; // Retorno seguro sin lanzar excepción
+      }
+
+      const valueToStore = stripInternalMetadata(valueToStoreRaw);
+
+      // 1. Actualización síncrona en memoria y estado React
       storedValueRef.current = valueToStore;
       setStoredValue(valueToStore);
 
       // 2. Persistencia síncrona/inmediata en IndexedDB local
       set(key, valueToStore).catch(err => console.error(`Error guardando local (${key}):`, err));
 
-      // 3. Sincronización debounced hacia Firestore (800ms) para no saturar la red ni crear bucles de snapshot
-      if (currentUser) {
+      // 3. Sincronización debounced hacia Firestore (si no es sensible)
+      if (currentUser && !isSensitiveKey) {
         pendingSyncValRef.current = valueToStore;
         if (debounceTimerRef.current) {
           clearTimeout(debounceTimerRef.current);
@@ -193,7 +285,7 @@ export function useIndexedDB(key, initialValue) {
     } catch (error) {
       console.error(`Error en setValue para ${key}:`, error);
     }
-  }, [key, currentUser, flushCloudSync]);
+  }, [key, currentUser, flushCloudSync, isSensitiveKey]);
 
   return [storedValue, setValue, isLoading];
 }

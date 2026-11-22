@@ -349,10 +349,11 @@ export default function HistoryView() {
         const data = JSON.parse(event.target.result);
         modal.showConfirm({
           title: "📥 ¿Restaurar Base de Datos en Firebase?",
-          message: `El archivo fue verificado con éxito. ¿Estás seguro de restaurar este respaldo maestro en tu cuenta de Firebase y en la memoria de la app?`,
+          message: `El archivo fue verificado con éxito. Se creará una copia de seguridad automática antes de aplicar los datos.\n\n¿Estás seguro de restaurar este respaldo maestro en tu cuenta de Firebase y en la memoria de la app?`,
           confirmText: "Restaurar Ahora",
           cancelText: "Cancelar",
           variant: "warning",
+          requireWord: "BORRAR",
           onConfirm: async () => {
             setIsRestoring(true);
             try {
@@ -388,17 +389,23 @@ export default function HistoryView() {
   const handleWipeAllData = () => {
     modal.showConfirm({
       title: "🚨 ZONA ROJA: Reset Total",
-      message: "¿ADVERTENCIA CRÍTICA: Estás verdaderamente seguro de BORRAR TODOS LOS DATOS de tu aplicación COACH V2?\n\nEsta acción eliminará por completo tus marcas, bitácoras y calibraciones para empezar desde cero.",
+      message: "¿ADVERTENCIA CRÍTICA: Estás verdaderamente seguro de BORRAR TODOS LOS DATOS de tu aplicación COACH V2?\n\nSe descargará una copia de seguridad automática antes de proceder. Esta acción eliminará por completo tus marcas, bitácoras y calibraciones locales para empezar desde cero.",
       confirmText: "⚠️ SÍ, BORRAR TODO A CERO",
       cancelText: "Mantener mis datos",
       variant: "danger",
+      requireWord: "BORRAR",
       onConfirm: async () => {
+        try {
+          await exportFullDatabase(currentUser, { isAutoBackup: true });
+        } catch (e) {
+          console.warn("No se pudo generar backup antes de reset total:", e);
+        }
         await clear();
         localStorage.clear();
         setShowConfigModal(false);
         modal.showAlert({ 
           title: "✅ Reset Total Terminado", 
-          message: "La memoria del laboratorio ha quedado impecable a cero.", 
+          message: "Se descargó un respaldo previo y la memoria del laboratorio ha quedado impecable a cero.", 
           variant: "info",
           onConfirm: () => {
             window.location.reload();

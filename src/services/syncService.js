@@ -4,7 +4,7 @@
 import { db, sanitizeForFirestore } from './firebase.js';
 import { collection, getDocs, doc, setDoc } from 'firebase/firestore';
 import { get, set, keys } from 'idb-keyval';
-import { mergeStoreValues, flushStoreOutbox } from './storeSyncHelper.js';
+import { mergeStoreValues, flushStoreOutbox, stripInternalMetadata } from './storeSyncHelper.js';
 
 /**
  * Descarga y consolida TODO el historial de sesiones y TODAS las configuraciones
@@ -125,23 +125,44 @@ export async function syncAllCloudDataToIndexedDB(currentUser) {
 
     for (const docId of allStoreKeys) {
       try {
+        // Excluir claves de API de la sincronización a Firestore (permanecen estrictamente locales)
+        if (docId.includes('deepseek') || docId.includes('api_key') || docId.includes('apikey')) {
+          continue;
+        }
+
         const localVal = await get(docId);
         const cloudVal = cloudStoreMap.get(docId);
         const mergedVal = mergeStoreValues(docId, localVal, cloudVal);
 
         if (mergedVal !== undefined) {
-          await set(docId, mergedVal);
-          storeSyncPayload[docId] = mergedVal;
+          const cleanMerged = stripInternalMetadata(mergedVal);
+          await set(docId, cleanMerged);
+          storeSyncPayload[docId] = cleanMerged;
           storeCount++;
 
-          const cloudStr = JSON.stringify(cloudVal ?? null);
-          const mergedStr = JSON.stringify(mergedVal ?? null);
+          const cloudStr = JSON.stringify(stripInternalMetadata(cloudVal) ?? null);
+          const mergedStr = JSON.stringify(cleanMerged ?? null);
 
-          // Si el valor local tenía contenido que la nube no tenía, subirlo a Firestore
+          // Comprobar si cleanMerged está vacío vs cloudVal poblado
+          const isMergedEmpty = cleanMerged === null || cleanMerged === undefined ||
+            (Array.isArray(cleanMerged) && cleanMerged.length === 0) ||
+            (typeof cleanMerged === 'object' && Object.keys(cleanMerged).length === 0);
+
+          const wasCloudEmpty = cloudVal === null || cloudVal === undefined ||
+            (Array.isArray(cloudVal) && cloudVal.length === 0) ||
+            (typeof cloudVal === 'object' && Object.keys(stripInternalMetadata(cloudVal)).length === 0);
+
+          // REGLA CRÍTICA: Nunca subir un valor vacío si Firestore tenía datos poblados
+          if (isMergedEmpty && !wasCloudEmpty) {
+            console.warn(`[Adonis Sync] 🛡️ Guardia: Bloqueada subida de valor vacío para "${docId}" porque Firestore tiene datos.`);
+            continue;
+          }
+
+          // Si el valor local tenía contenido que la nube no tenía, subirlo a Firestore con merge
           if (!cloudStoreMap.has(docId) || cloudStr !== mergedStr) {
             console.log(`[Adonis Sync] 💾 ➔ ☁️ Sincronizando clave ${docId} a Firestore...`);
             const docRef = doc(db, 'users', currentUser.uid, 'store', docId);
-            await setDoc(docRef, { value: sanitizeForFirestore(mergedVal) }, { merge: true });
+            await setDoc(docRef, { value: sanitizeForFirestore(cleanMerged), updatedAt: new Date().toISOString() }, { merge: true });
           }
         }
       } catch (err) {
