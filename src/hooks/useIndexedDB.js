@@ -3,7 +3,7 @@ import { db, sanitizeForFirestore } from '../services/firebase';
 import { doc, onSnapshot, setDoc, getDoc } from 'firebase/firestore';
 import { get, set } from 'idb-keyval';
 import { useAuth } from '../contexts/AuthContext';
-import { mergeStoreValues, enqueueStoreOutbox, flushStoreOutbox, stripInternalMetadata } from '../services/storeSyncHelper';
+import { mergeStoreValues, enqueueStoreOutbox, flushStoreOutbox, stripInternalMetadata, extractMetadataFromDoc } from '../services/storeSyncHelper';
 import { validateDatasetChange } from '../services/dataGuardian';
 
 export function useIndexedDB(key, initialValue) {
@@ -12,6 +12,8 @@ export function useIndexedDB(key, initialValue) {
   const { currentUser } = useAuth();
   const storedValueRef = useRef(storedValue);
   storedValueRef.current = storedValue;
+  const initialValueRef = useRef(initialValue);
+  initialValueRef.current = initialValue;
 
   const isLoadedRef = useRef(false);
   const pendingQueueRef = useRef([]);
@@ -34,7 +36,7 @@ export function useIndexedDB(key, initialValue) {
       pendingSyncValRef.current = null;
       const docRef = doc(db, 'users', currentUser.uid, 'store', key);
       const cleanVal = sanitizeForFirestore(stripInternalMetadata(valToSync));
-      setDoc(docRef, { value: cleanVal, updatedAt: new Date().toISOString() }, { merge: true }).catch(err => {
+      setDoc(docRef, { value: cleanVal, updatedAt: new Date().toISOString(), __cleared: false }, { merge: true }).catch(err => {
         console.warn(`[useIndexedDB] Falló envío Firestore (${key}), encolando en Outbox:`, err.message);
         enqueueStoreOutbox(currentUser.uid, key, cleanVal);
       });
@@ -44,12 +46,14 @@ export function useIndexedDB(key, initialValue) {
   useEffect(() => {
     let unsubscribe = null;
     let isMounted = true;
+    isLoadedRef.current = false;
+    setIsLoading(true);
 
     if (!currentUser) {
       // Usuario no autenticado: cargar únicamente de IndexedDB local
       get(key).then(localVal => {
         if (!isMounted) return;
-        const resolvedVal = localVal !== undefined ? stripInternalMetadata(localVal) : initialValue;
+        const resolvedVal = localVal !== undefined ? stripInternalMetadata(localVal) : initialValueRef.current;
         storedValueRef.current = resolvedVal;
         setStoredValue(resolvedVal);
         isLoadedRef.current = true;
@@ -109,7 +113,7 @@ export function useIndexedDB(key, initialValue) {
 
         if (isSensitiveKey) {
           // Las claves sensibles solo residen en IndexedDB local
-          resolvedVal = localVal !== undefined ? stripInternalMetadata(localVal) : initialValue;
+          resolvedVal = localVal !== undefined ? stripInternalMetadata(localVal) : initialValueRef.current;
         } else {
           const snapshot = await getDoc(docRef);
 
@@ -118,20 +122,21 @@ export function useIndexedDB(key, initialValue) {
             if (localVal !== undefined) {
               resolvedVal = stripInternalMetadata(localVal);
               const cleanVal = sanitizeForFirestore(resolvedVal);
-              await setDoc(docRef, { value: cleanVal, updatedAt: new Date().toISOString() }, { merge: true }).catch(err => {
+              await setDoc(docRef, { value: cleanVal, updatedAt: new Date().toISOString(), __cleared: false }, { merge: true }).catch(err => {
                 console.warn(`[useIndexedDB] Firestore offline/permisos para ${key}:`, err.message);
                 enqueueStoreOutbox(currentUser.uid, key, cleanVal);
               });
             } else {
               // NUNCA persistir initialValue a Firestore si no había datos reales
-              resolvedVal = initialValue;
+              resolvedVal = initialValueRef.current;
             }
           } else {
-            // Si existe en la nube, hacer merge no destructivo
+            // Si existe en la nube, hacer merge no destructivo pasando metadatos del documento
             const rawCloud = snapshot.data();
             const cloudVal = rawCloud.value !== undefined ? rawCloud.value : rawCloud;
-            const merged = mergeStoreValues(key, localVal, cloudVal);
-            resolvedVal = merged !== undefined ? stripInternalMetadata(merged) : initialValue;
+            const cloudMeta = extractMetadataFromDoc(rawCloud);
+            const merged = mergeStoreValues(key, localVal, cloudVal, cloudMeta);
+            resolvedVal = merged !== undefined ? stripInternalMetadata(merged) : initialValueRef.current;
 
             if (isMounted && resolvedVal !== undefined) {
               await set(key, resolvedVal).catch(() => {});
@@ -141,7 +146,7 @@ export function useIndexedDB(key, initialValue) {
             const cloudStr = JSON.stringify(stripInternalMetadata(cloudVal) ?? null);
             const resolvedStr = JSON.stringify(resolvedVal ?? null);
             if (resolvedVal !== undefined && resolvedStr !== cloudStr) {
-              setDoc(docRef, { value: sanitizeForFirestore(resolvedVal), updatedAt: new Date().toISOString() }, { merge: true }).catch(() => {
+              setDoc(docRef, { value: sanitizeForFirestore(resolvedVal), updatedAt: new Date().toISOString(), __cleared: false }, { merge: true }).catch(() => {
                 enqueueStoreOutbox(currentUser.uid, key, resolvedVal);
               });
             }
@@ -190,9 +195,10 @@ export function useIndexedDB(key, initialValue) {
               if (snap.exists() && isMounted) {
                 const rawCloud = snap.data();
                 const cloudVal = rawCloud.value !== undefined ? rawCloud.value : rawCloud;
+                const cloudMeta = extractMetadataFromDoc(rawCloud);
                 
                 const currentLocal = storedValueRef.current ?? (await get(key));
-                const merged = mergeStoreValues(key, currentLocal, cloudVal);
+                const merged = mergeStoreValues(key, currentLocal, cloudVal, cloudMeta);
                 const cleanMerged = stripInternalMetadata(merged);
 
                 storedValueRef.current = cleanMerged;
@@ -242,7 +248,7 @@ export function useIndexedDB(key, initialValue) {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('beforeunload', flushCloudSync);
     };
-  }, [key, currentUser, flushCloudSync, isSensitiveKey, initialValue]);
+  }, [key, currentUser, flushCloudSync, isSensitiveKey]);
 
   const setValue = useCallback((value) => {
     try {

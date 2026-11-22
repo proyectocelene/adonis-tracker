@@ -248,14 +248,6 @@ export async function exportFullDatabase(currentUser, options = {}) {
     ? `COACH_V2_PreRestore_AutoBackup_${new Date().toISOString().replace(/[:.]/g, '-')}.json`
     : `COACH_V2_Backup_Total_Firebase_${new Date().toISOString().split('T')[0]}.json`;
 
-  if (options.isAutoBackup) {
-    try {
-      await set('coachv2_prerestore_safety_backup', fullMasterBackup);
-    } catch (e) {
-      console.warn("No se pudo guardar copia pre-restore en IndexedDB:", e);
-    }
-  }
-
   downloadJsonFile(fullMasterBackup, filename);
   return { success: true, countSessions: mergedWorkoutHistory.length, filename };
 }
@@ -571,6 +563,60 @@ export async function restoreFullDatabase(currentUser, jsonData, onProgress) {
     throw new Error("El archivo no contiene una estructura JSON válida.");
   }
 
+  // 1. Extraer y preparar sesiones históricas
+  const sessionsToRestore = [];
+  if (Array.isArray(jsonData.workoutHistory)) {
+    sessionsToRestore.push(...jsonData.workoutHistory);
+  } else if (Array.isArray(jsonData.history)) {
+    sessionsToRestore.push(...jsonData.history);
+  }
+
+  // 2. Extraer y preparar configuraciones de la subcolección 'store'
+  const storeEntries = {};
+
+  // Extraer llaves directas del JSON si existen
+  if (jsonData.currentActiveSessions) storeEntries['coachv2_active_workouts'] = jsonData.currentActiveSessions;
+  if (jsonData.customExercises) storeEntries['coachv2_custom_day_exercises'] = jsonData.customExercises;
+  if (jsonData.swappedExercises) storeEntries['coachv2_swapped_exercises'] = jsonData.swappedExercises;
+  if (jsonData.skippedExercises) storeEntries['coachv2_skipped_exercises'] = jsonData.skippedExercises;
+  if (jsonData.exerciseOrders) storeEntries['coachv2_exercise_orders'] = jsonData.exerciseOrders;
+  if (jsonData.bodyWeightHistory) storeEntries['coachv2_body_metrics_history'] = jsonData.bodyWeightHistory;
+  if (jsonData.bodyComposition) storeEntries['coachv2_body_composition_data'] = jsonData.bodyComposition;
+  if (jsonData.physiqueGoal) storeEntries['coachv2_physique_goal'] = jsonData.physiqueGoal;
+  if (jsonData.machineConfigs) storeEntries['coachv2_machine_configs'] = jsonData.machineConfigs;
+  if (jsonData.machineProfiles) storeEntries['coachv2_machine_profiles'] = jsonData.machineProfiles;
+  if (jsonData.smartwatchKcal) storeEntries['coachv2_smartwatch_kcal'] = jsonData.smartwatchKcal;
+  if (jsonData.customRoutine) storeEntries['coachv2_custom_routine'] = jsonData.customRoutine;
+  if (jsonData.mesocycleStartDate) storeEntries['coachv2_mesocycle_start'] = jsonData.mesocycleStartDate;
+  if (jsonData.weightPreferredUnit) storeEntries['coachv2_weight_preferred_unit'] = jsonData.weightPreferredUnit;
+  if (jsonData.googleSheetsUrl) storeEntries['coachv2_google_sheets_url'] = jsonData.googleSheetsUrl;
+  if (jsonData.deloadActive !== undefined) storeEntries['coachv2_deload_active'] = jsonData.deloadActive;
+  if (jsonData.deloadCycleConfig) storeEntries['coachv2_deload_cycle_config'] = jsonData.deloadCycleConfig;
+  if (jsonData.weekSplitOverride) storeEntries['coachv2_week_split_override'] = jsonData.weekSplitOverride;
+  if (jsonData.dismissedPendingAlerts) storeEntries['coachv2_dismissed_pending_alerts'] = jsonData.dismissedPendingAlerts;
+
+  // Extraer del volcado FirestoreDump o rawIndexedDBDump (verificando que contengan claves antes de preferir)
+  const dumpSource = (jsonData.firestoreStoreDump && Object.keys(jsonData.firestoreStoreDump).length > 0)
+    ? jsonData.firestoreStoreDump
+    : ((jsonData.rawIndexedDBDump && Object.keys(jsonData.rawIndexedDBDump).length > 0)
+      ? jsonData.rawIndexedDBDump
+      : (jsonData.rawLocalStorageDump || {}));
+
+  Object.entries(dumpSource).forEach(([key, val]) => {
+    if (key.startsWith('coachv2_')) {
+      // NUNCA sobreescribir o restaurar credenciales de API
+      if (/api_?key/i.test(key) || /deepseek/i.test(key)) {
+        return;
+      }
+      storeEntries[key] = val;
+    }
+  });
+
+  // VALIDACIÓN CRÍTICA: Si el archivo no contiene ni sesiones ni configuraciones, abortar
+  if (sessionsToRestore.length === 0 && Object.keys(storeEntries).length === 0) {
+    throw new Error("El archivo de respaldo está vacío o no contiene sesiones ni configuraciones válidas.");
+  }
+
   let totalSessionsRestored = 0;
   let totalKeysRestored = 0;
 
@@ -583,13 +629,6 @@ export async function restoreFullDatabase(currentUser, jsonData, onProgress) {
   }
 
   // 1. Restaurar Historial de Entrenamientos en Firebase Firestore con writeBatch (Modo Upsert)
-  const sessionsToRestore = [];
-  if (Array.isArray(jsonData.workoutHistory)) {
-    sessionsToRestore.push(...jsonData.workoutHistory);
-  } else if (Array.isArray(jsonData.history)) {
-    sessionsToRestore.push(...jsonData.history);
-  }
-
   const restoredSessionIds = new Set();
 
   if (sessionsToRestore.length > 0) {
@@ -615,41 +654,6 @@ export async function restoreFullDatabase(currentUser, jsonData, onProgress) {
   }
 
   // 2. Restaurar Documentos de la Subcolección 'store' con writeBatch (Modo Upsert)
-  const storeEntries = {};
-
-  // Extraer llaves directas del JSON si existen
-  if (jsonData.currentActiveSessions) storeEntries['coachv2_active_workouts'] = jsonData.currentActiveSessions;
-  if (jsonData.customExercises) storeEntries['coachv2_custom_day_exercises'] = jsonData.customExercises;
-  if (jsonData.swappedExercises) storeEntries['coachv2_swapped_exercises'] = jsonData.swappedExercises;
-  if (jsonData.skippedExercises) storeEntries['coachv2_skipped_exercises'] = jsonData.skippedExercises;
-  if (jsonData.exerciseOrders) storeEntries['coachv2_exercise_orders'] = jsonData.exerciseOrders;
-  if (jsonData.bodyWeightHistory) storeEntries['coachv2_body_metrics_history'] = jsonData.bodyWeightHistory;
-  if (jsonData.bodyComposition) storeEntries['coachv2_body_composition_data'] = jsonData.bodyComposition;
-  if (jsonData.physiqueGoal) storeEntries['coachv2_physique_goal'] = jsonData.physiqueGoal;
-  if (jsonData.machineConfigs) storeEntries['coachv2_machine_configs'] = jsonData.machineConfigs;
-  if (jsonData.machineProfiles) storeEntries['coachv2_machine_profiles'] = jsonData.machineProfiles;
-  if (jsonData.smartwatchKcal) storeEntries['coachv2_smartwatch_kcal'] = jsonData.smartwatchKcal;
-  if (jsonData.customRoutine) storeEntries['coachv2_custom_routine'] = jsonData.customRoutine;
-  if (jsonData.mesocycleStartDate) storeEntries['coachv2_mesocycle_start'] = jsonData.mesocycleStartDate;
-  if (jsonData.weightPreferredUnit) storeEntries['coachv2_weight_preferred_unit'] = jsonData.weightPreferredUnit;
-  if (jsonData.googleSheetsUrl) storeEntries['coachv2_google_sheets_url'] = jsonData.googleSheetsUrl;
-  if (jsonData.deloadActive !== undefined) storeEntries['coachv2_deload_active'] = jsonData.deloadActive;
-  if (jsonData.deloadCycleConfig) storeEntries['coachv2_deload_cycle_config'] = jsonData.deloadCycleConfig;
-  if (jsonData.weekSplitOverride) storeEntries['coachv2_week_split_override'] = jsonData.weekSplitOverride;
-  if (jsonData.dismissedPendingAlerts) storeEntries['coachv2_dismissed_pending_alerts'] = jsonData.dismissedPendingAlerts;
-
-  // Extraer del volcado FirestoreDump o rawIndexedDBDump (excluyendo credenciales)
-  const dumpSource = jsonData.firestoreStoreDump || jsonData.rawIndexedDBDump || jsonData.rawLocalStorageDump || {};
-  Object.entries(dumpSource).forEach(([key, val]) => {
-    if (key.startsWith('coachv2_')) {
-      // NUNCA sobreescribir o restaurar credenciales de API
-      if (/api_?key/i.test(key) || /deepseek/i.test(key)) {
-        return;
-      }
-      storeEntries[key] = val;
-    }
-  });
-
   const restoredStoreKeys = new Set();
   const storeEntriesList = Object.entries(storeEntries);
 
@@ -664,7 +668,7 @@ export async function restoreFullDatabase(currentUser, jsonData, onProgress) {
           restoredStoreKeys.add(key);
           const docRef = doc(db, 'users', currentUser.uid, 'store', key);
           const cleanVal = sanitizeForFirestore(stripInternalMetadata(value));
-          batch.set(docRef, { value: cleanVal, restoredAt: new Date().toISOString() }, { merge: true });
+          batch.set(docRef, { value: cleanVal, restoredAt: new Date().toISOString(), __cleared: false }, { merge: true });
           totalKeysRestored++;
         }
       }
@@ -678,38 +682,42 @@ export async function restoreFullDatabase(currentUser, jsonData, onProgress) {
   try {
     if (onProgress) onProgress("Comprobando coherencia y depurando registros huérfanos...");
 
-    // 3.1 Purgar sesiones que ya no existen en el backup
-    const historyColRef = collection(db, 'users', currentUser.uid, 'history');
-    const historySnap = await getDocs(historyColRef);
-    const orphanHistoryDocs = historySnap.docs.filter(docSnap => !restoredSessionIds.has(docSnap.id));
+    // 3.1 Purgar sesiones que ya no existen en el backup (SOLO si se restauraron sesiones)
+    if (restoredSessionIds.size > 0) {
+      const historyColRef = collection(db, 'users', currentUser.uid, 'history');
+      const historySnap = await getDocs(historyColRef);
+      const orphanHistoryDocs = historySnap.docs.filter(docSnap => !restoredSessionIds.has(docSnap.id));
 
-    if (orphanHistoryDocs.length > 0) {
-      if (onProgress) onProgress(`Depurando ${orphanHistoryDocs.length} sesiones obsoletas no presentes en el backup...`);
-      for (let i = 0; i < orphanHistoryDocs.length; i += 400) {
-        const delBatch = writeBatch(db);
-        orphanHistoryDocs.slice(i, i + 400).forEach(d => delBatch.delete(d.ref));
-        await delBatch.commit();
+      if (orphanHistoryDocs.length > 0) {
+        if (onProgress) onProgress(`Depurando ${orphanHistoryDocs.length} sesiones obsoletas no presentes en el backup...`);
+        for (let i = 0; i < orphanHistoryDocs.length; i += 400) {
+          const delBatch = writeBatch(db);
+          orphanHistoryDocs.slice(i, i + 400).forEach(d => delBatch.delete(d.ref));
+          await delBatch.commit();
+        }
       }
     }
 
-    // 3.2 Purgar configuraciones obsoletas (EXCLUYENDO estrictamente API keys, autenticación y marcas de migración)
-    const storeColRef = collection(db, 'users', currentUser.uid, 'store');
-    const storeSnap = await getDocs(storeColRef);
-    const orphanStoreDocs = storeSnap.docs.filter(docSnap => {
-      const k = docSnap.id;
-      // NUNCA borrar claves de API, autenticación, migración o métricas locales
-      if (/api_?key/i.test(k) || /deepseek/i.test(k) || k.includes('migrated') || k.includes('last_cloud_sync')) {
-        return false;
-      }
-      return !restoredStoreKeys.has(k);
-    });
+    // 3.2 Purgar configuraciones obsoletas (SOLO si se restauraron claves de store y EXCLUYENDO claves sensibles/sistema)
+    if (restoredStoreKeys.size > 0) {
+      const storeColRef = collection(db, 'users', currentUser.uid, 'store');
+      const storeSnap = await getDocs(storeColRef);
+      const orphanStoreDocs = storeSnap.docs.filter(docSnap => {
+        const k = docSnap.id;
+        // NUNCA borrar claves de API, autenticación, migración, outbox o caché
+        if (/api_?key/i.test(k) || /deepseek/i.test(k) || k.includes('migrated') || k.includes('last_cloud_sync') || k.includes('outbox') || k.includes('cache')) {
+          return false;
+        }
+        return !restoredStoreKeys.has(k);
+      });
 
-    if (orphanStoreDocs.length > 0) {
-      if (onProgress) onProgress(`Depurando ${orphanStoreDocs.length} configuraciones obsoletas...`);
-      for (let i = 0; i < orphanStoreDocs.length; i += 400) {
-        const delBatch = writeBatch(db);
-        orphanStoreDocs.slice(i, i + 400).forEach(d => delBatch.delete(d.ref));
-        await delBatch.commit();
+      if (orphanStoreDocs.length > 0) {
+        if (onProgress) onProgress(`Depurando ${orphanStoreDocs.length} configuraciones obsoletas...`);
+        for (let i = 0; i < orphanStoreDocs.length; i += 400) {
+          const delBatch = writeBatch(db);
+          orphanStoreDocs.slice(i, i + 400).forEach(d => delBatch.delete(d.ref));
+          await delBatch.commit();
+        }
       }
     }
   } catch (cleanErr) {

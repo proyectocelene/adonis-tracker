@@ -472,10 +472,12 @@ export default function WorkoutDay() {
       variant: "danger",
       requireWord: "BORRAR",
       onConfirm: async () => {
+        const nowIso = new Date().toISOString();
+        const clearPayload = { __cleared: true, clearedAt: nowIso, __approvedDrop: true };
         await executeCleanSlate(currentUser);
-        setCustomExercisesMap({});
-        setSwappedExercisesMap({});
-        setExerciseOrderMap({});
+        setCustomExercisesMap(clearPayload);
+        setSwappedExercisesMap(clearPayload);
+        setExerciseOrderMap(clearPayload);
         setCustomRoutine(null);
         modal.showAlert({
           title: "🎉 Clean Slate Aplicado con Éxito",
@@ -1514,10 +1516,12 @@ export default function WorkoutDay() {
       variant: "warning",
       requireWord: "BORRAR",
       onConfirm: async () => {
+        const nowIso = new Date().toISOString();
+        const clearPayload = { __cleared: true, clearedAt: nowIso, __approvedDrop: true };
         await executeCleanSlate(currentUser);
-        setCustomExercisesMap({});
-        setSwappedExercisesMap({});
-        setExerciseOrderMap({});
+        setCustomExercisesMap(clearPayload);
+        setSwappedExercisesMap(clearPayload);
+        setExerciseOrderMap(clearPayload);
         setCustomRoutine(null);
         modal.showAlert({
           title: "🎉 Protocolo Adonis Definitivo Activado",

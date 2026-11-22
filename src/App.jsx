@@ -1,7 +1,7 @@
 import React, { useEffect, useState, lazy, Suspense } from 'react';
 import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import BottomNav from './components/BottomNav';
-import { ModalProvider, PwaInstallBanner } from './components/common/UIComponents';
+import { ModalProvider, PwaInstallBanner, useModal } from './components/common/UIComponents';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
 
 import { Loader2 } from 'lucide-react';
@@ -94,7 +94,27 @@ function PageLoader() {
 
 function AppContent() {
   const { currentUser } = useAuth();
+  const { showAlert } = useModal();
   const [isMigrating, setIsMigrating] = useState(true);
+
+  // Escuchar alertas del Guardián de Datos (bloqueo preventivo de caídas masivas)
+  useEffect(() => {
+    function handleGuardianBlocked(e) {
+      const { datasetKey, prevCount, newCount, reason } = e?.detail || {};
+      console.error(`[DataGuardian] 🛑 Escritura bloqueada en "${datasetKey}": ${reason} (${prevCount} ➔ ${newCount} elementos).`);
+      if (showAlert) {
+        showAlert({
+          title: "Protección de Datos Activada",
+          message: `El Guardián de Adonis bloqueó un intento anómalo de reducir tus datos en "${datasetKey}" (${prevCount} ➔ ${newCount} elementos). Tus datos existentes han sido preservados intactos.`,
+          variant: "danger",
+          buttonText: "Entendido"
+        });
+      }
+    }
+
+    window.addEventListener('adonis_guardian_blocked', handleGuardianBlocked);
+    return () => window.removeEventListener('adonis_guardian_blocked', handleGuardianBlocked);
+  }, [showAlert]);
 
   // Motor de Sincronización Automática Resiliente & Rescate Offline
   useEffect(() => {

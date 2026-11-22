@@ -4,7 +4,7 @@
 import { db, sanitizeForFirestore } from './firebase.js';
 import { collection, getDocs, doc, setDoc } from 'firebase/firestore';
 import { get, set, keys } from 'idb-keyval';
-import { mergeStoreValues, flushStoreOutbox, stripInternalMetadata } from './storeSyncHelper.js';
+import { mergeStoreValues, flushStoreOutbox, stripInternalMetadata, extractMetadataFromDoc } from './storeSyncHelper.js';
 
 /**
  * Descarga y consolida TODO el historial de sesiones y TODAS las configuraciones
@@ -94,7 +94,7 @@ export async function syncAllCloudDataToIndexedDB(currentUser) {
     for (const docSnap of storeSnapshot.docs) {
       const data = docSnap.data();
       const val = data.value !== undefined ? data.value : data;
-      cloudStoreMap.set(docSnap.id, val);
+      cloudStoreMap.set(docSnap.id, { val, meta: extractMetadataFromDoc(data) });
     }
 
     const KNOWN_STORE_KEYS = [
@@ -131,8 +131,10 @@ export async function syncAllCloudDataToIndexedDB(currentUser) {
         }
 
         const localVal = await get(docId);
-        const cloudVal = cloudStoreMap.get(docId);
-        const mergedVal = mergeStoreValues(docId, localVal, cloudVal);
+        const cloudEntry = cloudStoreMap.get(docId);
+        const cloudVal = cloudEntry ? cloudEntry.val : undefined;
+        const cloudMeta = cloudEntry ? cloudEntry.meta : null;
+        const mergedVal = mergeStoreValues(docId, localVal, cloudVal, cloudMeta);
 
         if (mergedVal !== undefined) {
           const cleanMerged = stripInternalMetadata(mergedVal);
@@ -162,7 +164,7 @@ export async function syncAllCloudDataToIndexedDB(currentUser) {
           if (!cloudStoreMap.has(docId) || cloudStr !== mergedStr) {
             console.log(`[Adonis Sync] 💾 ➔ ☁️ Sincronizando clave ${docId} a Firestore...`);
             const docRef = doc(db, 'users', currentUser.uid, 'store', docId);
-            await setDoc(docRef, { value: sanitizeForFirestore(cleanMerged), updatedAt: new Date().toISOString() }, { merge: true });
+            await setDoc(docRef, { value: sanitizeForFirestore(cleanMerged), updatedAt: new Date().toISOString(), __cleared: false }, { merge: true });
           }
         }
       } catch (err) {

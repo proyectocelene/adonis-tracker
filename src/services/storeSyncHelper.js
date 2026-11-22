@@ -30,20 +30,28 @@ export function stripInternalMetadata(data) {
 }
 
 /**
- * Extrae metadatos de borrado o actualización de un valor
+ * Extrae metadatos de borrado o actualización de un valor o documento Firestore
  */
-function extractMetadata(val) {
-  if (!val || typeof val !== 'object' || Array.isArray(val)) {
+export function extractMetadataFromDoc(rawDoc) {
+  if (!rawDoc || typeof rawDoc !== 'object') {
     return { isCleared: false, clearedAt: 0, updatedAt: 0 };
   }
-  const isCleared = Boolean(val.__cleared);
-  const clearedAt = val.clearedAt ? new Date(val.clearedAt).getTime() : 
-    (val.cleanSlateAt ? new Date(val.cleanSlateAt).getTime() : 0);
-  const updatedAt = val._updatedAt ? new Date(val._updatedAt).getTime() :
-    (val.updatedAt ? new Date(val.updatedAt).getTime() : 
-    (val.timestamp ? new Date(val.timestamp).getTime() : 0));
+  const isCleared = Boolean(rawDoc.__cleared || (rawDoc.value && rawDoc.value.__cleared));
+  const clearedAt = rawDoc.clearedAt ? new Date(rawDoc.clearedAt).getTime() : 
+    (rawDoc.cleanSlateAt ? new Date(rawDoc.cleanSlateAt).getTime() : 
+    (rawDoc.value?.clearedAt ? new Date(rawDoc.value.clearedAt).getTime() : 
+    (rawDoc.value?.cleanSlateAt ? new Date(rawDoc.value.cleanSlateAt).getTime() : 0)));
+  const updatedAt = rawDoc.updatedAt ? new Date(rawDoc.updatedAt).getTime() :
+    (rawDoc._updatedAt ? new Date(rawDoc._updatedAt).getTime() :
+    (rawDoc.timestamp ? new Date(rawDoc.timestamp).getTime() :
+    (rawDoc.value?._updatedAt ? new Date(rawDoc.value._updatedAt).getTime() : 
+    (rawDoc.value?.updatedAt ? new Date(rawDoc.value.updatedAt).getTime() : 0))));
 
   return { isCleared, clearedAt, updatedAt };
+}
+
+function extractMetadata(val) {
+  return extractMetadataFromDoc(val);
 }
 
 /**
@@ -69,9 +77,9 @@ function isEffectivelyEmpty(val) {
  * 2. Un borrado SOLO es válido si fue explícitamente marcado con { __cleared: true, clearedAt }.
  * 3. Los metadatos internos jamás se filtran al valor devuelto para React.
  */
-export function mergeStoreValues(key, localVal, cloudVal) {
-  const localMeta = extractMetadata(localVal);
-  const cloudMeta = extractMetadata(cloudVal);
+export function mergeStoreValues(key, localVal, cloudVal, cloudMetaParam = null, localMetaParam = null) {
+  const localMeta = localMetaParam || extractMetadata(localVal);
+  const cloudMeta = cloudMetaParam || extractMetadata(cloudVal);
 
   // Manejo de Borrado Explícito (__cleared: true)
   if (localMeta.isCleared) {
@@ -345,7 +353,7 @@ export async function flushStoreOutbox(currentUser) {
         }
         const docRef = doc(db, 'users', currentUser.uid, 'store', item.key);
         const cleanVal = sanitizeForFirestore(stripInternalMetadata(item.value));
-        await setDoc(docRef, { value: cleanVal, updatedAt: new Date().toISOString() }, { merge: true });
+        await setDoc(docRef, { value: cleanVal, updatedAt: new Date().toISOString(), __cleared: false }, { merge: true });
         console.log(`[StoreOutbox] ☁️ Sincronizado ${item.key} pendiente con Firestore.`);
       } catch (err) {
         console.warn(`[StoreOutbox] Error subiendo ${item.key}, se mantendrá en cola:`, err);
