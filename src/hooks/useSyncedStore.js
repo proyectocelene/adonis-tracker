@@ -28,8 +28,9 @@ export function useSyncedStore(key, initialValue) {
   const debounceTimerRef = useRef(null);
 
   const isSensitiveKey = key.includes('deepseek') || key.includes('api_key') || key.includes('apikey');
+  const cleanKeySuffix = key.replace(/^coachv2_/, '');
   const localNamespacedKey = isSensitiveKey 
-    ? `coachv2_${currentUser?.uid || 'anon'}_${key}`
+    ? `coachv2_${currentUser?.uid || 'anon'}_${cleanKeySuffix}`
     : key;
 
   // Vaciar escrituras pendientes hacia Firestore
@@ -112,6 +113,12 @@ export function useSyncedStore(key, initialValue) {
       (snapshot) => {
         if (!isMounted) return;
 
+        // Si el snapshot no existe en la caché local pero estamos online,
+        // esperar a que responda el servidor para no tomar initialValue en dispositivos nuevos
+        if (!snapshot.exists() && snapshot.metadata?.fromCache && (typeof navigator === 'undefined' || navigator.onLine)) {
+          return;
+        }
+
         // Si tenemos escrituras locales aún pendientes de vaciado, no sobreescribir el estado en memoria
         if (pendingCloudWriteRef.current !== null) {
           setIsLoading(false);
@@ -125,7 +132,9 @@ export function useSyncedStore(key, initialValue) {
           const rawVal = rawDoc.value !== undefined ? rawDoc.value : rawDoc;
 
           if (meta.isCleared) {
-            resolvedVal = Array.isArray(rawVal) ? [] : (key === 'coachv2_custom_routine' ? null : {});
+            resolvedVal = Array.isArray(initialValueRef.current) 
+              ? [] 
+              : (initialValueRef.current === null ? null : {});
           } else {
             resolvedVal = rawVal !== undefined ? stripInternalMetadata(rawVal) : initialValueRef.current;
           }

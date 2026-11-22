@@ -57,6 +57,11 @@ export function useWorkoutHistory() {
       (snapshot) => {
         if (!isMounted) return;
 
+        // Evitar parpadeo de 0 sesiones en un dispositivo nuevo esperando la respuesta del servidor
+        if (snapshot.empty && snapshot.metadata?.fromCache && (typeof navigator === 'undefined' || navigator.onLine)) {
+          return;
+        }
+
         // Mapear documentos y filtrar estrictamente aquellos con soft-delete (deletedAt)
         const activeSessions = snapshot.docs
           .map(docSnap => ({ ...docSnap.data(), id: docSnap.id }))

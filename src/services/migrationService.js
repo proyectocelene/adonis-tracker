@@ -28,7 +28,8 @@ const MIRROR_STORE_KEYS_TO_CLEAN = [
   'coachv2_deload_cycle_config',
   'coachv2_week_split_override',
   'coachv2_dismissed_pending_alerts',
-  'coachv2_physique_goal'
+  'coachv2_physique_goal',
+  'coachv2_gym_membership_settings'
 ];
 
 /**
@@ -204,35 +205,39 @@ export async function runV2FirestoreMigration(currentUser) {
   // 3. Drenar outboxes pendientes en este dispositivo
   await drainDeviceOutboxes(currentUser);
 
-  // 4. Verificar en el servidor Firestore si la migración ya fue completada
+  // 4. Verificar en Firestore si la migración ya fue completada
   const migrationsDocRef = doc(db, 'users', uid, 'meta', 'migrations');
-  let migrationMeta = null;
 
+  // 4.1 Primero leer de caché local rápida (0 ms, sin gastar lecturas al servidor)
   try {
-    // Intentar leer directamente del servidor para tener certeza absoluta del estado
+    const cacheSnap = await getDoc(migrationsDocRef);
+    if (cacheSnap.exists()) {
+      const cacheData = cacheSnap.data();
+      if (cacheData?.migrations?.v2_single_source_of_truth?.completedAt) {
+        // Ya completada en caché: limpiar espejos residuales si queda alguno y retornar en 0 ms
+        await cleanLegacyDeviceMirrors(uid);
+        return { success: true, alreadyCompleted: true };
+      }
+    }
+  } catch (cacheErr) {
+    console.warn("[Migration] Aviso leyendo caché de meta/migrations:", cacheErr.message);
+  }
+
+  // 4.2 Si la caché local no tiene completedAt, consultar al servidor
+  let migrationMeta = null;
+  try {
     const serverSnap = await getDocFromServer(migrationsDocRef);
     if (serverSnap.exists()) {
       migrationMeta = serverSnap.data();
+      if (migrationMeta?.migrations?.v2_single_source_of_truth?.completedAt) {
+        await cleanLegacyDeviceMirrors(uid);
+        return { success: true, alreadyCompleted: true };
+      }
     }
   } catch (serverErr) {
-    // Fallback a getDoc estándar si getDocFromServer falla
-    try {
-      const fallbackSnap = await getDoc(migrationsDocRef);
-      if (fallbackSnap.exists()) {
-        migrationMeta = fallbackSnap.data();
-      }
-    } catch (e) {
-      console.warn("[Migration] No se pudo verificar meta/migrations en Firestore:", e.message);
-    }
-  }
-
-  const isAlreadyMigrated = Boolean(migrationMeta?.migrations?.v2_single_source_of_truth?.completedAt);
-
-  if (isAlreadyMigrated) {
-    // La migración ya fue ejecutada (por este u otro dispositivo).
-    // Solo aseguramos la limpieza de los espejos viejos en este dispositivo.
-    await cleanLegacyDeviceMirrors(uid);
-    return { success: true, alreadyCompleted: true };
+    // Si getDocFromServer falla (red inestable / servidor inalcanzable), ABORTAR de forma segura
+    console.warn("[Migration] Servidor inalcanzable al verificar meta/migrations. Abortando sin tocar espejos locales:", serverErr.message);
+    return { success: false, reason: 'server_unreachable' };
   }
 
   // 5. EJECUTAR MIGRACIÓN ÚNICA SIN PÉRDIDA DE DATOS (Local ➔ Firestore)
@@ -302,12 +307,20 @@ export async function runV2FirestoreMigration(currentUser) {
 
         if (mergedVal !== undefined && mergedVal !== null) {
           const cleanMerged = sanitizeForFirestore(stripInternalMetadata(mergedVal));
-          await setDoc(storeDocRef, {
-            value: cleanMerged,
-            updatedAt: new Date().toISOString(),
-            __cleared: false
-          }, { merge: true });
-          migratedStoreKeys++;
+          const cleanCloud = stripInternalMetadata(cloudVal);
+
+          // Solo escribir a Firestore si el valor fusionado difiere del existente en la nube
+          if (JSON.stringify(cleanMerged) !== JSON.stringify(cleanCloud ?? null)) {
+            // Si la nube ya estaba explícitamente borrada y el local no aportó datos más nuevos
+            const isCleared = Boolean(cloudMeta.isCleared && (cleanMerged === null || (typeof cleanMerged === 'object' && Object.keys(cleanMerged).length === 0)));
+            await setDoc(storeDocRef, {
+              value: cleanMerged,
+              updatedAt: new Date().toISOString(),
+              __cleared: isCleared,
+              clearedAt: isCleared ? (cloudDocData?.clearedAt || new Date().toISOString()) : null
+            }, { merge: true });
+            migratedStoreKeys++;
+          }
         }
       } catch (storeErr) {
         console.warn(`[Migration] Error migrando store key ${storeKey}:`, storeErr);

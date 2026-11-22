@@ -68,7 +68,6 @@ function PageLoader() {
 function AppContent() {
   const { currentUser } = useAuth();
   const { showAlert } = useModal();
-  const [isMigrating, setIsMigrating] = useState(true);
 
   // Escuchar alertas del Guardián de Datos (bloqueo preventivo de caídas masivas)
   useEffect(() => {
@@ -89,24 +88,16 @@ function AppContent() {
     return () => window.removeEventListener('adonis_guardian_blocked', handleGuardianBlocked);
   }, [showAlert]);
 
-  // Migración y Sincronización Centralizada (Fase 2: users/{uid}/meta/migrations)
+  // Migración y Sincronización Centralizada en Segundo Plano (Fase 2: users/{uid}/meta/migrations)
+  // Se ejecuta en segundo plano sin bloquear el arranque de la app a 0ms con persistentLocalCache
   useEffect(() => {
-    if (!currentUser) {
-      setIsMigrating(false);
-      return;
-    }
+    if (!currentUser) return;
 
-    // Ejecutar migración segura, drenado de outboxes y limpieza de espejos
     import('./services/migrationService').then(({ runV2FirestoreMigration }) => {
-      runV2FirestoreMigration(currentUser).then(() => {
-        setIsMigrating(false);
-      }).catch(err => {
-        console.warn("[App] Aviso durante migración v2:", err);
-        setIsMigrating(false);
+      runV2FirestoreMigration(currentUser).catch(err => {
+        console.warn("[App] Aviso durante migración v2 en segundo plano:", err);
       });
-    }).catch(() => {
-      setIsMigrating(false);
-    });
+    }).catch(() => {});
   }, [currentUser]);
 
   // Garantizar persistencia de almacenamiento contra desalojos del navegador
@@ -119,15 +110,6 @@ function AppContent() {
       }).catch(e => console.warn("[Storage] Error solicitando persistencia:", e));
     }
   }, []);
-
-  if (isMigrating) {
-    return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '12px', color: '#0066ff' }}>
-        <Loader2 size={32} style={{ animation: 'spin 1s linear infinite' }} />
-        <span style={{ fontSize: '13px', fontWeight: '700', color: '#64748b' }}>Migrando a la Nube Segura...</span>
-      </div>
-    );
-  }
 
   if (!currentUser) {
     return <LoginScreen />;
