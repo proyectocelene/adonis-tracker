@@ -9,7 +9,7 @@
 | 1 | Detener pérdida de datos | Antigravity | Planning + modelo más potente, razonamiento alto | `fix/perdida-datos` | ✅ Hecha (2026-11-22) |
 | 2 | Fuente única de verdad de datos | Antigravity | Planning + alto | `refactor/fuente-unica-datos` | ✅ Hecha (2026-11-22) |
 | 3 | Tests, CI, Firestore rules | Antigravity | Planning + medio | `chore/estabilidad` | ✅ Hecha (2026-11-22) |
-| 4 | Dividir archivos gigantes (1 archivo por chat) | Antigravity | Planning + alto | `refactor/<archivo>` | 🔄 En curso (4a: ✅ Hecha, 4b: ✅ Hecha, 4c: ✅ Hecha) |
+| 4 | Dividir archivos gigantes (1 archivo por chat) | Antigravity | Planning + alto | `refactor/<archivo>` | ✅ Hecha (4a: ✅, 4b: ✅, 4c: ✅, 4d: ✅) |
 | 5 | UI para uso en el gym | Quick (mockup) → Antigravity (implementación) | Balanced / Fast | `ui/<pantalla>` | ⬜ |
 | ✔ | Revisión al cierre de cada fase | Quick, chat "Revisor Adonis" | Smart | — | — |
 
@@ -193,10 +193,36 @@ Archivo: `base de datos pruebas/COACH_V2_Backup_Total_Firebase_2026-09-17.json` 
   - `vitest`: 82 tests unitarios en verde (7 suites, ~0.5s), incluyendo 25 nuevos tests en `tests/progressionChart.test.js`.
   - `vite build`: Compilación limpia de producción en 1.01s con Service Worker PWA generado.
 
-### Pendientes de la Fase 4:
 - [x] **Fase 4b:** Dividir `CardioLogger.jsx` (2,110 líneas) · Rama `refactor/cardiologger`.
 - [x] **Fase 4c:** Dividir `ExerciseProgressionChart.jsx` (1,885 líneas) · Rama `refactor/progressionchart`.
-- [ ] **Fase 4d:** Dividir `SetLogger.jsx` (1,463 líneas) · Rama `refactor/setlogger`.
+- [x] **Fase 4d:** Dividir `SetLogger.jsx` (1,463 líneas) · Rama `refactor/setlogger`.
+
+### FASE 4d — Dividir `SetLogger.jsx` (✅ Hecha 2026-11-22)
+**Rama:** `refactor/setlogger`
+- **Resultados de arquitectura:**
+  - `SetLogger.jsx` reducido de **1,463 líneas a 204 líneas** (~86% de reducción) como un orquestador declarativo y liviano.
+  - Ningún archivo nuevo o modificado supera las ~400 líneas (todos entre 83 y 352 líneas).
+  - Estabilidad referencial en defaults: uso de `EMPTY_OBJECT = {}` y `EMPTY_ARRAY = []` para que `useMemo` y `useEffect` no se disparen innecesariamente.
+  - Preservación estricta de la compatibilidad de props, interactividad táctil (`tactile-btn`, `safeVibrate`) y estilos visuales idénticos.
+- **Módulos creados en `src/utils/`:**
+  - `setLoggerHelpers.js` (228 líneas): Funciones puras de fisiología de calentamiento (`getWarmupPlan`), vibración háptica segura (`safeVibrate`), tipo de aparato (`getApparatusType`), chequeo bilateral estricto (`isStrictlyBilateralExercise`), insignia delta-aware (`getSetCompletedBadge`) y paleta semántica de RPE (`getRpeColorStyle`).
+- **Módulos creados en `src/hooks/exercise/`:**
+  - `useSetLoggerMachineConfig.js` (102 líneas): Hook enfocado en `useSyncedStore` para `coachv2_machine_configs` y `coachv2_machine_profiles` (sin duplicar listeners), resolución de máquina activa y sincronización con `exerciseData` y `onUpdateExerciseMeta`.
+- **Módulos creados en `src/components/exercise/setlogger/`:**
+  - `SetLoggerHeader.jsx` (212 líneas): Barra superior compacta con toggle bilateral/por lado, selector de perfiles de máquina, chips de calibración y botón de sobrecarga.
+  - `SetLoggerWarmup.jsx` (202 líneas): Alerta de cambio de piso/ubicación, tarjetas de series de calentamiento (C1, C2) y botón de calentamiento manual.
+  - `SetLoggerTargetBanners.jsx` (92 líneas): Banners de meta del coach y modo Deload.
+  - `SetRow.jsx` (177 líneas): Orquestador de fila de serie con soporte de deload omitido y desbloqueo.
+  - `SetRowHeader.jsx` (152 líneas): Cabecera de serie S{setNum}, botón de autollenado anterior ("Prev:"), meta de sobrecarga táctil y badge de completado.
+  - `SetRowInputs.jsx` (352 líneas): Steppers de peso (-/+), inputs con calculadora de discos, reps bilateral vs unilateral (Izq/Der con promedio automático), selector RPE semántico y botón de check.
+  - `SetLoggerFooter.jsx` (83 líneas): Botones de acción inferior (+ Serie, Quitar y Sensaciones).
+  - `SetLoggerModals.jsx` (90 líneas): Agrupación declarativa de los 4 modales de soporte (discos, ciencia, máquina, sensaciones).
+- **Pruebas unitarias (`tests/setLoggerHelpers.test.js`):**
+  - 23 nuevos tests unitarios (suite completa en verde) validando `getWarmupPlan`, `getApparatusType`, `isStrictlyBilateralExercise`, `getSetCompletedBadge`, `getRpeColorStyle` y `safeVibrate`.
+- **Calidad y estabilidad:**
+  - `oxlint`: **0 warnings y 0 errores** en todos los 12 archivos tocados (warnings globales del repo bajan de 171 a 154 tras eliminar 17 warnings en `SetLogger`).
+  - `vitest`: 105 tests unitarios en verde (8 suites, ~2.9s).
+  - `vite build`: Compilación limpia de producción en 2.45s con Service Worker PWA generado.
 
 ## FASE 5 — UI para el gym
 - **Quick (Balanced):** "Hazme un mockup HTML de la pantalla de registro de series para usar con una mano en el gym: registrar una serie en ≤2 toques, indicador de Guardado ✓ / Pendiente ⟳, modo oscuro."
@@ -219,3 +245,4 @@ regresiones, setDoc sin merge, código muerto. Veredicto: aprobar / corregir.
 - 2026-11-22 · Fase 4a · Se divide `WorkoutDay.jsx` (de 2,291 líneas a 373 líneas) en 8 hooks en `src/hooks/workout/`, 4 componentes en `src/components/workout/` y 1 helper puro `sessionDataHelper.js`. Ningún archivo supera ~380 líneas. Cero listeners duplicados en `useSyncedStore`. 0 errores y 0 warnings de `oxlint` en los archivos tocados (warnings globales del repo bajan de 246 a 208). 57 tests en verde y build limpio.
 - 2026-11-22 · Fase 4b · Se divide `CardioLogger.jsx` (de 2,110 líneas a 382 líneas) en 3 hooks/helpers en `src/hooks/cardio/` y 8 componentes en `src/components/cardio/`. Ningún archivo supera ~388 líneas. Estabilidad garantizada con `EMPTY_EXERCISE_DATA = {}` por defecto y preservación exacta de `rpe`. 0 errores y 0 warnings de `oxlint` en los archivos tocados (warnings globales del repo bajan de 208 a 185). 57 tests en verde y build limpio.
 - 2026-11-22 · Fase 4c · Se divide `ExerciseProgressionChart.jsx` (de 1,885 líneas a 148 líneas) en 4 utilidades en `src/utils/charts/`, 2 hooks en `src/hooks/charts/`, 8 componentes en `src/components/exercise/progression/` y 1 suite de tests (`tests/progressionChart.test.js`). Ningún archivo supera ~393 líneas. Estabilidad referencial con `EMPTY_ARRAY` y `EMPTY_OBJECT`. Se eliminaron 14 warnings de `oxlint` (warnings globales bajan de 185 a 171). 82 tests en verde y build limpio.
+- 2026-11-22 · Fase 4d · Se divide `SetLogger.jsx` (de 1,463 líneas a 204 líneas) en 1 módulo de helpers puros `src/utils/setLoggerHelpers.js`, 1 hook enfocado `src/hooks/exercise/useSetLoggerMachineConfig.js`, 8 subcomponentes visuales en `src/components/exercise/setlogger/` y 1 suite de pruebas unitarias `tests/setLoggerHelpers.test.js`. Ningún archivo supera ~352 líneas. Estabilidad referencial garantizada con `EMPTY_OBJECT` y `EMPTY_ARRAY`. Se eliminaron 17 warnings de `oxlint` (warnings globales bajan de 171 a 154). 105 tests unitarios en verde y build limpio. Fase 4 concluida exitosamente al 100%.
