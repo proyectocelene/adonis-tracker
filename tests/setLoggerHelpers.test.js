@@ -195,44 +195,47 @@ describe('setLoggerHelpers', () => {
     });
 
     it('no lanza error si navigator.vibrate no existe o no es invocable', () => {
-      const originalVibrate = globalThis.navigator?.vibrate;
+      if (!globalThis.navigator) {
+        globalThis.navigator = {};
+      }
+      const originalVibrate = globalThis.navigator.vibrate;
       try {
-        Object.defineProperty(globalThis.navigator, 'vibrate', {
-          value: undefined,
-          configurable: true,
-          writable: true
-        });
+        globalThis.navigator.vibrate = undefined;
         expect(() => safeVibrate(20)).not.toThrow();
       } finally {
-        Object.defineProperty(globalThis.navigator, 'vibrate', {
-          value: originalVibrate,
-          configurable: true,
-          writable: true
-        });
+        globalThis.navigator.vibrate = originalVibrate;
       }
     });
 
     it('llama a navigator.vibrate cuando está disponible', () => {
+      if (!globalThis.navigator) {
+        globalThis.navigator = {};
+      }
+      const originalVibrate = globalThis.navigator.vibrate;
       const vibrateMock = vi.fn();
-      Object.defineProperty(globalThis.navigator, 'vibrate', {
-        value: vibrateMock,
-        configurable: true,
-        writable: true
-      });
-      safeVibrate(25);
-      expect(vibrateMock).toHaveBeenCalledWith(25);
+      try {
+        globalThis.navigator.vibrate = vibrateMock;
+        safeVibrate(25);
+        expect(vibrateMock).toHaveBeenCalledWith(25);
+      } finally {
+        globalThis.navigator.vibrate = originalVibrate;
+      }
     });
 
     it('captura excepciones de navigator.vibrate sin romper la ejecución', () => {
+      if (!globalThis.navigator) {
+        globalThis.navigator = {};
+      }
+      const originalVibrate = globalThis.navigator.vibrate;
       const throwingVibrate = vi.fn().mockImplementation(() => {
         throw new Error('NotAllowedError');
       });
-      Object.defineProperty(globalThis.navigator, 'vibrate', {
-        value: throwingVibrate,
-        configurable: true,
-        writable: true
-      });
-      expect(() => safeVibrate(30)).not.toThrow();
+      try {
+        globalThis.navigator.vibrate = throwingVibrate;
+        expect(() => safeVibrate(30)).not.toThrow();
+      } finally {
+        globalThis.navigator.vibrate = originalVibrate;
+      }
     });
   });
 });

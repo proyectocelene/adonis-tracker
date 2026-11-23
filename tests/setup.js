@@ -9,6 +9,14 @@ if (typeof globalThis.window === 'undefined') {
   };
 }
 
+// Mock global navigator if needed in Node
+if (typeof globalThis.navigator === 'undefined') {
+  globalThis.navigator = {
+    vibrate: vi.fn(),
+    storage: { persist: vi.fn(async () => true) }
+  };
+}
+
 // Mock Firebase SDK modules to prevent any real network or project connection
 vi.mock('firebase/app', () => ({
   initializeApp: vi.fn(() => ({})),
