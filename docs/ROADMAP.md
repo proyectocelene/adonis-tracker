@@ -9,7 +9,7 @@
 | 1 | Detener pérdida de datos | Antigravity | Planning + modelo más potente, razonamiento alto | `fix/perdida-datos` | ✅ Hecha (2026-11-22) |
 | 2 | Fuente única de verdad de datos | Antigravity | Planning + alto | `refactor/fuente-unica-datos` | ✅ Hecha (2026-11-22) |
 | 3 | Tests, CI, Firestore rules | Antigravity | Planning + medio | `chore/estabilidad` | ✅ Hecha (2026-11-22) |
-| 4 | Dividir archivos gigantes (1 archivo por chat) | Antigravity | Planning + alto | `refactor/<archivo>` | 🔄 En curso (4a: ✅ Hecha, 4b: ✅ Hecha) |
+| 4 | Dividir archivos gigantes (1 archivo por chat) | Antigravity | Planning + alto | `refactor/<archivo>` | 🔄 En curso (4a: ✅ Hecha, 4b: ✅ Hecha, 4c: ✅ Hecha) |
 | 5 | UI para uso en el gym | Quick (mockup) → Antigravity (implementación) | Balanced / Fast | `ui/<pantalla>` | ⬜ |
 | ✔ | Revisión al cierre de cada fase | Quick, chat "Revisor Adonis" | Smart | — | — |
 
@@ -164,9 +164,38 @@ Archivo: `base de datos pruebas/COACH_V2_Backup_Total_Firebase_2026-09-17.json` 
   - `vitest`: 57 tests unitarios en verde (6 suites, ~0.5s).
   - `vite build`: Compilación limpia de producción en 1.04s con Service Worker PWA generado.
 
+### FASE 4c — Dividir `ExerciseProgressionChart.jsx` (✅ Hecha 2026-11-22)
+**Rama:** `refactor/progressionchart`
+- **Resultados de arquitectura:**
+  - `ExerciseProgressionChart.jsx` reducido de **1,885 líneas a 148 líneas** (~92% reducción) como un orquestador declarativo y liviano.
+  - Ningún archivo nuevo o modificado supera las 400 líneas (todos entre 23 y 393 líneas).
+  - Estabilidad referencial en props por defecto con `EMPTY_ARRAY = []` y `EMPTY_OBJECT = {}`.
+  - Preservación exacta de la interactividad de hover (`hoveredPoint`) y fijado (`pinnedPoint`), y las alturas de `ResponsiveContainer` para prevenir colapsos.
+- **Módulos creados en `src/utils/charts/`:**
+  - `chartConstants.js` (38 líneas): Paleta `PROGRESSION_COLORS`, opciones de timeframe, modos de carga y objetos vacíos congelados.
+  - `progressionScales.js` (56 líneas): Dominios dinámicos YAxis (cargas y tonelaje) con holguras fisiológicas del 15% y 20%.
+  - `progressionProjections.js` (147 líneas): Cálculo científico de tasa miofibrilar y proyección a +1 ses, +2 ses, +1m, +3m, +6m con microcargas.
+  - `progressionDataHelper.js` (383 líneas): Parsing de reps, detección de estaciones, formato de fechas, normalización de series de hoy, ventanas continuas de Deload y filtro temporal.
+- **Módulos creados en `src/hooks/charts/`:**
+  - `useProgressionChartState.js` (89 líneas): Estado de filtros, visibilidad de curvas, persistencia segura en `localStorage` y puntos fijados/hover.
+  - `useProgressionChartData.js` (156 líneas): Pipeline memoizado de datos reales y proyecciones miofibrilares.
+- **Módulos creados en `src/components/exercise/progression/`:**
+  - `StationDot.jsx` (78 líneas): Glifos SVG diferenciados por estación (mancuerna, polea, Smith, discos, máquina) y aura de Deload.
+  - `ChartEmptyState.jsx` (23 líneas): Estado visual cuando el ejercicio no tiene historial previo.
+  - `ChartHeaderControls.jsx` (332 líneas): Cabecera con título dinámico, meta de reps, alcance (Familia vs Máquina), Cargas vs Tonelaje y toggles de curvas.
+  - `TimeframeSelector.jsx` (63 líneas): Barra de pastillas para resolución temporal del Eje X (`5 Ses` a `Siempre`) con conteo de sesiones.
+  - `ChartLegendAndBanners.jsx` (152 líneas): Banner de consolidación de familia biomecánica y guía de colores/hipertrofia.
+  - `ProgressionChartGraph.jsx` (393 líneas): Gráfica Recharts `ComposedChart` con doble eje Y, 7 gradientes SVG, `ReferenceArea` y `CustomTooltipReceiver`.
+  - `SessionAuditCard.jsx` (253 líneas): Tarjeta de auditoría inferior con 4 KPIs (Carga Pico, Prom Ponderado, Reps Top/Prom, Tonelaje/1RM), desglose de series y notas.
+  - `ChartFooter.jsx` (37 líneas): Resumen de último pico, récord histórico y último promedio ponderado.
+- **Calidad y estabilidad:**
+  - `oxlint`: **0 warnings y 0 errores** en todos los 15 archivos tocados (warnings globales del repo bajan de 185 a 171 tras eliminar 14 warnings históricos).
+  - `vitest`: 82 tests unitarios en verde (7 suites, ~0.5s), incluyendo 25 nuevos tests en `tests/progressionChart.test.js`.
+  - `vite build`: Compilación limpia de producción en 1.01s con Service Worker PWA generado.
+
 ### Pendientes de la Fase 4:
 - [x] **Fase 4b:** Dividir `CardioLogger.jsx` (2,110 líneas) · Rama `refactor/cardiologger`.
-- [ ] **Fase 4c:** Dividir `ExerciseProgressionChart.jsx` (1,885 líneas) · Rama `refactor/progressionchart`.
+- [x] **Fase 4c:** Dividir `ExerciseProgressionChart.jsx` (1,885 líneas) · Rama `refactor/progressionchart`.
 - [ ] **Fase 4d:** Dividir `SetLogger.jsx` (1,463 líneas) · Rama `refactor/setlogger`.
 
 ## FASE 5 — UI para el gym
@@ -189,3 +218,4 @@ regresiones, setDoc sin merge, código muerto. Veredicto: aprobar / corregir.
 - 2026-11-22 · Fase 3 · Se configuran oxlint, Vitest con 57 tests unitarios en 6 suites (Firebase e IndexedDB aislados con mocks), CI estricto en GitHub Actions y Cloud Firestore Security Rules multi-tenant con default deny.
 - 2026-11-22 · Fase 4a · Se divide `WorkoutDay.jsx` (de 2,291 líneas a 373 líneas) en 8 hooks en `src/hooks/workout/`, 4 componentes en `src/components/workout/` y 1 helper puro `sessionDataHelper.js`. Ningún archivo supera ~380 líneas. Cero listeners duplicados en `useSyncedStore`. 0 errores y 0 warnings de `oxlint` en los archivos tocados (warnings globales del repo bajan de 246 a 208). 57 tests en verde y build limpio.
 - 2026-11-22 · Fase 4b · Se divide `CardioLogger.jsx` (de 2,110 líneas a 382 líneas) en 3 hooks/helpers en `src/hooks/cardio/` y 8 componentes en `src/components/cardio/`. Ningún archivo supera ~388 líneas. Estabilidad garantizada con `EMPTY_EXERCISE_DATA = {}` por defecto y preservación exacta de `rpe`. 0 errores y 0 warnings de `oxlint` en los archivos tocados (warnings globales del repo bajan de 208 a 185). 57 tests en verde y build limpio.
+- 2026-11-22 · Fase 4c · Se divide `ExerciseProgressionChart.jsx` (de 1,885 líneas a 148 líneas) en 4 utilidades en `src/utils/charts/`, 2 hooks en `src/hooks/charts/`, 8 componentes en `src/components/exercise/progression/` y 1 suite de tests (`tests/progressionChart.test.js`). Ningún archivo supera ~393 líneas. Estabilidad referencial con `EMPTY_ARRAY` y `EMPTY_OBJECT`. Se eliminaron 14 warnings de `oxlint` (warnings globales bajan de 185 a 171). 82 tests en verde y build limpio.
