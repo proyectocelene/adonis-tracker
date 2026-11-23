@@ -1,476 +1,59 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { scientificProtocol } from '../data/scientificProtocol';
-import { UNIFIED_EXERCISE_LIBRARY } from '../data/unifiedExerciseLibrary';
-import ExerciseRow from './ExerciseRow';
-import CardioLogger from './CardioLogger';
-import TimelineSelector from './workout/TimelineSelector';
 import MonthlyCalendar from './workout/MonthlyCalendar';
 import GamificationDashboard from './gamification/GamificationDashboard';
-import GlosarioModal from './common/GlosarioModal';
-import RoutineManagerModal from './workout/RoutineManagerModal';
-import GymMembershipReminder from './common/GymMembershipReminder';
 import WorkoutHeader from './workout/WorkoutHeader';
 import WorkoutLiveStats from './workout/WorkoutLiveStats';
 import WorkoutExerciseList from './workout/WorkoutExerciseList';
-import AddCustomExerciseModal from './workout/AddCustomExerciseModal';
 import WorkoutFooterControls from './workout/WorkoutFooterControls';
-import SmartRescheduleModal from './workout/SmartRescheduleModal';
 import SundayRecoveryDashboard from './workout/SundayRecoveryDashboard';
 import PendingExercisesBanner from './workout/PendingExercisesBanner';
 import DeloadMonitoringCard from './workout/DeloadMonitoringCard';
-import { detectFatigueStatus, isSplitOverrideActive, createDeloadCycle, calculateDeloadProgress, distributePendingExercisesAcrossDays } from '../utils/adaptiveRoutineEngine';
-import { detectUnfinishedExercisesFromPreviousSession } from '../utils/pendingExercisesDetector';
-import { executeCleanSlate } from '../services/cleanSlateService';
+import MorningCardioBanner from './workout/MorningCardioBanner';
+import GeneralWarmupBanner from './workout/GeneralWarmupBanner';
+import AIAnalysisCard from './workout/AIAnalysisCard';
+import WorkoutModals from './workout/WorkoutModals';
 import { useAuth } from '../contexts/AuthContext';
-import { getPreviousDataForExercise } from '../utils/exerciseMatcher';
-import { calculateVolume, calculate1RM, calculateAverageRPE, isExerciseUnilateral, getMachineStorageKey } from '../hooks/useWorkoutCalculations';
-import { calculateWorkoutCalories } from '../utils/calorieCalculations';
-import { shareOrExportWorkout, downloadWorkoutTCX, downloadWorkoutJSON } from '../services/workoutExportService';
-import { generateAISessionPrompt } from '../utils/aiPromptGenerator';
-import { useSyncedStore } from '../hooks/useSyncedStore';
-import { useWorkoutHistory } from '../hooks/useWorkoutHistory';
-import { Target, Calendar as CalendarIcon, Clock, ArrowRight, Loader2, Dumbbell, Save, Activity, Trash2, Cpu, FileText, CheckCircle, RotateCcw, ChevronDown, ChevronUp, RefreshCw, RefreshCcw, Plus, X, Layers, Settings2, Cloud, FileSpreadsheet, Lock, Sparkles, BookOpen, Copy, HelpCircle, Check, Flame, ShieldCheck, Zap, Database, History, Share2 } from 'lucide-react';
 import { useModal } from './common/UIComponents';
+import { useWorkoutDayState } from '../hooks/workout/useWorkoutDayState';
+import { Calendar as CalendarIcon, Dumbbell, BookOpen, CheckCircle, Loader2 } from 'lucide-react';
 
 export default function WorkoutDay() {
   const { currentUser } = useAuth();
-  const [activeTab, setActiveTab] = useState('workout');
   const modal = useModal();
   const todayStr = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(new Date().getDate()).padStart(2, '0')}`;
-  
-  // 1. Estados y Hooks de Base de Datos / LocalStorage al inicio
-  const [customRoutine, setCustomRoutine] = useSyncedStore('coachv2_custom_routine', null);
-  const [mesocycleStartDate, setMesocycleStartDate] = useSyncedStore('coachv2_mesocycle_start', null);
-  const [customExercisesMap, setCustomExercisesMap] = useSyncedStore('coachv2_custom_day_exercises', {});
-  const [swappedExercisesMap, setSwappedExercisesMap] = useSyncedStore('coachv2_swapped_exercises', {});
-  const [skippedExercisesMap, setSkippedExercisesMap] = useSyncedStore('coachv2_skipped_exercises', {});
-  const [smartwatchKcalMap, setSmartwatchKcalMap] = useSyncedStore('coachv2_smartwatch_kcal', {});
-  const [exerciseOrderMap, setExerciseOrderMap] = useSyncedStore('coachv2_exercise_orders', {});
-  const [globalWarmupDone, setGlobalWarmupDone] = useSyncedStore('coachv2_global_warmup', {});
-  const [currentSessions, setCurrentSessions, isSessionsLoading] = useSyncedStore('coachv2_active_workouts', {});
-  const [bodyMetrics, , isMetricsLoading] = useSyncedStore('coachv2_body_metrics_history', []);
-  const [bodyComposition] = useSyncedStore('coachv2_body_composition_data', {});
-  const [globalMachineConfigs] = useSyncedStore('coachv2_machine_configs', {});
-  const [globalMachineProfiles] = useSyncedStore('coachv2_machine_profiles', {});
-  const [workoutHistory, setWorkoutHistory, isHistoryLoading, saveSession, deleteSession] = useWorkoutHistory();
-  const [apiKey] = useSyncedStore('coachv2_deepseek_api_key', '');
-  const [googleSheetsUrl, setGoogleSheetsUrl] = useSyncedStore('coachv2_google_sheets_url', 'https://script.google.com/macros/s/AKfycbxA-KbUcEgWUq4jvjdSBxLw3tGsgPxXsF2Y7mX5JsNIpE2qslN1v7xW3NqdJ3-4b-RCwg/exec');
-  const [isDeloadMode, setIsDeloadMode] = useSyncedStore('coachv2_deload_active', false);
-  const [deloadCycleConfig, setDeloadCycleConfig] = useSyncedStore('coachv2_deload_cycle_config', null);
-  const [weekSplitOverride, setWeekSplitOverride] = useSyncedStore('coachv2_week_split_override', null);
-  const [dismissedPendingAlerts, setDismissedPendingAlerts] = useSyncedStore('coachv2_dismissed_pending_alerts', {});
 
-  const isLoadingDb = isHistoryLoading || isSessionsLoading || isMetricsLoading;
-
-  // 2. Estados locales de navegación y vistas
+  // 1. Estados locales de navegación y visibilidad de vistas/modales
   const [selectedDateKey, setSelectedDateKey] = useState(todayStr);
   const [currentDayIndex, setCurrentDayIndex] = useState(() => {
     let day = new Date().getDay();
-    if (day === 0) day = 7; 
+    if (day === 0) day = 7;
     return day - 1;
   });
 
   const [showMonthlyCalendar, setShowMonthlyCalendar] = useState(true);
   const [showGlosarioModal, setShowGlosarioModal] = useState(false);
   const [showRescheduleModal, setShowRescheduleModal] = useState(false);
-  const [isAddingExercise, setIsAddingExercise] = useState(false);
-  const [newExScope, setNewExScope] = useState('today'); // 'today' | 'permanent'
   const [showRoutineBuilder, setShowRoutineBuilder] = useState(false);
   const [showSecondaryTools, setShowSecondaryTools] = useState(false);
   const [showStrengthWatchModal, setShowStrengthWatchModal] = useState(false);
-
-  // 2.1 Verificar expiración automática del split override semanal (domingo 23:59)
-  const isOverrideActive = useMemo(() => isSplitOverrideActive(weekSplitOverride), [weekSplitOverride]);
-  useEffect(() => {
-    if (weekSplitOverride && !isOverrideActive) {
-      setWeekSplitOverride(null);
-    }
-  }, [weekSplitOverride, isOverrideActive]);
-
-  // Formulario nuevo ejercicio
-  const [newExName, setNewExName] = useState('');
-  const [newExSets, setNewExSets] = useState('3');
-  const [newExReps, setNewExReps] = useState('10-12');
-  const [newExRest, setNewExRest] = useState('90 s');
-  const [newExBiomech, setNewExBiomech] = useState('');
-  const [newExMuscleGroup, setNewExMuscleGroup] = useState('General');
-
-  // Acordeón Exclusivo de Ejercicio
   const [expandedExerciseId, setExpandedExerciseId] = useState(null);
-  const [deferredExIds, setDeferredExIds] = useState([]);
-
-
-  // Estados AI
-  const [isAnalyzingAI, setIsAnalyzingAI] = useState(false);
-  const [aiAnalysisResult, setAiAnalysisResult] = useState(null);
 
   const isViewingHistory = selectedDateKey !== todayStr;
-  let historySession = null;
-  if (workoutHistory && workoutHistory.length > 0) {
-    historySession = workoutHistory.find(s => {
-      if (!s) return false;
-      
-      // 1. Prioridad: Matching exacto por la fecha guardada (s.date suele ser YYYY-MM-DD en Local Time)
-      if (s.date === selectedDateKey) return true;
-      
-      // 2. Fallback: Parsear el timestamp a Local Time (ignorando startsWith que falla por diferencias UTC)
-      if (s.timestamp) {
-        const d = new Date(s.timestamp);
-        if (!isNaN(d.getTime())) {
-          const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-          if (key === selectedDateKey) return true;
-        }
-      }
-      
-      // 3. Fallback final: id que contenga _YYYY-MM-DD
-      if (s.id && s.id.includes(`_${selectedDateKey}`)) return true;
-      
-      return false;
-    });
-  }
 
-  // 3. Variables derivadas en orden estricto de dependencias
-  const baseActiveDays = (customRoutine && Array.isArray(customRoutine) && customRoutine.length > 0) ? customRoutine : scientificProtocol;
-  const activeDays = (isOverrideActive && weekSplitOverride?.routine && Array.isArray(weekSplitOverride.routine))
-    ? weekSplitOverride.routine
-    : baseActiveDays;
-  
-  // Si existe una sesión guardada para esta fecha, usar su dayId correspondiente (ej. d3 Jalón)
-  let effectiveDayIndex = currentDayIndex;
-  if (historySession && historySession.dayId) {
-    const histIndex = activeDays.findIndex(d => d.id === historySession.dayId);
-    if (histIndex !== -1) {
-      effectiveDayIndex = histIndex;
-    }
-  }
+  // 2. Coordinador unificado de estado (Hooks especializados)
+  const state = useWorkoutDayState({
+    currentUser,
+    modal,
+    selectedDateKey,
+    currentDayIndex,
+    isViewingHistory
+  });
 
-  const baseDay = activeDays[effectiveDayIndex] || activeDays[0] || scientificProtocol[0];
-  const [newExTargetDay, setNewExTargetDay] = useState(baseDay.id);
-
+  // 3. Sincronizar currentDayIndex con fecha o sesión archivada
   useEffect(() => {
-    if (baseDay && baseDay.id) {
-      setNewExTargetDay(baseDay.id);
-    }
-  }, [baseDay?.id]);
-
-  // === CÁLCULO DE SEMANA AUTOMÁTICO ===
-  let currentWeek = 1;
-  if (mesocycleStartDate) {
-    const startDate = new Date(mesocycleStartDate);
-    startDate.setHours(0,0,0,0);
-    const startDay = startDate.getDay() || 7;
-    startDate.setDate(startDate.getDate() - startDay + 1); // Lunes de esa semana
-
-    const selectedDateObj = new Date(selectedDateKey + 'T12:00:00');
-    const diffTime = selectedDateObj.getTime() - startDate.getTime();
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    const calculatedWeek = Math.floor(diffDays / 7) + 1;
-    currentWeek = calculatedWeek > 0 ? calculatedWeek : 1;
-  } else if (!isHistoryLoading && workoutHistory && workoutHistory.length > 0) {
-    const earliest = workoutHistory.reduce((min, s) => {
-      const d = new Date(s.timestamp || s.date).getTime();
-      return d < min ? d : min;
-    }, Infinity);
-    if (earliest !== Infinity) {
-      setMesocycleStartDate(new Date(earliest).toISOString());
-    }
-  } else if (!isHistoryLoading && workoutHistory && workoutHistory.length === 0 && !mesocycleStartDate) {
-    setMesocycleStartDate(new Date().toISOString());
-  }
-
-  // === ANÁLISIS CLÍNICO DE FATIGA Y RECOMENDACIÓN DE DESCARGA ===
-  const fatigueStatus = useMemo(() => {
-    return detectFatigueStatus(workoutHistory, currentWeek, deloadCycleConfig);
-  }, [workoutHistory, currentWeek, deloadCycleConfig]);
-
-  // Progreso y cálculo exacto del ciclo de descarga (7 días completos)
-  const deloadProgress = useMemo(() => {
-    if (!isDeloadMode && !deloadCycleConfig?.isActive) return null;
-    return calculateDeloadProgress(deloadCycleConfig, workoutHistory);
-  }, [isDeloadMode, deloadCycleConfig, workoutHistory]);
-
-  // Si el ciclo de 7 días se completó y expiró, finalizar descarga automáticamente
-  useEffect(() => {
-    if (isDeloadMode && deloadProgress?.isCompleted) {
-      const completedConfig = {
-        ...(deloadCycleConfig || {}),
-        isActive: false,
-        manuallyExited: false,
-        exitedWeek: currentWeek,
-        completedAt: new Date().toISOString()
-      };
-      setIsDeloadMode(false);
-      setDeloadCycleConfig(completedConfig);
-
-      modal.showAlert({
-        title: "⚡ ¡Semana de Descarga Completada!",
-        message: "Has completado exitosamente el microciclo de 7 días de recuperación activa y supercompensación. Tu sistema nervioso y articulaciones están al 100%. ¡Iniciando nueva fase de sobrecarga progresiva pesada!",
-        variant: "success"
-      });
-    }
-  }, [isDeloadMode, deloadProgress?.isCompleted, currentWeek, deloadCycleConfig]);
-
-  const handleToggleDeload = () => {
-    if (!isDeloadMode) {
-      // Activar ciclo de 7 días
-      const newCycle = createDeloadCycle(currentWeek, fatigueStatus?.reason);
-      setDeloadCycleConfig(newCycle);
-      setIsDeloadMode(true);
-      modal.showAlert({
-        title: "🧘 Modo Descarga Activado (7 Días)",
-        message: `Iniciado microciclo de descarga científica de 7 días naturales.\n\n• Cargas ajustadas al 80%\n• Volumen reducido al 50% (2 series)\n• Intensidad RIR 3-4\n• Duración: hasta el ${new Date(newCycle.endDate).toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' })}.`,
-        variant: "info"
-      });
-    } else {
-      // Desactivar manualmente
-      modal.showConfirm({
-        title: "⚠️ ¿Finalizar Semana de Descarga?",
-        message: "Si desactivas el modo Deload antes de concluir los 7 días naturales, regresarás inmediatamente a las series completas (3-4 series) y pesos máximos de sobrecarga progresiva.",
-        confirmText: "Sí, Volver a Pesado",
-        cancelText: "Mantener Descarga",
-        variant: "warning",
-        onConfirm: async () => {
-          const exitedConfig = {
-            isActive: false,
-            manuallyExited: true,
-            exitedWeek: currentWeek,
-            exitedAt: new Date().toISOString(),
-            completedAt: new Date().toISOString()
-          };
-          setIsDeloadMode(false);
-          setDeloadCycleConfig(exitedConfig);
-
-          modal.showAlert({
-            title: "💪 Modo Deload Finalizado",
-            message: "Se ha registrado la salida del microciclo de descarga. El modo pesado queda restablecido y no se reactivará durante esta semana.",
-            variant: "success"
-          });
-        }
-      });
-    }
-  };
-
-  const handleRollingShift = () => {
-    modal.showConfirm({
-      title: "🔄 Desplazar Sesión a Mañana",
-      message: `Hoy se marcará como descanso regenerador. Tu entrenamiento (${baseDay.name}) se reprogramará como la prioridad para mañana.`,
-      confirmText: "Confirmar Desplazamiento",
-      variant: "info",
-      onConfirm: async () => {
-        await handleSaveSpecialDay('rest');
-        modal.showAlert({
-          title: "🔄 Sesión Desplazada",
-          message: "El descanso de hoy ha sido registrado. Mañana retomas tu entrenamiento exactamente donde lo dejaste.",
-          variant: "success"
-        });
-      }
-    });
-  };
-
-  const handleSaveSundayLog = async (recoveryData) => {
-    const sessionId = historySession?.id || `ses_${selectedDateKey}_d7`;
-    const sessionDate = new Date(`${selectedDateKey}T12:00:00`);
-    const sessionLog = {
-      id: sessionId,
-      weekNumber: currentWeek,
-      weekName: `Semana ${currentWeek}`,
-      date: selectedDateKey,
-      timestamp: sessionDate.toISOString(),
-      dateString: sessionDate.toLocaleDateString('es-ES', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }),
-      dayId: 'd7',
-      dayName: 'Domingo: Descanso Activo / NEAT',
-      focus: 'Descanso total del SNC & Termogénesis NEAT',
-      volume: 0,
-      completedSets: 0,
-      cardioCompleted: 0,
-      exercises: {},
-      isCompleted: true,
-      isRestDay: true,
-      isMissedDay: false,
-      neatSteps: recoveryData.neatSteps,
-      sleepHours: recoveryData.sleepHours,
-      energyLevel: recoveryData.energyLevel,
-      recoveryNotes: recoveryData.recoveryNotes
-    };
-    await saveSession(sessionLog);
-    modal.showAlert({
-      title: "✅ Descanso Activo Guardado",
-      message: `Registro de recuperación del Domingo archivado con éxito (${recoveryData.neatSteps.toLocaleString()} pasos NEAT • ${recoveryData.sleepHours} hrs de sueño).`,
-      variant: "success"
-    });
-  };
-
-  // === DETECCIÓN INTELIGENTE DE EJERCICIOS PENDIENTES DE LA SESIÓN PREVIA O FALTAS ===
-  const pendingPreviousData = useMemo(() => {
-    if (isViewingHistory) return null;
-    return detectUnfinishedExercisesFromPreviousSession({
-      selectedDateKey,
-      activeDays,
-      workoutHistory,
-      dismissedAlerts: dismissedPendingAlerts,
-      customExercisesMap
-    });
-  }, [selectedDateKey, activeDays, workoutHistory, dismissedPendingAlerts, isViewingHistory, customExercisesMap]);
-
-  const handleImportPendingToToday = (exercisesToImport) => {
-    if (!exercisesToImport || exercisesToImport.length === 0) return;
-    const dayKey = baseDay.id;
-    const existingCustoms = customExercisesMap[dayKey] || [];
-    const newAdds = exercisesToImport.map(ex => ({
-      id: `pending_${Date.now()}_${ex.id || Math.random().toString(36).substr(2, 6)}`,
-      name: ex.name,
-      muscleGroup: ex.muscleGroup || 'General',
-      sets: ex.sets || 3,
-      reps: ex.reps || '10-12',
-      restTime: ex.restTime || '90 s',
-      biomechanics: ex.biomechanics || 'Trabajo recuperado de sesión pendiente para balance de volumen semanal.',
-      unifiedCode: ex.unifiedCode,
-      isCustom: true
-    }));
-
-    setCustomExercisesMap(prev => ({
-      ...prev,
-      [dayKey]: [...existingCustoms, ...newAdds]
-    }));
-
-    setDismissedPendingAlerts(prev => ({
-      ...prev,
-      [selectedDateKey]: true
-    }));
-
-    modal.showAlert({
-      title: "✅ Ejercicios Incorporados",
-      message: `Se agregaron ${newAdds.length} ejercicio(s) al final de tu rutina de hoy (${baseDay.name}) como remate para completar tu volumen semanal.`,
-      variant: "success"
-    });
-  };
-
-  const handleDistributePendingAcrossWeek = (exercisesToDistribute) => {
-    if (!exercisesToDistribute || exercisesToDistribute.length === 0) return;
-
-    // Identificar los días de entrenamiento disponibles en la semana activa a partir de hoy (effectiveDayIndex)
-    const currentDayPos = effectiveDayIndex;
-    const remainingDays = activeDays.filter((d, idx) => {
-      if (!d || d.type === 'rest' || d.id === 'd7') return false;
-      return idx >= currentDayPos;
-    });
-
-    const candidateDays = remainingDays.length > 0
-      ? remainingDays
-      : activeDays.filter(d => d && d.type !== 'rest' && d.id !== 'd7');
-
-    const { distributionMap, summaryItems } = distributePendingExercisesAcrossDays({
-      pendingExercises: exercisesToDistribute,
-      remainingDays: candidateDays,
-      existingCustomsMap: customExercisesMap
-    });
-
-    if (summaryItems.length === 0) {
-      modal.showAlert({
-        title: "⚠️ Sin días disponibles",
-        message: "No se encontraron días de entrenamiento restantes para redistribuir en esta semana. Puedes sumarlos a la sesión de hoy.",
-        variant: "warning"
-      });
-      return;
-    }
-
-    // Actualizar customExercisesMap integrando las nuevas asignaciones
-    setCustomExercisesMap(prev => {
-      const nextMap = { ...(prev || {}) };
-      Object.entries(distributionMap).forEach(([dayId, items]) => {
-        if (items && items.length > 0) {
-          nextMap[dayId] = [...(nextMap[dayId] || []), ...items];
-        }
-      });
-      return nextMap;
-    });
-
-    // Descartar la alerta para la fecha actual
-    setDismissedPendingAlerts(prev => ({
-      ...prev,
-      [selectedDateKey]: true
-    }));
-
-    // Agrupar resumen por día asignado
-    const groupedSummary = {};
-    summaryItems.forEach(item => {
-      if (!groupedSummary[item.targetDayName]) groupedSummary[item.targetDayName] = [];
-      groupedSummary[item.targetDayName].push(item.exerciseName);
-    });
-
-    const summaryList = Object.entries(groupedSummary)
-      .map(([dayName, exNames]) => `• ${dayName}: ${exNames.join(', ')}`)
-      .join('\n');
-
-    modal.showAlert({
-      title: "⚡ Distribución Inteligente Completada",
-      message: `Se distribuyeron ${summaryItems.length} ejercicio(s) pendiente(s) respetando sinergia muscular y un límite seguro de 1-2 ejercicios por sesión:\n\n${summaryList}\n\n✅ Tu volumen semanal queda totalmente salvaguardado sin sobrecargar ninguna sesión.`,
-      variant: "success"
-    });
-  };
-
-  const handleMoveExerciseBetweenDays = (sourceDayId, targetDayId, exerciseId) => {
-    const srcDay = activeDays.find(d => d.id === sourceDayId);
-    const targetDay = activeDays.find(d => d.id === targetDayId);
-    if (!srcDay || !targetDay) return;
-
-    const exToMove = (srcDay.exercises || []).find(e => e.id === exerciseId);
-    if (!exToMove) return;
-
-    const currentTargetCustoms = customExercisesMap[targetDayId] || [];
-    const newTargetItem = {
-      id: `moved_${Date.now()}_${exToMove.id}`,
-      name: exToMove.name,
-      muscleGroup: exToMove.muscleGroup || 'General',
-      sets: exToMove.sets || 3,
-      reps: exToMove.reps || '10-12',
-      restTime: exToMove.restTime || '90 s',
-      biomechanics: exToMove.biomechanics || 'Ejercicio redistribuido para balance de volumen semanal.',
-      unifiedCode: exToMove.unifiedCode,
-      isCustom: true
-    };
-
-    setCustomExercisesMap(prev => ({
-      ...prev,
-      [targetDayId]: [...currentTargetCustoms, newTargetItem]
-    }));
-
-    modal.showAlert({
-      title: "⚖️ Volumen Redistribuido",
-      message: `${exToMove.name} fue transferido a ${targetDay.name.split(':')[0]} para equilibrar tus series semanales.`,
-      variant: "success"
-    });
-  };
-
-  const handleExecuteCleanSlate = () => {
-    modal.showConfirm({
-      title: "🧹 Clean Slate: Purgar Caché y Órdenes Viejos",
-      message: "Esta acción descargará una copia de seguridad automática y eliminará en tu dispositivo y en Firestore Cloud cualquier orden residual o rutina desfasada.\n\n✅ Tu historial completo de entrenamientos, pesos levantados y marcas de 1RM quedará 100% a salvo e intacto.\n\n¿Proceder con la purga limpia?",
-      confirmText: "🧹 Sí, Purgar y Limpiar Todo",
-      cancelText: "Cancelar",
-      variant: "danger",
-      requireWord: "BORRAR",
-      onConfirm: async () => {
-        const nowIso = new Date().toISOString();
-        const clearPayload = { __cleared: true, clearedAt: nowIso, __approvedDrop: true };
-        await executeCleanSlate(currentUser);
-        setCustomExercisesMap(clearPayload);
-        setSwappedExercisesMap(clearPayload);
-        setExerciseOrderMap(clearPayload);
-        setCustomRoutine(null);
-        modal.showAlert({
-          title: "🎉 Clean Slate Aplicado con Éxito",
-          message: "Se generó un respaldo previo y se purgaron los órdenes desfasados. La app ahora está sincronizada al 100% con el Protocolo Oficial limpio.",
-          variant: "success"
-        });
-      }
-    });
-  };
-
-  // === SINCRONIZAR currentDayIndex CON FECHA O HISTORIAL ===
-  useEffect(() => {
-    if (historySession && historySession.dayId) {
-      const histIndex = activeDays.findIndex(d => d.id === historySession.dayId);
+    if (state.historySession && state.historySession.dayId) {
+      const histIndex = state.activeDays.findIndex(d => d.id === state.historySession.dayId);
       if (histIndex !== -1) {
         setCurrentDayIndex(histIndex);
         return;
@@ -482,1287 +65,9 @@ export default function WorkoutDay() {
       if (day === 0) day = 7;
       setCurrentDayIndex(day - 1);
     }
-  }, [selectedDateKey, historySession?.dayId]);
+  }, [selectedDateKey, state.historySession, state.activeDays]);
 
-  const getDayDataForWeek = (sessions, week, dayId) => {
-    if (!sessions) return {};
-    const weekKey = `week_${week}`;
-    if (!sessions[weekKey] && week === 1 && sessions[dayId]) {
-      return sessions[dayId] || {};
-    }
-    return sessions[weekKey] ? (sessions[weekKey][dayId] || {}) : {};
-  };
-
-  const userCustomForDay = customExercisesMap[baseDay.id] || [];
-  const baseDayExercises = baseDay.exercises || [];
-  
-  // Extraer cualquier ejercicio temporal agregado exclusivamente para la sesión de hoy
-  const temporaryTodayExercises = [];
-  const rawDayData = isViewingHistory ? (historySession?.exercises || {}) : (currentSessions?.[`draft_${selectedDateKey}`] || {});
-  
-  Object.keys(rawDayData).forEach(exId => {
-    const d = rawDayData[exId];
-    if (d && (d.isTemporaryToday || exId.startsWith('temp_today_')) && !baseDayExercises.some(e => e.id === exId) && !userCustomForDay.some(e => e.id === exId)) {
-      temporaryTodayExercises.push({
-        id: exId,
-        name: d.name || 'Ejercicio Hoy',
-        muscleGroup: d.muscleGroup || 'General',
-        sets: d.customSetsCount || 3,
-        reps: d.reps || '10-12',
-        restTime: d.restTime || '90 s',
-        biomechanics: d.biomechanics || 'Control de técnica e IAP.',
-        isTemporaryToday: true,
-        isCustom: true
-      });
-    }
-  });
-
-  const rawExercises = [...baseDayExercises, ...userCustomForDay, ...temporaryTodayExercises];
-
-  // Reordenamiento dinámico por día (para máquinas ocupadas)
-  const customOrder = exerciseOrderMap[baseDay.id];
-  let orderedExercises = rawExercises.map(ex => {
-    const swapped = (swappedExercisesMap[baseDay.id] || {})[ex.id];
-    if (swapped) {
-      return { ...ex, ...swapped, originalName: ex.name };
-    }
-    return ex;
-  });
-
-  if (customOrder && Array.isArray(customOrder)) {
-    orderedExercises.sort((a, b) => {
-      const idxA = customOrder.indexOf(a.id);
-      const idxB = customOrder.indexOf(b.id);
-      if (idxA !== -1 && idxB !== -1) return idxA - idxB;
-      if (idxA !== -1) return -1;
-      if (idxB !== -1) return 1;
-      return 0;
-    });
-  }
-
-  // Defer temporalmente al final de la sesión de hoy (sin alterar exerciseOrderMap en la nube)
-  if (deferredExIds.length > 0) {
-    orderedExercises.sort((a, b) => {
-      const aDef = deferredExIds.includes(a.id);
-      const bDef = deferredExIds.includes(b.id);
-      if (aDef && !bDef) return 1;
-      if (!aDef && bDef) return -1;
-      return 0;
-    });
-  }
-
-  const currentDay = {
-    ...baseDay,
-    exercises: orderedExercises
-  };
-
-  const handleDeferExercise = (exerciseId) => {
-    setDeferredExIds(prev => {
-      if (prev.includes(exerciseId)) {
-        return prev.filter(id => id !== exerciseId);
-      }
-      return [...prev, exerciseId];
-    });
-  };
-
-  const handleMoveExercise = (exerciseId, direction) => {
-    const dayId = baseDay.id;
-    const currentOrderList = currentDay.exercises.map(x => x.id);
-    const index = currentOrderList.indexOf(exerciseId);
-    if (index === -1) return;
-
-    const targetIndex = direction === 'up' ? index - 1 : index + 1;
-    if (targetIndex < 0 || targetIndex >= currentOrderList.length) return;
-
-    const newOrderList = [...currentOrderList];
-    const temp = newOrderList[index];
-    newOrderList[index] = newOrderList[targetIndex];
-    newOrderList[targetIndex] = temp;
-
-    setExerciseOrderMap(prev => ({
-      ...prev,
-      [dayId]: newOrderList
-    }));
-  };
-
-
-  let todayWorkoutData = {};
-  const dateDraft = currentSessions?.[`draft_${selectedDateKey}`];
-  const histExercises = (historySession && historySession.exercises && typeof historySession.exercises === 'object') ? historySession.exercises : null;
-
-  if (histExercises && dateDraft && typeof dateDraft === 'object') {
-    // Fusión profunda segura: combinar ejercicios y series, dando precedencia a los datos más recientes en borrador (dateDraft)
-    todayWorkoutData = { ...histExercises };
-    Object.keys(dateDraft).forEach(exId => {
-      if (!todayWorkoutData[exId]) {
-        todayWorkoutData[exId] = dateDraft[exId];
-      } else if (typeof dateDraft[exId] === 'object' && dateDraft[exId] !== null) {
-        todayWorkoutData[exId] = {
-          ...todayWorkoutData[exId],
-          ...dateDraft[exId]
-        };
-        // También fusionar series individuales para no perder campos
-        Object.keys(dateDraft[exId]).forEach(setKey => {
-          if (typeof dateDraft[exId][setKey] === 'object' && dateDraft[exId][setKey] !== null) {
-            todayWorkoutData[exId][setKey] = {
-              ...(todayWorkoutData[exId][setKey] || {}),
-              ...dateDraft[exId][setKey]
-            };
-          }
-        });
-      }
-    });
-  } else if (dateDraft && Object.keys(dateDraft).length > 0) {
-    todayWorkoutData = dateDraft;
-  } else if (histExercises && Object.keys(histExercises).length > 0) {
-    todayWorkoutData = histExercises;
-  } else {
-    // Todo día no entrenado sin borrador inicia 100% en blanco
-    todayWorkoutData = {};
-  }
-
-  const getPreviousDataForDay = () => {
-    // Buscar en workoutHistory la sesión anterior más reciente para este dayId previa a selectedDateKey
-    const prevLog = [...workoutHistory].reverse().find(s => s.dayId === currentDay.id && (!s.date || s.date < selectedDateKey) && !s.isRestDay && !s.isMissedDay && (s.volume > 0 || s.completedSets > 0 || s.isCompleted));
-    if (prevLog && prevLog.exercises) return prevLog.exercises;
-
-    const fallbackLog = [...workoutHistory].reverse().find(s => s.dayId === currentDay.id && (!s.date || s.date < selectedDateKey));
-    return fallbackLog ? (fallbackLog.exercises || {}) : {};
-  };
-
-  const previousExercisesData = getPreviousDataForDay();
-  const previousSession = [...workoutHistory].reverse().find(s => s.dayId === currentDay.id && (!s.date || s.date < selectedDateKey));
-
-  const updateSessionDataForCurrentDay = (updater) => {
-    // Si estamos modificando una sesión que ya existe en el historial oficial para esta fecha:
-    if (historySession) {
-      // Tomar como base la fusión activa (historial + borrador) para que ninguna serie en edición se pierda
-      const baseExercises = {
-        ...(historySession.exercises || {}),
-        ...(dateDraft || {})
-      };
-      if (dateDraft && historySession.exercises) {
-        Object.keys(dateDraft).forEach(exId => {
-          if (historySession.exercises[exId] && typeof dateDraft[exId] === 'object') {
-            baseExercises[exId] = {
-              ...historySession.exercises[exId],
-              ...dateDraft[exId]
-            };
-          }
-        });
-      }
-
-      const newExercises = updater(baseExercises);
-
-      let recalculatedVol = 0;
-      let recSets = 0;
-      Object.values(newExercises).forEach(exLogs => {
-        if (exLogs && typeof exLogs === 'object') {
-          Object.keys(exLogs).forEach(k => {
-            if (!isNaN(parseInt(k))) {
-              const s = exLogs[k];
-              if (s && s.completed) {
-                recSets++;
-                if (s.repsL !== undefined || s.repsR !== undefined) {
-                  const rL = parseFloat(s.repsL) || 0;
-                  const rR = parseFloat(s.repsR) || 0;
-                  let wL = parseFloat(s.weightL || s.weight) || 0;
-                  let wR = parseFloat(s.weightR || s.weight) || 0;
-                  if (s.unit === 'kg') {
-                    wL *= 2.20462;
-                    wR *= 2.20462;
-                  }
-                  recalculatedVol += (wL * rL) + (wR * rR);
-                } else {
-                  let w = parseFloat(s.weight) || 0;
-                  if (s.unit === 'kg') w *= 2.20462;
-                  const r = parseFloat(s.reps) || 0;
-                  recalculatedVol += (w * r);
-                }
-              }
-            }
-          });
-        }
-      });
-
-      const updated = {
-        ...historySession,
-        exercises: newExercises,
-        volume: Math.round(recalculatedVol),
-        completedSets: recSets,
-        isCompleted: recSets > 0 || recalculatedVol > 0,
-        lastModified: Date.now()
-      };
-
-      // Redundancia defensiva local INMEDIATA: mantener copia en draft_ para evitar desincronizaciones en segundo plano
-      setCurrentSessions(prev => ({
-        ...prev,
-        [`draft_${selectedDateKey}`]: newExercises,
-        [`lastModified_${selectedDateKey}`]: Date.now()
-      }));
-
-      saveSession(updated);
-      return;
-    }
-
-    setCurrentSessions(prev => {
-      const dayData = prev?.[`draft_${selectedDateKey}`] || {};
-      const newDayData = updater(dayData);
-
-      // Auto-inicio silencioso de la sesión en segundo plano:
-      // Si el usuario marca su primera serie o cardio y no hay startTime, registrar timestamp de inicio
-      let startTime = prev?.[`startTime_${selectedDateKey}`];
-      if (!startTime) {
-        const hasCompletedSetOrCardio = Object.values(newDayData).some(ex => {
-          if (!ex) return false;
-          if (ex.completed && (ex.cardioDone || ex.machine)) return true;
-          return Object.keys(ex).some(k => !isNaN(parseInt(k)) && ex[k]?.completed);
-        });
-        if (hasCompletedSetOrCardio) {
-          startTime = new Date().toISOString();
-        }
-      }
-
-      return {
-        ...prev,
-        [`draft_${selectedDateKey}`]: newDayData,
-        [`lastModified_${selectedDateKey}`]: Date.now(),
-        ...(startTime ? { [`startTime_${selectedDateKey}`]: startTime } : {})
-      };
-    });
-  };
-
-  const handleUpdateSet = (exerciseId, setNumber, setData) => {
-    updateSessionDataForCurrentDay(dayData => {
-      const exData = dayData[exerciseId] || {};
-      const currentSet = exData[setNumber] || {};
-      return {
-        ...dayData,
-        [exerciseId]: {
-          ...exData,
-          [setNumber]: {
-            ...currentSet,
-            ...setData
-          }
-        }
-      };
-    });
-  };
-
-  const handleUpdateExerciseMeta = (exerciseId, metaData) => {
-    updateSessionDataForCurrentDay(dayData => {
-      const exData = dayData[exerciseId] || {};
-      return {
-        ...dayData,
-        [exerciseId]: {
-          ...exData,
-          ...metaData
-        }
-      };
-    });
-  };
-
-  const handleUpdateCardio = (exerciseId, cardioData) => {
-    updateSessionDataForCurrentDay(dayData => {
-      return {
-        ...dayData,
-        [exerciseId]: cardioData
-      };
-    });
-  };
-
-  const handleClonePreviousWeek = () => {
-    if (currentWeek <= 1) return;
-    const prevData = getPreviousDataForDay();
-    if (!prevData || Object.keys(prevData).length === 0) {
-      modal.showAlert({
-        title: "⚠️ Sin registros previos en S" + (currentWeek - 1),
-        message: `No se encontraron datos registrados en la Semana ${currentWeek - 1} para el día: "${currentDay.name}".`,
-        variant: "warning"
-      });
-      return;
-    }
-
-    const clonedDayData = {};
-    Object.keys(prevData).forEach(exId => {
-      const exVal = prevData[exId];
-      if (exVal && exVal.machine) {
-        clonedDayData[exId] = { ...exVal, completed: false };
-      } else if (exVal) {
-        clonedDayData[exId] = { ...exVal };
-        Object.keys(exVal).forEach(k => {
-          if (!isNaN(parseInt(k))) {
-            clonedDayData[exId][k] = { ...exVal[k], completed: false };
-          }
-        });
-      }
-    });
-
-    updateSessionDataForCurrentDay(() => clonedDayData);
-    modal.showAlert({
-      title: "⚡️ ¡Pesos Clonados Exitosamente!",
-      message: `Se copiaron las cargas y repeticiones de la Semana ${currentWeek - 1} como guía base.`,
-      variant: "success"
-    });
-  };
-
-  const handleSwapExercise = (exerciseId, newExerciseData) => {
-    setSwappedExercisesMap(prev => {
-      const daySwaps = { ...(prev[baseDay.id] || {}) };
-      if (!newExerciseData) {
-        delete daySwaps[exerciseId];
-      } else {
-        daySwaps[exerciseId] = newExerciseData;
-      }
-      return {
-        ...prev,
-        [baseDay.id]: daySwaps
-      };
-    });
-    if (newExerciseData) {
-      modal.showAlert({
-        title: "🔄 Ejercicio Sustituido",
-        message: `El ejercicio fue actualizado por "${newExerciseData.name}".`,
-        variant: "success"
-      });
-    }
-  };
-
-  const handleSkipExercise = (exerciseId, reason = '') => {
-    setSkippedExercisesMap(prev => {
-      const daySkips = { ...(prev[baseDay.id] || {}) };
-      if (reason === null || reason === false) {
-        delete daySkips[exerciseId];
-      } else {
-        daySkips[exerciseId] = {
-          skippedAt: new Date().toISOString(),
-          reason: reason || 'Omitido voluntariamente'
-        };
-      }
-      return {
-        ...prev,
-        [baseDay.id]: daySkips
-      };
-    });
-  };
-
-  const handleSetSmartwatchKcal = (data) => {
-    setSmartwatchKcalMap(prev => {
-      const next = { ...(prev || {}) };
-      if (!data) {
-        delete next[selectedDateKey];
-      } else if (typeof data === 'object') {
-        next[selectedDateKey] = data;
-      } else if (!isNaN(data) && Number(data) > 0) {
-        next[selectedDateKey] = Math.round(Number(data));
-      } else {
-        delete next[selectedDateKey];
-      }
-      return next;
-    });
-  };
-
-  const handlePickFromLibrary = (libId) => {
-    if (!libId) return;
-    const item = UNIFIED_EXERCISE_LIBRARY.find(x => x.id === libId);
-    if (item) {
-      setNewExName(item.name);
-      setNewExMuscleGroup(item.muscleGroup || 'General');
-      setNewExSets(item.defaultSets || 4);
-      setNewExReps(item.defaultReps || '10-12');
-      setNewExRest(item.defaultRest || '90 s');
-      setNewExBiomech(item.biomechanics || '');
-    }
-  };
-
-  const handleAddCustomExercise = (e) => {
-    e.preventDefault();
-    if (!newExName.trim()) return;
-
-    const setsCount = parseInt(newExSets) || 3;
-    const repsStr = newExReps.trim() || '10-12';
-    const restStr = newExRest.trim() || '90 s';
-    const biomechStr = newExBiomech.trim() || 'Control de técnica e IAP.';
-    const muscleGroupStr = newExMuscleGroup || 'General';
-    const cleanName = newExName.trim();
-
-    if (newExScope === 'today') {
-      const newExId = `temp_today_${Date.now()}`;
-      updateSessionDataForCurrentDay(dayData => {
-        const initialSets = {};
-        for (let s = 1; s <= setsCount; s++) {
-          initialSets[s] = { weight: '', reps: repsStr.split('-')[0] || '10', rpe: '8', completed: false, unit: 'lbs' };
-        }
-        return {
-          ...dayData,
-          [newExId]: {
-            name: cleanName,
-            muscleGroup: muscleGroupStr,
-            customSetsCount: setsCount,
-            reps: repsStr,
-            restTime: restStr,
-            biomechanics: biomechStr,
-            isTemporaryToday: true,
-            isCustom: true,
-            ...initialSets
-          }
-        };
-      });
-
-      // Asegurar que el ejercicio temporal quede en el orden del día
-      setExerciseOrderMap(prev => {
-        const curOrder = prev?.[baseDay.id] || currentDay.exercises.map(x => x.id);
-        if (!curOrder.includes(newExId)) {
-          return { ...prev, [baseDay.id]: [...curOrder, newExId] };
-        }
-        return prev;
-      });
-
-      setNewExName('');
-      setIsAddingExercise(false);
-      modal.showAlert({
-        title: "📌 Ejercicio Añadido a Hoy",
-        message: `"${cleanName}" fue agregado exclusivamente a la sesión de hoy.`,
-        variant: "success"
-      });
-    } else {
-      const targetDayId = newExTargetDay || baseDay.id;
-      const targetDayObj = activeDays.find(d => d.id === targetDayId) || baseDay;
-      const newExId = `custom_${Date.now()}`;
-      const newEx = {
-        id: newExId,
-        name: cleanName,
-        muscleGroup: muscleGroupStr,
-        sets: setsCount,
-        reps: repsStr,
-        restTime: restStr,
-        biomechanics: biomechStr,
-        isCustom: true
-      };
-
-      setCustomExercisesMap(prev => {
-        const dayCustoms = (prev && prev[targetDayId]) ? prev[targetDayId] : [];
-        return {
-          ...prev,
-          [targetDayId]: [...dayCustoms, newEx]
-        };
-      });
-
-      // Si el día objetivo es el día que estamos viendo actualmente, inicializar sets en el borrador de hoy
-      if (targetDayId === baseDay.id) {
-        updateSessionDataForCurrentDay(dayData => {
-          const initialSets = {};
-          for (let s = 1; s <= setsCount; s++) {
-            initialSets[s] = { weight: '', reps: repsStr.split('-')[0] || '10', rpe: '8', completed: false, unit: 'lbs' };
-          }
-          return {
-            ...dayData,
-            [newExId]: {
-              name: cleanName,
-              muscleGroup: muscleGroupStr,
-              customSetsCount: setsCount,
-              reps: repsStr,
-              restTime: restStr,
-              biomechanics: biomechStr,
-              isCustom: true,
-              ...initialSets
-            }
-          };
-        });
-      }
-
-      // Asegurar orden persistente
-      setExerciseOrderMap(prev => {
-        const curOrder = prev?.[targetDayId] || targetDayObj.exercises.map(x => x.id);
-        if (!curOrder.includes(newExId)) {
-          return { ...prev, [targetDayId]: [...curOrder, newExId] };
-        }
-        return prev;
-      });
-
-      setNewExName('');
-      setIsAddingExercise(false);
-      modal.showAlert({
-        title: "🔄 Ejercicio Guardado en Rutina",
-        message: `"${newEx.name}" fue agregado a la rutina fija de ${targetDayObj.name}.`,
-        variant: "success"
-      });
-    }
-  };
-
-  const handleDeleteCustomExercise = (exerciseId) => {
-    modal.showConfirm({
-      title: "🗑️ ¿Eliminar Ejercicio?",
-      message: "¿Deseas eliminar este ejercicio de tu rutina / sesión?",
-      confirmText: "Sí, Eliminar",
-      cancelText: "Cancelar",
-      variant: "danger",
-      onConfirm: () => {
-        // 1. Eliminar de customExercisesMap
-        setCustomExercisesMap(prev => {
-          if (!prev) return prev;
-          const next = { ...prev };
-          Object.keys(next).forEach(dId => {
-            if (Array.isArray(next[dId])) {
-              next[dId] = next[dId].filter(e => e.id !== exerciseId);
-            }
-          });
-          return next;
-        });
-
-        // 2. Eliminar del borrador actual
-        updateSessionDataForCurrentDay(dayData => {
-          const next = { ...dayData };
-          delete next[exerciseId];
-          return next;
-        });
-
-        // 3. Eliminar de exerciseOrderMap
-        setExerciseOrderMap(prev => {
-          if (!prev) return prev;
-          const next = { ...prev };
-          Object.keys(next).forEach(dId => {
-            if (Array.isArray(next[dId])) {
-              next[dId] = next[dId].filter(id => id !== exerciseId);
-            }
-          });
-          return next;
-        });
-
-        modal.showAlert({
-          title: "🗑️ Ejercicio Eliminado",
-          message: "El ejercicio ha sido retirado.",
-          variant: "success"
-        });
-      }
-    });
-  };
-
-  const calculateVolumeAndSets = () => {
-    let effectiveSetsCount = 0;
-    let warmupSetsCount = 0;
-    let cardioCount = 0;
-    const allCompletedSets = [];
-
-    Object.keys(todayWorkoutData).forEach(exId => {
-      const exLogs = todayWorkoutData[exId];
-      if (exLogs) {
-        if (exLogs.completed && (exLogs.cardioDone || exLogs.machine)) {
-          cardioCount++;
-        }
-
-        const exDef = currentDay.exercises?.find(e => e.id === exId);
-        const isUnilateral = isExerciseUnilateral(exDef, exLogs);
-
-        Object.keys(exLogs).forEach(key => {
-          const num = parseInt(key, 10);
-          if (!isNaN(num)) {
-            const setObj = exLogs[key];
-            if (setObj && setObj.completed) {
-              if (num === 0) {
-                warmupSetsCount++;
-              } else {
-                effectiveSetsCount++;
-              }
-              allCompletedSets.push({
-                ...setObj,
-                isUnilateral
-              });
-            }
-          }
-        });
-      }
-    });
-
-    const totalVolume = calculateVolume(allCompletedSets);
-    return {
-      volume: Math.round(totalVolume),
-      completedSets: effectiveSetsCount,
-      warmupSets: warmupSetsCount,
-      totalSetsCount: effectiveSetsCount + warmupSetsCount,
-      cardioCompleted: cardioCount
-    };
-  };
-
-  const { volume, completedSets, warmupSets, cardioCompleted } = calculateVolumeAndSets();
-
-  // Peso corporal real para cálculo metabólico de gasto energético
-  const latestWeight = (bodyMetrics && bodyMetrics.length > 0)
-    ? parseFloat(bodyMetrics[bodyMetrics.length - 1]?.weight)
-    : (parseFloat(bodyComposition?.weightKg) || 78.55);
-  const userWeightKg = !isNaN(latestWeight) && latestWeight > 0 ? latestWeight : 78.55;
-
-  // Auto-detección de inicio de sesión y reloj interno en segundo plano
-  const sessionStartTime = historySession?.startTime || currentSessions?.[`startTime_${selectedDateKey}`] || null;
-
-  const [liveElapsedMinutes, setLiveElapsedMinutes] = useState(() => {
-    if (historySession && historySession.durationMinutes) return historySession.durationMinutes;
-    if (sessionStartTime) {
-      const diffMs = Date.now() - new Date(sessionStartTime).getTime();
-      return Math.max(1, Math.round(diffMs / 60000));
-    }
-    return 0;
-  });
-
-  useEffect(() => {
-    if (isViewingHistory || !sessionStartTime) {
-      if (historySession?.durationMinutes) {
-        setLiveElapsedMinutes(historySession.durationMinutes);
-      }
-      return;
-    }
-
-    const updateTimer = () => {
-      const diffMs = Date.now() - new Date(sessionStartTime).getTime();
-      setLiveElapsedMinutes(Math.max(1, Math.round(diffMs / 60000)));
-    };
-
-    updateTimer();
-    const interval = setInterval(updateTimer, 10000);
-    return () => clearInterval(interval);
-  }, [sessionStartTime, isViewingHistory, historySession]);
-
-  // Gasto energético científico de la sesión (fuerza, cardio, pausas y EPOC)
-  const todayCalories = useMemo(() => {
-    const defs = {};
-    (currentDay.exercises || []).forEach(e => {
-      defs[e.id] = { name: e.name, muscleGroup: e.muscleGroup };
-    });
-    const watchKcal = smartwatchKcalMap?.[selectedDateKey] || null;
-    return calculateWorkoutCalories(todayWorkoutData, userWeightKg, defs, liveElapsedMinutes, watchKcal);
-  }, [todayWorkoutData, currentDay.exercises, userWeightKg, liveElapsedMinutes, smartwatchKcalMap, selectedDateKey]);
-
-  const buildCurrentSessionExportData = () => {
-    const exercisesDetailed = [];
-    const exercisesSummary = [];
-    let cardioDetailed = null;
-
-    (currentDay.exercises || []).forEach(ex => {
-      const logs = todayWorkoutData[ex.id] || {};
-      if (ex.isCardio) {
-        if (logs.completed) {
-          cardioDetailed = {
-            name: ex.name,
-            machine: logs.machine || ex.name,
-            duration: logs.duration || logs.timeMinutes || 0,
-            distanceKm: logs.distanceKm || logs.distance || 0,
-            speedKmh: logs.speedKmh || logs.speed || 0,
-            inclinePct: logs.inclinePct || logs.incline || 0,
-            resistanceLevel: logs.resistanceLevel || logs.resistance || null,
-            machineKcal: logs.machineKcal || logs.calories || 0,
-            watchKcal: logs.watchKcal || null,
-            watchHrAvg: logs.watchHrAvg || null,
-            watchHrMax: logs.watchHrMax || null,
-            rpe: logs.rpe || null
-          };
-        }
-        return;
-      }
-
-      const sets = [];
-      const isUni = isExerciseUnilateral(ex, logs);
-      Object.keys(logs).forEach(k => {
-        const num = parseInt(k, 10);
-        if (!isNaN(num) && logs[k]?.completed) {
-          const s = logs[k];
-          const w = parseFloat(s.weight) || 0;
-          const r = parseFloat(s.reps) || Math.max(parseFloat(s.repsR) || 0, parseFloat(s.repsL) || 0) || 0;
-          sets.push({
-            setNum: num,
-            weight: w,
-            reps: r,
-            repsL: isUni && s.repsL !== undefined && s.repsL !== '' && s.repsL !== null && s.repsL !== 'null' ? s.repsL : null,
-            repsR: isUni && s.repsR !== undefined && s.repsR !== '' && s.repsR !== null && s.repsR !== 'null' ? s.repsR : null,
-            isUnilateral: isUni,
-            rpe: s.rpe || null,
-            unit: s.unit || ex.defaultUnit || 'lbs',
-            isWarmup: num === 0,
-            completed: true,
-            estimated1RM: calculate1RM(w, r)
-          });
-        }
-      });
-
-      if (sets.length > 0) {
-        sets.sort((a, b) => a.setNum - b.setNum);
-        const slug = getMachineStorageKey(ex);
-        const mConfig = logs.machineConfig || 
-          globalMachineConfigs?.[ex.id] || 
-          globalMachineConfigs?.[slug] || 
-          (() => {
-            const profs = globalMachineProfiles?.[slug] || globalMachineProfiles?.[ex.id];
-            if (Array.isArray(profs) && profs.length > 0) {
-              return profs.find(p => p.isDefault) || profs[0];
-            }
-            try {
-              return JSON.parse(localStorage.getItem(slug) || localStorage.getItem(`adonis_machine_${ex.id}`) || localStorage.getItem(`coachv2_machine_${ex.id}`) || 'null');
-            } catch (e) {
-              return null;
-            }
-          })();
-
-        exercisesDetailed.push({
-          id: ex.id,
-          name: ex.name,
-          muscleGroup: ex.muscleGroup || 'General',
-          machineConfig: mConfig,
-          sets
-        });
-
-        const bestSet = sets.reduce((max, s) => (s.weight > max.weight ? s : max), sets[0]);
-        exercisesSummary.push(`${ex.name}: ${sets.length} series (Máx ${bestSet.weight} lbs × ${bestSet.reps})`);
-      }
-    });
-
-    return {
-      dayName: currentDay.name,
-      focus: currentDay.focus,
-      date: selectedDateKey,
-      week: currentWeek,
-      completedSets,
-      warmupSets,
-      volume,
-      cardioCompleted,
-      userWeightKg,
-      startTime: sessionStartTime || new Date().toISOString(),
-      endTime: new Date().toISOString(),
-      durationMinutes: liveElapsedMinutes,
-      timestamp: new Date(`${selectedDateKey}T12:00:00`).toISOString(),
-      exercisesDetailed,
-      exercisesSummary: exercisesSummary.join(' | '),
-      cardioDetailed,
-      rawWorkoutData: todayWorkoutData
-    };
-  };
-
-  const handleExportTCX = async () => {
-    const currentSessionLog = buildCurrentSessionExportData();
-    const res = await shareOrExportWorkout(currentSessionLog, todayCalories);
-    if (res.success && res.method === 'download') {
-      modal.showAlert({
-        title: "📥 Archivo TCX Generado",
-        message: `Se descargó el archivo "entrenamiento_adonis_${selectedDateKey}.tcx".\n\n⏱️ Duración registrada: ${liveElapsedMinutes > 0 ? `${liveElapsedMinutes} min` : 'Estimada'}\n🔥 Gasto: ${todayCalories?.totalKcal || 0} kcal\n⚖️ Peso atleta: ${userWeightKg} kg\nCompatible con Google Fit, Health Connect, Garmin y Strava.`,
-        variant: "success"
-      });
-    }
-  };
-
-  const handleExportJSON = () => {
-    const currentSessionLog = buildCurrentSessionExportData();
-    const success = downloadWorkoutJSON(currentSessionLog, todayCalories, bodyMetrics, bodyComposition);
-    if (success) {
-      modal.showAlert({
-        title: "💾 Bitácora Completa Exportada",
-        message: `Se ha descargado el archivo JSON con todos los datos cuantitativos:\n• Series, repeticiones, RPEs y 1RMs\n• Medidas corporales (% Grasa, Músculo, Cintura, Hombros)\n• Gasto energético y datos de smartwatch\n• Configuración exacta de máquinas y poleas`,
-        variant: "success"
-      });
-    }
-  };
-
-  // Función para reiniciar o limpiar el borrador del día actual
-  const handleClearCurrentDraft = () => {
-    modal.showConfirm({
-      title: "🗑️ ¿Limpiar Registro de este Día?",
-      message: "¿Deseas borrar las casillas marcadas de esta fecha y empezar en limpio? (Tu historial pasado seguirá intacto).",
-      confirmText: "Sí, Limpiar a 0",
-      cancelText: "Cancelar",
-      variant: "warning",
-      onConfirm: async () => {
-        const weekKey = `week_${currentWeek}`;
-        setCurrentSessions(prev => {
-          const next = { ...(prev || {}) };
-          delete next[`draft_${selectedDateKey}`];
-          delete next[`startTime_${selectedDateKey}`];
-          delete next[`${selectedDateKey}_${currentDay.id}`];
-          delete next[currentDay.id];
-          if (next[weekKey]) {
-            const nextWeek = { ...next[weekKey] };
-            delete nextWeek[currentDay.id];
-            next[weekKey] = nextWeek;
-          }
-          return next;
-        });
-
-        // Si había una sesión archivada en Firebase para esta fecha exacta, eliminarla también
-        const sessionId = historySession?.id || `ses_${selectedDateKey}_${currentDay.id}`;
-        if (deleteSession) await deleteSession(sessionId);
-
-        modal.showAlert({
-          title: "🧹 Día Limpiado",
-          message: "Los registros de este día han sido reiniciados a 0.",
-          variant: "info"
-        });
-      }
-    });
-  };
-
-  const handleFinishWorkout = () => {
-    modal.showConfirm({
-      title: `🏁 ¿Archivar Sesión en Bitácora?`,
-      message: `Resumen de tu entrenamiento del ${selectedDateKey}:\n\n⏱️ Duración Real: ${liveElapsedMinutes > 0 ? `${liveElapsedMinutes} min` : 'Automática'}\n💪 Series completadas: ${completedSets}\n🔥 Volumen Total Levantado: ${volume.toLocaleString()} lbs-reps\n⚡ Gasto Calórico Estimado: ${todayCalories.totalKcal} kcal\n   (🏋️ ${todayCalories.strengthKcal} kcal fuerza + 🚴 ${todayCalories.cardioKcal} kcal cardio + ⚡ ${todayCalories.epocKcal} kcal EPOC)\n\n¿Archivar datos oficiales?`,
-      confirmText: "💾 Sí, Archivar Ahora",
-      cancelText: "Continuar Entrenando",
-      variant: "success",
-      onConfirm: async () => {
-        const sessionId = historySession?.id || `ses_${selectedDateKey}_${currentDay.id}`;
-        const sessionDate = new Date(`${selectedDateKey}T12:00:00`);
-        const endTimeIso = new Date().toISOString();
-        const startIso = sessionStartTime || new Date(Date.now() - Math.max(15, liveElapsedMinutes || 45) * 60000).toISOString();
-        const finalDuration = liveElapsedMinutes > 0 ? liveElapsedMinutes : Math.max(15, Math.round((completedSets * 2.2) + (cardioCompleted * 35)));
-
-        // Asegurar que cada ejercicio conserve su machineConfig en el registro histórico
-        const exercisesWithConfigs = { ...todayWorkoutData };
-        Object.keys(exercisesWithConfigs).forEach(exKey => {
-          if (exercisesWithConfigs[exKey] && typeof exercisesWithConfigs[exKey] === 'object') {
-            if (!exercisesWithConfigs[exKey].machineConfig) {
-              const matchedConfig = globalMachineConfigs[exKey] || globalMachineConfigs[exercisesWithConfigs[exKey]?.name];
-              if (matchedConfig) {
-                exercisesWithConfigs[exKey] = {
-                  ...exercisesWithConfigs[exKey],
-                  machineConfig: matchedConfig
-                };
-              }
-            }
-          }
-        });
-
-        const sessionLog = {
-          id: sessionId,
-          weekNumber: currentWeek,
-          weekName: `Semana ${currentWeek}`,
-          date: selectedDateKey,
-          timestamp: sessionDate.toISOString(),
-          startTime: startIso,
-          endTime: endTimeIso,
-          durationMinutes: finalDuration,
-          dateString: sessionDate.toLocaleDateString('es-ES', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }),
-          dayId: currentDay.id,
-          dayName: currentDay.name,
-          focus: currentDay.focus,
-          volume,
-          completedSets,
-          cardioCompleted,
-          calories: todayCalories,
-          exercises: exercisesWithConfigs,
-          skippedExercises: skippedExercisesMap[baseDay.id] || {},
-          userWeightKg: userWeightKg || (bodyMetrics.length > 0 ? bodyMetrics[bodyMetrics.length - 1]?.weightKg : null),
-          bodyComposition: bodyComposition || null,
-          isCompleted: true,
-          isRestDay: false,
-          isMissedDay: false,
-          isDeloadSession: Boolean(isDeloadMode)
-        };
-
-        // Guardar en Firebase Collection y sincronizar
-        await saveSession(sessionLog);
-
-        // Limpiar el borrador temporal activo para este día
-        const weekKey = `week_${currentWeek}`;
-        setCurrentSessions(prev => {
-          const next = { ...(prev || {}) };
-          delete next[`draft_${selectedDateKey}`];
-          delete next[`startTime_${selectedDateKey}`];
-          delete next[`${selectedDateKey}_${currentDay.id}`];
-          if (next[weekKey]) {
-            const nextWeek = { ...next[weekKey] };
-            delete nextWeek[currentDay.id];
-            next[weekKey] = nextWeek;
-          }
-          return next;
-        });
-
-        modal.showAlert({
-          title: "🎉 ¡Entrenamiento Archivado!",
-          message: `Sesión de ${selectedDateKey} (${currentDay.name}) guardada con éxito (${volume.toLocaleString()} lbs-reps • ${finalDuration} min • ${todayCalories.totalKcal} kcal quemadas).`,
-          variant: "success"
-        });
-      }
-    });
-  };
-
-  const handleSaveSpecialDay = (type) => {
-    const isRest = type === 'rest';
-    const title = isRest ? "💤 ¿Marcar como Día de Descanso?" : "❌ ¿Registrar Falta / No Entrené?";
-    const msg = isRest
-      ? `Se guardará el ${selectedDateKey} como día de descanso muscular programado en tu bitácora.`
-      : `Se registrará una inasistencia para el ${selectedDateKey} en tu calendario.`;
-
-    modal.showConfirm({
-      title,
-      message: msg,
-      confirmText: isRest ? "Guardar Descanso" : "Registrar Falta",
-      cancelText: "Cancelar",
-      variant: isRest ? "info" : "danger",
-      onConfirm: async () => {
-        const sessionId = historySession?.id || `ses_${selectedDateKey}_${currentDay.id}`;
-        const sessionDate = new Date(`${selectedDateKey}T12:00:00`);
-        const sessionLog = {
-          id: sessionId,
-          weekNumber: currentWeek,
-          weekName: `Semana ${currentWeek}`,
-          date: selectedDateKey,
-          timestamp: sessionDate.toISOString(),
-          dateString: sessionDate.toLocaleDateString('es-ES', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }),
-          dayId: currentDay.id,
-          dayName: currentDay.name,
-          focus: isRest ? 'Día de Descanso Programado' : 'Falta / Inasistencia al Gym',
-          volume: 0,
-          completedSets: 0,
-          cardioCompleted: 0,
-          exercises: {},
-          isCompleted: false,
-          isRestDay: isRest,
-          isMissedDay: !isRest
-        };
-
-        await saveSession(sessionLog);
-
-        // Limpiar cualquier borrador pendiente de esta fecha
-        const weekKey = `week_${currentWeek}`;
-        setCurrentSessions(prev => {
-          const next = { ...(prev || {}) };
-          delete next[`draft_${selectedDateKey}`];
-          delete next[`${selectedDateKey}_${currentDay.id}`];
-          if (next[weekKey]) {
-            const nextWeek = { ...next[weekKey] };
-            delete nextWeek[currentDay.id];
-            next[weekKey] = nextWeek;
-          }
-          return next;
-        });
-
-        modal.showAlert({
-          title: isRest ? "💤 Descanso Registrado" : "❌ Falta Registrada",
-          message: `El registro para ${selectedDateKey} se guardó exitosamente en tu bitácora.`,
-          variant: "info"
-        });
-      }
-    });
-  };
-
-  const handleResetCurrent = () => {
-    modal.showConfirm({
-      title: "🔄 ¿Reiniciar casillas de hoy?",
-      message: "Se limpiarán los checks y pesos ingresados para este día en la pantalla actual.",
-      confirmText: "Reiniciar",
-      cancelText: "Cancelar",
-      variant: "warning",
-      onConfirm: () => {
-        const weekKey = `week_${currentWeek}`;
-        setCurrentSessions(prev => {
-          const next = { ...(prev || {}) };
-          delete next[`draft_${selectedDateKey}`];
-          delete next[`${selectedDateKey}_${currentDay.id}`];
-          if (next[weekKey]) {
-            const nextWeek = { ...next[weekKey] };
-            delete nextWeek[currentDay.id];
-            next[weekKey] = nextWeek;
-          }
-          return next;
-        });
-        updateSessionDataForCurrentDay(() => ({}));
-      }
-    });
-  };
-
-  const handleResetToOfficialRoutine = () => {
-    modal.showConfirm({
-      title: "↺ Restablecer a Rutina Oficial",
-      message: `¿Deseas restablecer ${baseDay.name} a la plantilla oficial limpia del Protocolo Adonis?\n\nSe eliminarán los swaps y ejercicios personalizados añadidos a este día. Tu historial previo de entrenamientos no se borrará.`,
-      confirmText: "Restablecer a Oficial",
-      cancelText: "Cancelar",
-      variant: "warning",
-      onConfirm: () => {
-        setCustomExercisesMap(prev => ({ ...prev, [baseDay.id]: [] }));
-        setSwappedExercisesMap(prev => ({ ...prev, [baseDay.id]: {} }));
-        setExerciseOrderMap(prev => ({ ...prev, [baseDay.id]: [] }));
-        setCustomRoutine(null);
-        modal.showAlert({
-          title: "✅ Rutina Restablecida",
-          message: `${baseDay.name} ahora muestra exactamente los ejercicios del Protocolo Adonis Definitivo.`,
-          variant: "success"
-        });
-      }
-    });
-  };
-
-  const handleResetAllDaysToOfficial = () => {
-    modal.showConfirm({
-      title: "✨ Activar Protocolo Adonis Oficial en Toda la Semana",
-      message: "Se generará un respaldo automático previo y se limpiarán todas las sustituciones y órdenes alterados para activar la lista oficial limpia del Protocolo Adonis Definitivo.\n\n✅ Tu historial de marcas y bitácoras anteriores permanecerá 100% a salvo e intacto.",
-      confirmText: "✨ Sí, Activar en Todos los Días",
-      cancelText: "Cancelar",
-      variant: "warning",
-      requireWord: "BORRAR",
-      onConfirm: async () => {
-        const nowIso = new Date().toISOString();
-        const clearPayload = { __cleared: true, clearedAt: nowIso, __approvedDrop: true };
-        await executeCleanSlate(currentUser);
-        setCustomExercisesMap(clearPayload);
-        setSwappedExercisesMap(clearPayload);
-        setExerciseOrderMap(clearPayload);
-        setCustomRoutine(null);
-        modal.showAlert({
-          title: "🎉 Protocolo Adonis Definitivo Activado",
-          message: "Todos los días de la semana ahora muestran la plantilla oficial limpia sin residuos de órdenes antiguos.",
-          variant: "success"
-        });
-      }
-    });
-  };
-
-  const handleOptimizeWithMath = () => {
-    setIsAnalyzingAI(true);
-    
-    // Simulate slight processing time for UI effect
-    setTimeout(() => {
-      let analysisText = `Análisis Biomecánico - ${currentDay.name}\n\n`;
-      let improvements = 0;
-      let totalExercises = 0;
-
-      currentDay.exercises.forEach(ex => {
-        const todayLogs = todayWorkoutData[ex.id] || {};
-        const prevLogs = getPreviousDataForExercise(ex, currentDay.id, currentWeek, workoutHistory) || {};
-        
-        let todayMaxWeight = 0;
-        let todayMaxReps = 0;
-        let todayEpley = 0;
-
-        Object.keys(todayLogs).forEach(set => {
-          if (!isNaN(parseInt(set)) && todayLogs[set].completed) {
-            const w = parseFloat(todayLogs[set].weight) || 0;
-            const r = parseInt(todayLogs[set].reps) || 0;
-            const epley = calculate1RM(w, r);
-            if (w > todayMaxWeight) { todayMaxWeight = w; todayMaxReps = r; }
-            if (epley > todayEpley) todayEpley = epley;
-          }
-        });
-
-        if (todayMaxWeight > 0) {
-          totalExercises++;
-          let prevMaxWeight = 0;
-          let prevMaxReps = 0;
-          let prevEpley = 0;
-
-          Object.keys(prevLogs).forEach(set => {
-             if (!isNaN(parseInt(set)) && prevLogs[set].completed) {
-                const w = parseFloat(prevLogs[set].weight) || 0;
-                const r = parseFloat(prevLogs[set].reps) || 0;
-                const epley = calculate1RM(w, r);
-                if (w > prevMaxWeight) { prevMaxWeight = w; prevMaxReps = r; }
-                if (epley > prevEpley) prevEpley = epley;
-             }
-          });
-
-          if (prevMaxWeight > 0) {
-            if (todayEpley > prevEpley) {
-              improvements++;
-              if (todayMaxWeight > prevMaxWeight) {
-                analysisText += `✅ ${ex.name}: +${todayMaxWeight - prevMaxWeight} lbs. ¡Sobrecarga por tensión mecánica lograda!\n`;
-              } else if (todayMaxReps > prevMaxReps) {
-                analysisText += `✅ ${ex.name}: +${todayMaxReps - prevMaxReps} reps. ¡Progresión en volumen y resistencia muscular!\n`;
-              }
-            } else if (todayEpley === prevEpley) {
-               analysisText += `⚖️ ${ex.name}: Carga mantenida. Intenta empujar al fallo la próxima sesión o aplicar parciales elongadas.\n`;
-            } else {
-               analysisText += `⚠️ ${ex.name}: Ligero descenso de fuerza. Asegúrate de descansar bien el SNC y comer carbohidratos previos.\n`;
-            }
-          } else {
-            analysisText += `📌 ${ex.name}: Línea base establecida (${todayMaxWeight} lbs). Progreso rastreable a partir de la próxima semana.\n`;
-          }
-        }
-      });
-
-      if (totalExercises === 0) {
-        analysisText = "No hay series completadas hoy para realizar análisis matemático.";
-      } else if (isDeloadMode) {
-        analysisText += `\n🧘 EVALUACIÓN CLÍNICA DE DESCARGA (DELOAD):\n`;
-        analysisText += `• Volumen controlado: Has completado tus series con rango submáximo de recuperación.\n`;
-        analysisText += `• El objetivo clínico no es batir récords hoy, sino disipar la fatiga de tendones y del SNC.\n`;
-        analysisText += `• Mantén este estímulo controlado hasta el final de tu microciclo de 7 días para detonar la supercompensación de fuerza en el siguiente bloque.`;
-      } else {
-        analysisText += `\n🎯 Resumen: Lograste sobrecarga progresiva real en ${improvements} de ${totalExercises} ejercicios evaluados.`;
-        if (fatigueStatus?.shouldHighlightDeload) {
-          analysisText += `\n\n💡 DIAGNÓSTICO DEL COACH INTELIGENTE:`;
-          analysisText += `\n⚠️ Alerta de fatiga o avance de mesociclo: ${fatigueStatus.reason}`;
-          analysisText += `\n👉 Recomendación: Puedes activar el [🧘 Modo Descarga] para resetear la fatiga articular y volver a romper marcas la próxima semana.`;
-        }
-      }
-
-      setAiAnalysisResult({ resumenSobrecarga: analysisText, isDeloadMode });
-      setIsAnalyzingAI(false);
-    }, 600);
-  };
-
-
-
-  const handleCopyRoutineForCoach = () => {
-    let summaryText = `💪 PROTOCOLO ADONIS - RUTINA DE HOY\n`;
-    summaryText += `🗓️ Semana ${currentWeek} • Día ${currentDay.dayNumber}: ${currentDay.name}\n`;
-    summaryText += `🎯 Enfoque: ${currentDay.focus}\n\n`;
-    
-    currentDay.exercises.forEach((ex, idx) => {
-      summaryText += `${idx + 1}. ${ex.name} [${ex.sets || 3} series x ${ex.reps || '10-12'}]\n`;
-      const logs = todayWorkoutData[ex.id];
-      if (logs && !ex.isCardio) {
-        let loggedInfo = [];
-        Object.keys(logs).forEach(setNum => {
-          if (!isNaN(parseInt(setNum)) && logs[setNum].weight) {
-            loggedInfo.push(`S${setNum}: ${logs[setNum].weight} ${logs[setNum].unit || 'lbs'} x ${logs[setNum].reps || 0}`);
-          }
-        });
-        if (loggedInfo.length > 0) {
-          summaryText += `   📊 Registrado: ${loggedInfo.join(" | ")}\n`;
-        }
-      }
-    });
-
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(summaryText).then(() => {
-        modal.showAlert({ title: "📋 Copiado al Portapapeles", message: "Resumen de rutina copiado.", variant: "success" });
-      });
-    }
-  };
-
-  const handleCopyWorkoutCard = () => {
-    let card = `🏆 COACH V2 — WORKOUT CARD\n`;
-    card += `📅 Fecha: ${selectedDateKey} | Semana ${currentWeek}\n`;
-    card += `⚡ Rutina: ${currentDay.name || 'Entrenamiento'}\n`;
-    card += `📊 Volumen: ${volume.toLocaleString()} lbs | ${completedSets} Series Efectivas${warmupSets > 0 ? ` (+${warmupSets} calentamiento)` : ''}\n`;
-    card += `────────────────────────────\n`;
-
-    let count = 0;
-    currentDay.exercises.forEach(ex => {
-      const logs = todayWorkoutData[ex.id] || {};
-      const setsArr = [];
-      Object.keys(logs).forEach(k => {
-        const num = parseInt(k, 10);
-        if (!isNaN(num) && num > 0 && logs[k] && logs[k].completed) {
-          setsArr.push({ num, ...logs[k] });
-        }
-      });
-
-      if (setsArr.length > 0) {
-        count++;
-        card += `\n• ${ex.name}:\n`;
-        const isUnilateralEx = isExerciseUnilateral(ex, logs);
-
-        setsArr.sort((a, b) => a.num - b.num).forEach(s => {
-          let r = 0;
-          if (isUnilateralEx) {
-            const rL = parseFloat(s.repsL) || 0;
-            const rR = parseFloat(s.repsR) || 0;
-            r = (rL > 0 && rR > 0) ? Math.min(rL, rR) : (rL > 0 ? rL : rR);
-          } else {
-            r = parseFloat(s.reps) || Math.max(parseFloat(s.repsR) || 0, parseFloat(s.repsL) || 0) || 0;
-          }
-
-          const epley = calculate1RM(s.weight, r);
-          const epleyStr = epley > 0 ? ` (1RM est: ${epley} lbs)` : '';
-          const rpeStr = s.rpe ? ` @ RPE ${s.rpe}` : '';
-          if (isUnilateralEx && ((s.repsL && s.repsL !== 'null') || (s.repsR && s.repsR !== 'null'))) {
-            card += `  - S${s.num}: ${s.weight || 0} lbs × I:${s.repsL || s.reps} D:${s.repsR || s.reps}${rpeStr}${epleyStr}\n`;
-          } else {
-            card += `  - S${s.num}: ${s.weight || 0} lbs × ${r} reps${rpeStr}${epleyStr}\n`;
-          }
-        });
-      }
-    });
-
-    if (count === 0) {
-      modal.showAlert({
-        title: "Sin series completadas",
-        message: "Marca al menos una serie completada (✓) para generar tu Workout Card.",
-        variant: "warning"
-      });
-      return;
-    }
-
-    card += `\n────────────────────────────\n`;
-    card += `🔥 Adonis Tracker • Hipertrofia & Sobrecarga Progresiva`;
-
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(card).then(() => {
-        modal.showAlert({
-          title: "📋 ¡Workout Card Copiada!",
-          message: "El resumen compacto de tu entrenamiento se ha copiado al portapapeles listo para compartir.",
-          variant: "success"
-        });
-      }).catch(() => {
-        modal.showAlert({ title: "Workout Card", message: card, variant: "info" });
-      });
-    } else {
-      modal.showAlert({ title: "Workout Card", message: card, variant: "info" });
-    }
-  };
-
-  const handleCopySessionForAI = () => {
-    const prompt = generateAISessionPrompt({
-      currentDay,
-      todayWorkoutData,
-      previousExercisesData,
-      workoutHistory,
-      currentWeek,
-      selectedDateKey,
-      completedSets,
-      warmupSets,
-      volume,
-      calories: todayCalories,
-      elapsedMinutes: liveElapsedMinutes,
-      isWarmupDone,
-      skippedExercises: skippedExercisesMap[baseDay.id] || {},
-      machineConfigs: globalMachineConfigs || {},
-      bodyMetrics,
-      bodyComposition,
-      userWeightKg,
-      isDeloadMode,
-      deloadCycleConfig,
-      fatigueStatus
-    });
-
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(prompt).then(() => {
-        modal.showAlert({
-          title: "🤖 ¡Prompt para IA Copiado!",
-          message: "Se ha copiado a tu portapapeles un informe integral y estructurado con todos los datos cuantitativos de tu sesión.\n\nPégalo directamente en ChatGPT, Claude o Gemini para una auditoría de sobrecarga y prescripción de cargas.",
-          variant: "success"
-        });
-      }).catch(() => {
-        modal.showAlert({ title: "Prompt para IA", message: prompt, variant: "info" });
-      });
-    } else {
-      modal.showAlert({ title: "Prompt para IA", message: prompt, variant: "info" });
-    }
-  };
-
-
-  const getFirstUncompletedIdx = () => {
-    for (let idx = 0; idx < currentDay.exercises.length; idx++) {
-      const ex = currentDay.exercises[idx];
-      const data = todayWorkoutData[ex.id];
-      if (ex.isCardio) {
-        if (!data?.completed) return idx;
-      } else {
-        const totalSets = parseInt(ex.sets) || 3;
-        let completed = 0;
-        if (data) {
-          for (let s = 1; s <= totalSets; s++) {
-            if (data[s]?.completed) completed++;
-          }
-        }
-        if (completed < totalSets) return idx;
-      }
-    }
-    return 0;
-  };
-
-  const firstUncompletedIdx = getFirstUncompletedIdx();
-  const warmupKey = `warmup_${selectedDateKey}`;
-  const isWarmupDone = historySession 
-    ? !!historySession.isWarmupDone 
-    : !!(currentSessions?.[`draft_${selectedDateKey}`]?.isWarmupDone || globalWarmupDone[warmupKey]);
-
-  if (isLoadingDb) {
+  if (state.isLoadingDb) {
     return (
       <div style={{ minHeight: '60vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '12px', color: '#0066ff' }}>
         <Loader2 size={32} style={{ animation: 'spin 1s linear infinite' }} />
@@ -1773,7 +78,7 @@ export default function WorkoutDay() {
 
   return (
     <div className="container" style={{ paddingBottom: '90px' }}>
-      {/* BARRA SUPERIOR DE SELECTOR DE MODO (MUTUAMENTE EXCLUSIVO) */}
+      {/* BARRA SUPERIOR DE SELECTOR DE MODO */}
       <div style={{ display: 'flex', background: 'var(--bg-surface-secondary)', border: '1px solid var(--border-subtle)', padding: '4px', borderRadius: '18px', marginBottom: '14px' }}>
         <button
           type="button"
@@ -1823,11 +128,11 @@ export default function WorkoutDay() {
         </button>
       </div>
 
-      {/* MODO 1: VISTA DE CALENDARIO MENSUAL EXCLUSIVA (SIN REPETIR LA RUTINA DEBAJO) */}
+      {/* MODO 1: VISTA DE CALENDARIO MENSUAL */}
       {showMonthlyCalendar ? (
         <div>
           <MonthlyCalendar
-            workoutHistory={workoutHistory}
+            workoutHistory={state.workoutHistory}
             onSelectDate={(dateKey) => {
               setSelectedDateKey(dateKey);
               setShowMonthlyCalendar(false);
@@ -1839,10 +144,10 @@ export default function WorkoutDay() {
                 setShowMonthlyCalendar(false);
               }
             }}
-            onSaveSession={saveSession}
-            onDeleteSession={deleteSession}
-            currentSessions={currentSessions}
-            setCurrentSessions={setCurrentSessions}
+            onSaveSession={state.saveSession}
+            onDeleteSession={state.deleteSession}
+            currentSessions={state.currentSessions}
+            setCurrentSessions={state.setCurrentSessions}
           />
 
           <button
@@ -1868,61 +173,59 @@ export default function WorkoutDay() {
             <BookOpen size={18} /> Ver Glosario & Guía Explicativa
           </button>
 
-          {/* HUB DE GAMIFICACIÓN, CONSTANCIA Y PREDICTOR ADONIS */}
           <GamificationDashboard
-            workoutHistory={workoutHistory}
-            bodyMetrics={bodyMetrics}
+            workoutHistory={state.workoutHistory}
+            bodyMetrics={state.bodyMetrics}
           />
         </div>
       ) : (
-        /* MODO 2: VISTA DE RUTINA DEL DÍA DE ENTRENAMIENTO (ENFOQUE TOTAL) */
+        /* MODO 2: VISTA DE RUTINA DEL DÍA */
         <div>
           <WorkoutHeader
             isViewingHistory={isViewingHistory}
-            historySession={historySession}
+            historySession={state.historySession}
             selectedDateKey={selectedDateKey}
             setSelectedDateKey={setSelectedDateKey}
-            currentWeek={currentWeek}
+            currentWeek={state.currentWeek}
             todayStr={todayStr}
-            currentDay={currentDay}
+            currentDay={state.currentDay}
             currentDayIndex={currentDayIndex}
-            baseDay={baseDay}
-            previousSession={previousSession}
+            baseDay={state.baseDay}
+            previousSession={state.previousSession}
             modal={modal}
-            setMesocycleStartDate={setMesocycleStartDate}
-            handleClonePreviousWeek={handleClonePreviousWeek}
-            handleResetToOfficialRoutine={handleResetToOfficialRoutine}
-            handleSaveSpecialDay={handleSaveSpecialDay}
-            isHistoryLoading={isHistoryLoading}
-            completedSets={completedSets}
-            volume={volume}
-            workoutHistory={workoutHistory}
-            isDeloadMode={isDeloadMode}
-            onToggleDeload={handleToggleDeload}
-            fatigueStatus={fatigueStatus}
-            activeOverride={isOverrideActive ? weekSplitOverride : null}
+            setMesocycleStartDate={state.setMesocycleStartDate}
+            handleClonePreviousWeek={state.handleClonePreviousWeek}
+            handleResetToOfficialRoutine={state.handleResetToOfficialRoutine}
+            handleSaveSpecialDay={state.handleSaveSpecialDay}
+            isHistoryLoading={state.isHistoryLoading}
+            completedSets={state.completedSets}
+            volume={state.volume}
+            workoutHistory={state.workoutHistory}
+            isDeloadMode={state.isDeloadMode}
+            onToggleDeload={state.handleToggleDeload}
+            fatigueStatus={state.fatigueStatus}
+            activeOverride={state.isOverrideActive ? state.weekSplitOverride : null}
             onOpenRescheduleModal={() => setShowRescheduleModal(true)}
           />
 
-          {/* BARRITAS KPI EN VIVO */}
           <WorkoutLiveStats
-            currentDay={currentDay}
-            volume={volume}
-            completedSets={completedSets}
-            warmupSets={warmupSets}
-            handleResetCurrent={handleResetCurrent}
-            calories={todayCalories}
-            elapsedMinutes={liveElapsedMinutes}
+            currentDay={state.currentDay}
+            volume={state.volume}
+            completedSets={state.completedSets}
+            warmupSets={state.warmupSets}
+            handleResetCurrent={state.handleResetCurrent}
+            calories={state.todayCalories}
+            elapsedMinutes={state.liveElapsedMinutes}
           />
 
           {/* DÍA DE DESCANSO / RECUPERACIÓN O RUTINA DE ENTRENAMIENTO */}
-          {currentDay.id === 'd7' || (currentDay.type === 'rest' && currentDay.exercises.length === 0) ? (
-            currentDay.id === 'd7' ? (
+          {state.currentDay.id === 'd7' || (state.currentDay.type === 'rest' && state.currentDay.exercises.length === 0) ? (
+            state.currentDay.id === 'd7' ? (
               <SundayRecoveryDashboard
                 selectedDateKey={selectedDateKey}
-                currentWeek={currentWeek}
-                onSaveSundayLog={handleSaveSundayLog}
-                historySession={historySession}
+                currentWeek={state.currentWeek}
+                onSaveSundayLog={state.handleSaveSundayLog}
+                historySession={state.historySession}
                 isViewingHistory={isViewingHistory}
               />
             ) : (
@@ -1936,25 +239,25 @@ export default function WorkoutDay() {
             )
           ) : (
             <div>
-              {/* MONITOR CLÍNICO DE DESCARGA ACTIVA (DURACIÓN 7 DÍAS & 4 PILARES) */}
-              {isDeloadMode && deloadProgress && (
+              {/* MONITOR CLÍNICO DE DESCARGA ACTIVA */}
+              {state.isDeloadMode && state.deloadProgress && (
                 <DeloadMonitoringCard
-                  deloadProgress={deloadProgress}
-                  onDeactivateDeload={handleToggleDeload}
+                  deloadProgress={state.deloadProgress}
+                  onDeactivateDeload={state.handleToggleDeload}
                 />
               )}
 
-              {/* BANNER INTELIGENTE DE EJERCICIOS PENDIENTES DE LA SESIÓN ANTERIOR O FALTAS */}
-              {pendingPreviousData && (
+              {/* BANNER INTELIGENTE DE EJERCICIOS PENDIENTES */}
+              {state.pendingPreviousData && (
                 <PendingExercisesBanner
-                  pendingData={pendingPreviousData}
-                  todayDayName={baseDay.name}
-                  onDistributeAcrossWeek={handleDistributePendingAcrossWeek}
-                  onImportToToday={handleImportPendingToToday}
-                  onRollingShift={handleRollingShift}
+                  pendingData={state.pendingPreviousData}
+                  todayDayName={state.baseDay.name}
+                  onDistributeAcrossWeek={state.handleDistributePendingAcrossWeek}
+                  onImportToToday={state.handleImportPendingToToday}
+                  onRollingShift={state.handleRollingShift}
                   onOpenRescheduleModal={() => setShowRescheduleModal(true)}
                   onDismiss={() => {
-                    setDismissedPendingAlerts(prev => ({
+                    state.setDismissedPendingAlerts(prev => ({
                       ...prev,
                       [selectedDateKey]: true
                     }));
@@ -1963,328 +266,127 @@ export default function WorkoutDay() {
               )}
 
               {/* ACCESO RÁPIDO PROTOCOLO MATUTINO (CARDIO / REMO) */}
-              {(() => {
-                const morningCardioEx = currentDay.exercises?.find(e => e.isCardio);
-                if (!morningCardioEx) return null;
-                const morningCardioData = todayWorkoutData[morningCardioEx.id];
-                const isCardioDone = !!morningCardioData?.completed;
-                const isRower = morningCardioEx.machineType === 'rower' || morningCardioEx.unifiedCode === '[CARD-ROW_HIIT_NEAT_01]';
-                return (
-                  <div 
-                    onClick={() => {
-                      setExpandedExerciseId(morningCardioEx.id);
-                      setTimeout(() => {
-                        const el = document.getElementById(`exercise-${morningCardioEx.id}`);
-                        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                      }, 50);
-                    }}
-                    style={{
-                      background: isCardioDone 
-                        ? 'var(--accent-emerald-subtle)' 
-                        : 'var(--bg-surface)',
-                      border: isCardioDone ? '1px solid var(--accent-emerald)' : '1px solid var(--accent-blue)',
-                      borderRadius: '12px',
-                      padding: '8px 12px',
-                      marginBottom: '10px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      cursor: 'pointer',
-                      userSelect: 'none'
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <div style={{ 
-                        width: '30px', 
-                        height: '30px', 
-                        borderRadius: '8px', 
-                        background: isCardioDone ? 'var(--accent-emerald)' : 'var(--accent-blue-light)', 
-                        color: isCardioDone ? '#000000' : 'var(--accent-blue)', 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        justifyContent: 'center', 
-                        flexShrink: 0
-                      }}>
-                        <Activity size={16} />
-                      </div>
-                      <div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '5px', flexWrap: 'wrap' }}>
-                          <h4 style={{ margin: 0, fontSize: '12.5px', fontWeight: '800', color: isCardioDone ? 'var(--accent-emerald)' : 'var(--text-main)' }}>
-                            {isRower ? 'Protocolo Matutino: Remo' : 'Cardio Aeróbico en Zona 2'}
-                          </h4>
-                          <span style={{ fontSize: '9px', background: isCardioDone ? 'var(--accent-emerald-subtle)' : 'var(--accent-amber-subtle)', color: isCardioDone ? 'var(--accent-emerald)' : 'var(--accent-amber)', padding: '1px 5px', borderRadius: '4px', fontWeight: '800' }}>
-                            ≥ 6h antes
-                          </span>
-                        </div>
-                        <span style={{ fontSize: '10.5px', color: isCardioDone ? 'var(--accent-emerald)' : 'var(--text-muted)', fontWeight: '600' }}>
-                          {isCardioDone 
-                            ? `✓ Completado • ${morningCardioData?.cardioKcal || 0} kcal registradas` 
-                            : 'Realizar por la mañana para anular interferencia AMPK/mTOR'}
-                        </span>
-                      </div>
-                    </div>
-                    <span style={{
-                      fontSize: '10.5px',
-                      fontWeight: '800',
-                      padding: '3px 8px',
-                      borderRadius: '8px',
-                      background: isCardioDone ? 'var(--accent-emerald)' : 'var(--accent-blue)',
-                      color: '#000000',
-                      flexShrink: 0
-                    }}>
-                      {isCardioDone ? '✓ LISTO' : 'ABRIR'}
-                    </span>
-                  </div>
-                );
-              })()}
+              <MorningCardioBanner
+                currentDay={state.currentDay}
+                todayWorkoutData={state.todayWorkoutData}
+                onOpenCardio={(exId) => {
+                  setExpandedExerciseId(exId);
+                  setTimeout(() => {
+                    const el = document.getElementById(`exercise-${exId}`);
+                    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  }, 50);
+                }}
+              />
 
               {/* PASO 0: CALENTAMIENTO GENERAL */}
-              {currentDay.type === 'workout' && (
-                <div 
-                  onClick={() => {
-                    const newVal = !isWarmupDone;
-                    setGlobalWarmupDone(prev => ({
-                      ...prev,
-                      [warmupKey]: newVal
-                    }));
-                    if (historySession) {
-                      saveSession({
-                        ...historySession,
-                        isWarmupDone: newVal
-                      });
-                    } else {
-                      updateSessionDataForCurrentDay(dayData => ({
-                        ...dayData,
-                        isWarmupDone: newVal
-                      }));
-                    }
-                  }}
-                  style={{
-                    background: isWarmupDone ? 'var(--accent-emerald-subtle)' : 'var(--bg-surface)',
-                    border: isWarmupDone ? '1px solid var(--accent-emerald)' : '1px dashed var(--accent-amber)',
-                    borderRadius: '12px',
-                    padding: '8px 12px',
-                    marginBottom: '10px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    cursor: 'pointer',
-                    userSelect: 'none'
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <div style={{ width: '30px', height: '30px', borderRadius: '8px', background: isWarmupDone ? 'var(--accent-emerald)' : 'var(--accent-amber-subtle)', color: isWarmupDone ? '#000000' : 'var(--accent-amber)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      {isWarmupDone ? <Check size={15} strokeWidth={3} /> : <Flame size={15} />}
-                    </div>
-                    <div>
-                      <h4 style={{ margin: 0, fontSize: '12.5px', fontWeight: '800', color: isWarmupDone ? 'var(--accent-emerald)' : 'var(--text-main)' }}>
-                        Calentamiento & Movilidad (5-10 min)
-                      </h4>
-                      <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '600' }}>
-                        Caminata/bici suave + movilidad articular
-                      </span>
-                    </div>
-                  </div>
-                  <span className="font-mono-tech" style={{ 
-                    fontWeight: '800', 
-                    fontSize: '10.5px',
-                    background: isWarmupDone ? 'var(--accent-emerald-subtle)' : 'var(--accent-amber-subtle)',
-                    color: isWarmupDone ? 'var(--accent-emerald)' : 'var(--accent-amber)',
-                    border: `1px solid ${isWarmupDone ? 'var(--accent-emerald)' : 'var(--accent-amber)'}`,
-                    padding: '2px 7px',
-                    borderRadius: '6px'
-                  }}>
-                    {isWarmupDone ? '✓ LISTO' : 'MARCAR'}
-                  </span>
-                </div>
-              )}
+              <GeneralWarmupBanner
+                isVisible={state.currentDay.type === 'workout'}
+                isWarmupDone={state.isWarmupDone}
+                onToggleWarmup={state.handleToggleWarmup}
+              />
 
-              {/* LISTA DE EJERCICIOS CON REORDENAMIENTO SEPARADO TOP/BOTTOM & TÉCNICA */}
+              {/* LISTA DE EJERCICIOS */}
               <WorkoutExerciseList
-                exercises={currentDay.exercises}
-                currentDayId={currentDay.id}
-                currentWeek={currentWeek}
-                workoutHistory={workoutHistory}
-                currentSessions={currentSessions}
-                todayWorkoutData={todayWorkoutData}
+                exercises={state.currentDay.exercises}
+                currentDayId={state.currentDay.id}
+                currentWeek={state.currentWeek}
+                workoutHistory={state.workoutHistory}
+                currentSessions={state.currentSessions}
+                todayWorkoutData={state.todayWorkoutData}
                 expandedExerciseId={expandedExerciseId}
                 setExpandedExerciseId={setExpandedExerciseId}
-                firstUncompletedIdx={firstUncompletedIdx}
-                handleUpdateCardio={handleUpdateCardio}
-                handleUpdateSet={handleUpdateSet}
-                handleUpdateExerciseMeta={handleUpdateExerciseMeta}
-                handleSwapExercise={handleSwapExercise}
-                handleMoveExercise={handleMoveExercise}
-                deferredExIds={deferredExIds}
-                handleDeferExercise={handleDeferExercise}
-                skippedExercisesMap={skippedExercisesMap[baseDay.id] || {}}
-                handleSkipExercise={handleSkipExercise}
-                userWeightKg={latestWeight}
-                userSmartwatchKcal={smartwatchKcalMap?.[selectedDateKey] || null}
+                firstUncompletedIdx={state.firstUncompletedIdx}
+                handleUpdateCardio={state.handleUpdateCardio}
+                handleUpdateSet={state.handleUpdateSet}
+                handleUpdateExerciseMeta={state.handleUpdateExerciseMeta}
+                handleSwapExercise={state.handleSwapExercise}
+                handleMoveExercise={(id, dir) => state.handleMoveExercise(id, dir, state.currentDay.exercises)}
+                deferredExIds={state.deferredExIds}
+                handleDeferExercise={state.handleDeferExercise}
+                skippedExercisesMap={state.skippedExercisesMap[state.baseDay.id] || {}}
+                handleSkipExercise={state.handleSkipExercise}
+                userWeightKg={state.latestWeight}
+                userSmartwatchKcal={state.smartwatchKcalMap?.[selectedDateKey] || null}
                 onOpenStrengthWatchModal={() => setShowStrengthWatchModal(true)}
-                onDeleteCustomExercise={handleDeleteCustomExercise}
-                isDeloadMode={isDeloadMode}
-              />
-
-              <SmartRescheduleModal
-                isOpen={showRescheduleModal}
-                onClose={() => setShowRescheduleModal(false)}
-                activeOverride={isOverrideActive ? weekSplitOverride : null}
-                onApplyOverride={(overrideObj) => {
-                  setWeekSplitOverride(overrideObj);
-                  modal.showAlert({
-                    title: "⚡ Semana Reestructurada",
-                    message: `Tu microciclo ha sido adaptado inteligentemente a ${overrideObj.splitType?.replace('_', ' ').toUpperCase()}. Todos los ejercicios clave de hipertrofia fueron preservados. Vencerá automáticamente el domingo.`,
-                    variant: "success"
-                  });
-                }}
-                onClearOverride={() => {
-                  setWeekSplitOverride(null);
-                  modal.showAlert({
-                    title: "🔄 Rutina Base Restaurada",
-                    message: "Has vuelto a la rutina base de 6 días.",
-                    variant: "info"
-                  });
-                }}
-                onRollingShift={handleRollingShift}
-                onCleanSlate={handleExecuteCleanSlate}
-                onMoveExerciseBetweenDays={handleMoveExerciseBetweenDays}
-                currentDayName={baseDay.name}
-                baseRoutine={customRoutine || scientificProtocol}
-                activeDays={activeDays}
-              />
-
-              <AddCustomExerciseModal
-                isAddingExercise={isAddingExercise}
-                setIsAddingExercise={setIsAddingExercise}
-                newExScope={newExScope}
-                setNewExScope={setNewExScope}
-                newExName={newExName}
-                setNewExName={setNewExName}
-                newExSets={newExSets}
-                setNewExSets={setNewExSets}
-                newExReps={newExReps}
-                setNewExReps={setNewExReps}
-                handleAddCustomExercise={handleAddCustomExercise}
-                handlePickFromLibrary={handlePickFromLibrary}
-                currentDayName={baseDay.name}
-                allDays={activeDays}
-                newExTargetDay={newExTargetDay}
-                setNewExTargetDay={setNewExTargetDay}
+                onDeleteCustomExercise={state.handleDeleteCustomExercise}
+                isDeloadMode={state.isDeloadMode}
               />
 
               <WorkoutFooterControls
-                handleFinishWorkout={handleFinishWorkout}
-                completedSets={completedSets}
+                handleFinishWorkout={state.handleFinishWorkout}
+                completedSets={state.completedSets}
                 isViewingHistory={isViewingHistory}
-                handleClearCurrentDraft={handleClearCurrentDraft}
-                todayWorkoutData={todayWorkoutData}
+                handleClearCurrentDraft={state.handleClearCurrentDraft}
+                todayWorkoutData={state.todayWorkoutData}
                 selectedDateKey={selectedDateKey}
                 showSecondaryTools={showSecondaryTools}
                 setShowSecondaryTools={setShowSecondaryTools}
-                handleOptimizeWithMath={handleOptimizeWithMath}
-                isAnalyzingAI={isAnalyzingAI}
+                handleOptimizeWithMath={state.handleOptimizeWithMath}
+                isAnalyzingAI={state.isAnalyzingAI}
                 setShowGlosarioModal={setShowGlosarioModal}
-                handleCopyRoutineForCoach={handleCopyRoutineForCoach}
-                handleCopyWorkoutCard={handleCopyWorkoutCard}
-                handleCopySessionForAI={handleCopySessionForAI}
+                handleCopyRoutineForCoach={state.handleCopyRoutineForCoach}
+                handleCopyWorkoutCard={state.handleCopyWorkoutCard}
+                handleCopySessionForAI={state.handleCopySessionForAI}
                 setShowRoutineBuilder={setShowRoutineBuilder}
-                handleResetToOfficialRoutine={handleResetToOfficialRoutine}
-                handleResetAllDaysToOfficial={handleResetAllDaysToOfficial}
-                baseDay={baseDay}
-                calories={todayCalories}
-                onExportTCX={handleExportTCX}
-                onExportJSON={handleExportJSON}
-                userSmartwatchKcal={smartwatchKcalMap?.[selectedDateKey] || null}
-                onSetSmartwatchKcal={handleSetSmartwatchKcal}
+                handleResetToOfficialRoutine={state.handleResetToOfficialRoutine}
+                handleResetAllDaysToOfficial={state.handleResetAllDaysToOfficial}
+                baseDay={state.baseDay}
+                calories={state.todayCalories}
+                onExportTCX={state.handleExportTCX}
+                onExportJSON={state.handleExportJSON}
+                userSmartwatchKcal={state.smartwatchKcalMap?.[selectedDateKey] || null}
+                onSetSmartwatchKcal={state.handleSetSmartwatchKcal}
                 isWatchModalOpen={showStrengthWatchModal}
                 setIsWatchModalOpen={setShowStrengthWatchModal}
               />
-
             </div>
           )}
         </div>
       )}
 
-      {/* MODAL GLOSARIO */}
-      <GlosarioModal
-        isOpen={showGlosarioModal}
-        onClose={() => setShowGlosarioModal(false)}
+      {/* REPORTE AI / DELOAD */}
+      <AIAnalysisCard
+        aiAnalysisResult={state.aiAnalysisResult}
+        onClose={() => state.setAiAnalysisResult(null)}
+        isDeloadMode={state.isDeloadMode}
+        fatigueStatus={state.fatigueStatus}
+        onToggleDeload={state.handleToggleDeload}
       />
 
-      {/* REPORTES Y MODALES SECUNDARIOS */}
-      {aiAnalysisResult && (
-        <div className="card animate-fade" style={{
-          padding: '16px 18px',
-          marginBottom: '16px',
-          background: aiAnalysisResult.isDeloadMode ? 'var(--accent-emerald-subtle)' : 'rgba(168, 85, 247, 0.12)',
-          border: aiAnalysisResult.isDeloadMode ? '1px solid var(--accent-emerald)' : '1px solid rgba(168, 85, 247, 0.3)',
-          borderRadius: '20px',
-          boxShadow: 'var(--shadow-ios)'
-        }}>
-          <div className="flex-between" style={{ marginBottom: '10px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              {aiAnalysisResult.isDeloadMode ? <Sparkles size={20} color="var(--accent-emerald)" /> : <Sparkles size={20} color="#c084fc" />}
-              <strong style={{ fontSize: '15px', color: aiAnalysisResult.isDeloadMode ? 'var(--accent-emerald)' : '#c084fc', fontWeight: '900' }}>
-                {aiAnalysisResult.isDeloadMode ? '🧘 Auditoría de Descarga del Coach' : 'Reporte de Sobrecarga AI'}
-              </strong>
-            </div>
-            <button type="button" onClick={() => setAiAnalysisResult(null)} style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}>
-              <X size={18} color="var(--text-muted)" />
-            </button>
-          </div>
-          <p style={{
-            fontSize: '13px',
-            color: 'var(--text-main)',
-            margin: 0,
-            lineHeight: '1.6',
-            fontWeight: '600',
-            whiteSpace: 'pre-line'
-          }}>
-            {aiAnalysisResult.resumenSobrecarga}
-          </p>
-          {!isDeloadMode && fatigueStatus?.shouldHighlightDeload && (
-            <div style={{ marginTop: '12px', display: 'flex', justifyContent: 'flex-end' }}>
-              <button
-                type="button"
-                onClick={() => {
-                  setAiAnalysisResult(null);
-                  handleToggleDeload();
-                }}
-                style={{
-                  background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
-                  color: '#ffffff',
-                  border: 'none',
-                  padding: '8px 14px',
-                  borderRadius: '12px',
-                  fontSize: '12px',
-                  fontWeight: '800',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  boxShadow: '0 2px 8px rgba(5, 150, 105, 0.3)'
-                }}
-              >
-                🧘 Activar Modo Descarga (7 Días)
-              </button>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* MODAL GESTOR DE RUTINA */}
-      <RoutineManagerModal
-        isOpen={showRoutineBuilder}
-        onClose={() => setShowRoutineBuilder(false)}
-        activeRoutine={activeDays}
-        customExercisesMap={customExercisesMap}
-        onSaveRoutine={async (newRoutine) => {
-          setCustomRoutine(newRoutine);
-        }}
-        onResetToBaseProtocol={async () => {
-          setCustomRoutine(null);
-        }}
+      {/* MODALES AUXILIARES REAGRUPADOS */}
+      <WorkoutModals
+        showRescheduleModal={showRescheduleModal}
+        setShowRescheduleModal={setShowRescheduleModal}
+        isOverrideActive={state.isOverrideActive}
+        weekSplitOverride={state.weekSplitOverride}
+        setWeekSplitOverride={state.setWeekSplitOverride}
+        handleRollingShift={state.handleRollingShift}
+        handleExecuteCleanSlate={state.handleExecuteCleanSlate}
+        handleMoveExerciseBetweenDays={state.handleMoveExerciseBetweenDays}
+        baseDay={state.baseDay}
+        customRoutine={state.customRoutine}
+        activeDays={state.activeDays}
+        isAddingExercise={state.isAddingExercise}
+        setIsAddingExercise={state.setIsAddingExercise}
+        newExScope={state.newExScope}
+        setNewExScope={state.setNewExScope}
+        newExName={state.newExName}
+        setNewExName={state.setNewExName}
+        newExSets={state.newExSets}
+        setNewExSets={state.setNewExSets}
+        newExReps={state.newExReps}
+        setNewExReps={state.setNewExReps}
+        handleAddCustomExercise={state.handleAddCustomExercise}
+        handlePickFromLibrary={state.handlePickFromLibrary}
+        newExTargetDay={state.newExTargetDay}
+        setNewExTargetDay={state.setNewExTargetDay}
+        showGlosarioModal={showGlosarioModal}
+        setShowGlosarioModal={setShowGlosarioModal}
+        showRoutineBuilder={showRoutineBuilder}
+        setShowRoutineBuilder={setShowRoutineBuilder}
+        customExercisesMap={state.customExercisesMap}
+        setCustomRoutine={state.setCustomRoutine}
+        modal={modal}
       />
     </div>
   );

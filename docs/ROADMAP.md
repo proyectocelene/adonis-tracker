@@ -9,7 +9,7 @@
 | 1 | Detener pérdida de datos | Antigravity | Planning + modelo más potente, razonamiento alto | `fix/perdida-datos` | ✅ Hecha (2026-11-22) |
 | 2 | Fuente única de verdad de datos | Antigravity | Planning + alto | `refactor/fuente-unica-datos` | ✅ Hecha (2026-11-22) |
 | 3 | Tests, CI, Firestore rules | Antigravity | Planning + medio | `chore/estabilidad` | ✅ Hecha (2026-11-22) |
-| 4 | Dividir archivos gigantes (1 archivo por chat) | Antigravity | Planning + alto | `refactor/<archivo>` | ⬜ |
+| 4 | Dividir archivos gigantes (1 archivo por chat) | Antigravity | Planning + alto | `refactor/<archivo>` | 🔄 En curso (4a: ✅ Hecha) |
 | 5 | UI para uso en el gym | Quick (mockup) → Antigravity (implementación) | Balanced / Fast | `ui/<pantalla>` | ⬜ |
 | ✔ | Revisión al cierre de cada fase | Quick, chat "Revisor Adonis" | Smart | — | — |
 
@@ -111,15 +111,36 @@ Archivo: `base de datos pruebas/COACH_V2_Backup_Total_Firebase_2026-09-17.json` 
 ## FASE 4 — Dividir archivos gigantes (un chat por archivo)
 **Dónde:** Antigravity · `04a-workoutday`, `04b-cardiologger`, `04c-progressionchart`, `04d-setlogger` · Planning + alto.
 
-```
-Lee AGENTS.md y docs/ROADMAP.md. Rama: refactor/workoutday.
-Divide src/components/WorkoutDay.jsx (2,306 líneas) SIN cambiar comportamiento:
-- Extraer estado/sync a hooks (useWorkoutSession, useRoutineConfig, useDeload).
-- Extraer modales y handlers a componentes/archivos propios.
-- Meta: ningún archivo >400 líneas.
-- Tests de Fase 3 deben pasar; npm run build limpio.
-Plan con mapa de archivos nuevos ANTES de mover código.
-```
+### FASE 4a — Dividir `WorkoutDay.jsx` (✅ Hecha 2026-11-22)
+**Rama:** `refactor/workoutday`
+- **Resultados de arquitectura:**
+  - `WorkoutDay.jsx` reducido de **2,291 líneas a 373 líneas** como un orquestador declarativo y liviano.
+  - Ningún archivo nuevo o modificado supera las 400 líneas (todos entre 55 y 382 líneas).
+  - Cero duplicación de listeners: cada clave `coachv2_*` vive en un único hook dueño y se inyecta limpiamente a hooks hermanos.
+- **Módulos creados en `src/hooks/workout/`:**
+  - `useWorkoutDayState.js` (120 líneas): Coordinador maestro de estado.
+  - `useDeloadManager.js` (115 líneas): Manejo clínico del ciclo de 7 días de descarga, alertas y fatiga.
+  - `useRoutineConfig.js` (382 líneas): Rutina activa, semana del mesociclo, orden, swaps y resets protegidos con `"BORRAR"`.
+  - `useWorkoutSession.js` (319 líneas): Fusión profunda segura de borrador e historial, reloj reactivo y cálculo metabólico.
+  - `useSessionUpdater.js` (168 líneas): Mutaciones en caliente de series, cardio y metadatos con auto-detección de inicio.
+  - `useSessionArchiver.js` (237 líneas): Lógica de finalización, limpieza, guardado de descansos/faltas y domingos NEAT.
+  - `useCustomExerciseManager.js` (229 líneas): Formulario y lógica de ejercicios personalizados (temporales de hoy vs fijos).
+  - `useWorkoutAIAndExports.js` (363 líneas): Análisis matemático Epley, exportaciones TCX/JSON y Workout Card.
+- **Módulos auxiliares creados:**
+  - `src/utils/sessionDataHelper.js` (137 líneas): Funciones puras de cálculo de volumen, 1RM, peso y matching de historial.
+  - `src/components/workout/MorningCardioBanner.jsx` (79 líneas): Acceso rápido al protocolo matutino de remo/cardio.
+  - `src/components/workout/GeneralWarmupBanner.jsx` (55 líneas): Paso 0 de calentamiento general interactivo.
+  - `src/components/workout/AIAnalysisCard.jsx` (78 líneas): Tarjeta de resultados de sobrecarga/descarga.
+  - `src/components/workout/WorkoutModals.jsx` (115 líneas): Reagrupación de modales secundarios.
+- **Calidad y estabilidad:**
+  - `oxlint`: **0 warnings y 0 errores** en todos los 14 archivos tocados (warnings globales del proyecto reducidos de 246 a 208).
+  - `vitest`: 57 tests unitarios en verde (6 suites, ~2s).
+  - `vite build`: Compilación limpia de producción en 3.08s con Service Worker PWA generado.
+
+### Pendientes de la Fase 4:
+- [ ] **Fase 4b:** Dividir `CardioLogger.jsx` (2,110 líneas) · Rama `refactor/cardiologger`.
+- [ ] **Fase 4c:** Dividir `ExerciseProgressionChart.jsx` (1,885 líneas) · Rama `refactor/progressionchart`.
+- [ ] **Fase 4d:** Dividir `SetLogger.jsx` (1,463 líneas) · Rama `refactor/setlogger`.
 
 ## FASE 5 — UI para el gym
 - **Quick (Balanced):** "Hazme un mockup HTML de la pantalla de registro de series para usar con una mano en el gym: registrar una serie en ≤2 toques, indicador de Guardado ✓ / Pendiente ⟳, modo oscuro."
@@ -137,3 +158,6 @@ regresiones, setDoc sin merge, código muerto. Veredicto: aprobar / corregir.
 ## 📒 Bitácora de decisiones
 - 2026-11-22 · Fase 0 · Se adoptan las Reglas de Seguridad de Datos en `AGENTS.md`. Se decide implementar en Antigravity (puede ejecutar build/dev server) y revisar en Quick.
 - 2026-11-22 · Fase 1 · Se completan las tareas A-H para eliminar todas las causas de pérdida de datos. Se blindan `mergeStoreValues`, `useIndexedDB`, `useWorkoutHistory`, `syncService` y `backupService` (upsert sin wipe previo). Las acciones destructivas ahora requieren confirmación escribiendo `BORRAR` y generan backup previo automático. Se crea `dataGuardian.js` para bloquear caídas anómalas >50%. Build y pruebas de integridad 100% exitosas.
+- 2026-11-22 · Fase 2 · Fuente única de verdad con Firestore `persistentLocalCache`, soft-delete universal (`deletedAt`), drenado de outboxes, eliminación de espejos duales en `idb-keyval` y creación del hook universal `useSyncedStore`.
+- 2026-11-22 · Fase 3 · Se configuran oxlint, Vitest con 57 tests unitarios en 6 suites (Firebase e IndexedDB aislados con mocks), CI estricto en GitHub Actions y Cloud Firestore Security Rules multi-tenant con default deny.
+- 2026-11-22 · Fase 4a · Se divide `WorkoutDay.jsx` (de 2,291 líneas a 373 líneas) en 8 hooks en `src/hooks/workout/`, 4 componentes en `src/components/workout/` y 1 helper puro `sessionDataHelper.js`. Ningún archivo supera ~380 líneas. Cero listeners duplicados en `useSyncedStore`. 0 errores y 0 warnings de `oxlint` en los archivos tocados (warnings globales del repo bajan de 246 a 208). 57 tests en verde y build limpio.
