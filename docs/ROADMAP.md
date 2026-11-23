@@ -9,7 +9,7 @@
 | 1 | Detener pérdida de datos | Antigravity | Planning + modelo más potente, razonamiento alto | `fix/perdida-datos` | ✅ Hecha (2026-11-22) |
 | 2 | Fuente única de verdad de datos | Antigravity | Planning + alto | `refactor/fuente-unica-datos` | ✅ Hecha (2026-11-22) |
 | 3 | Tests, CI, Firestore rules | Antigravity | Planning + medio | `chore/estabilidad` | ✅ Hecha (2026-11-22) |
-| 4 | Dividir archivos gigantes (1 archivo por chat) | Antigravity | Planning + alto | `refactor/<archivo>` | 🔄 En curso (4a: ✅ Hecha) |
+| 4 | Dividir archivos gigantes (1 archivo por chat) | Antigravity | Planning + alto | `refactor/<archivo>` | 🔄 En curso (4a: ✅ Hecha, 4b: ✅ Hecha) |
 | 5 | UI para uso en el gym | Quick (mockup) → Antigravity (implementación) | Balanced / Fast | `ui/<pantalla>` | ⬜ |
 | ✔ | Revisión al cierre de cada fase | Quick, chat "Revisor Adonis" | Smart | — | — |
 
@@ -137,8 +137,35 @@ Archivo: `base de datos pruebas/COACH_V2_Backup_Total_Firebase_2026-09-17.json` 
   - `vitest`: 57 tests unitarios en verde (6 suites, ~2s).
   - `vite build`: Compilación limpia de producción en 3.08s con Service Worker PWA generado.
 
+### FASE 4b — Dividir `CardioLogger.jsx` (✅ Hecha 2026-11-22)
+**Rama:** `refactor/cardiologger`
+- **Resultados de arquitectura:**
+  - `CardioLogger.jsx` reducido de **2,110 líneas a 382 líneas** como un orquestador declarativo y liviano.
+  - Ningún archivo nuevo o modificado supera las 400 líneas (todos entre 47 y 388 líneas).
+  - Estabilidad de `exerciseData`: uso de constante de módulo `EMPTY_EXERCISE_DATA = {}` para evitar re-disparos innecesarios del `useEffect`.
+  - Preservación estricta de `rpe`: variable `rowRpe` conectada al ciclo de `notifyChange` sin sobreescribir datos existentes y eliminando variables muertas.
+- **Módulos creados en `src/hooks/cardio/`:**
+  - `cardioStateHelper.js` (61 líneas): Funciones puras de resolución de máquina (`resolveInitialMachineType`), etiquetas legibles, saneamiento de inputs y duración efectiva.
+  - `useCardioTimer.js` (47 líneas): Cronómetro integrado con intervalo reactivo, formateo MM:SS, pausa, reinicio e inyección al registro oficial.
+  - `useCardioState.js` (388 líneas): Estado completo de cardio (remo, caminadora, bici, elíptica, reloj, consenso y setup), sincronización reactiva y cómputo de métricas ACSM en vivo.
+- **Módulos creados en `src/components/cardio/`:**
+  - `CardioHeader.jsx` (116 líneas): Cabecera vibrante del acordeón, badges de estado/energía, toggle completado y chevron.
+  - `CardioMachineSelector.jsx` (89 líneas): Selector segmentado de 4 aparatos aeróbicos.
+  - `RowerSection.jsx` (363 líneas): Panel de remo: ventana matutina (regla 6h), Opción A (HIIT + sprints) vs B (NEAT), Damper, SPM, Metros, Split /500m.
+  - `TreadmillSection.jsx` (219 líneas): Panel de caminadora: selector de modo bifásico vs simple y modo simple con accesos rápidos.
+  - `TreadmillDualPhase.jsx` (303 líneas): Protocolo bifásico: Fase A inclinada, Fase B plano y resumen consolidado con desnivel.
+  - `BikeSection.jsx` (135 líneas): Bicicleta estática ergómetro: RPM, resistencia, velocidad, distancia y cálculo en vivo de Watts.
+  - `EllipticalSection.jsx` (103 líneas): Elíptica sólo piernas: banner explicativo, zancadas SPM, resistencia y distancia.
+  - `WatchCalibrationSection.jsx` (323 líneas): Pulsaciones (promedio/máxima), diagnóstico Zona 2 (FATmax), calibración tripartita (ACSM, Reloj, Máquina, Consenso) y notas/setup.
+  - `CardioTimerTab.jsx` (87 líneas): Subpestaña 2 del cronómetro con reloj digital grande, controles e inyección oficial.
+  - `CardioScienceTab.jsx` (136 líneas): Subpestaña 3 con guía fisiológica clínica (AMPK vs mTOR, protocolo bifásico, ecuaciones ACSM).
+- **Calidad y estabilidad:**
+  - `oxlint`: **0 warnings y 0 errores** en todos los 14 archivos tocados (warnings globales del proyecto reducidos de 208 a 185).
+  - `vitest`: 57 tests unitarios en verde (6 suites, ~0.5s).
+  - `vite build`: Compilación limpia de producción en 1.04s con Service Worker PWA generado.
+
 ### Pendientes de la Fase 4:
-- [ ] **Fase 4b:** Dividir `CardioLogger.jsx` (2,110 líneas) · Rama `refactor/cardiologger`.
+- [x] **Fase 4b:** Dividir `CardioLogger.jsx` (2,110 líneas) · Rama `refactor/cardiologger`.
 - [ ] **Fase 4c:** Dividir `ExerciseProgressionChart.jsx` (1,885 líneas) · Rama `refactor/progressionchart`.
 - [ ] **Fase 4d:** Dividir `SetLogger.jsx` (1,463 líneas) · Rama `refactor/setlogger`.
 
@@ -161,3 +188,4 @@ regresiones, setDoc sin merge, código muerto. Veredicto: aprobar / corregir.
 - 2026-11-22 · Fase 2 · Fuente única de verdad con Firestore `persistentLocalCache`, soft-delete universal (`deletedAt`), drenado de outboxes, eliminación de espejos duales en `idb-keyval` y creación del hook universal `useSyncedStore`.
 - 2026-11-22 · Fase 3 · Se configuran oxlint, Vitest con 57 tests unitarios en 6 suites (Firebase e IndexedDB aislados con mocks), CI estricto en GitHub Actions y Cloud Firestore Security Rules multi-tenant con default deny.
 - 2026-11-22 · Fase 4a · Se divide `WorkoutDay.jsx` (de 2,291 líneas a 373 líneas) en 8 hooks en `src/hooks/workout/`, 4 componentes en `src/components/workout/` y 1 helper puro `sessionDataHelper.js`. Ningún archivo supera ~380 líneas. Cero listeners duplicados en `useSyncedStore`. 0 errores y 0 warnings de `oxlint` en los archivos tocados (warnings globales del repo bajan de 246 a 208). 57 tests en verde y build limpio.
+- 2026-11-22 · Fase 4b · Se divide `CardioLogger.jsx` (de 2,110 líneas a 382 líneas) en 3 hooks/helpers en `src/hooks/cardio/` y 8 componentes en `src/components/cardio/`. Ningún archivo supera ~388 líneas. Estabilidad garantizada con `EMPTY_EXERCISE_DATA = {}` por defecto y preservación exacta de `rpe`. 0 errores y 0 warnings de `oxlint` en los archivos tocados (warnings globales del repo bajan de 208 a 185). 57 tests en verde y build limpio.
