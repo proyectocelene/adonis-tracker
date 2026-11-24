@@ -11,6 +11,45 @@
 import { normalizeExerciseName, parseUnifiedCode } from './exerciseMatcher.js';
 
 /**
+ * Perfiles base de maquinaria real en ULTRAGYM (100% en lbs), indexados por unifiedCode.
+ * Se usan exclusivamente como fallback cuando el usuario no tiene un perfil personalizado guardado.
+ */
+export const DEFAULT_ULTRAGYM_MACHINES = Object.freeze({
+  '[PECH-CHEST_PRESS-CONV_01]': { type: 'stack', firstPlate: 20, plateStep: 5, unit: 'lbs' },
+  '[PECH-INC_PRESS-NITRO_01]': { type: 'stack', firstPlate: 20, plateStep: 15, unit: 'lbs' },
+  '[PECH-INC_PRESS-MANC_30]': { type: 'dumbbells', dumbbellStep: 10, unit: 'lbs' },
+  '[PECH-PEC_DECK-STACK_01]': { type: 'stack', firstPlate: 20, plateStep: 10, unit: 'lbs' },
+  '[HOMB-LAT_RAISE-MAQ_01]': { type: 'stack', firstPlate: 15, plateStep: 15, microWeight: 5, unit: 'lbs' },
+  '[HOMB-LAT_RAISE-BEHIND_CABLE_01]': { type: 'stack', firstPlate: 5, plateStep: 5, unit: 'lbs' },
+  '[HOMB-LAT_RAISE-CABLE_01]': { type: 'stack', firstPlate: 5, plateStep: 5, unit: 'lbs' },
+  '[TRIC-OVERHEAD_EXT-CABLE_01]': { type: 'stack', firstPlate: 10, plateStep: 5, unit: 'lbs' },
+  '[TRIC-PUSHDOWN-CABLE_01]': { type: 'stack', firstPlate: 10, plateStep: 5, unit: 'lbs' },
+  '[CUAD-HACK_SQUAT-DISC_01]': { type: 'plates', baseWeight: 0, availablePlates: [5, 10, 25, 45], unit: 'lbs' },
+  '[CUAD-LEG_PRESS-DISC_45_PB]': { type: 'plates', baseWeight: 0, availablePlates: [10, 25, 45], unit: 'lbs' },
+  '[GLUT-LEG_PRESS-HIGH_FEET_45]': { type: 'plates', baseWeight: 0, availablePlates: [10, 25, 45], unit: 'lbs' },
+  '[CUAD-LEG_EXT-STACK_01]': { type: 'stack', firstPlate: 20, plateStep: 15, microWeight: 5, unit: 'lbs' },
+  '[ISQU-LEG_CURL-SEATED_01]': { type: 'stack', firstPlate: 20, plateStep: 10, unit: 'lbs' },
+  '[ISQU-RDL-MANC_01]': { type: 'dumbbells', dumbbellStep: 10, unit: 'lbs' },
+  '[ISQU-RDL-SMITH_01]': { type: 'dumbbells', dumbbellStep: 10, unit: 'lbs' },
+  '[GLUT-BUTT_BLASTER-MAQ_01]': { type: 'stack', firstPlate: 25, plateStep: 12.5, unit: 'lbs' },
+  '[ABDU-ABDUCTOR-STACK_01]': { type: 'stack', firstPlate: 20, plateStep: 15, unit: 'lbs' },
+  '[PANT-CALF_RAISE-MAQ_01]': { type: 'stack', firstPlate: 30, plateStep: 20, unit: 'lbs' },
+  '[ESPA-PULLDOWN-WIDE_01]': { type: 'stack', firstPlate: 30, plateStep: 10, unit: 'lbs' },
+  '[ESPA-PULLDOWN-V_GRIP_01]': { type: 'stack', firstPlate: 30, plateStep: 10, unit: 'lbs' },
+  '[ESPA-MACHINE_ROW-CHEST_SUPP_01]': { type: 'stack', firstPlate: 30, plateStep: 10, unit: 'lbs' },
+  '[ESPA-SEATED_ROW-GIRONDA_01]': { type: 'stack', firstPlate: 30, plateStep: 10, unit: 'lbs' },
+  '[ESPA-PULLOVER-HIGH_CABLE_01]': { type: 'stack', firstPlate: 10, plateStep: 5, unit: 'lbs' },
+  '[HOMB-FACE_PULL-HIGH_CABLE_01]': { type: 'stack', firstPlate: 10, plateStep: 5, unit: 'lbs' },
+  '[BICEP-CABLE_CURL-BAYESIAN_01]': { type: 'stack', firstPlate: 10, plateStep: 5, unit: 'lbs' },
+  '[BICEP-CABLE_CURL-LOW_STRAIGHT_01]': { type: 'stack', firstPlate: 10, plateStep: 5, unit: 'lbs' },
+  '[BICEP-PREACHER_CURL-SCOTT_MAQ_01]': { type: 'stack', firstPlate: 10, plateStep: 5, unit: 'lbs' },
+  '[ABDO-CRUNCH-CABLE_01]': { type: 'stack', firstPlate: 10, plateStep: 5, unit: 'lbs' },
+  '[ABDO-DECLINE_CRUNCH-DISC_01]': { type: 'stack', firstPlate: 10, plateStep: 5, unit: 'lbs' },
+  '[BICEP-HAMMER_CURL-MANC_01]': { type: 'dumbbells', dumbbellStep: 10, unit: 'lbs' },
+  '[BICEP-INCLINE_CURL-MANC_01]': { type: 'dumbbells', dumbbellStep: 10, unit: 'lbs' }
+});
+
+/**
  * Genera la clave base de almacenamiento de una máquina a partir de un ejercicio o nombre.
  */
 export function getMachineStorageKey(exerciseOrName) {
@@ -32,6 +71,8 @@ export function getMachineStorageKey(exerciseOrName) {
  * Obtiene todas las claves posibles (IDs, slugs, códigos unificados, nombres canónicos)
  * para encontrar o guardar configuraciones de máquina sin perder el vínculo.
  */
+const POSITIONAL_SLOT_REGEX = /^d\d+_(e\d+|cardio)/i;
+
 export function getExerciseMachineKeys(exercise) {
   if (!exercise) return ['adonis_machine_default'];
 
@@ -42,22 +83,12 @@ export function getExerciseMachineKeys(exercise) {
   const originalId = exercise.originalId || '';
   const uCode = exercise.unifiedCode || '';
 
-  if (id) {
+  // NUNCA usar slots posicionales de rutina (ej. d1_e2, d4_e2, d6_e3) para evitar cruzar máquinas al reordenar el protocolo
+  if (id && !POSITIONAL_SLOT_REGEX.test(String(id))) {
     keys.add(id);
     keys.add(`adonis_machine_${id}`);
     keys.add(`coachv2_machine_${id}`);
   }
-
-  if (name) {
-    const slug = getMachineStorageKey(name);
-    keys.add(slug);
-    keys.add(`coachv2_profiles_${slug}`);
-    const norm = normalizeExerciseName(name);
-    if (norm) keys.add(getMachineStorageKey(norm));
-  }
-
-  if (originalId) keys.add(originalId);
-  if (originalName) keys.add(getMachineStorageKey(originalName));
 
   if (uCode) {
     keys.add(uCode);
@@ -69,6 +100,17 @@ export function getExerciseMachineKeys(exercise) {
       keys.add(`adonis_machine_${match[1].toLowerCase()}_${match[2].toLowerCase()}`);
     }
   }
+
+  if (name) {
+    const slug = getMachineStorageKey(name);
+    keys.add(slug);
+    keys.add(`coachv2_profiles_${slug}`);
+    const norm = normalizeExerciseName(name);
+    if (norm) keys.add(getMachineStorageKey(norm));
+  }
+
+  if (originalId && !POSITIONAL_SLOT_REGEX.test(String(originalId))) keys.add(originalId);
+  if (originalName) keys.add(getMachineStorageKey(originalName));
 
   return Array.from(keys).filter(Boolean);
 }
@@ -110,7 +152,86 @@ export function sanitizeMachineProfile(raw, defaultName = 'Máquina', index = 1)
     smallestPlate: raw.smallestPlate || 2.5,
     dumbbellStep: parseFloat(raw.dumbbellStep) || 5,
     minIncrement: raw.minIncrement || 5,
+    v44Verified: Boolean(raw.v44Verified),
     updatedAt: raw.updatedAt || new Date().toISOString()
+  };
+}
+
+function getEffectiveMachineStep(cfg) {
+  if (!cfg) return null;
+  if (cfg.type === 'plates') {
+    const plates = Array.isArray(cfg.availablePlates) && cfg.availablePlates.length > 0 ? cfg.availablePlates : [cfg.smallestPlate || 2.5];
+    return Math.min(...plates) * 2;
+  }
+  if (cfg.type === 'dumbbells') {
+    return parseFloat(cfg.dumbbellStep) || parseFloat(cfg.minIncrement) || 5;
+  }
+  return parseFloat(cfg.plateStep) || parseFloat(cfg.step) || parseFloat(cfg.minIncrement) || 10;
+}
+
+/**
+ * Sanitiza perfiles heredados (sin `v44Verified: true`) cuyos parámetros de carga contradicen
+ * a `DEFAULT_ULTRAGYM_MACHINES[unifiedCode]` o no contienen `anchorWeight`, preservando
+ * intactos los campos de estación del usuario (`name`, `floor`, `station`, `seat`, `pad`, `notch`, `notes`).
+ */
+export function resolveEffectiveMachineConfig(machineConfig, exercise = null, anchorWeight = 0) {
+  const uCode = exercise?.unifiedCode;
+  const preset = uCode ? DEFAULT_ULTRAGYM_MACHINES[uCode] : null;
+  if (!machineConfig) {
+    return preset ? { ...preset, isDefault: true, source: 'ultragym_default' } : null;
+  }
+  if (machineConfig.v44Verified === true || !preset) {
+    return machineConfig;
+  }
+
+  const expectedStep = getEffectiveMachineStep(preset);
+  const actualStep = getEffectiveMachineStep(machineConfig);
+  const stepMismatch = actualStep !== expectedStep || machineConfig.type !== preset.type || (parseFloat(machineConfig.microWeight) || 0) !== (parseFloat(preset.microWeight) || 0);
+
+  let anchorMismatch = false;
+  if (anchorWeight > 0) {
+    if (Array.isArray(machineConfig.availableWeights) && machineConfig.availableWeights.length > 0) {
+      const micro = parseFloat(machineConfig.microWeight) || 0;
+      const allPossible = new Set(machineConfig.availableWeights.map(Number));
+      if (micro > 0) {
+        machineConfig.availableWeights.forEach(w => allPossible.add(Number(w) + micro));
+      }
+      if (!allPossible.has(Number(anchorWeight))) {
+        anchorMismatch = true;
+      }
+    } else if (machineConfig.type === 'stack') {
+      const fp = parseFloat(machineConfig.firstPlate) || 10;
+      const st = parseFloat(machineConfig.plateStep) || parseFloat(machineConfig.step) || 10;
+      if (anchorWeight < fp || Math.abs(((anchorWeight - fp) % st)) > 0.01) {
+        anchorMismatch = true;
+      }
+    }
+  }
+
+  if (!stepMismatch && !anchorMismatch) {
+    return machineConfig;
+  }
+
+  return {
+    id: machineConfig.id,
+    name: machineConfig.name,
+    floor: machineConfig.floor,
+    station: machineConfig.station,
+    seat: machineConfig.seat || '',
+    backrest: machineConfig.backrest || '',
+    notch: machineConfig.notch || '',
+    pad: machineConfig.pad || '',
+    notes: machineConfig.notes || '',
+    isDefault: Boolean(machineConfig.isDefault),
+    type: preset.type,
+    firstPlate: preset.firstPlate,
+    plateStep: preset.plateStep,
+    microWeight: preset.microWeight || 0,
+    availablePlates: preset.availablePlates,
+    baseWeight: preset.baseWeight,
+    dumbbellStep: preset.dumbbellStep,
+    unit: preset.unit || 'lbs',
+    source: 'ultragym_sanitized'
   };
 }
 
@@ -209,9 +330,9 @@ export function loadMachineProfilesForExercise(exercise, {
     for (const session of histRev) {
       const detailed = session.exercisesDetailed || [];
       for (const exDet of detailed) {
-        const isMatch = (exDet.id === exercise.id) || 
+        const isMatch = (exercise.unifiedCode && exDet.unifiedCode === exercise.unifiedCode) ||
           (exercise.name && exDet.name && exDet.name.toLowerCase() === exercise.name.toLowerCase()) ||
-          (exercise.unifiedCode && exDet.unifiedCode === exercise.unifiedCode);
+          (exercise.id && !POSITIONAL_SLOT_REGEX.test(String(exercise.id)) && exDet.id === exercise.id);
         if (isMatch && exDet.machineConfig && typeof exDet.machineConfig === 'object') {
           addProfile(exDet.machineConfig, 'workoutHistory');
           if (foundProfiles.length >= 2) break;
@@ -239,9 +360,11 @@ export function loadMachineProfilesForExercise(exercise, {
 
   // Si es ejercicio de mancuernas y no tiene perfiles compatibles, generar perfil de rack de mancuernas
   if (isDumbbell && foundProfiles.length === 0) {
+    const ultragymPreset = exercise?.unifiedCode ? DEFAULT_ULTRAGYM_MACHINES[exercise.unifiedCode] : null;
+    const step = ultragymPreset?.dumbbellStep || 5;
     foundProfiles.push({
       id: 'prof_mancuernas_default',
-      name: 'Mancuernas (Incrementos de 5 lbs)',
+      name: `Mancuernas (Incrementos de ${step} lbs)`,
       floor: 'Planta Baja',
       station: 'Mancuernas',
       seat: '',
@@ -249,8 +372,8 @@ export function loadMachineProfilesForExercise(exercise, {
       notch: '',
       notes: 'Mancuernas de peso libre en rack',
       type: 'dumbbells',
-      dumbbellStep: 5,
-      minIncrement: 5,
+      dumbbellStep: step,
+      minIncrement: step,
       isDefault: true,
       availableWeights: [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100, 105, 110, 115, 120]
     });
@@ -271,36 +394,46 @@ export function loadMachineProfilesForExercise(exercise, {
  * 2. Perfil marcado como default
  * 3. Continuidad con la máquina de la sesión previa
  * 4. Primer perfil disponible
+ * 5. Perfil base ULTRAGYM por unifiedCode (solo si no existe perfil personalizado guardado)
  */
-export function getActiveMachineConfig(profiles = [], exerciseData = {}, previousData = {}) {
+export function getActiveMachineConfig(profiles = [], exerciseData = {}, previousData = {}, exercise = null) {
+  const ultragymDefault = exercise?.unifiedCode && DEFAULT_ULTRAGYM_MACHINES[exercise.unifiedCode]
+    ? { ...DEFAULT_ULTRAGYM_MACHINES[exercise.unifiedCode], isDefault: true, source: 'ultragym_default' }
+    : null;
+
   if (!Array.isArray(profiles) || profiles.length === 0) {
     // Si no hay perfiles registrados pero previousData o exerciseData tienen un objeto de máquina
     if (exerciseData?.machineConfig && typeof exerciseData.machineConfig === 'object') {
-      return sanitizeMachineProfile(exerciseData.machineConfig);
+      return resolveEffectiveMachineConfig(sanitizeMachineProfile(exerciseData.machineConfig), exercise);
     }
     if (previousData?.machineConfig && typeof previousData.machineConfig === 'object') {
-      return sanitizeMachineProfile(previousData.machineConfig);
+      return resolveEffectiveMachineConfig(sanitizeMachineProfile(previousData.machineConfig), exercise);
     }
-    return null;
+    return ultragymDefault;
   }
 
   // 1. Selección de hoy
   if (exerciseData?.machineConfig?.id) {
     const matchToday = profiles.find(p => p.id === exerciseData.machineConfig.id);
-    if (matchToday) return matchToday;
+    if (matchToday) return resolveEffectiveMachineConfig(matchToday, exercise);
+  }
+
+  // Si solo existe el perfil sintético genérico de mancuernas y hay preset ULTRAGYM específico, usar el preset
+  if (profiles.length === 1 && profiles[0]?.id === 'prof_mancuernas_default' && ultragymDefault) {
+    return ultragymDefault;
   }
 
   // 2. Perfil predeterminado
   const defaultProf = profiles.find(p => p.isDefault);
-  if (defaultProf) return defaultProf;
+  if (defaultProf) return resolveEffectiveMachineConfig(defaultProf, exercise);
 
   // 3. Continuidad con la sesión previa (ej. si la sesión pasada fue en Planta Alta, usar Planta Alta)
   if (previousData?.machineConfig?.floor) {
     const matchPrevFloor = profiles.find(p => p.floor?.toLowerCase() === previousData.machineConfig.floor.toLowerCase());
-    if (matchPrevFloor) return matchPrevFloor;
+    if (matchPrevFloor) return resolveEffectiveMachineConfig(matchPrevFloor, exercise);
   }
 
-  return profiles[0];
+  return resolveEffectiveMachineConfig(profiles[0], exercise);
 }
 
 /**
@@ -320,17 +453,22 @@ export function saveMachineConfigAndProfiles({
   const keys = getExerciseMachineKeys(exercise);
   const slugKey = getMachineStorageKey(exercise);
 
+  const verifiedConfig = configData ? { ...configData, v44Verified: true } : configData;
+  const verifiedProfiles = Array.isArray(updatedProfiles)
+    ? updatedProfiles.map(p => (p && typeof p === 'object' ? { ...p, v44Verified: true } : p))
+    : updatedProfiles;
+
   // 1. Notificar al estado de la sesión actual para que todayWorkoutData lo tenga de inmediato
   if (onUpdateExerciseMeta) {
-    onUpdateExerciseMeta({ machineConfig: configData });
+    onUpdateExerciseMeta({ machineConfig: verifiedConfig });
   }
 
   // 2. Persistir lista de perfiles en coachv2_machine_profiles (Firestore + IndexedDB)
-  if (setGlobalMachineProfiles && Array.isArray(updatedProfiles)) {
+  if (setGlobalMachineProfiles && Array.isArray(verifiedProfiles)) {
     setGlobalMachineProfiles(prev => {
       const next = { ...(prev || {}) };
       keys.forEach(k => {
-        next[k] = updatedProfiles;
+        next[k] = verifiedProfiles;
       });
       return next;
     });
@@ -340,9 +478,9 @@ export function saveMachineConfigAndProfiles({
   if (setGlobalMachineConfigs) {
     setGlobalMachineConfigs(prev => {
       const next = { ...(prev || {}) };
-      if (configData) {
+      if (verifiedConfig) {
         keys.forEach(k => {
-          next[k] = configData;
+          next[k] = verifiedConfig;
         });
       } else {
         keys.forEach(k => {
@@ -356,12 +494,12 @@ export function saveMachineConfigAndProfiles({
   // 4. Caché de compatibilidad offline en localStorage
   if (typeof window !== 'undefined' && window.localStorage) {
     try {
-      if (Array.isArray(updatedProfiles) && updatedProfiles.length > 0) {
-        const serializedList = JSON.stringify(updatedProfiles);
+      if (Array.isArray(verifiedProfiles) && verifiedProfiles.length > 0) {
+        const serializedList = JSON.stringify(verifiedProfiles);
         localStorage.setItem(`coachv2_profiles_${slugKey}`, serializedList);
       }
-      if (configData) {
-        const serializedConfig = JSON.stringify(configData);
+      if (verifiedConfig) {
+        const serializedConfig = JSON.stringify(verifiedConfig);
         localStorage.setItem(slugKey, serializedConfig);
         if (exercise.id) {
           localStorage.setItem(`adonis_machine_${exercise.id}`, serializedConfig);

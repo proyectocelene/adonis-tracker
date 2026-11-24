@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useSyncedStore } from '../useSyncedStore';
-import { scientificProtocol } from '../../data/scientificProtocol';
+import { scientificProtocol, PROTOCOL_VERSION } from '../../data/scientificProtocol';
 import { isSplitOverrideActive, distributePendingExercisesAcrossDays } from '../../utils/adaptiveRoutineEngine';
 import { detectUnfinishedExercisesFromPreviousSession } from '../../utils/pendingExercisesDetector';
 import { executeCleanSlate } from '../../services/cleanSlateService';
@@ -16,7 +16,8 @@ export function useRoutineConfig({
   modal
 }) {
   // 1. Stores sincronizados en Firestore
-  const [customRoutine, setCustomRoutine] = useSyncedStore('coachv2_custom_routine', null);
+  const [customRoutine, setCustomRoutine, isCustomRoutineLoading] = useSyncedStore('coachv2_custom_routine', null);
+  const [protocolVersion, setProtocolVersion, isProtocolVerLoading] = useSyncedStore('coachv2_protocol_version', null);
   const [mesocycleStartDate, setMesocycleStartDate] = useSyncedStore('coachv2_mesocycle_start', null);
   const [customExercisesMap, setCustomExercisesMap] = useSyncedStore('coachv2_custom_day_exercises', {});
   const [swappedExercisesMap, setSwappedExercisesMap] = useSyncedStore('coachv2_swapped_exercises', {});
@@ -24,6 +25,17 @@ export function useRoutineConfig({
   const [exerciseOrderMap, setExerciseOrderMap] = useSyncedStore('coachv2_exercise_orders', {});
   const [weekSplitOverride, setWeekSplitOverride] = useSyncedStore('coachv2_week_split_override', null);
   const [dismissedPendingAlerts, setDismissedPendingAlerts] = useSyncedStore('coachv2_dismissed_pending_alerts', {});
+
+  // Migración segura de versión del protocolo (sin tocar history ni coachv2_machine_configs)
+  useEffect(() => {
+    if (isCustomRoutineLoading || isProtocolVerLoading) return;
+    if (protocolVersion !== PROTOCOL_VERSION) {
+      if (customRoutine && Array.isArray(customRoutine) && customRoutine.length > 0) {
+        setCustomRoutine({ __cleared: true, clearedAt: new Date().toISOString(), __approvedDrop: true });
+      }
+      setProtocolVersion(PROTOCOL_VERSION);
+    }
+  }, [isCustomRoutineLoading, isProtocolVerLoading, protocolVersion, customRoutine, setCustomRoutine, setProtocolVersion]);
 
   // 2. Estado local de diferimiento temporal en la sesión
   const [deferredExIds, setDeferredExIds] = useState([]);

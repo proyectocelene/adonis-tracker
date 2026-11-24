@@ -1,4 +1,4 @@
-import { calculate1RM } from '../../hooks/useWorkoutCalculations.js';
+import { calculate1RM, isEpleyReliable } from '../../hooks/useWorkoutCalculations.js';
 import { matchExercise } from '../exerciseMatcher.js';
 
 /**
@@ -104,6 +104,15 @@ export function processHistoricalOccurrences(rawOccurrences, dateCounts) {
     const srcName = occ.sourceName || occ.matchedName || '';
     const { stationType, stationIcon, stationLabel } = detectStationType(srcName);
 
+    const workingList = occ.workingSets || occ.detailedSets || [];
+    const reliable1RMValues = workingList
+      .filter(s => !s.isWarmup && isEpleyReliable(s.reps) && (parseFloat(s.weight) || 0) > 0)
+      .map(s => calculate1RM(s.weight, s.reps))
+      .filter(v => v > 0);
+    const reliableEst1RM = reliable1RMValues.length > 0
+      ? Math.max(...reliable1RMValues)
+      : (isEpleyReliable(occ.bestReps) && peakW > 0 ? calculate1RM(peakW, occ.bestReps) : null);
+
     return {
       date: uniqueKey,
       displayDate: baseLabel,
@@ -134,7 +143,8 @@ export function processHistoricalOccurrences(rawOccurrences, dateCounts) {
       detailedSets: occ.detailedSets || [],
       workingSets: occ.workingSets || occ.detailedSets || [],
       topSet: occ.topSet,
-      est1RM: Math.round(occ.est1RM || calculate1RM(peakW, occ.bestReps)),
+      est1RM: reliableEst1RM,
+      isEpleyReliable: reliableEst1RM !== null,
       volume: effectiveTonnage,
       isDeloadSession: Boolean(occ.isDeloadSession),
       isProjected: false,
@@ -291,7 +301,10 @@ export function extractTodayWorkoutPoint(todayWorkoutData, exercise, rawOccurren
     warmupCount: allTodaySets.length - workingTodaySets.length,
     detailedSets: allTodaySets,
     workingSets: workingTodaySets,
-    est1RM: Math.round(calculate1RM(todayMaxW, bestRepsAtPeakToday)),
+    est1RM: (() => {
+      const reliableToday = workingTodaySets.filter(s => isEpleyReliable(s.reps) && s.weight > 0);
+      return reliableToday.length > 0 ? Math.max(...reliableToday.map(s => calculate1RM(s.weight, s.reps))) : null;
+    })(),
     volume: Math.round(todayTonnage),
     isDeloadSession: Boolean(isDeloadMode),
     isProjected: false,

@@ -1,7 +1,21 @@
+import { resolveEffectiveMachineConfig } from '../utils/machineManager.js';
+
 /**
- * Hook utilitario con funciones matemáticas y algoritmos científicos para COACH V2.
- * Desacopla la lógica de cálculo y recomendaciones biomecánicas de los componentes visuales.
+ * Garantiza invariante estricto en perSetTargets:
+ * 1) S1.weight >= S2.weight >= ...
+ * 2) Si target[i].weight === target[i-1].weight, entonces target[i].reps <= target[i-1].reps.
  */
+function enforceMonotonicPerSetTargets(targets = []) {
+  for (let i = 1; i < targets.length; i++) {
+    if (targets[i].weight > targets[i - 1].weight) {
+      targets[i].weight = targets[i - 1].weight;
+    }
+    if (targets[i].weight === targets[i - 1].weight && targets[i].reps > targets[i - 1].reps) {
+      targets[i].reps = targets[i - 1].reps;
+    }
+  }
+  return targets;
+}
 
 /**
  * Calcula el 1RM estimado usando la fórmula de Epley: W * (1 + r / 30)
@@ -15,6 +29,29 @@ export function calculate1RM(weight, reps) {
   if (w <= 0 || r <= 0) return 0;
   if (r === 1) return Math.round(w);
   return Math.round(w * (1 + r / 30));
+}
+
+/**
+ * Indica si el rango de repeticiones es confiable para la ecuación de Epley (reps <= 15).
+ * @param {number|string} reps
+ * @returns {boolean}
+ */
+export function isEpleyReliable(reps) {
+  const r = parseFloat(reps) || 0;
+  return r > 0 && r <= 15;
+}
+
+/**
+ * Calcula el 1RM estimado junto con la bandera de confiabilidad de Epley (reps <= 15).
+ * @param {number|string} weight
+ * @param {number|string} reps
+ * @returns {{ est1RM: number, isEpleyReliable: boolean }}
+ */
+export function calculate1RMWithMeta(weight, reps) {
+  return {
+    est1RM: calculate1RM(weight, reps),
+    isEpleyReliable: isEpleyReliable(reps)
+  };
 }
 
 /**
@@ -284,7 +321,56 @@ export function getLoadRecommendation(targetRepsStr = '10-12', previousData = {}
  * - Si cayó en fatiga prematura / carga excesiva: Ajuste para Hipertrofia.
  * - Si consolidó: Mantener peso ancla en el rango objetivo.
  */
-export function getUnifiedExerciseTarget(previousData = {}, targetRepsStr = "10-12", machineConfig = null) {
+/**
+ * Limpia y ordena series efectivas previas:
+ * - Ignora series con weight <= 0, reps <= 0, setNum <= 0, isWarmup o completed === false.
+ * - Filtra series de aproximación/feeder registradas erróneamente como S1
+ *   (setNum === 1 cuando weight < maxW y (weight < maxW * 0.85 || reps <= 6)).
+ * - Ordena descendentemente por (weight, reps) para que S1 >= S2 >= S3 siempre.
+ */
+export function extractCleanWorkingSets(previousData = {}) {
+  const rawSets = [];
+  if (!previousData || typeof previousData !== 'object') return rawSets;
+
+  Object.keys(previousData).forEach(k => {
+    const num = parseInt(k, 10);
+    if (!isNaN(num) && num > 0) {
+      const s = previousData[k];
+      if (!s || s.completed === false || s.isWarmup === true) return;
+      const w = parseFloat(s.weight) || 0;
+      const r = parseFloat(s.reps) || (
+        (s.repsL !== undefined || s.repsR !== undefined)
+          ? Math.max(parseFloat(s.repsL) || 0, parseFloat(s.repsR) || 0)
+          : 0
+      );
+      if (w > 0 && r > 0) {
+        rawSets.push({
+          setNum: num,
+          weight: w,
+          reps: r,
+          repsL: s.repsL !== undefined ? parseFloat(s.repsL) : undefined,
+          repsR: s.repsR !== undefined ? parseFloat(s.repsR) : undefined,
+          rpe: parseFloat(s.rpe) || 8,
+          unit: s.unit || 'lbs'
+        });
+      }
+    }
+  });
+
+  if (rawSets.length === 0) return rawSets;
+
+  const maxW = Math.max(...rawSets.map(s => s.weight));
+  const filtered = rawSets.filter(s => {
+    const isErroneousFeederS1 = s.setNum === 1 && s.weight < maxW && (s.weight < maxW * 0.85 || s.reps <= 6);
+    return !isErroneousFeederS1;
+  });
+
+  const workingSets = filtered.length > 0 ? filtered : rawSets;
+  workingSets.sort((a, b) => (b.weight - a.weight) || (b.reps - a.reps) || (a.setNum - b.setNum));
+  return workingSets;
+}
+
+export function getUnifiedExerciseTarget(previousData = {}, targetRepsStr = "10-12", machineConfig = null, options = {}) {
   let minReps = 8;
   let maxReps = 12;
   if (typeof targetRepsStr === 'string' && targetRepsStr.includes('-')) {
@@ -296,39 +382,26 @@ export function getUnifiedExerciseTarget(previousData = {}, targetRepsStr = "10-
     maxReps = minReps;
   }
 
-  const sets = [];
-  if (previousData && typeof previousData === 'object') {
-    Object.keys(previousData).forEach(k => {
-      const num = parseInt(k, 10);
-      if (!isNaN(num) && num > 0) {
-        const s = previousData[k];
-        if (s && (s.completed || s.weight)) {
-          sets.push({
-            setNum: num,
-            weight: parseFloat(s.weight) || 0,
-            reps: parseFloat(s.reps) || 0,
-            rpe: parseFloat(s.rpe) || 8,
-            unit: s.unit || 'lbs'
-          });
-        }
-      }
-    });
-  }
-
-  sets.sort((a, b) => a.setNum - b.setNum);
+  const sets = extractCleanWorkingSets(previousData);
+  const rawMaxW = sets.length > 0 ? Math.max(...sets.map(s => s.weight)) : 0;
+  const effectiveMachineConfig = options?.exercise
+    ? resolveEffectiveMachineConfig(machineConfig, options.exercise, rawMaxW)
+    : machineConfig;
 
   // Determinar incremento alcanzable según la máquina real
   let increment = 2.5;
-  if (machineConfig) {
-    if (machineConfig.type === 'plates' && machineConfig.availablePlates && machineConfig.availablePlates.length > 0) {
-      const smallest = Math.min(...machineConfig.availablePlates);
+  if (effectiveMachineConfig) {
+    if (effectiveMachineConfig.type === 'plates' && effectiveMachineConfig.availablePlates && effectiveMachineConfig.availablePlates.length > 0) {
+      const smallest = Math.min(...effectiveMachineConfig.availablePlates);
       increment = smallest * 2;
-    } else if (machineConfig.plateStep) {
-      increment = parseFloat(machineConfig.plateStep) || 5;
-    } else if (machineConfig.step) {
-      increment = parseFloat(machineConfig.step) || 5;
-    } else if (machineConfig.minIncrement) {
-      increment = parseFloat(machineConfig.minIncrement) || 2.5;
+    } else if (effectiveMachineConfig.plateStep) {
+      increment = parseFloat(effectiveMachineConfig.plateStep) || 5;
+    } else if (effectiveMachineConfig.step) {
+      increment = parseFloat(effectiveMachineConfig.step) || 5;
+    } else if (effectiveMachineConfig.minIncrement) {
+      increment = parseFloat(effectiveMachineConfig.minIncrement) || 2.5;
+    } else if (effectiveMachineConfig.dumbbellStep) {
+      increment = parseFloat(effectiveMachineConfig.dumbbellStep) || 5;
     }
   } else {
     const maxVal = sets.length > 0 ? Math.max(...sets.map(s => s.weight)) : 0;
@@ -347,6 +420,7 @@ export function getUnifiedExerciseTarget(previousData = {}, targetRepsStr = "10-
       badgeText: '🎯 Inicial',
       note: 'Busca un peso de trabajo que te sitúe en RPE 8 (2 repeticiones en reserva).',
       anchorWeight: 0,
+      perSetTargets: [],
       increment
     };
   }
@@ -356,14 +430,12 @@ export function getUnifiedExerciseTarget(previousData = {}, targetRepsStr = "10-
   const minW = weights.length > 0 ? Math.min(...weights) : 0;
   const spread = maxW - minW;
 
-  const heavySets = sets.filter(s => s.weight >= (maxW * 0.80) && s.weight > 0);
   const validSets = sets.filter(s => s.weight > 0 && s.reps > 0);
   const avgReps = validSets.length > 0 
     ? (validSets.reduce((sum, s) => sum + s.reps, 0) / validSets.length)
     : 0;
 
-  // El peso ancla real debe ser un peso real ejecutado por el usuario en sus series de trabajo,
-  // nunca un promedio sintético (ej. promediar 125 y 140 dando 132.5 -> 135 lbs, peso que nunca se cargó).
+  // El peso ancla real debe ser un peso real ejecutado por el usuario en sus series de trabajo
   const topWeightSets = sets.filter(s => s.weight === maxW && s.weight > 0);
   let effectiveAnchor = maxW;
 
@@ -376,18 +448,57 @@ export function getUnifiedExerciseTarget(previousData = {}, targetRepsStr = "10-
     }
   }
 
-  const anchorWeight = roundToAttainableWeight(effectiveAnchor, machineConfig);
+  const anchorWeight = effectiveAnchor;
+
+  // 0. Regla de Inactividad (>21 días sin entrenar este ejercicio)
+  const prevDateRaw = previousData?.date || previousData?.dateRaw || previousData?.timestamp;
+  if (prevDateRaw && anchorWeight > 0) {
+    const refMs = options?.referenceDate ? new Date(options.referenceDate).getTime() : Date.now();
+    const prevMs = new Date(prevDateRaw).getTime();
+    const daysSinceLast = (!isNaN(refMs) && !isNaN(prevMs)) ? (refMs - prevMs) / (1000 * 60 * 60 * 24) : 0;
+    if (daysSinceLast > 21) {
+      const perSetTargets = sets.map((_, idx) => ({
+        setNum: idx + 1,
+        weight: anchorWeight,
+        reps: minReps
+      }));
+      return {
+        hasData: true,
+        targetWeight: anchorWeight,
+        targetReps: `${minReps}-${maxReps}`,
+        minReps,
+        maxReps,
+        strategyType: 'reactivation',
+        headline: `Reactivación (${Math.floor(daysSinceLast)}d): Mantén ${anchorWeight} lbs × ${minReps}-${maxReps} reps`,
+        badgeText: '🔄 Reactivación',
+        note: `Han pasado ${Math.floor(daysSinceLast)} días desde tu última sesión. Mantén ${anchorWeight} lbs para readaptar el tejido antes de subir carga.`,
+        anchorWeight,
+        canProgressWeight: false,
+        isExcessiveLoad: false,
+        spread,
+        isSpreadHigh: spread >= 15 && (spread / (anchorWeight || 1)) > 0.15,
+        daysSinceLast: Math.floor(daysSinceLast),
+        perSetTargets,
+        increment
+      };
+    }
+  }
 
   // 1. Detectar si la carga fue EXCESIVA para hipertrofia en la sesión previa
-  const severelyLowRepsThreshold = Math.max(3, minReps - 2);
+  const severelyLowRepsThreshold = Math.max(3, minReps - 3);
   const severelyLowSets = validSets.filter(s => s.reps <= severelyLowRepsThreshold);
   const isExcessiveLoad = validSets.length >= 2 && (
-    avgReps < (minReps - 1) ||
+    avgReps < (minReps - 1.5) ||
     (severelyLowSets.length >= Math.min(2, Math.ceil(validSets.length * 0.5)))
   );
 
   if (isExcessiveLoad && anchorWeight > 0) {
     const adjustedLoad = getNextAttainableWeight(anchorWeight, machineConfig, 'down');
+    const perSetTargets = sets.map((_, idx) => ({
+      setNum: idx + 1,
+      weight: adjustedLoad,
+      reps: minReps
+    }));
     return {
       hasData: true,
       targetWeight: adjustedLoad,
@@ -404,65 +515,136 @@ export function getUnifiedExerciseTarget(previousData = {}, targetRepsStr = "10-
       canProgressWeight: false,
       spread,
       isSpreadHigh: spread >= 15 && (spread / (anchorWeight || 1)) > 0.15,
+      perSetTargets,
       increment
     };
   }
 
-  // 2. Evaluar si dominó el rango para SOBRECARGA PROGRESIVA
-  // Para subir peso, debe haber dominado el techo de repeticiones (maxReps) en las series DE ESE PESO ANCLA.
-  const anchorSets = sets.filter(s => s.weight === anchorWeight && s.reps > 0);
-  const passedAnchorSets = anchorSets.filter(s => s.reps >= maxReps && s.rpe <= 8.5);
-  const canProgressWeight = anchorSets.length >= 2 
-    ? (passedAnchorSets.length >= Math.ceil(anchorSets.length * 0.6))
-    : (passedAnchorSets.length === 1 && anchorSets[0].reps >= maxReps + 2 && anchorSets[0].rpe <= 7.5);
+  // 2. Doble Progresión diferenciada por tamaño de salto (jumpPct = deltaW / anchorWeight)
+  const nextUp = getNextAttainableWeight(anchorWeight, effectiveMachineConfig, 'up');
+  const jumpPct = anchorWeight > 0 ? (nextUp - anchorWeight) / anchorWeight : 0;
+  const hasMixedWeights = maxW > minW && minW > 0;
 
-  if (canProgressWeight) {
-    const nextW = getNextAttainableWeight(anchorWeight, machineConfig, 'up');
-    const realIncrement = Math.round((nextW - anchorWeight) * 10) / 10;
+  if (jumpPct >= 0.08) {
+    // DOBLE PROGRESIÓN DINÁMICA POR SERIE (saltos grandes >= 8%)
+    const perSetTargets = enforceMonotonicPerSetTargets(sets.map((s, idx) => {
+      const realSetW = s.weight;
+      if (s.reps >= maxReps && s.rpe < 9.5) {
+        const setNextUp = getNextAttainableWeight(realSetW, effectiveMachineConfig, 'up');
+        return { setNum: idx + 1, weight: setNextUp, reps: minReps };
+      }
+      return {
+        setNum: idx + 1,
+        weight: realSetW,
+        reps: Math.min(maxReps, Math.round(s.reps) + 1)
+      };
+    }));
+
+    const topTargetWeight = perSetTargets[0]?.weight || anchorWeight;
+    const anyProgressed = perSetTargets.some(t => t.weight > anchorWeight);
+    const realIncrement = Math.round((topTargetWeight - anchorWeight) * 10) / 10;
+
+    if (anyProgressed) {
+      return {
+        hasData: true,
+        targetWeight: topTargetWeight,
+        targetReps: `${minReps}-${maxReps}`,
+        minReps,
+        maxReps,
+        strategyType: 'progression',
+        progressionMode: 'dynamic',
+        jumpPct,
+        headline: `¡Progresión Dinámica!: S1 a ${topTargetWeight} lbs × ${minReps} reps`,
+        badgeText: realIncrement > 0 ? `⚡ +${realIncrement} lbs` : '⚡ Subir',
+        note: `Salto grande (${Math.round(jumpPct * 100)}%). Las series que alcanzaron ${maxReps} reps suben a ${topTargetWeight} lbs × ${minReps} reps; el resto consolida +1 rep.`,
+        anchorWeight,
+        canProgressWeight: true,
+        isExcessiveLoad: false,
+        spread,
+        isSpreadHigh: spread >= 15 && (spread / (anchorWeight || 1)) > 0.15,
+        perSetTargets,
+        increment: realIncrement || Math.round((nextUp - anchorWeight) * 10) / 10
+      };
+    }
+
     return {
       hasData: true,
-      targetWeight: nextW,
+      targetWeight: anchorWeight,
+      targetReps: `${minReps}-${maxReps}`,
+      minReps,
+      maxReps,
+      strategyType: 'consolidation',
+      progressionMode: 'dynamic',
+      jumpPct,
+      headline: `Meta Hoy: ${anchorWeight} lbs × ${minReps}-${maxReps} reps`,
+      badgeText: '🎯 Consolidar',
+      note: `Salto grande (${Math.round(jumpPct * 100)}%). Consolida ${anchorWeight} lbs buscando +1 rep por serie hasta alcanzar ${maxReps} reps.`,
+      anchorWeight,
+      canProgressWeight: false,
+      isExcessiveLoad: false,
+      spread,
+      isSpreadHigh: spread >= 15 && (spread / (anchorWeight || 1)) > 0.15,
+      perSetTargets,
+      increment: Math.round((nextUp - anchorWeight) * 10) / 10
+    };
+  }
+
+  // DOBLE PROGRESIÓN CLÁSICA (saltos pequeños < 8%)
+  const anchorSets = sets.filter(s => s.weight === anchorWeight && s.reps > 0);
+  const passedAnchorSets = anchorSets.filter(s => s.reps >= maxReps && s.rpe < 9.5);
+  const canProgressWeight = anchorSets.length > 0 && passedAnchorSets.length >= Math.ceil(anchorSets.length * 0.6);
+
+  if (canProgressWeight) {
+    const realIncrement = Math.round((nextUp - anchorWeight) * 10) / 10;
+    const perSetTargets = sets.map((_, idx) => ({
+      setNum: idx + 1,
+      weight: nextUp,
+      reps: minReps
+    }));
+    return {
+      hasData: true,
+      targetWeight: nextUp,
       targetReps: `${minReps}-${maxReps}`,
       minReps,
       maxReps,
       strategyType: 'progression',
-      headline: `¡Sobrecarga Progresiva!: Sube a ${nextW} lbs × ${minReps}-${maxReps} reps`,
+      progressionMode: 'classic',
+      jumpPct,
+      headline: `¡Sobrecarga Progresiva!: Sube a ${nextUp} lbs × ${minReps}-${maxReps} reps`,
       badgeText: realIncrement > 0 ? `⚡ +${realIncrement} lbs` : '⚡ Subir',
-      note: `¡Dominaste ${maxReps} reps a ${anchorWeight} lbs en la sesión anterior! Sube a ${nextW} lbs hoy para mantener la tensión mecánica óptima.`,
+      note: `¡Dominaste ${maxReps} reps a ${anchorWeight} lbs en la sesión anterior! Sube a ${nextUp} lbs hoy para mantener la tensión mecánica óptima.`,
       anchorWeight,
       canProgressWeight: true,
       isExcessiveLoad: false,
       spread,
       isSpreadHigh: spread >= 15 && (spread / (anchorWeight || 1)) > 0.15,
+      perSetTargets,
       increment: realIncrement
     };
   }
 
-  // 3. Detectar si hubo series de aproximación/calentamiento o variación alta
-  const isS1RampUp = sets.length >= 2 && sets[0].weight > 0 && sets[0].weight <= anchorWeight * 0.85;
+  // 3. Detectar si hubo caída por fatiga
+  const isS1RampUp = false;
   const lastSet = sets[sets.length - 1];
   const isFatigueDrop = sets.length >= 3 && lastSet && lastSet.reps > 0 && lastSet.reps <= minReps * 0.75;
 
-  // 4. Progresión en repeticiones / Consolidación de peso ancla
-  let targetRepsDisplay = `${minReps}-${maxReps}`;
-
+  // 4. Consolidación de peso ancla (si hay pesos mixtos maxW > minW, mantener cada serie en su peso real)
+  const targetRepsDisplay = `${minReps}-${maxReps}`;
   let noteText = `Consolida ${anchorWeight} lbs en rango de hipertrofia (${minReps}-${maxReps} reps) buscando RPE 8.`;
   let strategyType = 'consolidation';
   let badgeText = '🎯 Consolidar';
 
-  if (isS1RampUp && isFatigueDrop) {
-    strategyType = 'unify_ramp';
-    badgeText = '🎯 Unificar';
-    noteText = `En la sesión previa S1/S2 fueron a menor carga (${sets[0].weight} lbs) y S${sets.length} cayó a ${lastSet.reps} reps por fatiga. Hoy unificamos a ${anchorWeight} lbs buscando ${minReps}-${maxReps} reps consistentes con buen descanso.`;
-  } else if (isS1RampUp) {
-    strategyType = 'unify_ramp';
-    badgeText = '🎯 Unificar';
-    noteText = `En la sesión anterior las series iniciales fueron ligeras (${sets[0].weight} lbs). Hoy unificamos todas las series a tu peso ancla de ${anchorWeight} lbs.`;
-  } else if (isFatigueDrop) {
+  if (isFatigueDrop) {
     strategyType = 'fatigue_management';
     badgeText = '⏱️ +Descanso';
     noteText = `Mantén ${anchorWeight} lbs. En la serie final previa caíste a ${lastSet.reps} reps; añade 45-60s de descanso para mantener repeticiones en ${minReps}-${maxReps}.`;
   }
+
+  const perSetTargets = enforceMonotonicPerSetTargets(sets.map((s, idx) => ({
+    setNum: idx + 1,
+    weight: hasMixedWeights ? s.weight : anchorWeight,
+    reps: Math.min(maxReps, Math.round(s.reps) + 1)
+  })));
 
   return {
     hasData: true,
@@ -471,9 +653,9 @@ export function getUnifiedExerciseTarget(previousData = {}, targetRepsStr = "10-
     minReps,
     maxReps,
     strategyType,
-    headline: strategyType === 'unify_ramp' 
-      ? `Unificar Carga: ${anchorWeight} lbs × ${targetRepsDisplay} reps`
-      : `Meta Hoy: ${anchorWeight} lbs × ${targetRepsDisplay} reps`,
+    progressionMode: hasMixedWeights ? 'dynamic' : 'classic',
+    jumpPct,
+    headline: `Meta Hoy: ${anchorWeight} lbs × ${targetRepsDisplay} reps`,
     badgeText,
     note: noteText,
     anchorWeight,
@@ -483,6 +665,7 @@ export function getUnifiedExerciseTarget(previousData = {}, targetRepsStr = "10-
     isFatigueDrop,
     spread,
     isSpreadHigh: spread >= 15 && (spread / (anchorWeight || 1)) > 0.15,
+    perSetTargets,
     increment
   };
 }
@@ -491,29 +674,9 @@ export function getUnifiedExerciseTarget(previousData = {}, targetRepsStr = "10-
  * Motor de Diagnóstico Integral del Ejercicio.
  * Analiza TODAS las series previas juntas para generar la meta unificada y recomendaciones consistentes.
  */
-export function analyzeExercisePerformance(previousData = {}, targetRepsStr = "10-12", machineConfig = null) {
-  const unifiedTarget = getUnifiedExerciseTarget(previousData, targetRepsStr, machineConfig);
-
-  const sets = [];
-  Object.keys(previousData || {}).forEach(k => {
-    const num = parseInt(k, 10);
-    if (!isNaN(num) && num > 0) {
-      const s = previousData[k];
-      if (s && (s.completed || s.weight)) {
-        sets.push({
-          setNum: num,
-          weight: parseFloat(s.weight) || 0,
-          reps: parseFloat(s.reps) || 0,
-          repsL: s.repsL ? parseFloat(s.repsL) : undefined,
-          repsR: s.repsR ? parseFloat(s.repsR) : undefined,
-          rpe: parseFloat(s.rpe) || 8,
-          unit: s.unit || 'lbs'
-        });
-      }
-    }
-  });
-
-  sets.sort((a, b) => a.setNum - b.setNum);
+export function analyzeExercisePerformance(previousData = {}, targetRepsStr = "10-12", machineConfig = null, options = {}) {
+  const unifiedTarget = getUnifiedExerciseTarget(previousData, targetRepsStr, machineConfig, options);
+  const sets = extractCleanWorkingSets(previousData);
 
   if (!unifiedTarget.hasData) {
     return {
@@ -614,9 +777,20 @@ export function getNextAttainableWeight(currentWeight, machineConfig = null, dir
       allPossible = Array.from(new Set(allPossible)).sort((a, b) => a - b);
 
       if (direction === 'up') {
+        const configuredStep = parseFloat(machineConfig.plateStep) || parseFloat(machineConfig.step) || parseFloat(machineConfig.dumbbellStep) || parseFloat(machineConfig.minIncrement) || 0;
         const next = allPossible.find(pw => pw > w + 0.1);
-        if (next !== undefined) return next;
-        const lastStep = allPossible.length >= 2 ? (allPossible[allPossible.length - 1] - allPossible[allPossible.length - 2]) : 10;
+        if (next !== undefined) {
+          const producesOddHalf = Number.isInteger(w) && configuredStep > 0 && Number.isInteger(configuredStep) && !Number.isInteger(next);
+          if (!producesOddHalf && next > w) {
+            return next;
+          }
+          if (configuredStep > 0) {
+            return w + configuredStep;
+          }
+        }
+        const lastStep = configuredStep > 0
+          ? configuredStep
+          : (allPossible.length >= 2 ? (allPossible[allPossible.length - 1] - allPossible[allPossible.length - 2]) : 10);
         return w + lastStep;
       } else {
         const lower = allPossible.filter(pw => pw < w - 0.1);
@@ -775,16 +949,23 @@ export function getOverloadTarget(
   fallbackWeight = null, 
   fallbackReps = null,
   currentExerciseData = null,
-  isDeloadMode = false
+  isDeloadMode = false,
+  options = {}
 ) {
-  const analysis = analyzeExercisePerformance(previousData, targetRepsStr, machineConfig);
-  const unified = analysis.unifiedTarget || getUnifiedExerciseTarget(previousData, targetRepsStr, machineConfig);
+  const analysis = analyzeExercisePerformance(previousData, targetRepsStr, machineConfig, options);
+  const unified = analysis.unifiedTarget || getUnifiedExerciseTarget(previousData, targetRepsStr, machineConfig, options);
 
   const minReps = unified.minReps || 8;
   const maxReps = unified.maxReps || 12;
-  const rawPlannedWeight = unified.hasData && unified.targetWeight > 0
-    ? unified.targetWeight
-    : roundToAttainableWeight(fallbackWeight || 0, machineConfig);
+  const setTarget = Array.isArray(unified.perSetTargets)
+    ? unified.perSetTargets.find(t => t.setNum === setNum)
+    : null;
+  const plannedReps = setTarget?.reps || minReps;
+  const rawPlannedWeight = setTarget?.weight > 0
+    ? setTarget.weight
+    : (unified.hasData && unified.targetWeight > 0
+      ? unified.targetWeight
+      : roundToAttainableWeight(fallbackWeight || 0, machineConfig));
 
   // Ajuste por Deload (80% de carga habitual para disipar fatiga articular y neural)
   const plannedWeight = isDeloadMode && rawPlannedWeight > 0
@@ -827,13 +1008,15 @@ export function getOverloadTarget(
 
     return {
       suggestedWeight: plannedWeight,
-      suggestedReps: minReps,
+      suggestedReps: plannedReps,
+      perSetTargets: unified.perSetTargets || [],
+      strategyType: unified.strategyType,
       targetText: isDeloadMode 
         ? `Deload 80%: ${plannedWeight} lbs × ${minReps} reps (RIR 3-4)` 
-        : `Meta: ${plannedWeight} lbs × ${unified.targetReps || `${minReps}-${maxReps}`} reps`,
+        : `Meta: ${plannedWeight} lbs × ${setTarget ? `${plannedReps}` : (unified.targetReps || `${minReps}-${maxReps}`)} reps`,
       shortText: isDeloadMode
         ? `Deload: ${plannedWeight}# (80%)`
-        : `Meta: ${plannedWeight}# × ${unified.targetReps || `${minReps}-${maxReps}`}r`,
+        : `Meta: ${plannedWeight}# × ${setTarget ? `${plannedReps}` : (unified.targetReps || `${minReps}-${maxReps}`)}r`,
       note: setNote,
       isProgression: !isDeloadMode && unified.canProgressWeight,
       isLoadAdjustment: unified.isExcessiveLoad,
@@ -971,6 +1154,8 @@ export function calculateSessionLoadStats(sets = []) {
 
 // Re-exportar gestor maestro de máquinas y calibraciones (Planta Alta / Planta Baja / Multi-Perfiles)
 export {
+  DEFAULT_ULTRAGYM_MACHINES,
+  resolveEffectiveMachineConfig,
   getMachineStorageKey,
   getExerciseMachineKeys,
   sanitizeMachineProfile,

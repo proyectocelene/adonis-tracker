@@ -16,6 +16,7 @@ import {
   getUnifiedCodeForExercise
 } from '../utils/exerciseMatcher';
 import { calculate1RM } from '../hooks/useWorkoutCalculations';
+import { calculateMuscleGroupProgression } from '../utils/sessionDataHelper';
 import { 
   exportFullDatabase, 
   exportRoutineStructure, 
@@ -186,46 +187,7 @@ export default function HistoryView() {
         });
       }
     } else {
-      workoutHistory.forEach(ses => {
-        if (ses.exercises) {
-          let maxGroupWeight = 0;
-          let totalGroupVolume = 0;
-          let matches = false;
-
-          Object.keys(ses.exercises).forEach(exId => {
-            const exData = ses.exercises[exId];
-            const exDef = allAvailableExercises.find(e => e.id === exId);
-            const mg = exData?.muscleGroup || exDef?.muscleGroup;
-
-            if (mg && mg.toLowerCase().includes(selectedMuscleGroup.toLowerCase())) {
-              matches = true;
-              Object.keys(exData).forEach(setNum => {
-                if (!isNaN(parseInt(setNum))) {
-                  const s = exData[setNum];
-                  if (s && s.completed && s.weight) {
-                    let w = parseFloat(s.weight) || 0;
-                    if (s.unit === 'kg') w *= 2.20462;
-                    const r = parseFloat(s.reps) || 0;
-                    if (w > maxGroupWeight) maxGroupWeight = w;
-                    totalGroupVolume += (w * r);
-                  }
-                }
-              });
-            }
-          });
-
-          if (matches) {
-            progData.push({
-              date: formatSessionDate(ses),
-              maxWeight: Math.round(maxGroupWeight),
-              est1RM: Math.round(totalGroupVolume),
-              reps: '-',
-              unit: 'lbs-reps',
-              isDeloadSession: Boolean(ses.isDeloadSession || ses.isDeload || ses.focus?.toLowerCase().includes('deload') || ses.focus?.toLowerCase().includes('descarga'))
-            });
-          }
-        }
-      });
+      return calculateMuscleGroupProgression(workoutHistory, selectedMuscleGroup, allAvailableExercises, formatSessionDate);
     }
 
     return progData;

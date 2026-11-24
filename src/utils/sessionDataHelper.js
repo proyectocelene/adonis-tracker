@@ -79,15 +79,15 @@ export function calculateSessionVolumeAndSets(todayWorkoutData, exercises) {
         if (!isNaN(num)) {
           const setObj = exLogs[key];
           if (setObj && setObj.completed) {
-            if (num === 0) {
+            if (num <= 0) {
               warmupSetsCount++;
             } else {
               effectiveSetsCount++;
+              allCompletedSets.push({
+                ...setObj,
+                isUnilateral
+              });
             }
-            allCompletedSets.push({
-              ...setObj,
-              isUnilateral
-            });
           }
         }
       });
@@ -138,4 +138,59 @@ export function calculateFirstUncompletedIdx(exercises, todayWorkoutData) {
     }
   }
   return 0;
+}
+
+/**
+ * Calcula la progresión por grupo muscular excluyendo estrictamente series de calentamiento (setNum <= 0 o isWarmup).
+ */
+export function calculateMuscleGroupProgression(workoutHistory = [], selectedMuscleGroup = '', allAvailableExercises = [], formatDateFn = null) {
+  const progData = [];
+  if (!Array.isArray(workoutHistory) || !selectedMuscleGroup) return progData;
+  const targetMg = selectedMuscleGroup.toLowerCase();
+
+  workoutHistory.forEach(ses => {
+    if (!ses || !ses.exercises) return;
+    let maxGroupWeight = 0;
+    let totalGroupVolume = 0;
+    let matches = false;
+
+    Object.keys(ses.exercises).forEach(exId => {
+      const exData = ses.exercises[exId];
+      if (!exData || typeof exData !== 'object') return;
+      const exDef = allAvailableExercises.find(e => e.id === exId);
+      const mg = exData?.muscleGroup || exDef?.muscleGroup;
+
+      if (mg && mg.toLowerCase().includes(targetMg)) {
+        matches = true;
+        Object.keys(exData).forEach(setNum => {
+          const setNumInt = parseInt(setNum, 10);
+          if (!isNaN(setNumInt) && setNumInt > 0) {
+            const s = exData[setNum];
+            if (s && s.completed && s.weight && !s.isWarmup) {
+              let w = parseFloat(s.weight) || 0;
+              if (s.unit === 'kg') w *= 2.20462;
+              const r = parseFloat(s.reps) || 0;
+              if (w > 0 && r > 0) {
+                if (w > maxGroupWeight) maxGroupWeight = w;
+                totalGroupVolume += (w * r);
+              }
+            }
+          }
+        });
+      }
+    });
+
+    if (matches && (totalGroupVolume > 0 || maxGroupWeight > 0)) {
+      progData.push({
+        date: formatDateFn ? formatDateFn(ses) : (ses.dateString || ses.date || 'Sesión'),
+        maxWeight: Math.round(maxGroupWeight),
+        est1RM: Math.round(totalGroupVolume),
+        reps: '-',
+        unit: 'lbs-reps',
+        isDeloadSession: Boolean(ses.isDeloadSession || ses.isDeload || ses.focus?.toLowerCase().includes('deload') || ses.focus?.toLowerCase().includes('descarga'))
+      });
+    }
+  });
+
+  return progData;
 }

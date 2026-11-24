@@ -37,10 +37,10 @@ export function useSetLoggerMachineConfig({
     });
   }, [exercise, globalMachineProfiles, globalMachineConfigs, previousData, currentMachineConfig, workoutHistory]);
 
-  // Resuelve la máquina activa (hoy > default > match de piso previo > primer perfil)
+  // Resuelve la máquina activa (hoy > default > match de piso previo > primer perfil > ULTRAGYM default)
   const activeResolvedConfig = useMemo(() => {
-    return getActiveMachineConfig(exerciseProfiles, { machineConfig: currentMachineConfig }, previousData);
-  }, [exerciseProfiles, currentMachineConfig, previousData]);
+    return getActiveMachineConfig(exerciseProfiles, { machineConfig: currentMachineConfig }, previousData, exercise);
+  }, [exerciseProfiles, currentMachineConfig, previousData, exercise]);
 
   const [machineConfig, setMachineConfig] = useState(() => activeResolvedConfig);
 

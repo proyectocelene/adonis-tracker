@@ -7,6 +7,7 @@ export default function SetRowInputs({
   exercise,
   setVal = {},
   prevVal = {},
+  overloadTarget = null,
   isUnilateral,
   machineConfig,
   isDone,
@@ -72,7 +73,7 @@ export default function SetRowInputs({
             id={`set-weight-${exercise?.id || 'ex'}-${setNum}`}
             name={`weight_${exercise?.id || 'ex'}_${setNum}`}
             aria-label={`Peso serie ${setNum} de ${exercise?.name || 'ejercicio'}`}
-            placeholder="Peso"
+            placeholder={overloadTarget?.suggestedWeight > 0 ? String(overloadTarget.suggestedWeight) : 'Peso'}
             value={setVal.weight === null || setVal.weight === undefined || setVal.weight === 'null' ? '' : setVal.weight}
             onChange={(e) => {
               const raw = e.target.value.replace(',', '.');
@@ -215,7 +216,7 @@ export default function SetRowInputs({
                       if (rL === 1 && rR >= 5) avgR = String(rR);
                       else if (rR === 1 && rL >= 5) avgR = String(rL);
                       else avgR = String(Math.round((Number(rL) + Number(rR)) / 2));
-                    } else if (rL !== '') {
+                    } else if (rR !== '') {
                       avgR = String(rR);
                     }
                     handleSanitizedChange(setNum, {
@@ -248,7 +249,7 @@ export default function SetRowInputs({
               id={`set-reps-${exercise?.id || 'ex'}-${setNum}`}
               name={`reps_${exercise?.id || 'ex'}_${setNum}`}
               aria-label={`Repeticiones serie ${setNum} de ${exercise?.name || 'ejercicio'}`}
-              placeholder="Reps"
+              placeholder={overloadTarget?.suggestedReps > 0 ? String(overloadTarget.suggestedReps) : 'Reps'}
               value={setVal.reps === null || setVal.reps === undefined || setVal.reps === 'null' ? '' : setVal.reps}
               onChange={(e) => {
                 const val = e.target.value;
