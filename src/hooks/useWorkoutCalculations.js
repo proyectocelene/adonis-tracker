@@ -703,23 +703,29 @@ export function analyzeExercisePerformance(previousData = {}, targetRepsStr = "1
   const lastSet = sets[sets.length - 1];
   const isFatigueDrop = sets.length >= 3 && lastSet.reps > 0 && lastSet.reps <= unifiedTarget.minReps * 0.75;
 
-  // Asignar a CADA serie la meta unificada para que el objetivo no esté fragmentado
+  // Asignar a CADA serie la meta real por serie (perSetTargets) para que todo el sistema coincida 1:1
   const setRecommendations = {};
-  const maxSetCount = Math.max(sets.length, 6);
+  const maxSetCount = Math.max(sets.length, unifiedTarget.perSetTargets?.length || 0, 6);
   for (let sNum = 1; sNum <= maxSetCount; sNum++) {
     const isThisS1 = sNum === 1;
+    const perSet = Array.isArray(unifiedTarget.perSetTargets)
+      ? unifiedTarget.perSetTargets.find(t => t.setNum === sNum)
+      : null;
+    const sWeight = perSet?.weight > 0 ? perSet.weight : unifiedTarget.targetWeight;
+    const sReps = perSet?.reps > 0 ? perSet.reps : unifiedTarget.minReps;
+
     let setNote = unifiedTarget.note;
     if (isThisS1 && unifiedTarget.isS1RampUp) {
-      setNote = `En la sesión anterior S1 fue ligera (${sets[0]?.weight || 0} lbs). Tu peso real de trabajo es ${unifiedTarget.targetWeight} lbs.`;
+      setNote = `En la sesión anterior S1 fue ligera (${sets[0]?.weight || 0} lbs). Tu peso real de trabajo es ${sWeight} lbs.`;
     } else if (sNum === sets.length && isFatigueDrop) {
-      setNote = `En la serie final previa caíste a ${lastSet.reps} reps por fatiga. Mantén ${unifiedTarget.targetWeight} lbs y añade 30-45s de descanso.`;
+      setNote = `En la serie final previa caíste a ${lastSet.reps} reps por fatiga. Mantén ${sWeight} lbs y añade 30-45s de descanso.`;
     }
 
     setRecommendations[sNum] = {
-      suggestedWeight: unifiedTarget.targetWeight,
-      suggestedReps: unifiedTarget.minReps,
-      targetText: `Meta: ${unifiedTarget.targetWeight} lbs × ${unifiedTarget.targetReps} reps`,
-      shortText: `Meta: ${unifiedTarget.targetWeight}# × ${unifiedTarget.targetReps}r`,
+      suggestedWeight: sWeight,
+      suggestedReps: sReps,
+      targetText: perSet ? `Meta: ${sWeight} lbs × ${sReps} reps` : `Meta: ${sWeight} lbs × ${unifiedTarget.targetReps} reps`,
+      shortText: perSet ? `Meta: ${sWeight}# × ${sReps}r` : `Meta: ${sWeight}# × ${unifiedTarget.targetReps}r`,
       note: setNote,
       isProgression: unifiedTarget.canProgressWeight,
       isLoadAdjustment: unifiedTarget.isExcessiveLoad,

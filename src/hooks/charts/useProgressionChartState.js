@@ -24,13 +24,13 @@ export function useProgressionChartState(defaultScope = 'family') {
     } catch {}
   };
 
-  // Modo de Carga: 'peak' (Top Set limpio por defecto), 'band', 'avg', 'both'
-  const [weightMode, setWeightMode] = useState('peak');
+  // Modo de Carga: 'band' (Banda Min-Max + Promedio Ponderado + Pico), 'peak', 'avg', 'both'
+  const [weightMode, setWeightMode] = useState('band');
   const [showWeight, setShowWeight] = useState(true);
-  const [showReps, setShowReps] = useState(false);
+  const [showReps, setShowReps] = useState(true);
   const [show1RM, setShow1RM] = useState(true);
   const [showRPE, setShowRPE] = useState(false);
-  const [showProjections, setShowProjections] = useState(false);
+  const [showProjections, setShowProjections] = useState(true);
 
   // Modalidad de repeticiones: 'both', 'topSet', 'avg'
   const [repsMode, setRepsMode] = useState('both');

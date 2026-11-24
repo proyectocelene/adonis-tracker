@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function PeriodStatsSummary({ stats }) {
+export default function PeriodStatsSummary({ stats, timeframeLabel = 'periodo visible' }) {
   if (!stats || stats.sessionsCount === 0) return null;
 
   const { weight, reps, bestE1RM, sessionsCount, trend } = stats;
@@ -22,6 +22,10 @@ export default function PeriodStatsSummary({ stats }) {
       flexDirection: 'column',
       gap: '8px'
     }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)' }}>
+        <span>📊 Resumen del periodo · {sessionsCount} ses. ({timeframeLabel})</span>
+      </div>
+
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
         {/* Bloque 1: Peso */}
         <div style={{ background: 'var(--bg-card)', padding: '7px 9px', borderRadius: '10px', border: '1px solid var(--border-subtle)' }}>

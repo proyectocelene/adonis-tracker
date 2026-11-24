@@ -1,12 +1,14 @@
 import React from 'react';
-import { Zap, X, Brain, Target, ShieldAlert, CheckCircle2, TrendingUp, AlertTriangle, Clock, Layers, Sparkles } from 'lucide-react';
-import { analyzeExercisePerformance, calculate1RM } from '../../hooks/useWorkoutCalculations';
+import { X, Brain, Target, AlertTriangle, Clock, Layers, Sparkles } from 'lucide-react';
+import { analyzeExercisePerformance, roundToAttainableWeight } from '../../hooks/useWorkoutCalculations';
 
 export default function OverloadScienceModal({
   isOpen,
   onClose,
+  exercise = null,
   exerciseName = '',
-  loadRecommendation = null,
+  totalSets = 3,
+  isDeloadMode = false,
   targetReps = '10-12',
   previousData = {},
   todayWorkoutData = {},
@@ -14,24 +16,34 @@ export default function OverloadScienceModal({
 }) {
   if (!isOpen) return null;
 
-  const analysis = analyzeExercisePerformance(previousData, targetReps, machineConfig);
+  const analysis = analyzeExercisePerformance(previousData, targetReps, machineConfig, { exercise });
   const unified = analysis.unifiedTarget;
 
-  // Extraer el conjunto completo de números de series (unión de sesión previa y hoy)
   const prevSetKeys = Object.keys(previousData || {}).map(k => parseInt(k, 10)).filter(n => !isNaN(n) && n > 0);
   const todaySetKeys = Object.keys(todayWorkoutData || {}).map(k => parseInt(k, 10)).filter(n => !isNaN(n) && n > 0);
-  const maxSetNum = Math.max(3, ...prevSetKeys, ...todaySetKeys);
+  const prescribedSetsCount = Math.max(1, parseInt(totalSets || exercise?.sets, 10) || 3);
+  const maxSetNum = Math.max(prescribedSetsCount, ...prevSetKeys, ...todaySetKeys);
   const setNumbers = Array.from({ length: maxSetNum }, (_, i) => i + 1);
 
-  // Determinar especificación física del aparato
-  const machineTypeLabel = machineConfig?.type === 'plates' 
-    ? 'Prensa / Discos por Lado' 
+  const machineTypeLabel = machineConfig?.type === 'plates'
+    ? 'Prensa / Discos por Lado'
     : (machineConfig?.type === 'stack' ? 'Torre de Placas' : (machineConfig?.type === 'dumbbells' ? 'Mancuernas' : 'Máquina Guiada'));
   const machineLocation = machineConfig?.station || machineConfig?.floor || '';
-  const minIncrement = analysis.increment || (machineConfig?.firstPlate ? 10 : 2.5);
+  const minIncrement = unified?.increment || analysis.increment || 5;
+  const maxRepsVal = unified?.maxReps || 12;
+
+  const formulaLabel = isDeloadMode
+    ? 'Modo Deload (80%)'
+    : !unified?.hasData
+    ? 'Calibración Inicial'
+    : unified.strategyType === 'reactivation'
+    ? 'Reactivación (>21 días sin registro)'
+    : unified.progressionMode === 'dynamic'
+    ? `Doble Progresión Dinámica por serie · paso ±${minIncrement} lbs (≥8%)`
+    : `Doble Progresión Clásica · paso ±${minIncrement} lbs (<8%)`;
 
   return (
-    <div 
+    <div
       style={{
         position: 'fixed',
         inset: 0,
@@ -49,7 +61,7 @@ export default function OverloadScienceModal({
       }}
       onClick={onClose}
     >
-      <div 
+      <div
         style={{
           background: 'var(--bg-surface)',
           border: '1px solid var(--border-subtle)',
@@ -89,7 +101,7 @@ export default function OverloadScienceModal({
               </h3>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px', flexWrap: 'wrap' }}>
                 <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: '800' }}>
-                  {exerciseName}
+                  {exerciseName || exercise?.name}
                 </span>
                 {machineLocation && (
                   <span style={{ fontSize: '9.5px', background: 'var(--bg-surface-secondary)', color: 'var(--accent-cyan)', border: '1px solid var(--border-subtle)', padding: '1px 6px', borderRadius: '6px', fontWeight: '800' }}>
@@ -121,23 +133,28 @@ export default function OverloadScienceModal({
           </button>
         </div>
 
-        {/* 1. FICHA TÉCNICA DEL APARATO Y CALIBRACIÓN FÍSICA */}
+        {/* 1. FICHA TÉCNICA DEL APARATO Y FÓRMULA ACTIVA */}
         <div style={{
           background: 'var(--bg-surface-secondary)',
           border: '1px solid var(--border-subtle)',
           borderRadius: '12px',
           padding: '8px 12px',
           display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
+          flexDirection: 'column',
+          gap: '4px',
           fontSize: '11px'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-secondary)', fontWeight: '700' }}>
-            <Layers size={14} color="var(--accent-blue)" />
-            <span>{machineTypeLabel}</span>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-secondary)', fontWeight: '700' }}>
+              <Layers size={14} color="var(--accent-blue)" />
+              <span>{machineTypeLabel}</span>
+            </div>
+            <div className="font-mono-tech" style={{ color: 'var(--accent-cyan)', fontWeight: '800' }}>
+              Paso real: ±{minIncrement} lbs
+            </div>
           </div>
-          <div className="font-mono-tech" style={{ color: 'var(--accent-cyan)', fontWeight: '800' }}>
-            Incrementos: ±{minIncrement} lbs
+          <div style={{ fontSize: '10.5px', fontWeight: '800', color: '#a5b4fc' }}>
+            {formulaLabel}
           </div>
         </div>
 
@@ -152,38 +169,22 @@ export default function OverloadScienceModal({
           gap: '6px'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            {analysis.isExcessiveLoad ? (
-              <AlertTriangle size={16} color="var(--accent-amber)" />
-            ) : analysis.isSpreadHigh ? (
+            {(analysis.isExcessiveLoad || analysis.isSpreadHigh) ? (
               <AlertTriangle size={16} color="var(--accent-amber)" />
             ) : (
               <Target size={16} color="var(--accent-cyan)" />
             )}
             <strong style={{ fontSize: '12.5px', color: (analysis.isExcessiveLoad || analysis.isSpreadHigh) ? 'var(--accent-amber)' : 'var(--accent-cyan)', fontWeight: '900' }}>
-              {analysis.isExcessiveLoad 
-                ? '⚠️ Diagnóstico: Carga Excesiva (Fuera de Hipertrofia)' 
+              {isDeloadMode
+                ? '🧘 Semana de Descarga (Deload 80%)'
+                : analysis.isExcessiveLoad
+                ? '⚠️ Diagnóstico: Carga Excesiva'
                 : (analysis.canProgressWeight ? '🚀 ¡Sobrecarga Progresiva Alcanzada!' : 'Diagnóstico y Meta de Hipertrofia')}
             </strong>
           </div>
 
           <p style={{ margin: 0, fontSize: '11.5px', color: 'var(--text-secondary)', lineHeight: '1.45', fontWeight: '600' }}>
-            {analysis.isExcessiveLoad ? (
-              <>
-                En la sesión previa la carga fue excesiva para el rango prescrito ({analysis.minReps}-{analysis.maxReps} reps). Ajustamos el peso de trabajo a <strong>{analysis.adjustedLoad} lbs</strong> para acumular tensión mecánica limpia y efectiva.
-              </>
-            ) : analysis.canProgressWeight ? (
-              <>
-                ¡Completaste con solvencia el techo de repeticiones en la sesión anterior! Tu nueva meta de sobrecarga progresiva es subir a <strong>{unified.targetWeight} lbs</strong> buscando entre <strong>{unified.minReps} y {unified.maxReps} reps</strong>.
-              </>
-            ) : analysis.isS1RampUp ? (
-              <>
-                En tu sesión previa la Serie 1 fue ligera pero luego demostraste fuerza a <strong>{analysis.anchorWeight} lbs</strong>. Hoy unificamos todas las series a tu peso ancla de <strong>{analysis.anchorWeight} lbs</strong>.
-              </>
-            ) : (
-              <>
-                Tu peso ancla de trabajo se mantiene sólido en <strong>{analysis.anchorWeight || analysis.maxWeight || 100} lbs</strong>. El objetivo de hoy es consolidar en rango de <strong>{unified.targetReps || `${analysis.minReps}-${analysis.maxReps}`} reps</strong> buscando RPE 8.
-              </>
-            )}
+            {unified?.note || `Trabaja en rango de ${targetReps} reps buscando RPE 8.`}
           </p>
 
           {analysis.isFatigueDrop && (
@@ -197,13 +198,14 @@ export default function OverloadScienceModal({
         {/* 3. DESGLOSE SERIE POR SERIE EN VIVO (ANTERIOR VS HOY) */}
         <div>
           <label style={{ display: 'block', fontSize: '11px', fontWeight: '900', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '6px' }}>
-            🎯 Comparativa Serie por Serie (Historial vs Hoy):
+            🎯 Comparativa Serie por Serie ({prescribedSetsCount} prescritas hoy):
           </label>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
             {setNumbers.map(sNum => {
               const prev = previousData?.[sNum];
               const today = todayWorkoutData?.[sNum];
               const rec = analysis.setRecommendations?.[sNum];
+              const isExtraPrevOnly = sNum > prescribedSetsCount && !today?.completed;
 
               const prevWeight = prev ? parseFloat(prev.weight) || 0 : 0;
               const prevReps = prev ? parseFloat(prev.reps) || 0 : 0;
@@ -211,9 +213,14 @@ export default function OverloadScienceModal({
               const todayWeight = today ? parseFloat(today.weight) || 0 : 0;
               const todayReps = today ? parseFloat(today.reps) || 0 : 0;
               const todayRpe = today ? parseFloat(today.rpe) || 8 : null;
-              const isTodayDone = today && today.completed;
+              const isTodayDone = Boolean(today && today.completed);
 
-              // Calcular delta real
+              const rawMetaW = rec?.suggestedWeight || unified?.targetWeight || 0;
+              const metaW = isDeloadMode && rawMetaW > 0
+                ? roundToAttainableWeight(rawMetaW * 0.8, machineConfig)
+                : rawMetaW;
+              const metaR = rec?.suggestedReps || unified?.minReps;
+
               const deltaW = prevWeight > 0 ? (todayWeight - prevWeight) : 0;
               const deltaR = prevReps > 0 ? (todayReps - prevReps) : 0;
               const isExtraSet = !prevWeight && !prevReps;
@@ -225,16 +232,16 @@ export default function OverloadScienceModal({
                 } else if (deltaW === 0 && deltaR > 0) {
                   statusBadge = { text: `⚡ +${deltaR} reps!`, color: 'var(--accent-cyan)', bg: 'var(--accent-cyan-subtle)' };
                 } else if (deltaW === 0 && deltaR === 0) {
-                  statusBadge = { text: `✓ Consolidado`, color: 'var(--accent-emerald)', bg: 'var(--accent-emerald-subtle)' };
+                  statusBadge = { text: '✓ Consolidado', color: 'var(--accent-emerald)', bg: 'var(--accent-emerald-subtle)' };
                 } else if (isExtraSet) {
-                  statusBadge = { text: `➕ Extra`, color: '#a78bfa', bg: 'rgba(139, 92, 246, 0.15)' };
+                  statusBadge = { text: '➕ Extra', color: '#a78bfa', bg: 'rgba(139, 92, 246, 0.15)' };
                 } else {
-                  statusBadge = { text: `⚖️ Fatiga`, color: 'var(--accent-amber)', bg: 'var(--accent-warning-light)' };
+                  statusBadge = { text: '⚖️ Fatiga', color: 'var(--accent-amber)', bg: 'var(--accent-warning-light)' };
                 }
               }
 
               return (
-                <div 
+                <div
                   key={sNum}
                   style={{
                     background: isTodayDone ? 'var(--accent-emerald-subtle)' : 'var(--bg-card)',
@@ -244,18 +251,19 @@ export default function OverloadScienceModal({
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
-                    gap: '8px'
+                    gap: '8px',
+                    opacity: isExtraPrevOnly ? 0.65 : 1
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span className="font-mono-tech" style={{ 
-                      background: isTodayDone ? 'var(--accent-emerald)' : 'var(--bg-surface-secondary)', 
-                      color: isTodayDone ? '#ffffff' : 'var(--text-secondary)', 
+                    <span className="font-mono-tech" style={{
+                      background: isTodayDone ? 'var(--accent-emerald)' : 'var(--bg-surface-secondary)',
+                      color: isTodayDone ? '#ffffff' : 'var(--text-secondary)',
                       border: '1px solid var(--border-subtle)',
-                      fontSize: '10px', 
-                      fontWeight: '900', 
-                      padding: '2px 6px', 
-                      borderRadius: '6px' 
+                      fontSize: '10px',
+                      fontWeight: '900',
+                      padding: '2px 6px',
+                      borderRadius: '6px'
                     }}>
                       S{sNum}
                     </span>
@@ -267,9 +275,15 @@ export default function OverloadScienceModal({
                         <span className="font-mono-tech" style={{ fontSize: '11.5px', color: 'var(--text-main)', fontWeight: '800' }}>
                           Hoy: {todayWeight}# × {todayReps}r {todayRpe ? `(RPE ${todayRpe})` : ''}
                         </span>
+                      ) : isExtraPrevOnly ? (
+                        <span className="font-mono-tech" style={{ fontSize: '10.5px', color: 'var(--text-muted)', fontWeight: '700' }}>
+                          Serie extra histórica (hoy tocan {prescribedSetsCount} series)
+                        </span>
                       ) : (
-                        <span className="font-mono-tech" style={{ fontSize: '11px', color: 'var(--accent-cyan)', fontWeight: '700' }}>
-                          Meta: {rec?.suggestedWeight || unified.targetWeight || 100}# × {unified.targetReps || `${analysis.minReps}-${analysis.maxReps}`} reps
+                        <span className="font-mono-tech" style={{ fontSize: '11px', color: 'var(--accent-cyan)', fontWeight: '800' }}>
+                          {metaW > 0
+                            ? `Meta hoy: ${metaW}# × ${metaR}r`
+                            : `Meta hoy: ${unified?.targetReps || targetReps} reps (RPE 8)`}
                         </span>
                       )}
                     </div>
@@ -300,8 +314,8 @@ export default function OverloadScienceModal({
             <Sparkles size={14} color="#a78bfa" /> Pautas de Acción Inmediata en el Gym:
           </strong>
           <ul style={{ margin: 0, paddingLeft: '16px', fontSize: '11px', color: 'var(--text-secondary)', lineHeight: '1.45' }}>
-            <li><strong>Si superas el rango máximo (ej: 13-15 reps con RPE ≤ 8):</strong> Tienes dominio neuromuscular pleno. Sube en la siguiente serie <strong className="font-mono-tech">+{minIncrement} lbs</strong> (el siguiente salto físico de la máquina).</li>
-            <li><strong>Si sientes fatiga prematura en S3/S4:</strong> No sacrifiques el peso ancla de golpe. Añade <strong>60 segundos adicionales de descanso</strong> antes de comenzar para resintetizar fosfocreatina muscular.</li>
+            <li><strong>Si superas el rango máximo ({maxRepsVal + 1}+ reps con RPE ≤ 8):</strong> Tienes dominio neuromuscular pleno. Sube en la siguiente serie <strong className="font-mono-tech">+{minIncrement} lbs</strong> (el siguiente salto físico de esta máquina).</li>
+            <li><strong>Si sientes fatiga prematura en las últimas series:</strong> No sacrifiques el peso ancla de golpe. Añade <strong>60 segundos adicionales de descanso</strong> antes de comenzar para resintetizar fosfocreatina.</li>
           </ul>
         </div>
 

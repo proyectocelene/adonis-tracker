@@ -1,7 +1,30 @@
 import React from 'react';
 
+function extractChronologicalWorkingSets(previousData = {}, fallbackSets = []) {
+  const keys = Object.keys(previousData || {})
+    .map(k => parseInt(k, 10))
+    .filter(n => !isNaN(n) && n > 0)
+    .sort((a, b) => a - b);
+
+  const chrono = [];
+  for (const k of keys) {
+    const s = previousData[k];
+    if (!s || s.completed === false || s.isWarmup === true) continue;
+    const w = parseFloat(s.weight) || 0;
+    const r = parseFloat(s.reps) || (
+      (s.repsL !== undefined || s.repsR !== undefined)
+        ? Math.max(parseFloat(s.repsL) || 0, parseFloat(s.repsR) || 0)
+        : 0
+    );
+    if (w > 0 && r > 0) {
+      chrono.push({ setNum: k, weight: w, reps: r });
+    }
+  }
+  return chrono.length > 0 ? chrono : (fallbackSets || []);
+}
+
 function formatLastRealSummary(coachAnalysis, previousData) {
-  const sets = coachAnalysis?.sets || [];
+  const sets = extractChronologicalWorkingSets(previousData, coachAnalysis?.sets || []);
   if (!sets.length) return 'Sesión inicial';
 
   const weights = sets.map(s => s.weight);
@@ -14,9 +37,11 @@ function formatLastRealSummary(coachAnalysis, previousData) {
   return dateLabel ? `${setsText} · ${dateLabel}` : setsText;
 }
 
-function formatTodayTargetSummary(unifiedTarget) {
+function formatTodayTargetSummary(unifiedTarget, totalSets) {
   if (!unifiedTarget) return 'Sesión inicial';
-  const perSet = unifiedTarget.perSetTargets || [];
+  const rawPerSet = unifiedTarget.perSetTargets || [];
+  const count = totalSets > 0 ? totalSets : rawPerSet.length;
+  const perSet = count > 0 ? rawPerSet.slice(0, count) : rawPerSet;
   if (perSet.length > 0) {
     return perSet.map(t => `S${t.setNum}: ${t.weight}×${t.reps}`).join(' · ');
   }
@@ -42,12 +67,13 @@ function resolveStrategyBadge(unifiedTarget) {
 export default function SetLoggerTargetBanners({
   coachAnalysis,
   previousData,
+  totalSets = 0,
   setIsScienceModalOpen,
   isDeloadMode
 }) {
   const unifiedTarget = coachAnalysis?.unifiedTarget;
   const lastRealText = formatLastRealSummary(coachAnalysis, previousData);
-  const metaHoyText = formatTodayTargetSummary(unifiedTarget);
+  const metaHoyText = formatTodayTargetSummary(unifiedTarget, totalSets);
   const badge = resolveStrategyBadge(unifiedTarget);
 
   return (
@@ -69,12 +95,12 @@ export default function SetLoggerTargetBanners({
           }}
           title="Toca para ver detalle de progresión"
         >
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', minWidth: 0, flex: 1 }}>
-            <div style={{ fontSize: '10.5px', color: 'var(--text-muted)', fontWeight: '700', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', minWidth: 0, flex: 1 }}>
+            <div style={{ fontSize: '10.5px', color: 'var(--text-muted)', fontWeight: '700', lineHeight: '1.3' }}>
               <span style={{ opacity: 0.85 }}>Último real:</span>{' '}
               <strong className="font-mono-tech" style={{ color: 'var(--text-main)' }}>{lastRealText}</strong>
             </div>
-            <div style={{ fontSize: '11px', color: badge.color, fontWeight: '900', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            <div style={{ fontSize: '11px', color: badge.color, fontWeight: '900', lineHeight: '1.35', wordBreak: 'break-word' }}>
               <span style={{ opacity: 0.9 }}>Meta hoy:</span>{' '}
               <span className="font-mono-tech">{metaHoyText}</span>
             </div>

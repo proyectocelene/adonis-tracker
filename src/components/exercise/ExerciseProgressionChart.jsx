@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { useProgressionChartState } from '../../hooks/charts/useProgressionChartState.js';
 import { useProgressionChartData } from '../../hooks/charts/useProgressionChartData.js';
 import { getWeightYDomain, getTonnageYDomain } from '../../utils/charts/progressionScales.js';
-import { EMPTY_ARRAY, EMPTY_OBJECT } from '../../utils/charts/chartConstants.js';
+import { EMPTY_ARRAY, EMPTY_OBJECT, TIMEFRAME_OPTIONS } from '../../utils/charts/chartConstants.js';
 import { getPreviousDataForExercise } from '../../utils/exerciseMatcher.js';
 import { getActiveMachineConfig } from '../../utils/machineManager.js';
 import { computeExercisePeriodStats, buildNextSessionCardData } from '../../utils/charts/progressionStatsHelper.js';
@@ -15,6 +15,7 @@ import ProgressionChartGraph from './progression/ProgressionChartGraph.jsx';
 import SessionAuditCard from './progression/SessionAuditCard.jsx';
 import NextSessionHighlightCard from './progression/NextSessionHighlightCard.jsx';
 import PeriodStatsSummary from './progression/PeriodStatsSummary.jsx';
+import ChartFooter from './progression/ChartFooter.jsx';
 
 /**
  * Orquestador principal de la gráfica de sobrecarga progresiva, próxima sesión y estadísticas claras.
@@ -57,12 +58,18 @@ export default function ExerciseProgressionChart({
     machineConfig: resolvedMachineConfig,
     isDeloadMode,
     timeframe: state.timeframe,
-    showProjections: state.showProjections
+    showProjections: state.showProjections,
+    nextSessionTarget: nextSessionData
   });
 
   const periodStats = useMemo(() => {
     return computeExercisePeriodStats(data.chartData);
   }, [data.chartData]);
+
+  const timeframeLabel = useMemo(() => {
+    const opt = TIMEFRAME_OPTIONS.find(o => o.id === state.timeframe);
+    return opt ? opt.label.replace(/^[^\s]+\s/, '') : state.timeframe;
+  }, [state.timeframe]);
 
   const weightYDomain = useMemo(() => getWeightYDomain(state.yAxisScale), [state.yAxisScale]);
   const tonnageYDomain = useMemo(() => getTonnageYDomain(state.yAxisScale), [state.yAxisScale]);
@@ -87,9 +94,9 @@ export default function ExerciseProgressionChart({
       ) : (
         <>
           {/* 2. Resumen estadístico claro (Peso Máx/Prom/Mín · Reps Máx/Prom/Mín · 1RM · Tendencia) */}
-          <PeriodStatsSummary stats={periodStats} />
+          <PeriodStatsSummary stats={periodStats} timeframeLabel={timeframeLabel} />
 
-          {/* 3. Controles + Selector temporal + Gráfica */}
+          {/* 3. Controles visibles + Selector temporal + Leyenda + Gráfica */}
           <ChartHeaderControls
             metricMode={state.metricMode}
             setMetricMode={state.setMetricMode}
@@ -162,15 +169,23 @@ export default function ExerciseProgressionChart({
             setPinnedPoint={state.setPinnedPoint}
           />
 
-          {/* 4. Tarjeta simplificada de auditoría al tocar/inspeccionar un punto */}
+          {/* 4. Tarjeta completa de auditoría al tocar/inspeccionar un punto */}
           {activeData && (
             <SessionAuditCard
               activeData={activeData}
               pinnedPoint={state.pinnedPoint}
               setPinnedPoint={state.setPinnedPoint}
               hoveredPoint={state.hoveredPoint}
+              targetRange={data.targetRange}
             />
           )}
+
+          {/* 5. Pie de referencia rápida */}
+          <ChartFooter
+            currentWeight={data.currentWeight}
+            peakWeight={data.peakWeight}
+            currentAvgWeight={data.currentAvgWeight}
+          />
         </>
       )}
     </div>
