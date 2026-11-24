@@ -15,7 +15,7 @@ import { roundToAttainableWeight, getNextAttainableWeight } from '../../hooks/us
  *   lastRealPoint: object
  * }}
  */
-export function calculateScientificProjections(realPoints, machineConfig, targetMaxReps = 12) {
+export function calculateScientificProjections(realPoints, machineConfig, targetMaxReps = 12, nextSessionTarget = null) {
   if (!realPoints || realPoints.length === 0) {
     return {
       projectedPoints: [],
@@ -26,8 +26,8 @@ export function calculateScientificProjections(realPoints, machineConfig, target
     };
   }
 
-  const maxHistorical = Math.max(...realPoints.map(p => p.weight));
-  const maxAvgHistorical = Math.max(...realPoints.map(p => p.avgWeight));
+  const maxHistorical = Math.max(...realPoints.map(p => p.weight || 0));
+  const maxAvgHistorical = Math.max(...realPoints.map(p => p.avgWeight || 0));
   const lastRealPoint = realPoints[realPoints.length - 1];
 
   // Calcular tasa segura de adaptación miofibrilar (lbs por semana)
@@ -41,10 +41,11 @@ export function calculateScientificProjections(realPoints, machineConfig, target
     weeklyRate = Math.max(1.0, Math.min(3.0, (lastRealPoint.weight || 100) * 0.015));
   }
 
-  const baselineWeight = Math.max(maxHistorical, lastRealPoint.weight);
-  const baselineAvgWeight = Math.max(maxAvgHistorical, lastRealPoint.avgWeight);
-  const baseline1RM = Math.max(...realPoints.map(p => p.est1RM));
-  const baselineTonnage = Math.max(...realPoints.map(p => p.tonnage));
+  const baselineWeight = Math.max(maxHistorical, lastRealPoint.weight || 0);
+  const baselineAvgWeight = Math.max(maxAvgHistorical, lastRealPoint.avgWeight || 0);
+  const valid1RMs = realPoints.map(p => p.est1RM).filter(v => Number.isFinite(v) && v > 0);
+  const baseline1RM = valid1RMs.length > 0 ? Math.max(...valid1RMs) : baselineWeight;
+  const baselineTonnage = Math.max(...realPoints.map(p => p.tonnage || 0));
 
   // Conectar el último punto real con la curva proyectada para que sea continua
   lastRealPoint.projectedWeight = lastRealPoint.weight;
@@ -96,18 +97,25 @@ export function calculateScientificProjections(realPoints, machineConfig, target
   const projectedPoints = projections.map(proj => {
     const factor = proj.factor;
     let projectedW;
+    let projectedReps = lastRealPoint.reps;
+    let projectionNote = proj.note;
+
     if (proj.label === '+1 ses') {
-      const hasDominatedReps = (lastRealPoint.reps >= targetMaxReps);
-      if (hasDominatedReps) {
-        projectedW = getNextAttainableWeight(baselineWeight, machineConfig, 'up');
+      const firstSetTarget = nextSessionTarget?.perSetTargets?.[0];
+      if (nextSessionTarget?.hasData && firstSetTarget?.weight > 0) {
+        projectedW = firstSetTarget.weight;
+        projectedReps = firstSetTarget.reps || lastRealPoint.reps;
+        projectionNote = nextSessionTarget.headline || proj.note;
       } else {
-        projectedW = baselineWeight;
+        const hasDominatedReps = (lastRealPoint.reps >= targetMaxReps);
+        projectedW = hasDominatedReps
+          ? getNextAttainableWeight(baselineWeight, machineConfig, 'up')
+          : baselineWeight;
       }
     } else {
       projectedW = roundToAttainableWeight(baselineWeight + factor, machineConfig);
+      if (projectedW < baselineWeight) projectedW = baselineWeight;
     }
-
-    if (projectedW < baselineWeight) projectedW = baselineWeight;
 
     const projectedAvgW = roundToAttainableWeight(baselineAvgWeight + factor * 0.95, machineConfig);
     const projectedRM = Math.round(baseline1RM + (factor * 1.15));
@@ -130,10 +138,10 @@ export function calculateScientificProjections(realPoints, machineConfig, target
       isProjected: true,
       projectedWeight: projectedW,
       projectedAvgWeight: projectedAvgW,
-      projectedReps: lastRealPoint.reps,
+      projectedReps,
       projected1RM: projectedRM,
       projectedTonnage: projectedTon,
-      projectionNote: proj.note
+      projectionNote
     };
   });
 

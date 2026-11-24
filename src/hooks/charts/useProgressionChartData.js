@@ -22,7 +22,8 @@ export function useProgressionChartData({
   machineConfig = null,
   isDeloadMode = false,
   timeframe = '10ses',
-  showProjections = true
+  showProjections = true,
+  nextSessionTarget = null
 }) {
   // Rango de repeticiones dinámico e individual para este ejercicio específico
   const targetRange = useMemo(() => {
@@ -110,7 +111,7 @@ export function useProgressionChartData({
       projectedPoints,
       maxHistorical,
       lastRealPoint
-    } = calculateScientificProjections(realPoints, machineConfig, targetRange.max);
+    } = calculateScientificProjections(realPoints, machineConfig, targetRange.max, nextSessionTarget);
 
     const transDate = lastRealPoint.date;
 
@@ -138,7 +139,7 @@ export function useProgressionChartData({
       deloadWindows,
       isDense
     };
-  }, [exercise, workoutHistory, todayWorkoutData, scopeMode, machineConfig, targetRange.max, isDeloadMode, timeframe, showProjections]);
+  }, [exercise, workoutHistory, todayWorkoutData, scopeMode, machineConfig, targetRange.max, isDeloadMode, timeframe, showProjections, nextSessionTarget]);
 
   const dynamicXInterval = useMemo(() => {
     return getDynamicXInterval(dataBundle.chartData.length);

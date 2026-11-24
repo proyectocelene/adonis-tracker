@@ -4,6 +4,7 @@ import {
   resolveEffectiveMachineConfig,
   getActiveMachineConfig,
   getUnifiedExerciseTarget,
+  analyzeExercisePerformance,
   getOverloadTarget,
   getNextAttainableWeight,
   calculate1RM,
@@ -253,6 +254,23 @@ describe('Progression Engine v4.4 + Perfiles ULTRAGYM', () => {
       // Si tiene v44Verified: true, siempre manda el perfil del usuario
       const verified = resolveEffectiveMachineConfig({ ...legacyProfile, v44Verified: true }, chestEx, 155);
       expect(verified.plateStep).toBe(15);
+    });
+
+    it('analyzeExercisePerformance alinea setRecommendations 1:1 con perSetTargets (Hack Squat 270x8,7,8,8 -> 270x9)', () => {
+      const hackEx = { unifiedCode: '[CUAD-HACK_SQUAT-DISC_01]', name: 'Hack Squat', sets: 3, reps: '6-10' };
+      const prevHack = {
+        date: '2026-11-17',
+        '1': { weight: 270, reps: 8, completed: true },
+        '2': { weight: 270, reps: 7, completed: true },
+        '3': { weight: 270, reps: 8, completed: true },
+        '4': { weight: 270, reps: 8, completed: true }
+      };
+      const analysis = analyzeExercisePerformance(prevHack, '6-10', null, { exercise: hackEx });
+      expect(analysis.unifiedTarget.perSetTargets[0]).toEqual({ setNum: 1, weight: 270, reps: 9 });
+      expect(analysis.setRecommendations[1].suggestedWeight).toBe(270);
+      expect(analysis.setRecommendations[1].suggestedReps).toBe(9);
+      expect(analysis.setRecommendations[2].suggestedReps).toBe(9);
+      expect(analysis.setRecommendations[3].suggestedReps).toBe(9);
     });
   });
 });

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { TrendingUp, Sparkles, SlidersHorizontal } from 'lucide-react';
+import React from 'react';
+import { TrendingUp, Sparkles } from 'lucide-react';
 import { WEIGHT_MODES } from '../../../utils/charts/chartConstants.js';
 
 export default function ChartHeaderControls({
@@ -26,8 +26,6 @@ export default function ChartHeaderControls({
   yAxisScale,
   setYAxisScale
 }) {
-  const [showSecondaryControls, setShowSecondaryControls] = useState(false);
-
   return (
     <div style={{
       display: 'flex',
@@ -57,105 +55,13 @@ export default function ChartHeaderControls({
             {metricMode === 'tonnage' ? 'Tonelaje Acumulado' : 'Sobrecarga Progresiva'}
           </span>
           <span style={{ fontSize: '9px', color: 'var(--text-muted)', fontWeight: '700' }}>
-            Meta: {targetRange.label} reps • Top Set + e1RM real
+            Meta: {targetRange.label} reps • Calentamientos aislados
           </span>
         </div>
       </div>
 
-      {/* CONTROLES PRINCIPALES LIMPIOS + TOGGLE SECUNDARIO COLAPSADO */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap' }}>
-        {/* Toggle Métrica: Cargas vs Tonelaje */}
-        <div style={{ display: 'inline-flex', background: 'var(--bg-surface-secondary)', borderRadius: '8px', padding: '2px', border: '1px solid var(--border-subtle)' }}>
-          <button
-            type="button"
-            onClick={() => setMetricMode('weights')}
-            style={{
-              padding: '3px 7px',
-              borderRadius: '6px',
-              border: 'none',
-              background: metricMode === 'weights' ? 'var(--accent-blue)' : 'transparent',
-              color: metricMode === 'weights' ? '#000000' : 'var(--text-secondary)',
-              fontWeight: '900',
-              fontSize: '9.5px',
-              cursor: 'pointer',
-              boxShadow: metricMode === 'weights' ? '0 1px 4px rgba(56,189,248,0.3)' : 'none'
-            }}
-            title="Ver curvas de peso (Top Set) y e1RM"
-          >
-            🏋️ Carga
-          </button>
-          <button
-            type="button"
-            onClick={() => setMetricMode('tonnage')}
-            style={{
-              padding: '3px 7px',
-              borderRadius: '6px',
-              border: 'none',
-              background: metricMode === 'tonnage' ? 'var(--accent-amber)' : 'transparent',
-              color: metricMode === 'tonnage' ? '#000000' : 'var(--text-secondary)',
-              fontWeight: '900',
-              fontSize: '9.5px',
-              cursor: 'pointer',
-              boxShadow: metricMode === 'tonnage' ? '0 1px 4px rgba(255,179,0,0.3)' : 'none'
-            }}
-            title="Ver volumen total de trabajo (peso × reps) de series efectivas"
-          >
-            📦 Tonelaje
-          </button>
-        </div>
-
-        {/* Toggle 1RM */}
-        {metricMode === 'weights' && (
-          <button
-            type="button"
-            onClick={() => setShow1RM(prev => !prev)}
-            style={{
-              padding: '3px 7px',
-              borderRadius: '8px',
-              border: show1RM ? `1.5px solid var(--accent-cyan)` : '1px solid var(--border-subtle)',
-              background: show1RM ? 'var(--accent-cyan-subtle)' : 'var(--bg-surface-secondary)',
-              color: show1RM ? 'var(--accent-cyan)' : 'var(--text-muted)',
-              fontSize: '9.5px',
-              fontWeight: '900',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '3px'
-            }}
-            title="Curva de 1RM Estimado por fórmula de Epley (reps <= 15)"
-          >
-            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: show1RM ? 'var(--accent-cyan)' : 'var(--text-muted)' }} />
-            e1RM
-          </button>
-        )}
-
-        {/* Botón discreto para desplegar controles secundarios */}
-        <button
-          type="button"
-          onClick={() => setShowSecondaryControls(prev => !prev)}
-          style={{
-            padding: '3px 7px',
-            borderRadius: '8px',
-            border: showSecondaryControls ? '1.5px solid var(--accent-blue)' : '1px solid var(--border-subtle)',
-            background: showSecondaryControls ? 'var(--accent-blue-light)' : 'var(--bg-surface-secondary)',
-            color: showSecondaryControls ? 'var(--accent-blue)' : 'var(--text-muted)',
-            fontSize: '9.5px',
-            fontWeight: '800',
-            cursor: 'pointer',
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '3px'
-          }}
-          title="Opciones secundarias de gráfica (Reps, RPE, Metas proyectadas, Escala)"
-        >
-          <SlidersHorizontal size={11} />
-          Filtros
-        </button>
-      </div>
-
-      {/* PANEL COLAPSADO DE CONTROLES SECUNDARIOS */}
-      {showSecondaryControls && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap', width: '100%', paddingTop: '4px', borderTop: '1px dashed var(--border-subtle)' }}>
+      {/* CONTROLES DIRECTOS DE GRÁFICA (VISIBLES SIN OCULTAR) */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap', width: '100%' }}>
         {/* Selector de Alcance: Toda la Familia vs Esta Máquina */}
         {machineKey && (
           <div style={{ display: 'inline-flex', background: 'var(--bg-surface-secondary)', borderRadius: '8px', padding: '2px', border: '1px solid var(--border-subtle)' }}>
@@ -197,6 +103,46 @@ export default function ChartHeaderControls({
             </button>
           </div>
         )}
+
+        {/* Toggle Métrica: Cargas vs Tonelaje */}
+        <div style={{ display: 'inline-flex', background: 'var(--bg-surface-secondary)', borderRadius: '8px', padding: '2px', border: '1px solid var(--border-subtle)' }}>
+          <button
+            type="button"
+            onClick={() => setMetricMode('weights')}
+            style={{
+              padding: '3px 7px',
+              borderRadius: '6px',
+              border: 'none',
+              background: metricMode === 'weights' ? 'var(--accent-blue)' : 'transparent',
+              color: metricMode === 'weights' ? '#000000' : 'var(--text-secondary)',
+              fontWeight: '900',
+              fontSize: '9.5px',
+              cursor: 'pointer',
+              boxShadow: metricMode === 'weights' ? '0 1px 4px rgba(56,189,248,0.3)' : 'none'
+            }}
+            title="Ver curvas de peso (Top Set, Promedio y Banda) y Reps"
+          >
+            🏋️ Carga & Reps
+          </button>
+          <button
+            type="button"
+            onClick={() => setMetricMode('tonnage')}
+            style={{
+              padding: '3px 7px',
+              borderRadius: '6px',
+              border: 'none',
+              background: metricMode === 'tonnage' ? 'var(--accent-amber)' : 'transparent',
+              color: metricMode === 'tonnage' ? '#000000' : 'var(--text-secondary)',
+              fontWeight: '900',
+              fontSize: '9.5px',
+              cursor: 'pointer',
+              boxShadow: metricMode === 'tonnage' ? '0 1px 4px rgba(255,179,0,0.3)' : 'none'
+            }}
+            title="Ver volumen total de trabajo (peso × reps) de series efectivas"
+          >
+            📦 Tonelaje
+          </button>
+        </div>
 
         {metricMode === 'weights' && (
           <>
@@ -270,6 +216,29 @@ export default function ChartHeaderControls({
               )}
             </div>
 
+            {/* Toggle 1RM */}
+            <button
+              type="button"
+              onClick={() => setShow1RM(prev => !prev)}
+              style={{
+                padding: '3px 7px',
+                borderRadius: '8px',
+                border: show1RM ? `1.5px solid var(--accent-cyan)` : '1px solid var(--border-subtle)',
+                background: show1RM ? 'var(--accent-cyan-subtle)' : 'var(--bg-surface-secondary)',
+                color: show1RM ? 'var(--accent-cyan)' : 'var(--text-muted)',
+                fontSize: '9.5px',
+                fontWeight: '900',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '3px'
+              }}
+              title="Curva de 1RM Estimado por fórmula de Epley (reps <= 15)"
+            >
+              <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: show1RM ? 'var(--accent-cyan)' : 'var(--text-muted)' }} />
+              1RM
+            </button>
+
             {/* Toggle RPE */}
             <button
               type="button"
@@ -318,7 +287,7 @@ export default function ChartHeaderControls({
           Metas
         </button>
 
-        {/* Selector de Escala Vertical Eje Y: Rango de trabajo vs Desde 0 */}
+        {/* Selector de Escala Vertical Eje Y */}
         <div style={{ display: 'inline-flex', background: 'var(--bg-surface-secondary)', borderRadius: '8px', padding: '2px', border: '1px solid var(--border-subtle)' }}>
           <button
             type="button"
@@ -352,13 +321,12 @@ export default function ChartHeaderControls({
               cursor: 'pointer',
               boxShadow: yAxisScale === 'zero' ? '0 1px 4px rgba(56,189,248,0.3)' : 'none'
             }}
-            title="Escala Completa: Inicia el eje vertical desde 0 para ver la proporción real de los cambios sin dramatismo visual"
+            title="Escala Desde 0: Eje Y inicia en 0 lbs"
           >
             0️⃣ Desde 0
           </button>
         </div>
-        </div>
-      )}
+      </div>
     </div>
   );
 }

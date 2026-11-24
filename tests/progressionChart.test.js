@@ -165,6 +165,23 @@ describe('progressionProjections', () => {
     expect(projectedPoints[0].projectedWeight).toBeGreaterThanOrEqual(105);
   });
 
+  it('debe alinear +1 ses con nextSessionTarget y tolerar est1RM null (>15 reps)', () => {
+    const realPoints = [
+      { date: '1 Ene', weight: 90, avgWeight: 85, reps: 16, est1RM: null, tonnage: 2000 },
+      { date: '8 Ene', weight: 95, avgWeight: 90, reps: 15, est1RM: 143, tonnage: 2200 }
+    ];
+    const nextSessionTarget = {
+      hasData: true,
+      headline: 'Subir a 105 lbs × 12',
+      perSetTargets: [{ setNum: 1, weight: 105, reps: 12 }]
+    };
+    const { projectedPoints } = calculateScientificProjections(realPoints, null, 15, nextSessionTarget);
+    expect(projectedPoints[0].projectedWeight).toBe(105);
+    expect(projectedPoints[0].projectedReps).toBe(12);
+    expect(projectedPoints[0].projectionNote).toBe('Subir a 105 lbs × 12');
+    expect(Number.isFinite(projectedPoints[1].projected1RM)).toBe(true);
+  });
+
   it('debe manejar array vacío de puntos sin lanzar errores', () => {
     const res = calculateScientificProjections([], null, 12);
     expect(res.projectedPoints).toEqual([]);

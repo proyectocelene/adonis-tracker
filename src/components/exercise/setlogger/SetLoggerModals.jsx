@@ -9,6 +9,8 @@ export default function SetLoggerModals({
   plateModal,
   setPlateModal,
   exercise,
+  totalSets = 3,
+  isDeloadMode = false,
   machineConfig,
   handleSaveMachineConfig,
   isMachineConfigOpen,
@@ -53,7 +55,10 @@ export default function SetLoggerModals({
       <OverloadScienceModal
         isOpen={isScienceModalOpen}
         onClose={() => setIsScienceModalOpen(false)}
+        exercise={exercise}
         exerciseName={exercise?.name}
+        totalSets={totalSets}
+        isDeloadMode={isDeloadMode}
         loadRecommendation={loadRecommendation}
         targetReps={prescribedReps}
         previousData={previousData}

@@ -150,6 +150,7 @@ export default function SetLogger({
       <SetLoggerTargetBanners
         coachAnalysis={coachAnalysis}
         previousData={previousData}
+        totalSets={totalSets}
         setIsScienceModalOpen={setIsScienceModalOpen}
         isDeloadMode={isDeloadMode}
       />
@@ -202,6 +203,8 @@ export default function SetLogger({
         plateModal={plateModal}
         setPlateModal={setPlateModal}
         exercise={exercise}
+        totalSets={totalSets}
+        isDeloadMode={isDeloadMode}
         machineConfig={machineConfig}
         handleSaveMachineConfig={handleSaveMachineConfig}
         isMachineConfigOpen={isMachineConfigOpen}
