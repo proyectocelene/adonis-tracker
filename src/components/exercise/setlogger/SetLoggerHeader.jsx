@@ -1,5 +1,26 @@
 import React from 'react';
-import { Settings2 } from 'lucide-react';
+import { Settings2, BarChart2 } from 'lucide-react';
+
+function getMachineStepLabel(machineConfig) {
+  if (!machineConfig) return '±5 lbs';
+  if (machineConfig.type === 'plates' && Array.isArray(machineConfig.availablePlates) && machineConfig.availablePlates.length > 0) {
+    return `±${Math.min(...machineConfig.availablePlates) * 2} lbs`;
+  }
+  if (machineConfig.type === 'dumbbells') {
+    return `±${machineConfig.dumbbellStep || 5} lbs`;
+  }
+  const step = machineConfig.plateStep || machineConfig.step || machineConfig.minIncrement || 5;
+  return `±${step} lbs`;
+}
+
+function getShortMachineLabel(machineConfig, exercise) {
+  if (machineConfig?.station && machineConfig.station !== 'Máquina #1') return machineConfig.station;
+  if (machineConfig?.name) return machineConfig.name;
+  if (machineConfig?.type === 'dumbbells') return 'Mancuernas';
+  if (machineConfig?.type === 'plates') return 'Discos';
+  const rawName = (exercise?.name || 'Máquina').split('(')[0].trim();
+  return rawName.length > 20 ? `${rawName.slice(0, 18)}…` : rawName;
+}
 
 export default function SetLoggerHeader({
   isStrictlyBilateral,
@@ -10,202 +31,122 @@ export default function SetLoggerHeader({
   exercise,
   handleSelectMachineProfile,
   setIsMachineConfigOpen,
-  coachAnalysis,
   setIsScienceModalOpen
 }) {
+  const machineLabel = getShortMachineLabel(machineConfig, exercise);
+  const stepLabel = getMachineStepLabel(machineConfig);
+
   return (
     <div style={{
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
       gap: '6px',
-      marginBottom: '10px',
+      marginBottom: '8px',
       width: '100%',
       flexWrap: 'nowrap'
     }}>
-      {/* SELECTOR SEGMENTADO BILATERAL / POR LADO O BADGE BILATERAL RÍGIDO */}
-      {isStrictlyBilateral ? (
-        <div style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          background: 'var(--bg-surface-secondary)',
-          padding: '4px 8px',
-          borderRadius: '10px',
-          border: '1px solid var(--border-subtle)',
-          fontSize: '10.5px',
-          fontWeight: '800',
-          color: 'var(--text-secondary)',
-          flexShrink: 0
-        }}>
-          🔗 Barra Bilateral
-        </div>
-      ) : (
-        <div style={{
-          display: 'inline-flex',
-          background: 'var(--bg-surface-secondary)',
-          padding: '2px',
-          borderRadius: '10px',
-          border: '1px solid var(--border-subtle)',
-          flexShrink: 0
-        }}>
-          <button
-            type="button"
-            onClick={() => isUnilateral && onUpdateExerciseMeta && onUpdateExerciseMeta({ isUnilateral: false })}
-            style={{
-              padding: '4px 8px',
-              borderRadius: '8px',
-              border: 'none',
-              background: !isUnilateral ? 'var(--bg-card)' : 'transparent',
-              color: !isUnilateral ? 'var(--text-main)' : 'var(--text-muted)',
-              fontWeight: !isUnilateral ? '900' : '700',
-              fontSize: '10.5px',
-              cursor: 'pointer',
-              boxShadow: !isUnilateral ? 'var(--shadow-ios-sm)' : 'none',
-              transition: 'all 0.15s ease'
-            }}
-          >
-            Bilateral
-          </button>
-          <button
-            type="button"
-            onClick={() => !isUnilateral && onUpdateExerciseMeta && onUpdateExerciseMeta({ isUnilateral: true })}
-            style={{
-              padding: '4px 8px',
-              borderRadius: '8px',
-              border: 'none',
-              background: isUnilateral ? '#7c3aed' : 'transparent',
-              color: isUnilateral ? '#ffffff' : 'var(--text-muted)',
-              fontWeight: isUnilateral ? '900' : '700',
-              fontSize: '10.5px',
-              cursor: 'pointer',
-              boxShadow: isUnilateral ? '0 1px 4px rgba(124,58,237,0.3)' : 'none',
-              transition: 'all 0.15s ease'
-            }}
-          >
-            Por Lado
-          </button>
-        </div>
-      )}
-
-      {/* SELECTOR DE MÁQUINA CON PERFILES Y CALIBRACIÓN */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 1, minWidth: 0 }}>
+      {/* IZQUIERDA: MÁQUINA + INCREMENTO ACTIVO + CONFIG DISCRETA */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', minWidth: 0, flex: 1 }}>
         <button
           type="button"
           onClick={() => setIsMachineConfigOpen(true)}
           style={{
-            background: machineConfig ? 'var(--accent-blue-light)' : 'var(--bg-surface-secondary)',
-            border: machineConfig ? '1.5px solid var(--accent-blue)' : '1px solid var(--border-subtle)',
-            borderRadius: '8px',
-            padding: '4px 6px',
-            cursor: 'pointer',
-            display: 'flex',
+            display: 'inline-flex',
             alignItems: 'center',
-            justifyContent: 'center',
-            flexShrink: 0
+            gap: '5px',
+            background: 'var(--bg-surface-secondary)',
+            border: '1px solid var(--border-subtle)',
+            borderRadius: '8px',
+            padding: '4px 8px',
+            cursor: 'pointer',
+            minWidth: 0,
+            maxWidth: '100%'
           }}
-          title="Calibrar máquina, asiento, respaldo, muesca o saltos de peso"
+          title="Configurar estación, placas, asiento o respaldo"
         >
-          <Settings2 size={13} color={machineConfig ? 'var(--accent-blue)' : 'var(--text-muted)'} />
+          <Settings2 size={12} color="var(--accent-blue)" style={{ flexShrink: 0 }} />
+          <span className="font-mono-tech" style={{
+            fontSize: '10.5px',
+            fontWeight: '800',
+            color: 'var(--text-main)',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis'
+          }}>
+            {machineLabel} · {stepLabel}
+          </span>
         </button>
 
-        <select
-          id={`machine-profile-${exercise?.id || 'ex'}`}
-          name={`machine_profile_${exercise?.id || 'ex'}`}
-          aria-label={`Perfil de máquina para ${exercise?.name || 'ejercicio'}`}
-          value={machineConfig?.id || (exerciseProfiles[0]?.id) || ''}
-          onChange={(e) => handleSelectMachineProfile(e.target.value)}
-          style={{
-            background: machineConfig ? 'rgba(124, 58, 237, 0.15)' : 'var(--bg-card)',
-            border: machineConfig ? '1.5px solid #a855f7' : '1px solid var(--border-subtle)',
-            borderRadius: '8px',
-            padding: '4px 5px',
-            fontSize: '10px',
-            fontWeight: '800',
-            color: machineConfig ? '#c084fc' : 'var(--text-main)',
-            maxWidth: '145px',
-            cursor: 'pointer',
-            outline: 'none',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-            overflow: 'hidden'
-          }}
-          title="Selecciona qué máquina estás usando (Planta Alta o Planta Baja) o añade una nueva"
-        >
-          {exerciseProfiles.length === 0 && !machineConfig && (
-            <option value="">⚙️ Sin calibrar</option>
-          )}
-          {exerciseProfiles.map(prof => (
-            <option key={prof.id} value={prof.id}>
-              {prof.floor === 'Planta Alta' ? '🏢 P. Alta: ' : (prof.floor === 'Planta Baja' ? '🏢 P. Baja: ' : '⚙️ ')}{prof.name || prof.station || 'Máquina'}{prof.seat ? ` (As. ${prof.seat})` : ''}
-            </option>
-          ))}
-          {(!exerciseProfiles.some(p => p.id === machineConfig?.id) && (machineConfig?.name || machineConfig?.station)) && (
-            <option value={machineConfig.id || 'curr'}>
-              {machineConfig.floor ? `🏢 ${machineConfig.floor}: ` : '⚙️ '}{machineConfig.name || machineConfig.station}
-            </option>
-          )}
-          <option value="__NEW__">➕ Añadir máquina (P. Alta / P. Baja)...</option>
-        </select>
-
-        {/* Chip de calibración biomecánica activa si existe asiento/respaldo/muesca */}
-        {(machineConfig?.seat || machineConfig?.backrest || machineConfig?.notch) && (
-          <button
-            type="button"
-            onClick={() => setIsMachineConfigOpen(true)}
+        {exerciseProfiles.length > 1 && (
+          <select
+            id={`machine-profile-${exercise?.id || 'ex'}`}
+            name={`machine_profile_${exercise?.id || 'ex'}`}
+            aria-label={`Perfil de máquina para ${exercise?.name || 'ejercicio'}`}
+            value={machineConfig?.id || exerciseProfiles[0]?.id || ''}
+            onChange={(e) => handleSelectMachineProfile(e.target.value)}
             style={{
-              background: 'var(--accent-emerald-subtle)',
-              border: '1px solid var(--accent-emerald)',
+              background: 'var(--bg-surface-secondary)',
+              border: '1px solid var(--border-subtle)',
               borderRadius: '8px',
-              padding: '3px 5px',
-              fontSize: '9px',
+              padding: '3px 4px',
+              fontSize: '9.5px',
               fontWeight: '800',
-              color: 'var(--accent-emerald)',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '2px',
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              maxWidth: '110px'
+              color: 'var(--text-secondary)',
+              maxWidth: '90px',
+              cursor: 'pointer'
             }}
-            title="Calibración activa: clic para editar"
           >
-            <span>
-              {[
-                machineConfig.seat ? `Asiento: ${machineConfig.seat}` : '',
-                machineConfig.backrest ? `Resp: ${machineConfig.backrest}` : '',
-                machineConfig.notch ? `Muesca: ${machineConfig.notch}` : ''
-              ].filter(Boolean).join(' • ')}
-            </span>
-          </button>
+            {exerciseProfiles.map(prof => (
+              <option key={prof.id} value={prof.id}>
+                {prof.floor ? `${prof.floor}: ` : ''}{prof.station || prof.name}
+              </option>
+            ))}
+            <option value="__NEW__">+ Nueva…</option>
+          </select>
         )}
       </div>
 
-      {/* CHIP DE SOBRECARGA CIENTÍFICA (ABRE MODAL) */}
-      <button
-        type="button"
-        onClick={() => setIsScienceModalOpen(true)}
-        style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: '3px',
-          background: coachAnalysis?.isSpreadHigh ? 'var(--accent-amber-subtle)' : (coachAnalysis?.canProgressWeight ? 'var(--accent-emerald-subtle)' : 'var(--accent-blue-light)'),
-          border: `1.5px solid ${coachAnalysis?.isSpreadHigh ? 'var(--accent-amber)' : (coachAnalysis?.canProgressWeight ? 'var(--accent-emerald)' : 'var(--accent-blue)')}`,
-          color: coachAnalysis?.isSpreadHigh ? 'var(--accent-amber)' : (coachAnalysis?.canProgressWeight ? 'var(--accent-emerald)' : 'var(--accent-blue)'),
-          borderRadius: '9px',
-          padding: '4px 8px',
-          fontSize: '10.5px',
-          fontWeight: '900',
-          cursor: 'pointer',
-          boxShadow: 'var(--shadow-ios-sm)',
-          flexShrink: 0
-        }}
-        title="Ver análisis estadístico y estrategia inteligente de este ejercicio"
-      >
-        <span>{coachAnalysis?.isSpreadHigh ? '🎯 Unificar' : (coachAnalysis?.canProgressWeight ? '⚡ Subir' : '💡 Coach')}</span>
-        <span style={{ fontSize: '8.5px', opacity: 0.8 }}>ⓘ</span>
-      </button>
+      {/* DERECHA: TOGGLE BILATERAL/UNILATERAL DISCRETO + DETALLE COACH */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
+        {!isStrictlyBilateral && (
+          <button
+            type="button"
+            onClick={() => onUpdateExerciseMeta && onUpdateExerciseMeta({ isUnilateral: !isUnilateral })}
+            style={{
+              padding: '4px 7px',
+              borderRadius: '8px',
+              border: isUnilateral ? '1px solid #a855f7' : '1px solid var(--border-subtle)',
+              background: isUnilateral ? 'rgba(124, 58, 237, 0.18)' : 'var(--bg-surface-secondary)',
+              color: isUnilateral ? '#c084fc' : 'var(--text-muted)',
+              fontSize: '9.5px',
+              fontWeight: '800',
+              cursor: 'pointer'
+            }}
+            title="Cambiar entre registro Bilateral o Por Lado (I/D)"
+          >
+            {isUnilateral ? 'Por Lado' : 'Bilateral'}
+          </button>
+        )}
+
+        <button
+          type="button"
+          onClick={() => setIsScienceModalOpen(true)}
+          style={{
+            padding: '4px 6px',
+            borderRadius: '8px',
+            border: '1px solid var(--border-subtle)',
+            background: 'var(--bg-surface-secondary)',
+            color: 'var(--text-muted)',
+            cursor: 'pointer',
+            display: 'inline-flex',
+            alignItems: 'center'
+          }}
+          title="Ver diagnóstico y estrategia de progresión"
+        >
+          <BarChart2 size={12} />
+        </button>
+      </div>
     </div>
   );
 }

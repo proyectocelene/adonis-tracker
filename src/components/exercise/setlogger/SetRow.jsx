@@ -1,5 +1,5 @@
 import React from 'react';
-import { calculate1RM, getOverloadTarget } from '../../../hooks/useWorkoutCalculations';
+import { calculate1RM, getOverloadTarget, isEpleyReliable } from '../../../hooks/useWorkoutCalculations';
 import { getSetCompletedBadge, getRpeColorStyle } from '../../../utils/setLoggerHelpers';
 import SetRowHeader from './SetRowHeader';
 import SetRowInputs from './SetRowInputs';
@@ -19,6 +19,7 @@ export default function SetRow({
   exerciseData = {},
   previousData = {},
   prevLocation,
+  historicalBest1RM = 0,
   handleSanitizedChange,
   handleSetChange,
   toggleSetComplete,
@@ -48,10 +49,9 @@ export default function SetRow({
   const isExtraSet = !prevWeightNum && !prevRepsNum;
 
   // Pasa machineConfig y lo realizado hoy (exerciseData) para cálculo con incrementos reales y estabilidad
-  const overloadTarget = getOverloadTarget(setNum, previousData, prescribedReps, machineConfig, prevVal.weight, prevVal.reps, exerciseData, isDeloadMode);
+  const overloadTarget = getOverloadTarget(setNum, previousData, prescribedReps, machineConfig, prevVal.weight, prevVal.reps, exerciseData, isDeloadMode, { exercise });
   const current1RM = calculate1RM(setVal.weight, setVal.reps);
-  const prev1RM = calculate1RM(prevVal.weight, prevVal.reps);
-  const isPr = isDone && current1RM > 0 && prev1RM > 0 && current1RM > prev1RM;
+  const isPr = isDone && isEpleyReliable(setVal.reps) && current1RM > 0 && historicalBest1RM > 0 && current1RM > historicalBest1RM;
 
   // Si estamos en Deload y es la serie 3 o posterior (y no está completada ni desbloqueada manualmente)
   if (isDeloadMode && sIdx >= 2 && !unlockedDeloadSets[setNum] && !isDone) {
@@ -155,6 +155,7 @@ export default function SetRow({
         exercise={exercise}
         setVal={setVal}
         prevVal={prevVal}
+        overloadTarget={overloadTarget}
         isUnilateral={isUnilateral}
         machineConfig={machineConfig}
         isDone={isDone}

@@ -1,8 +1,11 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { 
   analyzeExercisePerformance, 
-  isExerciseUnilateral 
+  isExerciseUnilateral,
+  calculate1RM,
+  isEpleyReliable
 } from '../../hooks/useWorkoutCalculations';
+import { getHistoricalRecordsForExercise } from '../../utils/exerciseMatcher';
 import { 
   getWarmupPlan, 
   isStrictlyBilateralExercise, 
@@ -70,9 +73,25 @@ export default function SetLogger({
   const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
   const [manualWarmupOpen, setManualWarmupOpen] = useState(false);
 
-  const coachAnalysis = analyzeExercisePerformance(previousData, prescribedReps, machineConfig);
+  const coachAnalysis = analyzeExercisePerformance(previousData, prescribedReps, machineConfig, { exercise });
   const warmupPlan = getWarmupPlan(exercise, previousData, exerciseData, machineConfig, coachAnalysis);
   const shouldRenderWarmup = warmupPlan.requiresWarmup || manualWarmupOpen;
+
+  // Máximo e1RM histórico real (solo reps <= 15 donde Epley es confiable)
+  const historicalBest1RM = useMemo(() => {
+    if (!exercise || !Array.isArray(workoutHistory) || workoutHistory.length === 0) return 0;
+    const records = getHistoricalRecordsForExercise(exercise, workoutHistory, { autoFallback: false });
+    let best = 0;
+    (records.sessionOccurrences || []).forEach(occ => {
+      (occ.workingSets || occ.detailedSets || []).forEach(s => {
+        if (!s.isWarmup && isEpleyReliable(s.reps)) {
+          const rm = calculate1RM(s.weight, s.reps);
+          if (rm > best) best = rm;
+        }
+      });
+    });
+    return best;
+  }, [exercise, workoutHistory]);
 
   const currentFeedback = exerciseData.feedback || null;
   const hasFeedback = !!currentFeedback && Object.keys(currentFeedback).length > 0;
@@ -130,6 +149,7 @@ export default function SetLogger({
       {/* 3. BANNERS: META DEL COACH Y MODO DELOAD */}
       <SetLoggerTargetBanners
         coachAnalysis={coachAnalysis}
+        previousData={previousData}
         setIsScienceModalOpen={setIsScienceModalOpen}
         isDeloadMode={isDeloadMode}
       />
@@ -158,6 +178,7 @@ export default function SetLogger({
               exerciseData={exerciseData}
               previousData={previousData}
               prevLocation={prevLocation}
+              historicalBest1RM={historicalBest1RM}
               handleSanitizedChange={handleSanitizedChange}
               handleSetChange={handleSetChange}
               toggleSetComplete={toggleSetComplete}

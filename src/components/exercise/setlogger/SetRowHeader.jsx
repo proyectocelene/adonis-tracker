@@ -99,12 +99,14 @@ export default function SetRowHeader({
           onClick={() => {
             safeVibrate(15);
             const updates = {};
-            if (overloadTarget.targetWeight) updates.weight = String(overloadTarget.targetWeight);
-            if (overloadTarget.targetReps) {
-              updates.reps = String(overloadTarget.targetReps);
+            const targetW = overloadTarget.suggestedWeight ?? overloadTarget.targetWeight;
+            const targetR = overloadTarget.suggestedReps ?? overloadTarget.targetReps;
+            if (targetW) updates.weight = String(targetW);
+            if (targetR) {
+              updates.reps = String(targetR);
               if (isUnilateral) {
-                updates.repsL = String(overloadTarget.targetReps);
-                updates.repsR = String(overloadTarget.targetReps);
+                updates.repsL = String(targetR);
+                updates.repsR = String(targetR);
               }
             }
             handleSanitizedChange(setNum, updates);

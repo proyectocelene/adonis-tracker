@@ -7,6 +7,7 @@ import ExerciseNotes from './exercise/ExerciseNotes';
 import ExerciseBiomechanics from './exercise/ExerciseBiomechanics';
 import ExerciseSwap from './exercise/ExerciseSwap';
 import { calculateSmartWarmup, getLoadRecommendation, isExerciseUnilateral, loadMachineProfilesForExercise, getActiveMachineConfig } from '../hooks/useWorkoutCalculations';
+import { useGlobalTimer, parseRestSecondsFromPrescribed } from '../contexts/GlobalTimerContext';
 import { useSyncedStore } from '../hooks/useSyncedStore';
 import { UNIFIED_EXERCISE_LIBRARY } from '../data/unifiedExerciseLibrary';
 import { normalizeExerciseName } from '../utils/exerciseMatcher';
@@ -37,6 +38,7 @@ export default function ExerciseRow({
 }) {
 
   const modal = useModal();
+  const globalTimer = useGlobalTimer();
   const [internalExpanded, setInternalExpanded] = useState(initiallyExpanded);
   const isExpanded = controlledExpanded !== undefined ? controlledExpanded : internalExpanded;
 
@@ -56,7 +58,7 @@ export default function ExerciseRow({
       exerciseData,
       workoutHistory
     });
-    return getActiveMachineConfig(profiles, exerciseData, previousData);
+    return getActiveMachineConfig(profiles, exerciseData, previousData, exercise);
   }, [exercise, globalMachineProfiles, globalMachineConfigs, previousData, exerciseData?.machineConfig, workoutHistory]);
 
   // Estado del Gesto "Dejar Presionado" (Long Press Reorder Mode)
@@ -200,6 +202,21 @@ export default function ExerciseRow({
       finalReps = Math.max(parseFloat(currentSet.repsL) || 0, parseFloat(currentSet.repsR) || 0) || finalReps;
     }
     const finalWeight = currentSet.weight || previousData[setIndex]?.weight || '';
+    const effectiveUnit = currentSet.unit || exercise.defaultUnit || 'lbs';
+    const usesWeight = effectiveUnit === 'lbs' || effectiveUnit === 'kg';
+    const numericWeight = parseFloat(finalWeight);
+
+    if (newCompleted && usesWeight && (finalWeight === '' || isNaN(numericWeight) || numericWeight <= 0)) {
+      if (modal?.showAlert) {
+        modal.showAlert({
+          title: '⚠️ Peso requerido',
+          message: `Ingresa un peso real mayor a 0 ${effectiveUnit} antes de marcar la serie como completada.`,
+          variant: 'warning',
+          buttonText: 'Entendido'
+        });
+      }
+      return;
+    }
 
     onUpdateSet(setIndex, {
       ...currentSet,
@@ -207,6 +224,12 @@ export default function ExerciseRow({
       weight: finalWeight,
       reps: String(finalReps)
     });
+
+    // Iniciar temporizador automático al completar una serie efectiva (setIndex > 0, NO en C1/C2)
+    if (newCompleted && setIndex > 0 && globalTimer?.startTimer) {
+      const restSeconds = parseRestSecondsFromPrescribed(exercise.restTime || effectiveRestSeconds, 90);
+      globalTimer.startTimer(restSeconds, exercise.name);
+    }
 
     // AUTOCOMPLETADO INTELIGENTE:
     // Al completar la serie N (para N >= 1), si la serie N+1 está vacía, prellenarla con la misma carga y repeticiones.
@@ -512,6 +535,10 @@ export default function ExerciseRow({
           {/* SUBPESTAÑA 1: SERIES & CARGAS (OPTIMIZADA) */}
           {activeSubTab === 'logger' && (
             <div style={{ width: '100%' }}>
+              <RestTimer
+                exercise={exercise}
+                effectiveRestSeconds={effectiveRestSeconds}
+              />
               {/* TABLA DE SERIES DE TRABAJO */}
               <SetLogger
                 exercise={exercise}

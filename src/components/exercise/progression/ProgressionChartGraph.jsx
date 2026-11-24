@@ -349,7 +349,7 @@ export default function ProgressionChartGraph({
                   strokeDasharray="3 3"
                   dot={isDense ? { r: 1.5, fill: PROGRESSION_COLORS.est1RM } : { r: 2.5, fill: PROGRESSION_COLORS.est1RM }}
                   activeDot={{ r: 4 }}
-                  connectNulls={false}
+                  connectNulls={true}
                 />
               )}
 

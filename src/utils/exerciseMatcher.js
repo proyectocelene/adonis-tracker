@@ -435,6 +435,7 @@ const REAL_DATABASE_ALIASES = [
   // Hombros
   { name: 'Press Militar en Máquina (Dual Axis)', code: '[HOMB-SHOULDER_PRESS-CONV_01]' },
   { name: 'Elevaciones Laterales en Polea o Máquina', code: '[HOMB-LAT_RAISE-MAQ_01]' },
+  { name: 'Elevaciones Laterales en Máquina o Polea', code: '[HOMB-LAT_RAISE-MAQ_01]' },
   { name: 'Elevaciones Laterales en Polea Baja', code: '[HOMB-LAT_RAISE-CABLE_01]' },
   { name: 'Elevaciones Laterales con Mancuernas (o Máquina)', code: '[HOMB-LAT_RAISE-MANC_01]' },
   { name: 'Face Pulls en Polea Alta (con Cuerda)', code: '[HOMB-FACE_PULL-HIGH_CABLE_01]' },
@@ -1458,7 +1459,7 @@ export function getHistoricalRecordsForExercise(currentEx, workoutHistory = [], 
  * Encuentra la coincidencia más precisa para un ejercicio dentro de los ejercicios de una sesión.
  * Prioriza código unificado, nombre exacto y equivalentes configurados.
  */
-function findBestMatchInSession(currentEx, sessionOrExercises) {
+function findBestMatchInSession(currentEx, sessionOrExercises, { allowEquivalents = true } = {}) {
   if (!sessionOrExercises) return null;
 
   let entries = [];
@@ -1489,19 +1490,23 @@ function findBestMatchInSession(currentEx, sessionOrExercises) {
     }
   }
 
-  // Prioridad 2: Coincidencia exacta por Nombre
+  // Prioridad 2: Coincidencia exacta por Nombre (solo si los códigos canónicos no contradicen)
   for (const { key, data: exData } of entries) {
     if (!exData || exData.machine) continue;
+    const histUCode = getUnifiedCodeForExercise(exData) || parseUnifiedCode(exData.unifiedCode) || parseUnifiedCode(key);
+    if (currentUCode && histUCode && currentUCode.canonical !== histUCode.canonical) continue;
     const histName = exData.name || exData.originalName || key;
     if (currentEx.name && histName && currentEx.name.trim().toLowerCase() === histName.trim().toLowerCase()) {
       return exData;
     }
   }
 
-  // Prioridad 3: Coincidencia por nombre normalizado estricto
+  // Prioridad 3: Coincidencia por nombre normalizado estricto (solo si los códigos canónicos no contradicen)
   const normCurrent = normalizeExerciseName(currentEx.name);
   for (const { key, data: exData } of entries) {
     if (!exData || exData.machine) continue;
+    const histUCode = getUnifiedCodeForExercise(exData) || parseUnifiedCode(exData.unifiedCode) || parseUnifiedCode(key);
+    if (currentUCode && histUCode && currentUCode.canonical !== histUCode.canonical) continue;
     const histName = exData.name || exData.originalName || key;
     if (areIncompatibleExercises(currentEx.name, histName)) continue;
     const normHist = normalizeExerciseName(histName);
@@ -1511,7 +1516,7 @@ function findBestMatchInSession(currentEx, sessionOrExercises) {
   }
 
   // Prioridad 4: Coincidencia por Equivalentes Directos Configurados
-  if (currentEx.equivalents && Array.isArray(currentEx.equivalents)) {
+  if (allowEquivalents && currentEx.equivalents && Array.isArray(currentEx.equivalents)) {
     for (const eq of currentEx.equivalents) {
       const uCodeEq = getUnifiedCodeForExercise(eq);
       for (const { key, data: exData } of entries) {
@@ -1531,9 +1536,11 @@ function findBestMatchInSession(currentEx, sessionOrExercises) {
     }
   }
 
-  // Prioridad 5: Coincidencia exacta por ID sólo si no hay contradicción de ejercicio ni sustitución
+  // Prioridad 5: Coincidencia exacta por ID sólo si no hay contradicción de ejercicio, código ni sustitución
   for (const { key, data: exData } of entries) {
     if (!exData || exData.machine) continue;
+    const histUCode = getUnifiedCodeForExercise(exData) || parseUnifiedCode(exData.unifiedCode) || parseUnifiedCode(key);
+    if (currentUCode && histUCode && currentUCode.canonical !== histUCode.canonical) continue;
     if (key === currentEx.id || exData.id === currentEx.id) {
       const histName = exData.name || exData.originalName || key;
       if (areIncompatibleExercises(currentEx.name, histName)) continue;
@@ -1566,9 +1573,12 @@ export function getPreviousDataForExercise(currentEx, dayId, currentWeek, workou
     return sets.length > 0;
   };
 
-  const normalizeResult = (matched) => {
+  const normalizeResult = (matched, session = null) => {
     if (!matched) return {};
     const result = { ...matched };
+    if (!result.date && session?.date) result.date = session.date;
+    if (!result.dateStr && session) result.dateStr = formatSessionDate(session);
+    if (!result.sessionId && session?.id) result.sessionId = session.id;
     const isUni = isExerciseUnilateral(currentEx, matched);
     result.isUnilateral = isUni;
 
@@ -1621,10 +1631,10 @@ export function getPreviousDataForExercise(currentEx, dayId, currentWeek, workou
     return result;
   };
 
-  // 1. Obtener historial cronológico unificado usando el mismo motor exacto de la gráfica
+  // 1. Obtener historial cronológico estricto (SIN autoFallback hacia otra máquina)
   if (Array.isArray(workoutHistory) && workoutHistory.length > 0) {
     const historyRecords = getHistoricalRecordsForExercise(currentEx, workoutHistory, {
-      autoFallback: true
+      autoFallback: false
     });
 
     const occurrences = historyRecords.sessionOccurrences || [];
@@ -1707,16 +1717,16 @@ export function getPreviousDataForExercise(currentEx, dayId, currentWeek, workou
     }
   }
 
-  // 2. Fallback de contingencia si no hubo ocurrencias en el historial consolidado
+  // 2. Fallback de contingencia estricto (solo misma estación/nombre, sin cruzar equivalentes)
   const sortedRev = [...(workoutHistory || [])].sort((a, b) => parseSessionTimestamp(b) - parseSessionTimestamp(a));
   for (const s of sortedRev) {
-    const matched = findBestMatchInSession(currentEx, s);
-    if (matched && hasValidLoggedSets(matched)) return normalizeResult(matched);
+    const matched = findBestMatchInSession(currentEx, s, { allowEquivalents: false });
+    if (matched && hasValidLoggedSets(matched)) return normalizeResult(matched, s);
   }
 
   for (const s of sortedRev) {
-    const matched = findBestMatchInSession(currentEx, s);
-    if (matched) return normalizeResult(matched);
+    const matched = findBestMatchInSession(currentEx, s, { allowEquivalents: false });
+    if (matched) return normalizeResult(matched, s);
   }
 
   return {};
