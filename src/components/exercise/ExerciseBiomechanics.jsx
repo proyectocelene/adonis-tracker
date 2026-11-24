@@ -158,6 +158,7 @@ export default function ExerciseBiomechanics({
         exercise={exercise}
         workoutHistory={workoutHistory}
         todayWorkoutData={todayWorkoutData}
+        machineConfig={machineConfig}
         height={260}
       />
 
