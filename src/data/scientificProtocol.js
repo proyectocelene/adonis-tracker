@@ -1,7 +1,7 @@
-// PROTOCOLO ADONIS v4.4 - RUTINA DEFINITIVA Y UNIFICADA (94 SERIES DE FUERZA + CARDIO ZONA 2)
+// PROTOCOLO ADONIS v4.5 - RUTINA DEFINITIVA Y UNIFICADA (96 SERIES DE FUERZA + CARDIO ZONA 2)
 // Actualizada con Familias de Carga, Equivalencias Directas, Motor de Matching, Biomecánica con IAP y Caminadora Inclinada Zona 2 Post-Pesas
 
-export const PROTOCOL_VERSION = '4.4';
+export const PROTOCOL_VERSION = '4.5';
 
 export const LOAD_FAMILIES = {
   "INCLINE_PRESS": "Familia Press Superior Inclinado",
@@ -54,9 +54,9 @@ export const scientificProtocol = [
   {
     id: "d1",
     dayNumber: 1,
-    name: "Lunes: Empuje 1 (Pecho Clavicular, Hombro Lateral & Tríceps Largo)",
+    name: "Lunes: Empuje 1 (Pecho Clavicular, Hombro Lateral, Tríceps Largo & Core)",
     type: "workout",
-    focus: "Protocolo Adonis v4.4 (14 series fuerza + Zona 2): Press Inclinado con Mancuernas #1 para haz clavicular, Elevaciones Laterales en Máquina #2 para anchura deltoidea, Pec Deck #3 y Copa en Polea #4 para cabeza larga del tríceps.",
+    focus: "Protocolo Adonis v4.5 (16 series fuerza + Zona 2): Press Inclinado con Mancuernas #1 para haz clavicular, Elevaciones Laterales en Máquina #2 para anchura deltoidea, Pec Deck #3, Copa en Polea #4 y Crunch Declinado con Disco #5.",
     exercises: [
       {
         id: "d1_e1",
@@ -162,15 +162,30 @@ export const scientificProtocol = [
           }
         ]
       },
+      {
+        id: "d1_e5",
+        unifiedCode: "[ABDO-DECLINE_CRUNCH-DISC_01]",
+        name: "Crunch Declinado con Disco (Decline Plate-Weighted Crunch)",
+        muscleGroup: "Abdomen (Recto Abdominal)",
+        loadFamily: LOAD_FAMILIES.CORE_FLEXION,
+        sets: 2,
+        reps: "10-15",
+        restTime: "60-90 s",
+        defaultUnit: "lbs",
+        biomechanics: "Sostén un disco o mancuerna contra el pecho y flexiona la columna redondeando la espalda alta al subir para aislar el recto abdominal sin jalar el cuello ni dominar con el psoas.",
+        warmup: "🔥 No ocupa",
+        searchQuery: "decline weighted crunch proper form hypertrophy",
+        equivalents: []
+      },
       TREADMILL_ZONA2_CARDIO("d1")
     ]
   },
   {
     id: "d2",
     dayNumber: 2,
-    name: "Martes: Pierna 1 (Enfoque Cuádriceps, Femorales, Pantorrilla & Core)",
+    name: "Martes: Pierna 1 (Enfoque Cuádriceps, Femorales, Glúteo F2 & Pantorrilla)",
     type: "workout",
-    focus: "Protocolo Adonis v4.4 (16 series fuerza + Zona 2): Hack Squat pesada #1 con pre-activación sinovial en Extensión, Prensa 45° #2, Extensión de Cuádriceps #3, Curl Femoral Sentado #4, Pantorrillas #5 y Cable Crunch #6.",
+    focus: "Protocolo Adonis v4.5 (16 series fuerza + Zona 2): Hack Squat pesada #1 con pre-activación sinovial en Extensión, Prensa 45° #2, Extensión de Cuádriceps #3, Curl Femoral Sentado #4, Glute Butt Blaster #5 y Pantorrillas #6.",
     exercises: [
       {
         id: "d2_e1",
@@ -245,6 +260,21 @@ export const scientificProtocol = [
       },
       {
         id: "d2_e5",
+        unifiedCode: "[GLUT-BUTT_BLASTER-MAQ_01]",
+        name: "Glute Butt Blaster en Máquina",
+        muscleGroup: "Glúteo Mayor (Extensión de Cadera)",
+        loadFamily: LOAD_FAMILIES.GLUTE_EXTENSION,
+        sets: 3,
+        reps: "10-12",
+        restTime: "90-120 s",
+        defaultUnit: "lbs",
+        biomechanics: "Abdomen contraído para evitar hiperextensión lumbar. Empuja con el talón hacia atrás y arriba apretando el glúteo 1s en extensión completa.",
+        warmup: "🔥 No ocupa",
+        searchQuery: "glute butt blaster machine kickback form",
+        equivalents: []
+      },
+      {
+        id: "d2_e6",
         unifiedCode: "[PANT-CALF_RAISE-MAQ_01]",
         name: "Elevación de Pantorrillas en Máquina (Pausa 2s Estiramiento)",
         muscleGroup: "Pantorrillas (Gastrocnemio & Sóleo)",
@@ -256,21 +286,6 @@ export const scientificProtocol = [
         biomechanics: "Pausa obligatoria de 2 segundos completos abajo en máximo estiramiento para eliminar el rebote del tendón de Aquiles; sube explosivo y aprieta 1s arriba.",
         warmup: "🔥 No ocupa",
         searchQuery: "standing calf raise machine 2 second pause form",
-        equivalents: []
-      },
-      {
-        id: "d2_e6",
-        unifiedCode: "[ABDO-CRUNCH-CABLE_01]",
-        name: "Flexión Espinal Lastrada: Cable Crunch en Polea Alta",
-        muscleGroup: "Abdomen (Recto Abdominal)",
-        loadFamily: LOAD_FAMILIES.CORE_FLEXION,
-        sets: 3,
-        reps: "12-15",
-        restTime: "60-90 s",
-        defaultUnit: "lbs",
-        biomechanics: "De rodillas frente a polea alta con cuerda junto a la frente. Cadera fija en 90°: enrolla la columna llevando las costillas hacia el pubis exhalando todo el aire al final.",
-        warmup: "🔥 Sí ocupa (1 serie ligera de aproximación para calibrar flexión espinal).",
-        searchQuery: "high cable rope crunch form",
         equivalents: []
       },
       TREADMILL_ZONA2_CARDIO("d2")
@@ -493,17 +508,17 @@ export const scientificProtocol = [
       },
       {
         id: "d4_e6",
-        unifiedCode: "[ABDO-CRUNCH-CABLE_01]",
-        name: "Flexión Espinal Lastrada: Cable Crunch en Polea Alta",
+        unifiedCode: "[ABDO-DECLINE_CRUNCH-DISC_01]",
+        name: "Crunch Declinado con Disco (Decline Plate-Weighted Crunch)",
         muscleGroup: "Abdomen (Recto Abdominal)",
         loadFamily: LOAD_FAMILIES.CORE_FLEXION,
         sets: 2,
-        reps: "12-15",
+        reps: "10-15",
         restTime: "60-90 s",
         defaultUnit: "lbs",
-        biomechanics: "Flexión lumbar/torácica pura con cadera inmóvil. Exhala por completo al contraer llevando codos hacia las rodillas.",
+        biomechanics: "Sostén un disco o mancuerna contra el pecho y flexiona la columna redondeando la espalda alta al subir para aislar el recto abdominal sin jalar el cuello ni dominar con el psoas.",
         warmup: "🔥 No ocupa",
-        searchQuery: "high cable crunch form",
+        searchQuery: "decline weighted crunch proper form hypertrophy",
         equivalents: []
       },
       TREADMILL_ZONA2_CARDIO("d4")
@@ -578,7 +593,7 @@ export const scientificProtocol = [
         name: "Glute Butt Blaster en Máquina",
         muscleGroup: "Glúteo Mayor (Extensión de Cadera)",
         loadFamily: LOAD_FAMILIES.GLUTE_EXTENSION,
-        sets: 2,
+        sets: 3,
         reps: "10-12",
         restTime: "90-120 s",
         defaultUnit: "lbs",
@@ -608,7 +623,7 @@ export const scientificProtocol = [
         name: "Elevación de Pantorrillas en Máquina (Pausa 2s Estiramiento)",
         muscleGroup: "Pantorrillas (Gastrocnemio & Sóleo)",
         loadFamily: LOAD_FAMILIES.CALVES,
-        sets: 3,
+        sets: 2,
         reps: "12-15",
         restTime: "90-120 s",
         defaultUnit: "lbs",

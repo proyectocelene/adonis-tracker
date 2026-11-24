@@ -4,13 +4,13 @@ import { UNIFIED_EXERCISE_LIBRARY } from '../unifiedExerciseLibrary.js';
 import { DEFAULT_ULTRAGYM_MACHINES, getActiveMachineConfig } from '../../utils/machineManager.js';
 import { getPreviousDataForExercise } from '../../utils/exerciseMatcher.js';
 
-describe('Protocolo Adonis v4.4 + Aislamiento entre máquinas', () => {
-  it('a) suma exactamente 94 series de fuerza (d1=14, d2=16, d3=16, d4=16, d5=16, d6=16) y cardio Zona 2 en D1-D6', () => {
-    expect(PROTOCOL_VERSION).toBe('4.4');
+describe('Protocolo Adonis v4.5 + Aislamiento entre máquinas', () => {
+  it('a) suma exactamente 96 series de fuerza (16 exactas por día D1-D6) y cardio Zona 2 en D1-D6', () => {
+    expect(PROTOCOL_VERSION).toBe('4.5');
     expect(scientificProtocol).toHaveLength(6);
 
     const expectedStrengthByDay = {
-      d1: 14,
+      d1: 16,
       d2: 16,
       d3: 16,
       d4: 16,
@@ -30,7 +30,17 @@ describe('Protocolo Adonis v4.4 + Aislamiento entre máquinas', () => {
       totalStrengthSets += daySum;
     }
 
-    expect(totalStrengthSets).toBe(94);
+    expect(totalStrengthSets).toBe(96);
+
+    const d1Decline = scientificProtocol[0].exercises.find(ex => ex.unifiedCode === '[ABDO-DECLINE_CRUNCH-DISC_01]');
+    const d4Decline = scientificProtocol[3].exercises.find(ex => ex.unifiedCode === '[ABDO-DECLINE_CRUNCH-DISC_01]');
+    expect(d1Decline?.sets).toBe(2);
+    expect(d4Decline?.sets).toBe(2);
+
+    const d2Butt = scientificProtocol[1].exercises.find(ex => ex.unifiedCode === '[GLUT-BUTT_BLASTER-MAQ_01]');
+    const d5Butt = scientificProtocol[4].exercises.find(ex => ex.unifiedCode === '[GLUT-BUTT_BLASTER-MAQ_01]');
+    expect(d2Butt?.sets).toBe(3);
+    expect(d5Butt?.sets).toBe(3);
   });
 
   it('b) todo ejercicio de fuerza tiene su unifiedCode en UNIFIED_EXERCISE_LIBRARY y resuelve machineConfig desde DEFAULT_ULTRAGYM_MACHINES', () => {
